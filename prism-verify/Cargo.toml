@@ -9,7 +9,6 @@ publish.workspace = true
 
 [dependencies]
 prism-field = { workspace = true }
-prism-isogeny = { workspace = true }
 sha3 = { workspace = true }
 
 [lints.rust]

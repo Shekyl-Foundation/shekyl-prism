@@ -7,9 +7,10 @@ transaction.
 The gap it exists for is in the wallet derivation: each output's ML-DSA seed
 is expanded from the combined shared secret, which the sender computed. A
 later design round can consider PRISM as a third mandatory authorization leg
-only after the level III verification cost has been measured on the floor
-device (Raspberry Pi 4 Model B). Until that number exists, this repository
-does not propose that leg.
+only after the level III cost of Algorithm 3, at `e` steps, has been
+measured on the floor device (Raspberry Pi 4 Model B). Until that chain
+exists and that number is measured, this repository does not propose that
+leg.
 
 ## What is here
 
@@ -28,7 +29,10 @@ The C reference [PRISM_v2](https://github.com/mariascrs/PRISM_v2) is the
 submodule `external/PRISM_v2`, pinned, and used only by
 `scripts/check_c_reference.py`. The Rust crates do not link it. That tree
 implements salt-PRISM. Its verifier resamples a salt and uses a
-probabilistic prime test. This workspace does not.
+probabilistic prime test. This workspace does neither; each divergence is a
+ruling in the spec. Its third quirk, restarting the basis search at 128 when
+the key's hint byte cannot name the index, is not a divergence here: this
+verifier carries no hint byte and derives the same index in one search.
 
 ## Field backend
 
@@ -41,15 +45,22 @@ III on the scalar path. The bench reports `field-backend=scalar`.
 ## Build
 
 ```bash
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 cargo run -p prism-bench --release
 python3 scripts/check_c_reference.py
 ```
 
-`cargo run -p prism-bench` prints wall time and the userspace counter
-(`cntvct_el0` on aarch64, `rdtsc` on x86_64). The synthetic input's challenge
-degree is not prime: `outcome=composite` means the chain of length `a`
-finished and Baillie–PSW refused `q`. That line is not an acceptance. The
-consensus gate is the level III line on the floor device. Levels I and V are
-the same run, so the cost curve is measured. A number from any other machine
-is not that gate.
+The first three are the gates; a change that compiles but fails fmt or
+clippy is not done.
+
+`cargo run -p prism-bench` prints the userspace counter
+(`cntvct_el0` on aarch64, `rdtsc` on x86_64) and, after a warm-up, the
+median and the spread of repeated runs. Until Algorithm 3 exists, that
+output is decode, the challenge hash, and one Baillie–PSW test.
+`outcome=relation` means those checks passed and the isogeny equality is
+still not an acceptance. The consensus gate is the level III line of
+Algorithm 3 at `e` steps on the floor device. Do not run that gate before
+the chain exists. Levels I and V are the same run, so the cost curve is
+measured. A number from any other machine is not that gate.

@@ -264,10 +264,13 @@ mod tests {
             if self.0 == 0 {
                 return Some(Self(0));
             }
-            if mod_pow(self.0, (P - 1) / 2) != 1 {
+            if !self.is_square() {
                 return None;
             }
             Some(Self(mod_pow(self.0, (P + 1) / 4)))
+        }
+        fn is_square(self) -> bool {
+            self.0 == 0 || mod_pow(self.0, (P - 1) / 2) == 1
         }
         fn is_zero(self) -> bool {
             self.0 == 0
