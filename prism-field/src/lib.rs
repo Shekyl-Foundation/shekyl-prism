@@ -28,6 +28,9 @@ pub trait Field: Copy {
     fn inv(self) -> Option<Self>;
     /// A square root, or `None` when this element is not a square.
     fn sqrt(self) -> Option<Self>;
+    /// Quadratic residuosity, including zero. `F_p` uses its Legendre
+    /// symbol. `F_{p^2}` uses the norm to `F_p` and that symbol.
+    fn is_square(self) -> bool;
     fn is_zero(self) -> bool;
     fn same(self, rhs: Self) -> bool;
 }
@@ -129,6 +132,9 @@ macro_rules! nist_level {
                     let mask = value.set_sqrt();
                     if mask_ok(mask) { Some(value) } else { None }
                 }
+                fn is_square(self) -> bool {
+                    self.legendre() >= 0
+                }
                 fn is_zero(self) -> bool {
                     mask_ok($fp::is_zero(self))
                 }
@@ -171,6 +177,9 @@ macro_rules! nist_level {
                     let mask = value.set_sqrt();
                     if mask_ok(mask) { Some(value) } else { None }
                 }
+                fn is_square(self) -> bool {
+                    self.legendre() >= 0
+                }
                 fn is_zero(self) -> bool {
                     mask_ok($fp2::is_zero(self))
                 }
@@ -191,7 +200,7 @@ macro_rules! nist_level {
                 const CHAIN_STEPS: u32 = $e;
                 const FP_LEN: usize = <$fp>::ENCODED_LENGTH;
                 const FP2_LEN: usize = <$fp2>::ENCODED_LENGTH;
-                const PUBLIC_KEY_LEN: usize = <$fp2>::ENCODED_LENGTH + 2;
+                const PUBLIC_KEY_LEN: usize = <$fp2>::ENCODED_LENGTH;
                 const S_LEN: usize = (($e - 1) as usize).div_ceil(8);
                 const INDEX_LEN: usize = 2;
                 const SIGNATURE_LEN: usize = 5 * <$fp2>::ENCODED_LENGTH + Self::INDEX_LEN;
@@ -305,7 +314,7 @@ mod tests {
         let root = L::base_decode(&hex_bytes(sqrt_sq)).expect("root decodes");
         assert!(root.mul(root).same(four));
         assert_eq!(L::FP_LEN * 2, L::FP2_LEN);
-        assert_eq!(L::PUBLIC_KEY_LEN, L::FP2_LEN + 2);
+        assert_eq!(L::PUBLIC_KEY_LEN, L::FP2_LEN);
         assert_eq!(L::INDEX_LEN, 2);
         assert_eq!(L::CHAIN_STEPS, L::E);
         assert_eq!(L::SIGNATURE_LEN, 5 * L::FP2_LEN + L::INDEX_LEN);
@@ -326,7 +335,7 @@ mod tests {
             "0000000000000000000000000000000000000000000000000000000000008002",
             "0200000000000000000000000000000000000000000000000000000000000000",
         );
-        assert_eq!(Level1::PUBLIC_KEY_LEN, 66);
+        assert_eq!(Level1::PUBLIC_KEY_LEN, 64);
         assert_eq!(Level1::SIGNATURE_LEN, 322);
         assert_eq!(Level1::CHAIN_STEPS, 248);
     }
@@ -339,7 +348,7 @@ mod tests {
             "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008020",
             "020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
         );
-        assert_eq!(Level3::PUBLIC_KEY_LEN, 98);
+        assert_eq!(Level3::PUBLIC_KEY_LEN, 96);
         assert_eq!(Level3::SIGNATURE_LEN, 482);
         assert_eq!(Level3::CHAIN_STEPS, 376);
     }
@@ -352,7 +361,7 @@ mod tests {
             "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d800",
             "02000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
         );
-        assert_eq!(Level5::PUBLIC_KEY_LEN, 130);
+        assert_eq!(Level5::PUBLIC_KEY_LEN, 128);
         assert_eq!(Level5::SIGNATURE_LEN, 642);
         assert_eq!(Level5::CHAIN_STEPS, 500);
     }

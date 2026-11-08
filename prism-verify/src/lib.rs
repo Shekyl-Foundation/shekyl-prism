@@ -34,10 +34,12 @@ pub enum VerifyError {
     Length,
     /// A field element is not the canonical representative in `0..p`.
     Canonical,
+    /// `A = 0`, the starting curve. Its endomorphism ring is public.
+    Origin,
     /// `A^2 = 4`. The Montgomery curve is singular.
     Singular,
-    /// The hint does not yield the deterministic basis, or it asks for the
-    /// reference's search fallback.
+    /// No basis index in `1..=127` meets the C search. Key generation
+    /// regenerates such a key.
     Basis,
     /// `y(P)` is zero or not strictly below `y(−P)` in `<_{F_{p^2}}`.
     Sign,
@@ -49,9 +51,9 @@ pub enum VerifyError {
 
 /// Run the public checks, then refuse with [`VerifyError::Relation`].
 ///
-/// Order: length, canonical decoding, the singular test, the basis hint,
-/// the sign test, then one Baillie–PSW test of `q_j`. The isogeny chain is
-/// not run.
+/// Order: length, canonical decoding, the starting-curve refusal, the
+/// singular test, the deterministic basis index, the sign test, then one
+/// Baillie–PSW test of `q_j`. The isogeny chain is not run.
 pub fn verify<L: Level>(
     public_key: &[u8],
     message: &[u8],
@@ -69,13 +71,15 @@ fn checked<L: Level>(
     if public_key.len() != L::PUBLIC_KEY_LEN || signature.len() != L::SIGNATURE_LEN {
         return Err(VerifyError::Length);
     }
-    let identity = &public_key[..L::FP2_LEN];
+    let identity = public_key;
     let coefficient = L::ext_decode(identity).ok_or(VerifyError::Canonical)?;
+    if coefficient.is_zero() {
+        return Err(VerifyError::Origin);
+    }
     if singular::<L>(coefficient) {
         return Err(VerifyError::Singular);
     }
-    let hint = u16::from_le_bytes([public_key[L::FP2_LEN], public_key[L::FP2_LEN + 1]]);
-    if !basis_hint::<L>(coefficient, hint) {
+    if c_basis_hint::<L>(coefficient).is_none() {
         return Err(VerifyError::Basis);
     }
     let y = decode_response_y::<L>(signature)?;
@@ -158,41 +162,46 @@ fn singular<L: Level>(coefficient: L::Ext) -> bool {
     coefficient.mul(coefficient).same(L::Ext::from_u64(4))
 }
 
-/// The low byte is the entangled-basis hint from the C reference: its least
-/// bit says whether `A` is a square, and the next seven bits are the index
-/// `b` or `n`. The high byte is zero. Index `0` on a non-zero curve is the
-/// reference's search fallback, and this verifier refuses it instead of
-/// searching. `A = 0` has the precomputed basis and accepts only hint `0`.
+/// The byte `ec_curve_to_basis_2f_to_hint` returns: `(index << 1) | hint_A`.
 ///
-/// A hint that fails these conditions cannot yield the basis. The order
-/// `2^e` test of the resulting points is part of Algorithm 3 and is not run.
-fn basis_hint<L: Level>(coefficient: L::Ext, hint: u16) -> bool {
-    if hint > u16::from(u8::MAX) {
-        return false;
-    }
-    if coefficient.is_zero() {
-        return hint == 0;
-    }
-    let hint = hint as u8;
-    let hint_square = hint & 1 == 1;
-    let index = hint >> 1;
-    if index == 0 || hint_square != coefficient.sqrt().is_some() {
-        return false;
-    }
-    let x = if hint_square {
-        // x(P) = −A / (1 + i·b), with b the seven-bit index.
-        let z = L::Ext::one().add(L::ext_i().mul(L::Ext::from_u64(u64::from(index))));
-        let Some(inv) = z.inv() else {
-            return false;
-        };
-        coefficient.mul(inv).negate()
+/// Square `A`: the first `b` in `1..=127` for which `1 + b^2` is a non-square
+/// in `F_p` and `x(P) = −A/(1 + i·b)` is a non-square on the curve.
+/// Non-square `A`: the first `n` in `1..=127` for which `x(P) = n·A` is on
+/// the curve. That is the C search order. No index in the range is a
+/// fallback; absence is [`VerifyError::Basis`], and key generation
+/// regenerates the key. `A = 0` is not handled here.
+pub fn c_basis_hint<L: Level>(coefficient: L::Ext) -> Option<u8> {
+    if coefficient.is_square() {
+        let mut n = 1u32;
+        while n <= 127 {
+            let b = n;
+            let one_plus = L::Base::from_u64(u64::from(b) * u64::from(b) + 1);
+            n += 1;
+            if one_plus.is_square() {
+                continue;
+            }
+            let z = L::Ext::one().add(L::ext_i().mul(L::Ext::from_u64(u64::from(b))));
+            let Some(inv) = z.inv() else {
+                continue;
+            };
+            let x = coefficient.mul(inv).negate();
+            if !x.is_square() && montgomery_rhs::<L>(coefficient, x).is_square() {
+                return Some((b as u8) << 1 | 1);
+            }
+        }
+        None
     } else {
-        coefficient.mul(L::Ext::from_u64(u64::from(index)))
-    };
-    if x.sqrt().is_some() {
-        return false;
+        let mut n = 1u32;
+        let mut x = coefficient;
+        while n < 128 {
+            if montgomery_rhs::<L>(coefficient, x).is_square() {
+                return Some((n as u8) << 1);
+            }
+            x = x.add(coefficient);
+            n += 1;
+        }
+        None
     }
-    montgomery_rhs::<L>(coefficient, x).sqrt().is_some()
 }
 
 fn montgomery_rhs<L: Level>(coefficient: L::Ext, x: L::Ext) -> L::Ext {
@@ -265,10 +274,9 @@ pub fn prepared(level: &str) -> Result<Prepared, VerifyError> {
 }
 
 fn sample<L: Level>() -> Option<(Vec<u8>, &'static [u8], Vec<u8>)> {
-    let public_key = vec![0u8; L::PUBLIC_KEY_LEN];
+    let public_key = reference_public_key(L::NAME)?.to_vec();
     let message = b"shekyl-prism";
-    let identity = &public_key[..L::FP2_LEN];
-    let j = smallest_challenge_index::<L>(identity, message)?;
+    let j = smallest_challenge_index::<L>(&public_key, message)?;
     let mut signature = vec![0u8; L::SIGNATURE_LEN];
     let one = L::ext_encode(L::Ext::one());
     let at = 2 * L::FP2_LEN;
@@ -276,6 +284,64 @@ fn sample<L: Level>() -> Option<(Vec<u8>, &'static [u8], Vec<u8>)> {
     let end = signature.len();
     signature[end - 2..].copy_from_slice(&j.to_le_bytes());
     Some((public_key, message, signature))
+}
+
+/// `A` from the C tree's key generation, one row per NIST level.
+///
+/// Lines are `<level-name> <hex of A> <hint byte>`. The hint is what
+/// `ec_curve_to_basis_2f_to_hint` returned. It is not part of the public key.
+const C_KEYS: &str = include_str!("../testdata/c_basis_hints.txt");
+
+struct CKey {
+    name: &'static str,
+    key: Vec<u8>,
+    #[cfg_attr(not(test), allow(dead_code))]
+    hint: u8,
+}
+
+fn c_keys() -> &'static [CKey] {
+    use std::sync::OnceLock;
+    static KEYS: OnceLock<Vec<CKey>> = OnceLock::new();
+    KEYS.get_or_init(|| {
+        C_KEYS
+            .lines()
+            .filter(|line| !line.is_empty() && !line.starts_with('#'))
+            .map(|line| {
+                let mut parts = line.split_whitespace();
+                let name = match parts.next().expect("level") {
+                    "NIST-I" => Level1::NAME,
+                    "NIST-III" => Level3::NAME,
+                    "NIST-V" => Level5::NAME,
+                    other => panic!("unknown level {other}"),
+                };
+                let key = decode_hex(parts.next().expect("key"));
+                let hint: u8 = parts.next().expect("hint").parse().expect("hint byte");
+                CKey { name, key, hint }
+            })
+            .collect()
+    })
+}
+
+fn reference_public_key(name: &str) -> Option<&'static [u8]> {
+    c_keys()
+        .iter()
+        .find(|row| row.name == name)
+        .map(|row| row.key.as_slice())
+}
+
+#[cfg(test)]
+fn reference_hint(name: &str) -> Option<u8> {
+    c_keys()
+        .iter()
+        .find(|row| row.name == name)
+        .map(|row| row.hint)
+}
+
+fn decode_hex(text: &str) -> Vec<u8> {
+    (0..text.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&text[i..i + 2], 16).expect("hex"))
+        .collect()
 }
 
 #[cfg(test)]
@@ -357,20 +423,24 @@ mod tests {
     }
 
     #[test]
-    fn zero_y_is_refused_and_one_is_below_its_negative() {
+    fn the_starting_curve_is_refused() {
         let pk = vec![0u8; Level1::PUBLIC_KEY_LEN];
-        let mut sig = vec![0u8; Level1::SIGNATURE_LEN];
+        let sig = vec![0u8; Level1::SIGNATURE_LEN];
+        assert_eq!(
+            verify::<Level1>(&pk, b"shekyl-prism", &sig),
+            Err(VerifyError::Origin)
+        );
+    }
+
+    #[test]
+    fn zero_y_is_refused() {
+        let pk = Level1::ext_encode(Ext1::from_u64(3));
+        assert_eq!(pk.len(), Level1::PUBLIC_KEY_LEN);
+        let sig = vec![0u8; Level1::SIGNATURE_LEN];
         assert_eq!(
             verify::<Level1>(&pk, b"shekyl-prism", &sig),
             Err(VerifyError::Sign)
         );
-        let one = Level1::ext_encode(Ext1::one());
-        let at = 2 * Level1::FP2_LEN;
-        sig[at..at + one.len()].copy_from_slice(&one);
-        // j = 0 is unlikely to be prime, so the sign check has passed and
-        // the next refusal is the degree.
-        let err = verify::<Level1>(&pk, b"shekyl-prism", &sig);
-        assert!(err == Err(VerifyError::Composite) || err == Err(VerifyError::Relation));
     }
 
     #[test]
@@ -386,38 +456,27 @@ mod tests {
     }
 
     #[test]
-    fn flipping_the_hint_does_not_change_the_challenge_and_is_refused() {
-        let message = b"shekyl-prism";
-        let mut key = vec![0u8; Level1::PUBLIC_KEY_LEN];
-        let identity = key[..Level1::FP2_LEN].to_vec();
-        let s_at_zero = challenge_s::<Level1>(&identity, message, 0);
-        key[Level1::FP2_LEN] = 1;
-        let s_flipped = challenge_s::<Level1>(&key[..Level1::FP2_LEN], message, 0);
-        assert_eq!(s_at_zero, s_flipped);
-        let mut sig = vec![0u8; Level1::SIGNATURE_LEN];
-        let one = Level1::ext_encode(Ext1::one());
-        let at = 2 * Level1::FP2_LEN;
-        sig[at..at + one.len()].copy_from_slice(&one);
-        assert_eq!(
-            verify::<Level1>(&key, message, &sig),
-            Err(VerifyError::Basis)
-        );
-        // A non-zero curve does not accept the search-fallback index.
-        let mut nonzero = Level1::ext_encode(Ext1::from_u64(3));
-        nonzero.extend_from_slice(&[0, 0]);
-        assert_eq!(nonzero.len(), Level1::PUBLIC_KEY_LEN);
-        assert_eq!(
-            verify::<Level1>(&nonzero, message, &sig),
-            Err(VerifyError::Basis)
-        );
+    fn the_derived_index_equals_the_c_hint() {
+        for name in [Level1::NAME, Level3::NAME, Level5::NAME] {
+            let key = reference_public_key(name).expect(name);
+            let hint = reference_hint(name).expect(name);
+            let coefficient = match name {
+                "NIST-I" => Level1::ext_decode(key).map(c_basis_hint::<Level1>),
+                "NIST-III" => Level3::ext_decode(key).map(c_basis_hint::<Level3>),
+                "NIST-V" => Level5::ext_decode(key).map(c_basis_hint::<Level5>),
+                _ => None,
+            };
+            assert_eq!(coefficient, Some(Some(hint)), "{name}");
+        }
     }
 
     #[test]
     fn a_prime_index_reaches_relation_without_being_checked_for_smallest() {
         let message = b"shekyl-prism";
-        let pk = vec![0u8; Level1::PUBLIC_KEY_LEN];
-        let identity = &pk[..Level1::FP2_LEN];
-        let j = smallest_challenge_index::<Level1>(identity, message).expect("a prime degree");
+        let pk = reference_public_key(Level1::NAME)
+            .expect("level I key")
+            .to_vec();
+        let j = smallest_challenge_index::<Level1>(&pk, message).expect("a prime degree");
         let mut sig = vec![0u8; Level1::SIGNATURE_LEN];
         let one = Level1::ext_encode(Ext1::one());
         let at = 2 * Level1::FP2_LEN;
@@ -435,7 +494,7 @@ mod tests {
             let err = verify::<Level1>(&pk, message, &later);
             // A different index is a different degree. It is refused when
             // that degree is composite, and it is not refused for being larger.
-            if degree_is_prime(Level1::E, &challenge_s::<Level1>(identity, message, j + 1)) {
+            if degree_is_prime(Level1::E, &challenge_s::<Level1>(&pk, message, j + 1)) {
                 assert_eq!(err, Err(VerifyError::Relation));
             } else {
                 assert_eq!(err, Err(VerifyError::Composite));

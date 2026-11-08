@@ -47,8 +47,9 @@ cargo run -p prism-bench --release
 python3 scripts/check_c_reference.py
 ```
 
-`cargo run -p prism-bench` prints wall time and the userspace counter
-(`cntvct_el0` on aarch64, `rdtsc` on x86_64). Until Algorithm 3 exists, that
+`cargo run -p prism-bench` prints the userspace counter
+(`cntvct_el0` on aarch64, `rdtsc` on x86_64) and, after a warm-up, the
+median and the spread of repeated runs. Until Algorithm 3 exists, that
 output is decode, the challenge hash, and one Baillie–PSW test.
 `outcome=relation` means those checks passed and the isogeny equality is
 still not an acceptance. The consensus gate is the level III line of

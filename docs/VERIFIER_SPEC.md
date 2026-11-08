@@ -20,7 +20,7 @@ Table 2. `p = f·2^e − 1`. Each `p ≡ 3 (mod 4)`.
 | Prime | `5·2^248 − 1` | `65·2^376 − 1` | `27·2^500 − 1` |
 | `e` | 248 | 376 | 500 |
 | `λ` | 128 | 192 | 256 |
-| Public key | 66 bytes | 98 bytes | 130 bytes |
+| Public key | 64 bytes | 96 bytes | 128 bytes |
 | §5 chain length | 248 | 376 | 500 |
 | salt-PRISM `a` | 192 | 256 | 320 |
 | salt-PRISM signature | 191 bytes | 272 bytes | 350 bytes |
@@ -30,20 +30,27 @@ A level is a type. A level I encoding is refused by the level V decoder.
 
 The public key is the Montgomery coefficient `A` of `E : y^2 = x^3 + A x^2 + x`
 over `F_{p^2}`, little-endian canonical `fp2` encoding (`(bit length + 7) / 8`
-bytes for each of the two `F_p` components), followed by a 2-byte basis hint.
-`A^2 ≠ 4`, so the curve is nonsingular. A non-canonical field element is a
-refusal.
+bytes for each of the two `F_p` components). It is the key's identity, and
+it is what the challenge hashes. `A = 0` is the starting curve `E0`, whose
+endomorphism ring is public, so anyone could sign for it. That key is
+refused (`Origin`). `A^2 ≠ 4`, so the curve is nonsingular. A non-canonical
+field element is a refusal.
 
-The key's identity is `A` alone. `public_key_identity` is the canonical
-encoding of `A`. That is what the challenge hashes. The hint is a
-verification aid outside the identity. Its low byte is the entangled-basis
-hint: the least bit says whether `A` is a square, and the next seven bits
-are the index that names `x(P)`. The high byte is zero. Index `0` on a
-non-zero curve is the C reference's search fallback, and this verifier
-refuses it rather than searching. `A = 0` has the precomputed basis and
-accepts only hint `0`. A hint that fails these conditions cannot yield the
-basis (`Basis`). The order-`2^e` test of the resulting points is part of
-Algorithm 3 and is not yet run.
+The verifier derives the basis index itself, in the same order as
+`find_nqr_factor` and `find_nA_x_coord` in the C tree. Square tests use the
+norm to `F_p` and a Legendre symbol.
+
+- When `A` is a square: `b` from 1 upward. Skip `b` when `1 + b^2` is a
+  square in `F_p`. Accept the first `b` for which
+  `x(P) = −A / (1 + i·b)` is a non-square on the curve.
+- When `A` is not a square: `n` from 1 upward. Accept the first `n` for
+  which `x(P) = n·A` is on the curve.
+
+The search stops at 127. No index in that range is a fallback. If none
+qualifies, the key is refused (`Basis`) and key generation regenerates it.
+The byte the C function returns is `(index << 1)` with the low bit set when
+`A` is a square. It is not stored in the key. The order-`2^e` test of the
+resulting points is part of Algorithm 3 and is not yet run.
 
 ## Variant
 
@@ -176,7 +183,8 @@ For the authors of ePrint 2026/443:
 `verify` is a pure function of the public key, the message, and the
 signature. It refuses cheapest-first:
 
-- `Length`, then `Canonical`, then `Singular`, then `Basis`, then `Sign`
+- `Length`, then `Canonical`, then `Origin`, then `Singular`, then
+  `Basis`, then `Sign`
 - `Composite` when the one derived `q_j` fails Baillie–PSW
 - `Relation` when every check above passed
 
