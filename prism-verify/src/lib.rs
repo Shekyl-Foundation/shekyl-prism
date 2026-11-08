@@ -215,6 +215,21 @@ mod tests {
     }
 
     #[test]
+    fn a_noncanonical_signature_is_refused_before_the_basis_search() {
+        // The key is canonical, non-zero and nonsingular, so nothing above
+        // `Canonical` can shadow the refusal; every field element of the
+        // signature is out of range. The basis search is the next check
+        // after the decode, so a `Canonical` answer here is what keeps a
+        // junk signature from paying for up to `2λ` Legendre symbols.
+        let pk = key::<Level1>(3);
+        let sig = vec![0xffu8; Level1::SIGNATURE_LEN];
+        assert_eq!(
+            verify::<Level1>(&pk, b"shekyl-prism", &sig),
+            Err(VerifyError::Canonical)
+        );
+    }
+
+    #[test]
     fn zero_y_is_refused() {
         let pk = key::<Level1>(3);
         assert_eq!(pk.len(), Level1::PUBLIC_KEY_LEN);
