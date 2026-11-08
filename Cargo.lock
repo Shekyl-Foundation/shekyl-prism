@@ -101,7 +101,6 @@ name = "prism-verify"
 version = "0.1.0"
 dependencies = [
  "prism-field",
- "prism-isogeny",
  "sha3",
 ]
 

@@ -40,13 +40,17 @@ pub trait Level: Copy + Clone + Eq + Send + Sync + 'static {
     const LAMBDA: u32;
     /// Valuation in `p = f·2^e − 1`.
     const E: u32;
-    /// salt-PRISM `a`. Table 4 counts this many (2,2)-steps at verification.
+    /// §5 chain length. Algorithm 3 walks a `(2^e, 2^e)` chain, so this is
+    /// `e`. salt-PRISM's `a` is a different count and is not this constant.
     const CHAIN_STEPS: u32;
     const FP_LEN: usize;
     const FP2_LEN: usize;
     const PUBLIC_KEY_LEN: usize;
-    const SIGNATURE_LEN: usize;
+    /// Byte length of `s_j`. It is derived, not carried in the signature.
     const S_LEN: usize;
+    /// Bytes of the challenge index `j` carried at the end of a signature.
+    const INDEX_LEN: usize;
+    const SIGNATURE_LEN: usize;
 
     fn fp_zero() -> Self::Base;
     fn ext_i() -> Self::Ext;
@@ -65,7 +69,6 @@ macro_rules! nist_level {
         $name:literal,
         $lambda:expr,
         $e:expr,
-        $steps:expr,
         $fp:ident,
         $fp2:ident,
         [$($limb:expr),+ $(,)?]
@@ -185,12 +188,13 @@ macro_rules! nist_level {
                 const NAME: &'static str = $name;
                 const LAMBDA: u32 = $lambda;
                 const E: u32 = $e;
-                const CHAIN_STEPS: u32 = $steps;
+                const CHAIN_STEPS: u32 = $e;
                 const FP_LEN: usize = <$fp>::ENCODED_LENGTH;
                 const FP2_LEN: usize = <$fp2>::ENCODED_LENGTH;
                 const PUBLIC_KEY_LEN: usize = <$fp2>::ENCODED_LENGTH + 2;
                 const S_LEN: usize = (($e - 1) as usize).div_ceil(8);
-                const SIGNATURE_LEN: usize = 5 * <$fp2>::ENCODED_LENGTH + Self::S_LEN;
+                const INDEX_LEN: usize = 2;
+                const SIGNATURE_LEN: usize = 5 * <$fp2>::ENCODED_LENGTH + Self::INDEX_LEN;
 
                 fn fp_zero() -> Self::Base {
                     <$fp>::ZERO
@@ -230,7 +234,6 @@ nist_level!(
     "NIST-I",
     128,
     248,
-    192,
     FpLevel1,
     Fp2Level1,
     [
@@ -247,7 +250,6 @@ nist_level!(
     "NIST-III",
     192,
     376,
-    256,
     FpLevel3,
     Fp2Level3,
     [
@@ -266,7 +268,6 @@ nist_level!(
     "NIST-V",
     256,
     500,
-    320,
     FpLevel5,
     Fp2Level5,
     [
@@ -305,7 +306,9 @@ mod tests {
         assert!(root.mul(root).same(four));
         assert_eq!(L::FP_LEN * 2, L::FP2_LEN);
         assert_eq!(L::PUBLIC_KEY_LEN, L::FP2_LEN + 2);
-        assert_eq!(L::SIGNATURE_LEN, 5 * L::FP2_LEN + L::S_LEN);
+        assert_eq!(L::INDEX_LEN, 2);
+        assert_eq!(L::CHAIN_STEPS, L::E);
+        assert_eq!(L::SIGNATURE_LEN, 5 * L::FP2_LEN + L::INDEX_LEN);
     }
 
     fn hex_bytes(text: &str) -> Vec<u8> {
@@ -324,7 +327,8 @@ mod tests {
             "0200000000000000000000000000000000000000000000000000000000000000",
         );
         assert_eq!(Level1::PUBLIC_KEY_LEN, 66);
-        assert_eq!(Level1::SIGNATURE_LEN, 351);
+        assert_eq!(Level1::SIGNATURE_LEN, 322);
+        assert_eq!(Level1::CHAIN_STEPS, 248);
     }
 
     #[test]
@@ -336,7 +340,8 @@ mod tests {
             "020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
         );
         assert_eq!(Level3::PUBLIC_KEY_LEN, 98);
-        assert_eq!(Level3::SIGNATURE_LEN, 527);
+        assert_eq!(Level3::SIGNATURE_LEN, 482);
+        assert_eq!(Level3::CHAIN_STEPS, 376);
     }
 
     #[test]
@@ -348,7 +353,8 @@ mod tests {
             "02000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
         );
         assert_eq!(Level5::PUBLIC_KEY_LEN, 130);
-        assert_eq!(Level5::SIGNATURE_LEN, 703);
+        assert_eq!(Level5::SIGNATURE_LEN, 642);
+        assert_eq!(Level5::CHAIN_STEPS, 500);
     }
 
     #[test]

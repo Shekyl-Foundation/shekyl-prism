@@ -7,9 +7,10 @@ transaction.
 The gap it exists for is in the wallet derivation: each output's ML-DSA seed
 is expanded from the combined shared secret, which the sender computed. A
 later design round can consider PRISM as a third mandatory authorization leg
-only after the level III verification cost has been measured on the floor
-device (Raspberry Pi 4 Model B). Until that number exists, this repository
-does not propose that leg.
+only after the level III cost of Algorithm 3, at `e` steps, has been
+measured on the floor device (Raspberry Pi 4 Model B). Until that chain
+exists and that number is measured, this repository does not propose that
+leg.
 
 ## What is here
 
@@ -47,9 +48,10 @@ python3 scripts/check_c_reference.py
 ```
 
 `cargo run -p prism-bench` prints wall time and the userspace counter
-(`cntvct_el0` on aarch64, `rdtsc` on x86_64). The synthetic input's challenge
-degree is not prime: `outcome=composite` means the chain of length `a`
-finished and Baillie–PSW refused `q`. That line is not an acceptance. The
-consensus gate is the level III line on the floor device. Levels I and V are
-the same run, so the cost curve is measured. A number from any other machine
-is not that gate.
+(`cntvct_el0` on aarch64, `rdtsc` on x86_64). Until Algorithm 3 exists, that
+output is decode, the challenge hash, and one Baillie–PSW test.
+`outcome=relation` means those checks passed and the isogeny equality is
+still not an acceptance. The consensus gate is the level III line of
+Algorithm 3 at `e` steps on the floor device. Do not run that gate before
+the chain exists. Levels I and V are the same run, so the cost curve is
+measured. A number from any other machine is not that gate.

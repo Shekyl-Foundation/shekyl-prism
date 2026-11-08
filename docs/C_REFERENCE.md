@@ -18,5 +18,11 @@ the verifier quirks the spec records:
 - `src/verification/ref/lvlx/verify.c` calls
   `theta_chain_compute_and_eval_verify`
 
+`theta_chain_compute_and_eval_verify` is the known-answer source for
+Algorithm 3's chain, compared at the function level: the same kernel
+inputs, the codomain, and the evaluated images, with the chain length as
+a parameter. The salt-PRISM wrapper around that function is not the
+encoding this workspace checks.
+
 A match against that verifier is a match against salt-PRISM, including those
 quirks. It is not conformance to `docs/VERIFIER_SPEC.md`.
