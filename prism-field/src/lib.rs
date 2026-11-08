@@ -3,7 +3,12 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! The three primes in Table 2 of ePrint 2026/443, instantiated with `fp2`.
+//! The three primes in Table 2 of ePrint 2026/443, instantiated with `fp2`,
+//! and the byte layout each of those levels encodes.
+//!
+//! A level is a type. The encoding lengths and the challenge index below are
+//! part of that type's contract, so a level I encoding is refused by the
+//! level V decoder and no caller re-derives a length from a second constant.
 //!
 //! `fp2` 0.6.0 is MIT OR Apache-2.0. Its default feature is `test-utils`, so
 //! this crate turns default features off. Packed arithmetic stays off as well:
@@ -15,6 +20,58 @@
 
 use fp2::define_fp2_from_type;
 use fp2::define_fp_core;
+
+/// The challenge index the signer searched for and the signature carries.
+///
+/// State-shaped: it is the signer's counter, not a function of the key and
+/// the message, so nothing recomputes it from the inputs. Its canonical
+/// bytes are absorbed by the challenge hash, which makes
+/// [`Self::to_canonical_bytes`] the contract that derivation relies on:
+/// changing that encoding changes every challenge degree.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ChallengeIndex(u16);
+
+impl ChallengeIndex {
+    /// Bytes the index occupies at the end of a signature.
+    pub const WIDTH: usize = core::mem::size_of::<u16>();
+
+    /// The first index the signer tries.
+    pub const FIRST: Self = Self(u16::MIN);
+
+    /// The last index the signer may try. Exhausting the range is a signing
+    /// error: there is no fallback degree.
+    pub const LAST: Self = Self(u16::MAX);
+
+    /// Canonical encoding: little-endian, the bytes the challenge hashes.
+    pub const fn to_canonical_bytes(self) -> [u8; Self::WIDTH] {
+        self.0.to_le_bytes()
+    }
+
+    /// The index a signature carries. Every bit pattern names an index, so
+    /// this cannot fail; a degree it does not name is a `Composite` refusal.
+    pub const fn from_canonical_bytes(bytes: [u8; Self::WIDTH]) -> Self {
+        Self(u16::from_le_bytes(bytes))
+    }
+
+    /// The next index, or `None` once the search range is exhausted.
+    pub const fn next(self) -> Option<Self> {
+        match self.0.checked_add(1) {
+            Some(value) => Some(Self(value)),
+            None => None,
+        }
+    }
+
+    /// Every index the signer may search, smallest first.
+    pub fn search_order() -> impl Iterator<Item = Self> {
+        (u16::MIN..=u16::MAX).map(Self)
+    }
+}
+
+impl core::fmt::Display for ChallengeIndex {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
 /// Field operations the isogeny step uses. `inv` of zero is `None`.
 pub trait Field: Copy {
@@ -46,13 +103,20 @@ pub trait Level: Copy + Clone + Eq + Send + Sync + 'static {
     /// §5 chain length. Algorithm 3 walks a `(2^e, 2^e)` chain, so this is
     /// `e`. salt-PRISM's `a` is a different count and is not this constant.
     const CHAIN_STEPS: u32;
+    /// Bit width of the challenge scalar `s`: Algorithm 3 takes an odd `s`
+    /// with `0 < s < 2^{e−1}`, so this is `e − 1`.
+    const CHALLENGE_BITS: u32;
     const FP_LEN: usize;
     const FP2_LEN: usize;
     const PUBLIC_KEY_LEN: usize;
-    /// Byte length of `s_j`. It is derived, not carried in the signature.
+    /// Byte length of `s`, which is [`Self::CHALLENGE_BITS`] rounded up. It
+    /// is derived, not carried in the signature.
     const S_LEN: usize;
-    /// Bytes of the challenge index `j` carried at the end of a signature.
+    /// Bytes of the challenge index carried at the end of a signature.
     const INDEX_LEN: usize;
+    /// Field elements a signature carries: `A_sig`, `x(P)`, `y(P)`, `x(Q)`,
+    /// `y(Q)`.
+    const SIGNATURE_ELEMENTS: usize;
     const SIGNATURE_LEN: usize;
 
     fn fp_zero() -> Self::Base;
@@ -77,7 +141,17 @@ macro_rules! nist_level {
         [$($limb:expr),+ $(,)?]
     ) => {
         pub mod $modname {
-            use super::{define_fp2_from_type, define_fp_core, Field, Level};
+            use super::{define_fp2_from_type, define_fp_core, ChallengeIndex, Field, Level};
+
+            // Two facts the rest of the workspace reads off a level without
+            // re-testing: the challenge scalar occupies at least one byte, so
+            // its derivation may touch both ends of the buffer; and
+            // `p = f·2^e − 1` exceeds `2^64`, so every `u64` this crate lifts
+            // into the field is already canonical.
+            const _: () = assert!(
+                $e > 64,
+                "a level needs e > 64: one challenge byte, and a prime above 2^64"
+            );
 
             define_fp_core!(
                 typename = $fp,
@@ -198,12 +272,15 @@ macro_rules! nist_level {
                 const LAMBDA: u32 = $lambda;
                 const E: u32 = $e;
                 const CHAIN_STEPS: u32 = $e;
+                const CHALLENGE_BITS: u32 = $e - 1;
                 const FP_LEN: usize = <$fp>::ENCODED_LENGTH;
                 const FP2_LEN: usize = <$fp2>::ENCODED_LENGTH;
                 const PUBLIC_KEY_LEN: usize = <$fp2>::ENCODED_LENGTH;
-                const S_LEN: usize = (($e - 1) as usize).div_ceil(8);
-                const INDEX_LEN: usize = 2;
-                const SIGNATURE_LEN: usize = 5 * <$fp2>::ENCODED_LENGTH + Self::INDEX_LEN;
+                const S_LEN: usize = (Self::CHALLENGE_BITS as usize).div_ceil(8);
+                const INDEX_LEN: usize = ChallengeIndex::WIDTH;
+                const SIGNATURE_ELEMENTS: usize = 5;
+                const SIGNATURE_LEN: usize =
+                    Self::SIGNATURE_ELEMENTS * <$fp2>::ENCODED_LENGTH + Self::INDEX_LEN;
 
                 fn fp_zero() -> Self::Base {
                     <$fp>::ZERO
@@ -296,7 +373,7 @@ pub const FIELD_BACKEND: &str = "scalar";
 
 #[cfg(test)]
 mod tests {
-    use super::{Field, Level, Level1, Level3, Level5};
+    use super::{ChallengeIndex, Field, Level, Level1, Level3, Level5};
 
     fn hex(bytes: &[u8]) -> String {
         bytes.iter().map(|b| format!("{b:02x}")).collect()
@@ -315,9 +392,14 @@ mod tests {
         assert!(root.mul(root).same(four));
         assert_eq!(L::FP_LEN * 2, L::FP2_LEN);
         assert_eq!(L::PUBLIC_KEY_LEN, L::FP2_LEN);
-        assert_eq!(L::INDEX_LEN, 2);
+        assert_eq!(L::INDEX_LEN, ChallengeIndex::WIDTH);
         assert_eq!(L::CHAIN_STEPS, L::E);
-        assert_eq!(L::SIGNATURE_LEN, 5 * L::FP2_LEN + L::INDEX_LEN);
+        assert_eq!(L::CHALLENGE_BITS, L::E - 1);
+        assert_eq!(L::S_LEN, (L::CHALLENGE_BITS as usize).div_ceil(8));
+        assert_eq!(
+            L::SIGNATURE_LEN,
+            L::SIGNATURE_ELEMENTS * L::FP2_LEN + L::INDEX_LEN
+        );
     }
 
     fn hex_bytes(text: &str) -> Vec<u8> {
@@ -379,6 +461,25 @@ mod tests {
         let minus_five = <Level1 as Level>::Base::zero().sub(base(5));
         assert!(re.same(minus_five));
         assert!(im.same(base(10)));
+    }
+
+    #[test]
+    fn the_challenge_index_round_trips_little_endian() {
+        assert_eq!(ChallengeIndex::WIDTH, 2);
+        assert_eq!(ChallengeIndex::FIRST.to_canonical_bytes(), [0x00, 0x00]);
+        assert_eq!(ChallengeIndex::LAST.to_canonical_bytes(), [0xff, 0xff]);
+        assert_eq!(ChallengeIndex::LAST.next(), None);
+        assert_eq!(
+            ChallengeIndex::FIRST.next(),
+            Some(ChallengeIndex::from_canonical_bytes([0x01, 0x00]))
+        );
+        let index = ChallengeIndex::from_canonical_bytes([0x34, 0x12]);
+        assert_eq!(index.to_canonical_bytes(), [0x34, 0x12]);
+        assert_eq!(index.to_string(), "4660");
+        assert!(ChallengeIndex::FIRST < index && index < ChallengeIndex::LAST);
+        let mut order = ChallengeIndex::search_order();
+        assert_eq!(order.next(), Some(ChallengeIndex::FIRST));
+        assert_eq!(order.last(), Some(ChallengeIndex::LAST));
     }
 
     #[test]

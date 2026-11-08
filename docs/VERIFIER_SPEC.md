@@ -41,16 +41,76 @@ The verifier derives the basis index itself, in the same order as
 norm to `F_p` and a Legendre symbol.
 
 - When `A` is a square: `b` from 1 upward. Skip `b` when `1 + b^2` is a
-  square in `F_p`. Accept the first `b` for which
-  `x(P) = −A / (1 + i·b)` is a non-square on the curve.
+  square in `F_p`. Accept the first `b` for which `x(P) = −A / (1 + i·b)` is
+  on the curve. The test is the C's inversion-free form, `A^2(z − 1) − z^2`
+  a non-square for `z = 1 + i·b`: with `z` of non-square norm and `A` a
+  square, the cofactor `A/z^3` of the curve equation is a non-square, so
+  that character is the opposite of the curve equation's. The same identity
+  makes the C's debug-build check `x(P)` a non-square a consequence rather
+  than a test, so this verifier does not spend a Legendre symbol on it.
 - When `A` is not a square: `n` from 1 upward. Accept the first `n` for
   which `x(P) = n·A` is on the curve.
 
-The search stops at 127. No index in that range is a fallback. If none
-qualifies, the key is refused (`Basis`) and key generation regenerates it.
 The byte the C function returns is `(index << 1)` with the low bit set when
-`A` is a square. It is not stored in the key. The order-`2^e` test of the
+`A` is a square. It is not stored in the key, so the seven-bit width of that
+byte is not a ceiling on the search: indices above 127 are searched too,
+which is where the C's own fallback lives. The order-`2^e` test of the
 resulting points is part of Algorithm 3 and is not yet run.
+
+### The search covers the reference's fallback, under a cost bound
+
+Ruled 2026-11-08, revised the same day. The search runs from index 1 to `2λ`
+— 256, 384, 512 — and absence within that bound is a refusal (`Basis`). It
+reaches the same index the C reference does, by one search rather than two.
+
+`find_nqr_factor` and `find_nA_x_coord` loop without a bound and compress
+the index into seven bits, returning `hint = 0` when it does not fit.
+`ec_curve_to_basis_2f_from_hint` reads a stored index directly and reads the
+zero as "search again from `start = 128`". Both of its paths name the
+*smallest* qualifying index: a stored index is smallest because generation
+searched from 1, and the restart is smallest at or above 128 precisely
+because every index below 128 has already failed. A single search from 1
+therefore answers both cases, and the verifier needs no hint byte and no
+second search to agree with the reference.
+
+The one divergence left is the bound itself, which is a cost bound and not
+an encoding one. A verifier cannot loop without a bound, because whoever
+picks `A` picks the search length. `2λ` is chosen so that the divergence is
+no likelier than breaking the level:
+
+| Branch | Trials within `2λ` candidates | Probability no index qualifies |
+| --- | --- | --- |
+| `A` not a square | all `2λ`, each on the curve with probability about 1/2 | about `2^-2λ` |
+| `A` a square | about `λ`, the rest spent on the `1 + b^2` non-square filter | about `2^-λ` |
+
+So a key the C tree generates and this verifier refuses arises with
+probability at most about `2^-λ`, which is the level's own security target
+and the bar the C's comment aims at when it calls the fallback negligible.
+The superseded ceiling of 127 was weaker than both: it put the square branch
+at about `2^-63` at every level, because only about 63 of the 127 candidates
+survive the filter.
+
+The worst-case cost is `2λ` Legendre symbols, a length the sender chooses
+with `A`. Measured over 4000 random `A` per level on the development
+machine, alongside the `prism-bench` median for the whole of `verify`:
+
+| Level | Mean index | Per candidate | Worst case at `2λ` | `verify` median | Worst case as a share |
+| --- | --- | --- | --- | --- | --- |
+| NIST-I | 4.8 | 1.64 µs | 0.42 ms | 1.56 ms | +27% |
+| NIST-III | 5.3 | 2.62 µs | 1.01 ms | 2.28 ms | +44% |
+| NIST-V | 3.8 | 4.56 µs | 2.34 ms | 3.08 ms | +76% |
+
+An honest key costs the mean, 8–17 µs. The worst case is reachable on
+purpose — a sender picks `A` — and raising the bound from 127 to `2λ` raises
+it from about 0.58 ms to 2.34 ms at NIST V. That is a cost increase and not
+a category change: the ceiling stays below the cost of one `verify`, so a
+crafted `A` can at most roughly double the work a junk signature causes, and
+a node must rate-limit at `ms` scale either way. The ordering below keeps
+even that off the path of most junk: every free refusal runs first.
+
+The reopening criterion is a deployment measurement where that doubling
+matters, at which point the bound moves and the probability above moves with
+it.
 
 ## Variant
 
@@ -93,8 +153,14 @@ Ruled 2026-11-07. The challenge degree is found by a counter the signer
 searches and the signature carries. The verifier tests exactly one `q`.
 
 - `s_j = cSHAKE256(N = "", S = "shekyl-prism-challenge-v1"; public_key_identity ‖ message ‖ LE16(j))`,
-  read as `e−1` bits little-endian, low bit forced to 1, bits at and above
-  `e−1` cleared. The customization string stays `-v1`: nothing has consumed it.
+  read as `⌈(e−1)/8⌉` bytes little-endian, low bit forced to 1, bits at and
+  above `e−1` cleared. The top byte keeps `((e−2) mod 8) + 1` bits, which is
+  `1..=8`: a width that is a multiple of eight keeps the whole byte, and no
+  width keeps none of it, so the projection needs no special case. The
+  customization string stays `-v1`: nothing has consumed it.
+- The public key's identity is the byte string the key decoder accepted, at
+  `PUBLIC_KEY_LEN` bytes. The signer and the verifier reach the hash through
+  the same decoder, so neither can absorb a different string.
 - `q_j = 2^{2e−1} − s_j^2`.
 - The signer takes the smallest `j` in `0..=65535` for which `q_j` passes
   Baillie–PSW, so signing is deterministic for a given key and message.
@@ -121,6 +187,13 @@ for some `0 ≤ t < r`. No random bases. The arithmetic is variable-time
 Montgomery multiplication on 64-bit limbs: the degree is public.
 `ibz_probab_prime(n, 20)` in the C tree is not this test. Accepting a
 composite `q` would let the isogeny factor into small degrees.
+
+Two is in the trial-division table, so parity is the table's own first step
+and not a case beside it. Each table entry is compared against the whole
+integer, not its low limb: a wide `n` whose least significant 64 bits spell
+a small prime is not that prime, and the division is what refuses it. An
+integer wider than the module's 1024 bits is refused rather than truncated,
+and each level's `2e−1` is asserted to fit that width at compile time.
 
 The C reference stores a salt in a `uint32_t`, absorbs `sizeof(uint32_t)`
 native-endian bytes in `hash_to_challenge`, and when the value is
@@ -181,12 +254,24 @@ For the authors of ePrint 2026/443:
 ## What `verify` decides today
 
 `verify` is a pure function of the public key, the message, and the
-signature. It refuses cheapest-first:
+signature. It refuses cheapest-first, and an input that fails more than one
+check is refused with the earliest of them:
 
-- `Length`, then `Canonical`, then `Origin`, then `Singular`, then
-  `Basis`, then `Sign`
-- `Composite` when the one derived `q_j` fails Baillie–PSW
-- `Relation` when every check above passed
+| Order | Refusal | Cost |
+| --- | --- | --- |
+| 1 | `Length` | two integer comparisons, on both inputs before either decode |
+| 2 | `Canonical` | six field decodes |
+| 3 | `Origin` | a zero test on `A` |
+| 4 | `Singular` | one `F_{p^2}` multiplication |
+| 5 | `Sign` | two encodings and a byte comparison on an element already decoded |
+| 6 | `Basis` | up to `2λ` Legendre symbols — 256, 384, 512 — a length the sender chooses with `A` |
+| 7 | `Composite` | one cSHAKE256 squeeze and one Baillie–PSW test — more than everything above it together |
+| 8 | `Relation` | every check above passed |
+
+The order of `Sign` and `Basis` is load-bearing: the basis search is the one
+public check whose length a sender controls, so the free comparison on
+`y(P_sig)` runs first and a junk signature never pays for the search. The
+`VerifyError` variants are declared in this order and compare in it.
 
 `Relation` is the fail-closed stand-in for Algorithm 3 steps 3–8. It is not
 an authorization decision. Nothing in this crate returns success for a

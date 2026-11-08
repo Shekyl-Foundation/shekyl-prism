@@ -10,25 +10,41 @@
 //! condition. `Relation` is what a signature gets once the public checks
 //! have passed, so a missing isogeny equality cannot be mistaken for a
 //! valid authorization. The one-dimensional walk is not one of those checks.
+//!
+//! Each public check owns a module: [`identity`] decodes the key,
+//! [`signature`] decodes the response and normalizes its sign, [`basis`]
+//! re-derives the C reference's basis index, [`challenge`] derives the
+//! challenge scalar, and [`prime`] decides its degree. [`checked`] runs them
+//! in the order [`VerifyError`] declares.
 
 #![forbid(unsafe_code)]
 
+pub mod basis;
+pub mod challenge;
+pub mod identity;
+pub mod level;
 mod prime;
+pub mod reference;
+pub mod signature;
 
-use core::cmp::Ordering;
-use prism_field::{Field, Level, Level1, Level3, Level5};
-use sha3::digest::core_api::CoreWrapper;
-use sha3::digest::{ExtendableOutput, Update, XofReader};
-use sha3::{CShake256, CShake256Core};
+use prism_field::Level;
 
+pub use basis::{basis_hint, search_bound, BasisHint, C_HINT_MAX_INDEX};
+pub use challenge::{smallest_challenge_index, ChallengeScalar, IndexError, CHALLENGE_DOMAIN};
+pub use identity::KeyIdentity;
+pub use level::{verify_level, Nist, UnknownLevel};
 pub use prime::{degree_is_prime, is_baillie_psw};
-
-/// Customization string for the challenge hash. One context, versioned.
-/// Nothing has consumed `-v1`.
-pub const CHALLENGE_DOMAIN: &[u8] = b"shekyl-prism-challenge-v1";
+pub use prism_field::ChallengeIndex;
+pub use reference::{prepared, reference_key, Prepared, PreparedError, ReferenceKey, VectorError};
+pub use signature::{AffinePoint, Response};
 
 /// Why a signature was refused.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+///
+/// Variants are declared in the order [`checked`] runs the checks, cheapest
+/// first, and the derived order is that order. An input that fails more than
+/// one check is refused with the least of them, so an attacker sending junk
+/// pays for the cheapest refusal rather than the most expensive one.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum VerifyError {
     /// The byte string is not this level's length.
     Length,
@@ -38,22 +54,40 @@ pub enum VerifyError {
     Origin,
     /// `A^2 = 4`. The Montgomery curve is singular.
     Singular,
-    /// No basis index in `1..=127` meets the C search. Key generation
-    /// regenerates such a key.
-    Basis,
     /// `y(P)` is zero or not strictly below `y(−P)` in `<_{F_{p^2}}`.
     Sign,
+    /// No basis index within [`search_bound`] meets the C search.
+    ///
+    /// The search is the reference's, including the indices its `start = 128`
+    /// fallback covers, so this refuses only keys whose smallest index
+    /// exceeds `2λ` — about `2^-λ` of keys, the level's own security target.
+    /// `docs/VERIFIER_SPEC.md` records the bound and what it costs.
+    Basis,
     /// `2^{2e−1} − s_j^2` is not a Baillie–PSW prime.
     Composite,
     /// Algorithm 3 steps 3–8 are not yet an accept condition.
     Relation,
 }
 
+impl core::fmt::Display for VerifyError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let reason = match self {
+            Self::Length => "not this level's length",
+            Self::Canonical => "a field element is not canonical",
+            Self::Origin => "the starting curve",
+            Self::Singular => "a singular Montgomery curve",
+            Self::Sign => "y(P) is not the normalized representative",
+            Self::Basis => "no basis index within the search bound",
+            Self::Composite => "the challenge degree is composite",
+            Self::Relation => "the isogeny relation is not an accept condition yet",
+        };
+        f.write_str(reason)
+    }
+}
+
+impl std::error::Error for VerifyError {}
+
 /// Run the public checks, then refuse with [`VerifyError::Relation`].
-///
-/// Order: length, canonical decoding, the starting-curve refusal, the
-/// singular test, the deterministic basis index, the sign test, then one
-/// Baillie–PSW test of `q_j`. The isogeny chain is not run.
 pub fn verify<L: Level>(
     public_key: &[u8],
     message: &[u8],
@@ -63,6 +97,15 @@ pub fn verify<L: Level>(
     Err(VerifyError::Relation)
 }
 
+/// The public checks, cheapest refusal first.
+///
+/// Both lengths come before either decode, because a wrong length is the
+/// cheapest thing to refuse and `Length` must not depend on which field is
+/// wrong. The sign test is a byte comparison on an element already decoded,
+/// so it comes before the basis search, whose length an attacker chooses
+/// with `A` — up to [`search_bound`] Legendre symbols. The challenge hash
+/// and the one Baillie–PSW test are last: they cost more than everything
+/// above them together.
 fn checked<L: Level>(
     public_key: &[u8],
     message: &[u8],
@@ -71,341 +114,59 @@ fn checked<L: Level>(
     if public_key.len() != L::PUBLIC_KEY_LEN || signature.len() != L::SIGNATURE_LEN {
         return Err(VerifyError::Length);
     }
-    let identity = public_key;
-    let coefficient = L::ext_decode(identity).ok_or(VerifyError::Canonical)?;
-    if coefficient.is_zero() {
-        return Err(VerifyError::Origin);
-    }
-    if singular::<L>(coefficient) {
-        return Err(VerifyError::Singular);
-    }
-    if c_basis_hint::<L>(coefficient).is_none() {
-        return Err(VerifyError::Basis);
-    }
-    let y = decode_response_y::<L>(signature)?;
-    if !canonical_sign::<L>(y) {
+    let identity = KeyIdentity::<L>::decode(public_key)?;
+    let response = Response::<L>::decode(signature)?;
+    if !signature::canonical_sign::<L>(response.p.y) {
         return Err(VerifyError::Sign);
     }
-    let j = u16::from_le_bytes([
-        signature[signature.len() - 2],
-        signature[signature.len() - 1],
-    ]);
-    let s = challenge_s::<L>(identity, message, j);
-    if !degree_is_prime(L::E, &s) {
+    basis_hint::<L>(identity.coefficient())?;
+    let scalar = ChallengeScalar::derive(&identity, message, response.index);
+    if !scalar.degree_is_prime::<L>() {
         return Err(VerifyError::Composite);
     }
     Ok(())
 }
 
-/// The smallest `j` in `0..=65535` whose challenge degree is prime.
-///
-/// This is the signer's search. The verifier does not call it, and it does
-/// not check that a carried `j` is the smallest. Exhausting the range is a
-/// signing error: there is no fallback degree.
-pub fn smallest_challenge_index<L: Level>(identity: &[u8], message: &[u8]) -> Option<u16> {
-    if identity.len() != L::FP2_LEN {
-        return None;
-    }
-    for j in 0..=u16::MAX {
-        let s = challenge_s::<L>(identity, message, j);
-        if degree_is_prime(L::E, &s) {
-            return Some(j);
-        }
-    }
-    None
-}
-
-fn decode_response_y<L: Level>(signature: &[u8]) -> Result<L::Ext, VerifyError> {
-    let n = L::FP2_LEN;
-    // A_sig, P.x, P.y, Q.x, Q.y, then j.
-    if signature.len() != 5 * n + L::INDEX_LEN {
-        return Err(VerifyError::Length);
-    }
-    for i in 0..5 {
-        if L::ext_decode(&signature[i * n..(i + 1) * n]).is_none() {
-            return Err(VerifyError::Canonical);
-        }
-    }
-    L::ext_decode(&signature[2 * n..3 * n]).ok_or(VerifyError::Canonical)
-}
-
-fn canonical_sign<L: Level>(y: L::Ext) -> bool {
-    if y.is_zero() {
-        return false;
-    }
-    ext_less::<L>(y, y.negate())
-}
-
-/// `<_{F_{p^2}}`: the real part as an integer in `[0, p)`, then the imaginary part.
-fn ext_less<L: Level>(left: L::Ext, right: L::Ext) -> bool {
-    let (left_re, left_im) = L::ext_parts(left);
-    let (right_re, right_im) = L::ext_parts(right);
-    match int_cmp(&L::base_encode(left_re), &L::base_encode(right_re)) {
-        Ordering::Less => true,
-        Ordering::Greater => false,
-        Ordering::Equal => {
-            int_cmp(&L::base_encode(left_im), &L::base_encode(right_im)) == Ordering::Less
-        }
-    }
-}
-
-fn int_cmp(left: &[u8], right: &[u8]) -> Ordering {
-    for (l, r) in left.iter().rev().zip(right.iter().rev()) {
-        if l != r {
-            return l.cmp(r);
-        }
-    }
-    Ordering::Equal
-}
-
-fn singular<L: Level>(coefficient: L::Ext) -> bool {
-    coefficient.mul(coefficient).same(L::Ext::from_u64(4))
-}
-
-/// The byte `ec_curve_to_basis_2f_to_hint` returns: `(index << 1) | hint_A`.
-///
-/// Square `A`: the first `b` in `1..=127` for which `1 + b^2` is a non-square
-/// in `F_p` and `x(P) = −A/(1 + i·b)` is a non-square on the curve.
-/// Non-square `A`: the first `n` in `1..=127` for which `x(P) = n·A` is on
-/// the curve. That is the C search order. No index in the range is a
-/// fallback; absence is [`VerifyError::Basis`], and key generation
-/// regenerates the key. `A = 0` is not handled here.
-pub fn c_basis_hint<L: Level>(coefficient: L::Ext) -> Option<u8> {
-    if coefficient.is_square() {
-        let mut n = 1u32;
-        while n <= 127 {
-            let b = n;
-            let one_plus = L::Base::from_u64(u64::from(b) * u64::from(b) + 1);
-            n += 1;
-            if one_plus.is_square() {
-                continue;
-            }
-            let z = L::Ext::one().add(L::ext_i().mul(L::Ext::from_u64(u64::from(b))));
-            let Some(inv) = z.inv() else {
-                continue;
-            };
-            let x = coefficient.mul(inv).negate();
-            if !x.is_square() && montgomery_rhs::<L>(coefficient, x).is_square() {
-                return Some((b as u8) << 1 | 1);
-            }
-        }
-        None
-    } else {
-        let mut n = 1u32;
-        let mut x = coefficient;
-        while n < 128 {
-            if montgomery_rhs::<L>(coefficient, x).is_square() {
-                return Some((n as u8) << 1);
-            }
-            x = x.add(coefficient);
-            n += 1;
-        }
-        None
-    }
-}
-
-fn montgomery_rhs<L: Level>(coefficient: L::Ext, x: L::Ext) -> L::Ext {
-    // x^3 + A x^2 + x.
-    let x2 = x.mul(x);
-    x2.mul(x).add(coefficient.mul(x2)).add(x)
-}
-
-fn challenge_s<L: Level>(identity: &[u8], message: &[u8], j: u16) -> Vec<u8> {
-    let mut hasher: CShake256 = CoreWrapper::from_core(CShake256Core::new(CHALLENGE_DOMAIN));
-    hasher.update(identity);
-    hasher.update(message);
-    hasher.update(&j.to_le_bytes());
-    let mut reader = hasher.finalize_xof();
-    let mut s = vec![0u8; L::S_LEN];
-    reader.read(&mut s);
-    if let Some(low) = s.first_mut() {
-        *low |= 1;
-    }
-    let keep = ((L::E - 1) % 8) as u8;
-    if keep != 0 {
-        if let Some(high) = s.last_mut() {
-            *high &= (1u8 << keep) - 1;
-        }
-    }
-    s
-}
-
-/// NIST levels the bench and the tests can name.
-pub fn verify_level(
-    level: &str,
-    public_key: &[u8],
-    message: &[u8],
-    signature: &[u8],
-) -> Result<(), VerifyError> {
-    match level {
-        "1" | "I" => verify::<Level1>(public_key, message, signature),
-        "3" | "III" => verify::<Level3>(public_key, message, signature),
-        "5" | "V" => verify::<Level5>(public_key, message, signature),
-        _ => Err(VerifyError::Length),
-    }
-}
-
-/// A public key, message, and signature whose challenge degree is prime.
-///
-/// The index search is the signer's. A timing run builds this before the
-/// clock starts, then times [`verify_level`].
-pub struct Prepared {
-    pub name: &'static str,
-    pub public_key: Vec<u8>,
-    pub message: &'static [u8],
-    pub signature: Vec<u8>,
-}
-
-/// Build [`Prepared`] for a NIST level name.
-pub fn prepared(level: &str) -> Result<Prepared, VerifyError> {
-    let (name, sample) = match level {
-        "1" | "I" => (Level1::NAME, sample::<Level1>()),
-        "3" | "III" => (Level3::NAME, sample::<Level3>()),
-        "5" | "V" => (Level5::NAME, sample::<Level5>()),
-        _ => return Err(VerifyError::Length),
-    };
-    let (public_key, message, signature) = sample.ok_or(VerifyError::Composite)?;
-    Ok(Prepared {
-        name,
-        public_key,
-        message,
-        signature,
-    })
-}
-
-fn sample<L: Level>() -> Option<(Vec<u8>, &'static [u8], Vec<u8>)> {
-    let public_key = reference_public_key(L::NAME)?.to_vec();
-    let message = b"shekyl-prism";
-    let j = smallest_challenge_index::<L>(&public_key, message)?;
-    let mut signature = vec![0u8; L::SIGNATURE_LEN];
-    let one = L::ext_encode(L::Ext::one());
-    let at = 2 * L::FP2_LEN;
-    signature[at..at + one.len()].copy_from_slice(&one);
-    let end = signature.len();
-    signature[end - 2..].copy_from_slice(&j.to_le_bytes());
-    Some((public_key, message, signature))
-}
-
-/// `A` from the C tree's key generation, one row per NIST level.
-///
-/// Lines are `<level-name> <hex of A> <hint byte>`. The hint is what
-/// `ec_curve_to_basis_2f_to_hint` returned. It is not part of the public key.
-const C_KEYS: &str = include_str!("../testdata/c_basis_hints.txt");
-
-struct CKey {
-    name: &'static str,
-    key: Vec<u8>,
-    #[cfg_attr(not(test), allow(dead_code))]
-    hint: u8,
-}
-
-fn c_keys() -> &'static [CKey] {
-    use std::sync::OnceLock;
-    static KEYS: OnceLock<Vec<CKey>> = OnceLock::new();
-    KEYS.get_or_init(|| {
-        C_KEYS
-            .lines()
-            .filter(|line| !line.is_empty() && !line.starts_with('#'))
-            .map(|line| {
-                let mut parts = line.split_whitespace();
-                let name = match parts.next().expect("level") {
-                    "NIST-I" => Level1::NAME,
-                    "NIST-III" => Level3::NAME,
-                    "NIST-V" => Level5::NAME,
-                    other => panic!("unknown level {other}"),
-                };
-                let key = decode_hex(parts.next().expect("key"));
-                let hint: u8 = parts.next().expect("hint").parse().expect("hint byte");
-                CKey { name, key, hint }
-            })
-            .collect()
-    })
-}
-
-fn reference_public_key(name: &str) -> Option<&'static [u8]> {
-    c_keys()
-        .iter()
-        .find(|row| row.name == name)
-        .map(|row| row.key.as_slice())
-}
-
-#[cfg(test)]
-fn reference_hint(name: &str) -> Option<u8> {
-    c_keys()
-        .iter()
-        .find(|row| row.name == name)
-        .map(|row| row.hint)
-}
-
-fn decode_hex(text: &str) -> Vec<u8> {
-    (0..text.len())
-        .step_by(2)
-        .map(|i| u8::from_str_radix(&text[i..i + 2], 16).expect("hex"))
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prism_field::{Level, Level1, Level3, Level5};
+    use prism_field::{Field, Level, Level1, Level3, Level5};
+    use signature::{canonical_sign, ext_less};
 
     type Ext1 = <Level1 as Level>::Ext;
 
-    fn le(n: u32) -> Vec<u8> {
-        let bytes = n.to_le_bytes();
-        let len = bytes.iter().rposition(|b| *b != 0).unwrap() + 1;
-        bytes[..len].to_vec()
+    fn key<L: Level>(coefficient: u64) -> Vec<u8> {
+        L::ext_encode(L::Ext::from_u64(coefficient))
     }
 
     #[test]
-    fn two_thousand_forty_seven_is_not_a_prime() {
-        assert!(!is_baillie_psw(&le(2047)));
-        assert!(is_baillie_psw(&le(1019)));
-        assert!(!is_baillie_psw(&[1]));
-        assert!(!is_baillie_psw(&le(91)));
-        assert!(!is_baillie_psw(&le(561)));
-    }
-
-    #[test]
-    fn the_three_field_primes_pass_baillie_psw() {
-        assert!(is_baillie_psw(&prime_bytes(5, 248)));
-        assert!(is_baillie_psw(&prime_bytes(65, 376)));
-        assert!(is_baillie_psw(&prime_bytes(27, 500)));
-    }
-
-    fn prime_bytes(cofactor: u128, shift: u32) -> Vec<u8> {
-        let mut value = [0u8; 16];
-        value[..16].copy_from_slice(&cofactor.to_le_bytes());
-        let byte = (shift as usize) / 8;
-        let bit = (shift % 8) as u8;
-        let mut shifted = vec![0u8; value.len() + byte + 1];
-        for (i, b) in value.iter().enumerate() {
-            let low = u16::from(*b) << bit;
-            shifted[i + byte] |= low as u8;
-            if i + byte + 1 < shifted.len() {
-                shifted[i + byte + 1] |= (low >> 8) as u8;
-            }
-        }
-        let mut borrow = 1u8;
-        for b in &mut shifted {
-            let v = i16::from(*b) - i16::from(borrow);
-            if v < 0 {
-                *b = (v + 256) as u8;
-                borrow = 1;
-            } else {
-                *b = v as u8;
-                borrow = 0;
-            }
-        }
-        while shifted.last() == Some(&0) {
-            shifted.pop();
-        }
-        shifted
+    fn the_refusal_order_is_cheapest_first() {
+        // The declared order is the documented one, and `Sign` precedes the
+        // basis search an attacker can lengthen.
+        let order = [
+            VerifyError::Length,
+            VerifyError::Canonical,
+            VerifyError::Origin,
+            VerifyError::Singular,
+            VerifyError::Sign,
+            VerifyError::Basis,
+            VerifyError::Composite,
+            VerifyError::Relation,
+        ];
+        let mut sorted = order;
+        sorted.sort_unstable();
+        assert_eq!(order, sorted);
+        assert!(VerifyError::Sign < VerifyError::Basis);
+        assert!(VerifyError::Basis < VerifyError::Composite);
     }
 
     #[test]
     fn a_short_signature_is_a_length_refusal() {
         let err = verify::<Level1>(&[0u8; Level1::PUBLIC_KEY_LEN], b"m", &[0u8; 4]);
+        assert_eq!(err, Err(VerifyError::Length));
+        // A wrong length is refused before the key is looked at, so the
+        // starting curve does not shadow it.
+        let err = verify::<Level1>(&[0u8; Level1::PUBLIC_KEY_LEN], b"m", &[]);
         assert_eq!(err, Err(VerifyError::Length));
     }
 
@@ -433,8 +194,29 @@ mod tests {
     }
 
     #[test]
+    fn a_singular_curve_is_refused() {
+        // `A = 2` is a square root of four, so the curve is singular.
+        let sig = vec![0u8; Level1::SIGNATURE_LEN];
+        assert_eq!(
+            verify::<Level1>(&key::<Level1>(2), b"shekyl-prism", &sig),
+            Err(VerifyError::Singular)
+        );
+    }
+
+    #[test]
+    fn a_noncanonical_key_is_refused() {
+        let mut pk = vec![0xffu8; Level1::PUBLIC_KEY_LEN];
+        pk[Level1::FP_LEN - 1] = 0xff;
+        let sig = vec![0u8; Level1::SIGNATURE_LEN];
+        assert_eq!(
+            verify::<Level1>(&pk, b"shekyl-prism", &sig),
+            Err(VerifyError::Canonical)
+        );
+    }
+
+    #[test]
     fn zero_y_is_refused() {
-        let pk = Level1::ext_encode(Ext1::from_u64(3));
+        let pk = key::<Level1>(3);
         assert_eq!(pk.len(), Level1::PUBLIC_KEY_LEN);
         let sig = vec![0u8; Level1::SIGNATURE_LEN];
         assert_eq!(
@@ -456,49 +238,176 @@ mod tests {
     }
 
     #[test]
+    fn a_bad_sign_is_refused_before_the_challenge_is_hashed() {
+        // The key's basis index exists and the index names a prime degree,
+        // so the only failing check below `Composite` is the sign test.
+        let sample = prepared(Nist::I).expect("level I sample");
+        let mut response =
+            Response::<Level1>::decode(&sample.signature).expect("the sample decodes");
+        response.p.y = response.p.y.negate();
+        assert_eq!(
+            verify::<Level1>(&sample.public_key, sample.message, &response.encode()),
+            Err(VerifyError::Sign)
+        );
+        // And with the sign restored, a later index whose degree is composite
+        // is what the same signature is refused for.
+        response.p.y = response.p.y.negate();
+        let mut composite = None;
+        let mut index = response.index;
+        while let Some(next) = index.next() {
+            index = next;
+            let mut probe = response;
+            probe.index = next;
+            if verify::<Level1>(&sample.public_key, sample.message, &probe.encode())
+                == Err(VerifyError::Composite)
+            {
+                composite = Some(probe);
+                break;
+            }
+        }
+        let composite = composite.expect("a composite degree above the smallest index");
+        let mut both = composite;
+        both.p.y = both.p.y.negate();
+        assert_eq!(
+            verify::<Level1>(&sample.public_key, sample.message, &both.encode()),
+            Err(VerifyError::Sign),
+            "a signature failing Sign and Composite is refused with Sign"
+        );
+    }
+
+    #[test]
     fn the_derived_index_equals_the_c_hint() {
-        for name in [Level1::NAME, Level3::NAME, Level5::NAME] {
-            let key = reference_public_key(name).expect(name);
-            let hint = reference_hint(name).expect(name);
-            let coefficient = match name {
-                "NIST-I" => Level1::ext_decode(key).map(c_basis_hint::<Level1>),
-                "NIST-III" => Level3::ext_decode(key).map(c_basis_hint::<Level3>),
-                "NIST-V" => Level5::ext_decode(key).map(c_basis_hint::<Level5>),
-                _ => None,
+        for level in Nist::ALL {
+            let row = reference_key(level).unwrap_or_else(|err| panic!("{level}: {err}"));
+            let derived = match level {
+                Nist::I => derive_hint::<Level1>(&row.public_key),
+                Nist::III => derive_hint::<Level3>(&row.public_key),
+                Nist::V => derive_hint::<Level5>(&row.public_key),
             };
-            assert_eq!(coefficient, Some(Some(hint)), "{name}");
+            assert_eq!(derived, Ok(row.hint), "{level}");
+            // The byte the C returned round-trips through the typed hint.
+            let byte = row.hint.to_c_byte().expect("the C named this index");
+            assert_eq!(BasisHint::from_c_byte(byte), Some(row.hint), "{level}");
+        }
+    }
+
+    fn derive_hint<L: Level>(public_key: &[u8]) -> Result<BasisHint, VerifyError> {
+        let identity = KeyIdentity::<L>::decode(public_key)?;
+        basis_hint::<L>(identity.coefficient())
+    }
+
+    #[test]
+    fn the_pinned_hints_are_the_committed_bytes() {
+        // The vectors `scripts/export_c_basis_hints.py` wrote, unchanged.
+        for (level, byte) in [(Nist::I, 11u8), (Nist::III, 21), (Nist::V, 2)] {
+            let row = reference_key(level).unwrap_or_else(|err| panic!("{level}: {err}"));
+            assert_eq!(row.hint.to_c_byte(), Some(byte), "{level}");
+            assert!(row.hint.index() >= 1 && row.hint.index() <= C_HINT_MAX_INDEX);
+        }
+    }
+
+    #[test]
+    fn a_signature_round_trips_through_the_layout() {
+        for level in Nist::ALL {
+            let sample = prepared(level).unwrap_or_else(|err| panic!("{level}: {err}"));
+            let decoded = match level {
+                Nist::I => Response::<Level1>::decode(&sample.signature).map(|r| r.encode()),
+                Nist::III => Response::<Level3>::decode(&sample.signature).map(|r| r.encode()),
+                Nist::V => Response::<Level5>::decode(&sample.signature).map(|r| r.encode()),
+            };
+            assert_eq!(decoded, Ok(sample.signature.clone()), "{level}");
         }
     }
 
     #[test]
     fn a_prime_index_reaches_relation_without_being_checked_for_smallest() {
-        let message = b"shekyl-prism";
-        let pk = reference_public_key(Level1::NAME)
-            .expect("level I key")
-            .to_vec();
-        let j = smallest_challenge_index::<Level1>(&pk, message).expect("a prime degree");
-        let mut sig = vec![0u8; Level1::SIGNATURE_LEN];
-        let one = Level1::ext_encode(Ext1::one());
-        let at = 2 * Level1::FP2_LEN;
-        sig[at..at + one.len()].copy_from_slice(&one);
-        let end = sig.len();
-        sig[end - 2..].copy_from_slice(&j.to_le_bytes());
+        let sample = prepared(Nist::I).expect("level I sample");
         assert_eq!(
-            verify::<Level1>(&pk, message, &sig),
+            verify_level(
+                Nist::I,
+                &sample.public_key,
+                sample.message,
+                &sample.signature
+            ),
             Err(VerifyError::Relation)
         );
-        if j != u16::MAX {
-            let mut later = sig.clone();
-            let end = later.len();
-            later[end - 2..].copy_from_slice(&(j.wrapping_add(1)).to_le_bytes());
-            let err = verify::<Level1>(&pk, message, &later);
+        let response = Response::<Level1>::decode(&sample.signature).expect("the sample decodes");
+        if let Some(later) = response.index.next() {
+            let mut probe = response;
+            probe.index = later;
+            let err = verify::<Level1>(&sample.public_key, sample.message, &probe.encode());
             // A different index is a different degree. It is refused when
-            // that degree is composite, and it is not refused for being larger.
-            if degree_is_prime(Level1::E, &challenge_s::<Level1>(&pk, message, j + 1)) {
+            // that degree is composite, and never for being larger.
+            let identity = KeyIdentity::<Level1>::decode(&sample.public_key).expect("the key");
+            let scalar = ChallengeScalar::derive(&identity, sample.message, later);
+            if scalar.degree_is_prime::<Level1>() {
                 assert_eq!(err, Err(VerifyError::Relation));
             } else {
                 assert_eq!(err, Err(VerifyError::Composite));
             }
         }
+    }
+
+    #[test]
+    fn a_level_name_parses_or_is_its_own_error() {
+        for (text, level) in [
+            ("1", Nist::I),
+            ("I", Nist::I),
+            ("NIST-I", Nist::I),
+            ("3", Nist::III),
+            ("III", Nist::III),
+            ("5", Nist::V),
+            ("V", Nist::V),
+        ] {
+            assert_eq!(text.parse::<Nist>(), Ok(level), "{text}");
+        }
+        for text in ["", "2", "iv", "NIST-II"] {
+            assert_eq!(text.parse::<Nist>(), Err(UnknownLevel), "{text}");
+        }
+        // An unknown level is not a length refusal.
+        assert_ne!(UnknownLevel.to_string(), VerifyError::Length.to_string());
+    }
+
+    #[test]
+    fn two_thousand_forty_seven_is_not_a_prime() {
+        assert!(!is_baillie_psw(&2047u32.to_le_bytes()[..2]));
+        assert!(is_baillie_psw(&1019u32.to_le_bytes()[..2]));
+        assert!(!is_baillie_psw(&[1]));
+        assert!(!is_baillie_psw(&[91]));
+        assert!(!is_baillie_psw(&[49, 2]));
+    }
+
+    #[test]
+    fn the_three_field_primes_pass_baillie_psw() {
+        assert!(is_baillie_psw(&prime_bytes(5, Level1::E)));
+        assert!(is_baillie_psw(&prime_bytes(65, Level3::E)));
+        assert!(is_baillie_psw(&prime_bytes(27, Level5::E)));
+    }
+
+    /// `cofactor·2^shift − 1`, little-endian.
+    fn prime_bytes(cofactor: u128, shift: u32) -> Vec<u8> {
+        let mut bytes = vec![0u8; (shift as usize) / 8 + 17];
+        let byte = (shift as usize) / 8;
+        let bit = shift % 8;
+        for (index, value) in cofactor.to_le_bytes().iter().enumerate() {
+            let shifted = u16::from(*value) << bit;
+            bytes[index + byte] |= shifted as u8;
+            if let Some(slot) = bytes.get_mut(index + byte + 1) {
+                *slot |= (shifted >> 8) as u8;
+            }
+        }
+        let mut borrow = true;
+        for slot in &mut bytes {
+            if !borrow {
+                break;
+            }
+            let (value, wrapped) = slot.overflowing_sub(1);
+            *slot = value;
+            borrow = wrapped;
+        }
+        while bytes.last() == Some(&0) {
+            bytes.pop();
+        }
+        bytes
     }
 }

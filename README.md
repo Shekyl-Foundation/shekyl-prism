@@ -29,7 +29,10 @@ The C reference [PRISM_v2](https://github.com/mariascrs/PRISM_v2) is the
 submodule `external/PRISM_v2`, pinned, and used only by
 `scripts/check_c_reference.py`. The Rust crates do not link it. That tree
 implements salt-PRISM. Its verifier resamples a salt and uses a
-probabilistic prime test. This workspace does not.
+probabilistic prime test. This workspace does neither; each divergence is a
+ruling in the spec. Its third quirk, restarting the basis search at 128 when
+the key's hint byte cannot name the index, is not a divergence here: this
+verifier carries no hint byte and derives the same index in one search.
 
 ## Field backend
 
@@ -42,10 +45,15 @@ III on the scalar path. The bench reports `field-backend=scalar`.
 ## Build
 
 ```bash
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 cargo run -p prism-bench --release
 python3 scripts/check_c_reference.py
 ```
+
+The first three are the gates; a change that compiles but fails fmt or
+clippy is not done.
 
 `cargo run -p prism-bench` prints the userspace counter
 (`cntvct_el0` on aarch64, `rdtsc` on x86_64) and, after a warm-up, the

@@ -18,6 +18,15 @@ the verifier quirks the spec records:
 - `src/verification/ref/lvlx/verify.c` calls
   `theta_chain_compute_and_eval_verify`
 
+`ec_curve_to_basis_2f_from_hint` in `src/ec/ref/lvlx/basis.c` carries a
+recovery path the script does not pin, because `prism-verify` reaches the
+same answer without it: a hint of zero means the key-generation search
+needed an index of 128 or more, and that function restarts the search there.
+Both of its paths name the smallest qualifying index, so the Rust verifier —
+which carries no hint byte — derives that index in a single search from 1.
+`docs/VERIFIER_SPEC.md` records the one bound that remains and its
+probability.
+
 `theta_chain_compute_and_eval_verify` is the known-answer source for
 Algorithm 3's chain, compared at the function level: the same kernel
 inputs, the codomain, and the evaluated images, with the chain length as
