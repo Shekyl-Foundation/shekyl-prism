@@ -13,6 +13,9 @@
 
 #![forbid(unsafe_code)]
 
+pub mod montgomery;
+pub mod theta;
+
 use prism_field::Field;
 
 /// Short Weierstrass `y^2 = x^3 + a4 x + a6`.

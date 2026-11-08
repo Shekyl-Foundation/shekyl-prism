@@ -250,6 +250,58 @@ For the authors of ePrint 2026/443:
 3. The §5 strong-unforgeability argument assumes a deterministic
    `H_squares` (Remark 8). Whether the reduction holds when the signature
    carries the search index is theirs to answer.
+4. The two comparison questions in "How step 8 compares points", below.
+   They are written here so the accept condition has a stated
+   identification and a stated sign rule before any vector is allowed to
+   turn `Relation` into success. Confirmation that those two readings
+   match the paper is the authors'.
+
+## How step 8 compares points
+
+`verify` does not accept a signature yet. These two rulings are what the
+comparison will use once `theta_chain_compute_and_eval_verify` has a
+matching vector. They are not an accept condition by themselves.
+
+### Identification
+
+Step 4 builds `Φ` as `e − 1` (2,2)-steps. Step 5 builds `Ψ` as one more
+step, so the chain a node evaluates has length `e`. The paper's
+factorization `Φ₁ = Ψ_e ∘ Φ₂ ∘ ι` says those two computations land on the
+same abelian surface. A theta-model implementation does not land in a
+unique coordinate system: each step chooses a theta structure, and two
+structures on one surface differ by a signed permutation of the four
+theta coordinates.
+
+The comparison is not made in those raw coordinates. The splitting step
+records the isomorphism back to an elliptic product — the matrix the C
+reference calls `M` and applies with `apply_isomorphism` before
+`theta_point_to_montgomery_point`. Both sides of step 8 are read in that
+product's Montgomery model, after that one isomorphism. A codomain that
+does not split is a refusal, not a second choice of structure.
+
+### Sign
+
+A Montgomery `(X : Z)` and a theta point `(x : y : z : t)` are both even:
+each identifies a point with its negative. On a product `E1 × E2` the sign
+can flip per factor, not only globally, and an x-only equality of the
+step-8 images would accept a scalar and its negative on each factor.
+
+The signature carries affine `(x, y)` for `P_sig` and `Q_sig`, so `−P_sig`
+and `P_sig − Q_sig` are exact group-law points, not a choice of square
+root recovered from an x-coordinate. The kernel points of `Φ` are the
+doubles `[2]P_vk`, `[2]P_sig` and their partners. Doubling identifies a
+point with its negative in x-only form, so that kernel does not see the
+global sign. The step-8 equality does. It is compared as affine points on
+the product, with the y-coordinates fixed by the signature's `y` and by
+the same group law, not as x-only or theta coordinates. An image whose
+y-coordinate is the other square root fails the equality.
+
+`E0 × E0` is not the bench's general-key number. The curve `j = 1728` has
+extra automorphisms, and gluing from it can take a path a random product
+does not. The length-`e` chain on a C-generated general pair is the number
+the floor-device gate reads, plus the verifier's fixed overhead, after a
+positive vector has passed. A fully general end-to-end timing waits for a
+§5 signer.
 
 ## What `verify` decides today
 

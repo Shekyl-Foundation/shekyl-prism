@@ -1,0 +1,14 @@
+Theta arithmetic
+================
+
+`prism-isogeny/src/theta.rs` ports the theta-coordinate doubling from
+`external/PRISM_v2/src/hd/ref/lvlx/theta_structure.c` and the inline
+transforms in `theta_structure.h`.
+
+That code is Apache-2.0. Its authors, as named in those files, are
+Antonin Leroux and the SQIsign authors. The PRISM_v2 repository
+(https://github.com/mariascrs/PRISM_v2, commit
+87fad7da5f12f79112521677f4f5530672afe9ba) carries the same license and
+states that it is built on Qlapoti and the SQIsign reference.
+
+The rest of this repository is BSD-3-Clause, The Shekyl Foundation.
