@@ -280,8 +280,13 @@ reference calls `M` and applies with `apply_isomorphism` before
 product's Montgomery model, after that one isomorphism. A codomain that
 does not split is a refusal, not a second choice of structure. Verification
 in the pinned tree also requires the vanishing structure to be index 8;
-`splitting_compute` takes that index and refuses any other. `verify` does
-not call either function yet.
+`splitting_compute` takes that index and refuses any other. `chain` is
+the reference's `_theta_chain_compute_impl` with randomisation left out:
+gluing, the 8-torsion steps, and that split. `verify` does not call it yet.
+A basis of each factor is not by itself a kernel the chain accepts; the
+reference returns failure for `E0 × E0` and for `E0` times a key-generation
+curve. The kernel that succeeds is the graph of a 2-power isogeny, which
+is what Algorithm 3 builds from `(P_vk, P_sig)`.
 
 ### Sign
 

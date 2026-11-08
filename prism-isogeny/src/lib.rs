@@ -9,11 +9,15 @@
 //! That is the kernel which is already a product of torsion subgroups. The
 //! glued theta chain in the C reference
 //! (`theta_chain_compute_and_eval_verify`) is the differential target.
-//! [`theta_step`] is one step of that chain and [`splitting`] is the
-//! isomorphism the comparison reads through. Neither is called by `verify`.
+//! [`theta_step`] is one step of that chain, [`splitting`] is the
+//! isomorphism the comparison reads through, and [`chain`] runs them in the
+//! reference's order. `verify` does not call them.
 
 #![forbid(unsafe_code)]
 
+pub mod chain;
+pub mod gluing;
+pub mod jac;
 pub mod montgomery;
 pub mod splitting;
 pub mod theta;

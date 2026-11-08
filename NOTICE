@@ -12,6 +12,13 @@ maps from `theta_isogenies.c`, and the splitting-matrix table from
 normalisation matrices are not included: verification calls splitting with
 randomisation off.
 
+`prism-isogeny/src/jac.rs` ports Jacobian doubling and addition, and the
+basis lift, from `src/ec/ref/lvlx/ec_jac.c` and `basis.c`.
+
+`prism-isogeny/src/gluing.rs` and `prism-isogeny/src/chain.rs` port the
+gluing isogeny and `_theta_chain_compute_impl` from `theta_isogenies.c`.
+The signing-only randomisation of the final model is not included.
+
 That code is Apache-2.0. Its authors, as named in those files, are
 Antonin Leroux and the SQIsign authors. The PRISM_v2 repository
 (https://github.com/mariascrs/PRISM_v2, commit

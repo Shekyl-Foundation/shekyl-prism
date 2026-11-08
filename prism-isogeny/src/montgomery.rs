@@ -46,6 +46,47 @@ impl<F: Field> Xz<F> {
     }
 }
 
+/// Montgomery curve `C y^2 = C x^3 + A x^2 + C x`, stored as `(A : C)`.
+#[derive(Clone, Copy, Debug)]
+pub struct Montgomery<F> {
+    pub a: F,
+    pub c: F,
+}
+
+impl<F: Field> Montgomery<F> {
+    pub fn normalized(coefficient: F) -> Self {
+        Self {
+            a: coefficient,
+            c: F::one(),
+        }
+    }
+
+    /// `(A/C : 1)`, the form Jacobian arithmetic assumes.
+    pub fn affine_coefficient(self) -> Option<Self> {
+        self.c.inv().map(|inv| Self {
+            a: self.a.mul(inv),
+            c: F::one(),
+        })
+    }
+}
+
+/// Doubling for a projective coefficient `(A : C)`, the reference `xDBL`.
+pub fn xdbl_ac<F: Field>(curve: Montgomery<F>, point: Xz<F>) -> Xz<F> {
+    let sum = point.x.add(point.z);
+    let diff = point.x.sub(point.z);
+    let sum2 = sum.mul(sum);
+    let diff2 = diff.mul(diff);
+    let four_xz = sum2.sub(diff2);
+    let two_c = curve.c.add(curve.c);
+    let scaled = diff2.mul(two_c);
+    let scaled = scaled.add(scaled);
+    let mixed = two_c.add(curve.a).mul(four_xz).add(scaled);
+    Xz {
+        x: sum2.mul(scaled),
+        z: mixed.mul(four_xz),
+    }
+}
+
 /// Doubling on the curve with constant [`a24`].
 pub fn xdbl<F: Field>(a24: F, point: Xz<F>) -> Xz<F> {
     let sum = point.x.add(point.z);
