@@ -26,6 +26,8 @@ pub trait Field: Copy {
     fn mul(self, rhs: Self) -> Self;
     fn negate(self) -> Self;
     fn inv(self) -> Option<Self>;
+    /// A square root, or `None` when this element is not a square.
+    fn sqrt(self) -> Option<Self>;
     fn is_zero(self) -> bool;
     fn same(self, rhs: Self) -> bool;
 }
@@ -119,6 +121,11 @@ macro_rules! nist_level {
                         Some(self.invert())
                     }
                 }
+                fn sqrt(self) -> Option<Self> {
+                    let mut value = self;
+                    let mask = value.set_sqrt();
+                    if mask_ok(mask) { Some(value) } else { None }
+                }
                 fn is_zero(self) -> bool {
                     mask_ok($fp::is_zero(self))
                 }
@@ -155,6 +162,11 @@ macro_rules! nist_level {
                     } else {
                         Some(self.invert())
                     }
+                }
+                fn sqrt(self) -> Option<Self> {
+                    let mut value = self;
+                    let mask = value.set_sqrt();
+                    if mask_ok(mask) { Some(value) } else { None }
                 }
                 fn is_zero(self) -> bool {
                     mask_ok($fp2::is_zero(self))

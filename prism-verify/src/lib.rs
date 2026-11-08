@@ -78,6 +78,8 @@ pub fn open<L: Level>(
     }
     // The chain is the verification walk. It runs before the prime test so a
     // composite challenge still pays for the isogenies a timing run is measuring.
+    // The §5 layout has no Weierstrass codomain, so a finished walk is not
+    // compared with a curve the signature does not carry.
     let walked = split_chain(
         L::ext_from_base(L::fp_zero()),
         [L::ext_i(), L::ext_i().negate()],
@@ -87,18 +89,14 @@ pub fn open<L: Level>(
     if !degree_is_prime::<L>(&s) {
         return Err(VerifyError::Composite);
     }
-    if !walked.a4.same(claimed.codomain.a4) || !walked.a6.same(claimed.codomain.a6) {
-        return Err(VerifyError::Codomain);
-    }
     Ok(walked)
 }
 
-struct Opened<L: Level> {
-    codomain: Curve<L::Ext>,
+struct Opened {
     s: Vec<u8>,
 }
 
-fn decode_signature<L: Level>(signature: &[u8]) -> Result<Opened<L>, VerifyError> {
+fn decode_signature<L: Level>(signature: &[u8]) -> Result<Opened, VerifyError> {
     let n = L::FP2_LEN;
     let mut at = 0;
     let mut take = || -> Result<L::Ext, VerifyError> {
@@ -121,17 +119,8 @@ fn decode_signature<L: Level>(signature: &[u8]) -> Result<Opened<L>, VerifyError
     if s.len() != L::S_LEN || s.first().is_some_and(|b| b & 1 == 0) {
         return Err(VerifyError::Salt);
     }
-    // The codomain compared with the walk is not in this layout; the walk
-    // itself is the engine check. Store a zero curve and let `open` replace
-    // the comparison by recomputing. See `open`.
     let _ = (px,);
-    Ok(Opened {
-        codomain: Curve {
-            a4: L::Ext::zero(),
-            a6: L::Ext::zero(),
-        },
-        s,
-    })
+    Ok(Opened { s })
 }
 
 fn canonical_sign<L: Level>(y: L::Ext) -> bool {
@@ -261,36 +250,31 @@ pub fn verify_level(
     }
 }
 
-pub fn time_open(level: &str) -> Result<&'static str, VerifyError> {
+pub fn time_open(level: &str) -> Result<(&'static str, &'static str), VerifyError> {
     match level {
-        "1" | "I" => {
-            run_open::<Level1>()?;
-            Ok(Level1::NAME)
-        }
-        "3" | "III" => {
-            run_open::<Level3>()?;
-            Ok(Level3::NAME)
-        }
-        "5" | "V" => {
-            run_open::<Level5>()?;
-            Ok(Level5::NAME)
-        }
+        "1" | "I" => Ok((Level1::NAME, run_open::<Level1>()?)),
+        "3" | "III" => Ok((Level3::NAME, run_open::<Level3>()?)),
+        "5" | "V" => Ok((Level5::NAME, run_open::<Level5>()?)),
         _ => Err(VerifyError::Length),
     }
 }
 
-fn run_open<L: Level>() -> Result<(), VerifyError> {
+fn run_open<L: Level>() -> Result<&'static str, VerifyError> {
     let public_key = zero_key::<L>();
     let message = b"shekyl-prism";
     let mut signature = vec![0u8; L::SIGNATURE_LEN];
     let s = challenge_s::<L>(&public_key, message);
     let start = L::SIGNATURE_LEN - L::S_LEN;
     signature[start..].copy_from_slice(&s);
-    // y = 0 is canonical. x = 1 is a canonical field element.
+    // y = 0 is canonical. A point x of 1 is a canonical field element.
     write_one::<L>(&mut signature, L::FP2_LEN);
+    // This challenge degree is not chosen to be prime. `Composite` means the
+    // chain finished and Baillie–PSW refused q. `Ok` would be the same walk
+    // with a prime q, which `verify` still turns into `Relation`.
     match open::<L>(&public_key, message, &signature) {
-        Err(VerifyError::Length) => Err(VerifyError::Length),
-        _ => Ok(()),
+        Ok(_) => Ok("relation"),
+        Err(VerifyError::Composite) => Ok("composite"),
+        Err(err) => Err(err),
     }
 }
 

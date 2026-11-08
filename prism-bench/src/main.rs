@@ -17,17 +17,31 @@ use std::time::Instant;
 fn main() {
     println!("field-backend={FIELD_BACKEND}");
     println!("counter={}", counter_name());
+    let mut refused = false;
     for level in ["I", "III", "V"] {
         let before = counter();
         let start = Instant::now();
-        let name = time_open(level).unwrap_or("refused");
+        let outcome = time_open(level);
         let elapsed = start.elapsed();
         let after = counter();
-        println!(
-            "level={name} wall_ns={} counter_delta={}",
-            elapsed.as_nanos(),
-            after.wrapping_sub(before)
-        );
+        match outcome {
+            Ok((name, kind)) => println!(
+                "level={name} outcome={kind} wall_ns={} counter_delta={}",
+                elapsed.as_nanos(),
+                after.wrapping_sub(before)
+            ),
+            Err(err) => {
+                refused = true;
+                println!(
+                    "level={level} refused={err:?} wall_ns={} counter_delta={}",
+                    elapsed.as_nanos(),
+                    after.wrapping_sub(before)
+                );
+            }
+        }
+    }
+    if refused {
+        std::process::exit(1);
     }
 }
 

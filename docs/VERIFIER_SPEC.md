@@ -4,10 +4,9 @@ Status: draft, written to be taken to the authors. This file is not a
 standard. Numbers below are copied from the working copy
 `shekyl-dev/docs/papers/2026-PRISM_signature.pdf` (ePrint 2026/443, Table 2
 and §5 Algorithm 3). The SQIsign parameter source is
-`shekyl-dev/docs/papers/SQIsign-20250205.pdf`. The ECLIPSE PDF (ePrint
-2026/2312) was not retrieved on 2026-11-07 (the ePrint host returned 403 and
-`ia.cr` returned 404); the two open questions are recorded from the lane
-brief and stay open until that copy is in `docs/papers/`.
+`shekyl-dev/docs/papers/SQIsign-20250205.pdf`. The re-randomization questions
+are read from `shekyl-dev/docs/papers/2026-2312_ECLIPSE_PRISM.pdf`
+(ePrint 2026/2312).
 
 The candidate authorization level, if a later design round adopts one, is
 NIST III. NIST I and NIST V are implemented so the same binary can time them.
@@ -101,11 +100,18 @@ to the challenge hash is a refusal.
 
 ## Open questions
 
-Not built, and not decided:
+Not built. ePrint 2026/2312 instantiates `RandPK` / `RandSK` on its own
+construction, the prime-degree variant plus the §6 salt, and §9 cites
+statistical unlinkability against an observer who does not know the
+randomiser, for two hops. Its abstract leaves a formal SUF-CMA argument
+to future work.
 
-- A re-randomized per-output key is unlinkable to the long-term key.
-- Re-randomization holds for this §5 variant. ECLIPSE claims it for a
-  prime-degree variant, and its strong-unforgeability proof is still open.
+- Unlinkability of a re-randomized per-output key is that paper's claim.
+  This workspace does not implement re-randomization and does not treat
+  the claim as established for a Shekyl output key.
+- Whether re-randomization holds for the unsalted §5 variant this
+  verifier is aimed at is still open. ECLIPSE's randomiser is not that
+  variant.
 
 ## What `verify` decides today
 
@@ -115,9 +121,11 @@ signature. It returns:
 - `Length`, `Canonical`, `Singular`, `Sign`, `Salt`, `Composite` for the
   checks above
 - `Codomain` when the split chain of length `a`, started at Montgomery
-  coefficient 0 with kernel `(0, 0)`, does not produce the signature's
-  claimed codomain coefficient — this is an engine check, not Algorithm 3
-- `Relation` when every check above passed
+  coefficient 0 with kernel `(0, 0)`, cannot be evaluated. The §5 layout
+  does not carry a Weierstrass codomain, and the walk does not start at
+  the public key's curve. This is an engine check, not Algorithm 3
+- `Relation` when the length, canonical, singular, sign, and challenge
+  checks have passed, the chain evaluated, and `q` passed Baillie–PSW
 
 `Relation` is the fail-closed stand-in for Algorithm 3 steps 4–8. It is not
 an authorization decision. Nothing in this crate returns success for a

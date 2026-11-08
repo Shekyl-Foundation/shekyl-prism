@@ -147,14 +147,14 @@ impl<F: Field> SplitTwoTwo<F> {
     }
 }
 
-/// `steps` successive split (2,2)-isogenies on the product of a curve with itself.
+/// `steps` successive 2-isogenies, the factor a split (2,2) chain repeats.
 ///
 /// The walk starts at the Montgomery curve with coefficient `start`. The first
-/// kernel is `(0, 0)`. The two other 2-torsion x-coordinates are `siblings`,
-/// translated into the short-Weierstrass model. Each later kernel is the image
-/// of one sibling; the spare sibling is the third root of the codomain's
-/// 2-division polynomial, `-(r + s)`, which is rational whenever the first two
-/// are.
+/// kernel is `(0, 0)`. `siblings` are the other two 2-torsion x-coordinates,
+/// in Montgomery `x`, used only to name a point the first step can push.
+/// A 2-isogeny sends both of those points to the same codomain point, the
+/// kernel of the dual. The next kernel is one of the other two roots of the
+/// codomain's 2-division polynomial, so the walk does not step back.
 pub fn split_chain<F: Field>(start: F, siblings: [F; 2], steps: u32) -> Option<Curve<F>> {
     let mut curve = Curve::from_montgomery(start)?;
     if steps == 0 {
@@ -169,10 +169,6 @@ pub fn split_chain<F: Field>(start: F, siblings: [F; 2], steps: u32) -> Option<C
         x: siblings[0].add(shift),
         y: F::zero(),
     };
-    let mut extra = Point {
-        x: siblings[1].add(shift),
-        y: F::zero(),
-    };
     for i in 0..steps {
         if !curve.contains(kernel) {
             return None;
@@ -182,21 +178,45 @@ pub fn split_chain<F: Field>(start: F, siblings: [F; 2], steps: u32) -> Option<C
         if i + 1 == steps {
             break;
         }
-        let next = iso.image(spare)?;
-        let other = iso.image(extra)?;
-        kernel = next;
-        spare = other;
-        extra = Point {
-            x: next.x.add(other.x).negate(),
+        let dual = iso.image(spare)?;
+        let (left, _right) = other_torsion(curve, dual.x)?;
+        kernel = Point {
+            x: left,
+            y: F::zero(),
+        };
+        spare = Point {
+            x: _right,
             y: F::zero(),
         };
     }
     Some(curve)
 }
 
+/// The two 2-torsion x-coordinates other than `known` on a short-Weierstrass
+/// curve whose cubic is `x^3 + a4 x + a6`.
+fn other_torsion<F: Field>(curve: Curve<F>, known: F) -> Option<(F, F)> {
+    let delta = F::from_u64(3)
+        .mul(known.mul(known))
+        .negate()
+        .sub(F::from_u64(4).mul(curve.a4));
+    let root = delta.sqrt()?;
+    let half = F::from_u64(2).inv()?;
+    let base = known.negate();
+    let left = base.add(root).mul(half);
+    let right = base.sub(root).mul(half);
+    if left.same(known) || right.same(known) || left.same(right) {
+        return None;
+    }
+    let on = |x: F| curve.contains(Point { x, y: F::zero() });
+    if !on(left) || !on(right) {
+        return None;
+    }
+    Some((left, right))
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{two_isogeny, Curve, Point, SplitTwoTwo};
+    use super::{split_chain, two_isogeny, Curve, Point, SplitTwoTwo};
     use prism_field::Field;
 
     #[derive(Clone, Copy, Debug)]
@@ -239,6 +259,15 @@ mod tests {
             } else {
                 Some(Self(mod_pow(self.0, P - 2)))
             }
+        }
+        fn sqrt(self) -> Option<Self> {
+            if self.0 == 0 {
+                return Some(Self(0));
+            }
+            if mod_pow(self.0, (P - 1) / 2) != 1 {
+                return None;
+            }
+            Some(Self(mod_pow(self.0, (P + 1) / 4)))
         }
         fn is_zero(self) -> bool {
             self.0 == 0
@@ -319,6 +348,38 @@ mod tests {
         let image = iso.image(point).expect("not the kernel");
         assert!(iso.codomain().contains(image));
         let _ = source;
+    }
+
+    #[test]
+    fn a_chain_walks_past_the_dual_kernel() {
+        let alpha = Toy::from_u64(3);
+        let coefficient = alpha.add(alpha.inv().unwrap()).negate();
+        let delta = coefficient.mul(coefficient).sub(Toy::from_u64(4));
+        let root = delta.sqrt().expect("2-torsion discriminant");
+        let half = Toy::from_u64(2).inv().unwrap();
+        let siblings = [
+            coefficient.negate().add(root).mul(half),
+            coefficient.negate().sub(root).mul(half),
+        ];
+        let one = split_chain(coefficient, siblings, 1).expect("one step");
+        let kernel = Curve::kernel_at_zero(coefficient).unwrap();
+        let iso = two_isogeny(Curve::from_montgomery(coefficient).unwrap(), kernel).unwrap();
+        assert!(one.a4.same(iso.codomain().a4));
+        assert!(one.a6.same(iso.codomain().a6));
+        // Two steps is the one that used to die: both siblings land on the
+        // dual kernel. Later discriminants need not be squares in this prime
+        // field; the NIST walk is over F_{p^2}.
+        let two = split_chain(coefficient, siblings, 2).expect("two steps");
+        assert!(!(two.a4.same(one.a4) && two.a6.same(one.a6)));
+    }
+
+    #[test]
+    fn level_i_chain_walks_eight_steps() {
+        use prism_field::{Level, Level1};
+        let start = <Level1 as Level>::ext_from_base(<Level1 as Level>::fp_zero());
+        let i = <Level1 as Level>::ext_i();
+        let walked = split_chain(start, [i, i.negate()], 8).expect("eight steps");
+        assert!(!(walked.a4.is_zero() && walked.a6.is_zero()));
     }
 
     #[test]

@@ -47,6 +47,9 @@ python3 scripts/check_c_reference.py
 ```
 
 `cargo run -p prism-bench` prints wall time and the userspace counter
-(`cntvct_el0` on aarch64, `rdtsc` on x86_64). The consensus gate is the level
-III line on the floor device. Levels I and V are the same run, so the cost
-curve is measured.
+(`cntvct_el0` on aarch64, `rdtsc` on x86_64). The synthetic input's challenge
+degree is not prime: `outcome=composite` means the chain of length `a`
+finished and Baillie–PSW refused `q`. That line is not an acceptance. The
+consensus gate is the level III line on the floor device. Levels I and V are
+the same run, so the cost curve is measured. A number from any other machine
+is not that gate.

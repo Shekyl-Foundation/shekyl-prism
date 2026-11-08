@@ -1,0 +1,3 @@
+[submodule "external/PRISM_v2"]
+	path = external/PRISM_v2
+	url = https://github.com/mariascrs/PRISM_v2
