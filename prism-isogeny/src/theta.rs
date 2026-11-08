@@ -70,6 +70,33 @@ pub struct ThetaConstants<F> {
     pub primal_t: F,
 }
 
+impl<F: Field> ThetaPoint<F> {
+    pub fn from_coords(coords: [F; 4]) -> Self {
+        Self {
+            x: coords[0],
+            y: coords[1],
+            z: coords[2],
+            t: coords[3],
+        }
+    }
+
+    pub fn coords(self) -> [F; 4] {
+        [self.x, self.y, self.z, self.t]
+    }
+
+    /// Coordinate `index` modulo 4, the selection `choose_index_theta_point` makes.
+    pub fn coord(self, index: usize) -> F {
+        self.coords()[index % 4]
+    }
+}
+
+/// Two theta points name the same point when one is a scalar multiple of the other.
+pub fn projectively_same<F: Field>(left: ThetaPoint<F>, right: ThetaPoint<F>) -> bool {
+    let left = left.coords();
+    let right = right.coords();
+    (0..4).all(|i| (0..4).all(|j| left[i].mul(right[j]).same(left[j].mul(right[i]))))
+}
+
 impl<F: Field> ThetaConstants<F> {
     /// Precompute from the null point, as `theta_precomputation` does.
     pub fn from_null(null_point: ThetaPoint<F>) -> Self {

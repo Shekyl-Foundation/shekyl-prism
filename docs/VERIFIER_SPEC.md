@@ -275,9 +275,13 @@ theta coordinates.
 The comparison is not made in those raw coordinates. The splitting step
 records the isomorphism back to an elliptic product — the matrix the C
 reference calls `M` and applies with `apply_isomorphism` before
-`theta_point_to_montgomery_point`. Both sides of step 8 are read in that
+`theta_point_to_montgomery_point`. `splitting_compute` and
+`montgomery_couple` are that pair. Both sides of step 8 are read in that
 product's Montgomery model, after that one isomorphism. A codomain that
-does not split is a refusal, not a second choice of structure.
+does not split is a refusal, not a second choice of structure. Verification
+in the pinned tree also requires the vanishing structure to be index 8;
+`splitting_compute` takes that index and refuses any other. `verify` does
+not call either function yet.
 
 ### Sign
 

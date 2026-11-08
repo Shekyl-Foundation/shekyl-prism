@@ -8,13 +8,16 @@
 //! A split (2,2)-isogeny is a pair of Vélu 2-isogenies, one on each factor.
 //! That is the kernel which is already a product of torsion subgroups. The
 //! glued theta chain in the C reference
-//! (`theta_chain_compute_and_eval_verify`) is the differential target; it is
-//! not this function.
+//! (`theta_chain_compute_and_eval_verify`) is the differential target.
+//! [`theta_step`] is one step of that chain and [`splitting`] is the
+//! isomorphism the comparison reads through. Neither is called by `verify`.
 
 #![forbid(unsafe_code)]
 
 pub mod montgomery;
+pub mod splitting;
 pub mod theta;
+pub mod theta_step;
 
 use prism_field::Field;
 
