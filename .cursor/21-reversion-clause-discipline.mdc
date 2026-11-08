@@ -1,0 +1,69 @@
+---
+description: When the disposition for a question is "we don't need this now," the right shape is reject-now-with-named-reopening-criteria, not refuse-forever and not pre-provision-for-flexibility. Optionality without concrete need is debt, not flexibility.
+alwaysApply: true
+---
+
+# Reversion-clause discipline
+
+When the disposition is "we don't need this now," reject it now, with
+named criteria under which the rejection reverts to a positive decision.
+"Refused forever" and "kept open for flexibility" are both the wrong shape.
+
+The discipline applies wherever a decision rejects optionality: a derive,
+a feature, a closed design round, a FOLLOWUPS placement, a migration.
+
+## The shape
+
+1. **The rejection.** What is rejected, and why, under the current
+   substrate. Cite the substrate and the criteria.
+2. **The reopening criteria.** A specific, observable, substrate-anchored
+   change. "If we ever need X" is not a criterion. "If a production caller
+   emerges that requires X" is. "If circumstances change" is not a
+   criterion. "If the upstream crate's API is structurally incompatible
+   with `from_zeroizing`" is.
+3. **The re-evaluation shape.** Who decides, and what evidence they need:
+   a design round, a doc-comment update, a rules amendment, a threat-model
+   review. "Reopen if needed" is not a shape. "Reopen via design-round 1
+   of the per-trait PR following the readiness gate" is.
+
+The discipline does not require predicting the future. It requires naming
+the current substrate and the kind of substrate change that would matter.
+A clause without a named substrate-change class is "we'll think about it
+later."
+
+Optionality without a named caller is debt: attack surface and review
+cost for states that may never occur. Refusal-forever is the other
+failure. When the substrate shifts, a rationale with no reopening clause
+becomes a constraint nobody can justify. The tell is a rationale that was
+load-bearing under the old schema and is vacuous under the new one. The
+disposition is re-anchored, not kept by inertia.
+
+## Anti-patterns
+
+- **"Keep it for flexibility."** No named caller means delete now
+  (`15-deletion-and-debt.mdc`), not pre-provision.
+- **"Refuse forever."** No reopening criteria means the refusal cannot
+  move when its rationale dissolves.
+- **"The audits keep coming back clean, so skip the check."** Clean
+  results are what the check produces. The reopening criterion for
+  relaxing it is a substrate change, not a streak
+  (`16-architectural-inheritance.mdc`, audits-are-clean-so-compress).
+- **"We'll think about it later."** Later without a criterion is indefinite.
+- **"Reopen on request."** Author preference is not a substrate change.
+
+The question to pair with every rejection, at write time: if the
+substrate that drives this disposition shifts, what re-triggers
+evaluation? "Nothing in particular" is refuse-forever. "Any future
+contributor's preference" is pre-provision. The author has the substrate
+context. The later reviewer may not.
+
+## Related rules
+
+`15-deletion-and-debt.mdc` (targets and deprecation dates are this shape
+applied to work items), `16-architectural-inheritance.mdc` (fix
+structurally now; reopen only on prohibitive cost),
+`17-dependency-discipline.mdc` (re-verify a dependency when its version,
+features, or audit posture change), `19-validation-surface-discipline.mdc`
+(re-open a bundle when a new reviewer-facing property appears),
+`00-mission.mdc` (a rejection that cites the hierarchy reopens when the
+substrate re-orders the priority calculus, not when a preference does).

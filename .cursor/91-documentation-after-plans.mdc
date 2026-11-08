@@ -1,0 +1,113 @@
+---
+description: Documentation must be updated after executing a Plan; the doc update is always the final task.
+alwaysApply: true
+---
+
+# Documentation After Plans
+
+After any Plan is executed, documentation must be read and updated to reflect
+the changes. 
+
+## Rules
+
+- **Final task always:** When creating or executing a Plan, the final task
+  must be: read and update relevant documentation.
+- **Before closing a Plan:** read the docs that cover the changed area
+  (`docs/`, README, design docs, API comments) and update them so they match
+  current behavior, APIs, or design.
+- **What to update:** fix outdated steps, names, examples, and TODOs; add
+  or revise sections for new behavior; keep cross-references and checklist
+  items accurate. Update `docs/CHANGELOG.md` **only** for user-visible,
+  consensus, API, or security-relevant deltas (see
+  [`95-documentation-lifecycle.mdc`](95-documentation-lifecycle.mdc)).
+  Design-round archaeology stays in the plan doc. Completing a plan
+  includes archive-or-contract: living SoTs stay and flip their Status
+  banner; finished plans/preflights `git mv` to `docs/completed/` in the
+  same change per `IMPLEMENTATION_INDEX.md` §8.
+- **Scope:** prefer docs under `docs/` and the main README; update
+  file-level or inline docs (Doxygen, module READMEs, Rust crate-level
+  `//!` comments) when the change touches that code.
+- **Stale-doc detection:** if a doc references behavior that no longer
+  exists (e.g., a removed RPC field, a deleted RCT type), the doc update is
+  not optional — the doc is wrong and will mislead readers.
+- **Sweep the indexes, not just the text.** A correction is not landed until
+  every surface that *points at* the corrected text agrees with it: the item's
+  own **heading**, tables of contents, `docs/design/IMPLEMENTATION_INDEX.md`
+  rows (rule 94), `docs/FOLLOWUPS.md` entry titles, cross-references from other
+  docs, and the doc-comment headings above a corrected Rust item.
+
+  **A corrected body under a stale heading is worse than an uncorrected
+  item.** Scanning is how long documents are actually used — `FOLLOWUPS.md` is
+  read by heading, and the body is read only if the heading says it is
+  relevant. A stale heading routes the correction to the readers who
+  did not need it and hides it from the ones who did. The file looks
+  fixed to anyone grepping the body.
+
+- **A constant's doc is part of the edit, not adjacent to it.** When a constant's
+  *value* changes, its own doc comment changes in the same edit — not in a later
+  sweep. This is a narrower and more dangerous class than a stale comment
+  elsewhere in the tree, because **proximity implies authority**: a reader trusts
+  a comment attached to the thing it describes far more than one three files
+  away, so the two disagreeing *inside one declaration* is the worst possible
+  place for the disagreement to sit, and nothing checks the pair. The
+  tell is a comment that still names a field the value no longer
+  includes: a reader who trusts the comment over the constant concludes
+  the wire still carries what was deleted.
+
+- **The sweep covers claims about the present, never the record of what was.**
+  A released `CHANGELOG` entry, a shipped release note, a dated audit record, or
+  a "superseded text, retained" block describing a value **as it shipped** is
+  *correct* — it is history, not staleness. A mechanical sweep that "fixes" every
+  match corrupts the record **while reporting success**, which is worse than the
+  staleness it set out to remove: the file now lies about what shipped, and
+  nothing flags it. Before editing a match, ask whether the text asserts
+  something *is* true or records something *was* true. A sweep that
+  "corrects" a released changelog entry rewrites what shipped. Fix the
+  live comments. Leave the record.
+
+- **A match can be the rationale for the fix, phrased as the hazard.** Beyond
+  *asserts-is* and *records-was* there is a third category, and it is the one
+  that reverses meaning when swept: a live present-tense sentence describing a
+  hazard **inside the construct that closes it**. It is indistinguishable from
+  the vulnerability at one line of context, and "fixing" it rewrites the
+  sentence documenting the fix into a claim the fix is missing. The tell
+  is a present-tense hazard named inside the construct that closes it —
+  an enum arm whose comment says a mislabeled row would be undetectable,
+  because the type makes the mislabel unrepresentable. Read the enclosing
+  block, not the line, and ask which of the three a match is. Run the
+  inverse sweep too: a line-grep cannot find the claim it did not spell.
+
+- **A finding that refutes a premise edits the premise's own text in the same
+  commit — not only a findings register.** The asserts-is / records-was
+  discipline above is the fix for stale claims, and it fails in one specific
+  way: the finding is recorded somewhere *new* — a findings list, a charter
+  row, a commit message, a FOLLOWUPS update — while the sentence that carried
+  the wrong premise stays as written, because the finding's *subject* looked
+  like a file or a mechanism rather than like the sentence. The next reader
+  starts from the sentence. The same premise has been re-derived from the
+  C++ after a row already recorded the correction
+  (`05-system-thinking.mdc`), and a section has kept "deletes in this
+  increment" after a later section re-scheduled the deletion
+  (`22-no-lazy-deferral.mdc`). When a finding refutes a premise: `rg` for
+  the premise's **wording** — the claim, not the symbol — and edit every
+  asserts-is hit in the commit that records the finding, keeping the posed
+  text as a records-was beside the correction
+  (`16-architectural-inheritance.mdc`, premise refuted). A finding recorded
+  only where it was found has not reached the reader who will inherit the
+  premise.
+
+**Why the sweep exists:** builds, tests, const-asserts, and CI gates check
+the executable surface continuously. Nothing checks the descriptive
+surface. A wrong constant fails a build. A wrong comment about a constant
+becomes the next person's starting assumption.
+
+## Example
+
+When a Plan has N tasks, the (N+1)th task is:
+
+> "Read and update documentation (docs/*.md, README, design/API docs) to
+> reflect the changes. Archive-or-contract per rule 95. Update
+> CHANGELOG.md only if the change is user-visible, consensus, API, or
+> security-relevant."
+
+Complete that task before considering the Plan done.

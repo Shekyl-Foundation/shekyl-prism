@@ -1,0 +1,157 @@
+---
+description: Inherited code is not inherited architecture. CryptoNote-derived data flows that contradict Shekyl's threat model are migrated, not rationalized.
+alwaysApply: true
+---
+
+# Architectural inheritance
+
+Shekyl forked from Monero (which forked from CryptoNote). Code, data
+models, threat-model assumptions, and architectural choices were
+inherited along with the fork. Most of that inheritance is load-bearing.
+Some of it contradicts Shekyl's threat model.
+
+## Scope
+
+Pre-genesis, this rule applies to all Shekyl code. Inherited code is not
+grandfathered. Post-genesis, new architectural decisions stay under this
+rule; decisions already made under it change only by the amendment process.
+
+## The rule
+
+Inheriting code is not inheriting architecture. Code is text. Architecture
+is the property the code delivers against the threat model. When inherited
+code contradicts `00-mission.mdc`, `30-cryptography.mdc`,
+`35-secure-memory.mdc`, or `36-secret-locality.mdc`, the architecture is
+wrong for Shekyl however well it was tested in its original context.
+
+Migrate the data model. Do not rationalize the inheritance.
+
+`36-secret-locality.mdc` says Rust owns secrets at the C++/Rust boundary.
+This rule asks which Rust component owns them. Orchestrator-persisted
+derived per-output secrets satisfy rule 36 and still contradict engine
+isolation. Both rules apply.
+
+## A claim about the code is not the code
+
+An inherited claim — upstream docs, a comment, a design doc we ratified —
+is a hypothesis until someone reads the implementation. The failure that
+matters is a claim true of the design and false of the implementation.
+
+When a claim is load-bearing for a security property:
+
+1. Read it at the implementation before relying on it, including Shekyl's
+   own ratified documents. Provenance is not derivation
+   (`05-system-thinking.mdc`). A seal is not coverage.
+2. Give it a gate that can fail (`50-testing.mdc`,
+   `47-gate-subject-assertion.mdc`): a derivation check, a pinned vector,
+   an assertion that the constant equals the maximum it claims to be. A
+   defence that cannot fail consumes the attention that would have found
+   the gap.
+3. Otherwise demote it to a recorded assumption and name the check owed.
+   An unverifiable claim may be carried. It may not be carried as a property.
+
+A claim whose violation fails loudly (an unknown enum arm that throws) is
+a signpost. One that fails silently (a constant that stays valid-looking
+while the world moves past it) is the hazard.
+
+Four misreads recur. Each admits the convenient half of a claim and
+inherits the half that carries the verdict.
+
+- **Mood.** A present-tense sentence records a state. It is not a ruling.
+  Before treating "the verifier does not use the dataset" as a prohibition,
+  find the decision: a ratified question, a dated ruling, a reversion
+  clause. Unbuilt-because-unmeasured is not forbidden.
+- **Guard.** A conditional check is not evidence that the behaviour it
+  guards is conditional. A nettype gate says nothing about whether the
+  behaviour varies by nettype. Show the behaviour varies.
+- **Direction.** An enumeration of what a component consumes says nothing
+  about what its consumers must read back out of it. Name which direction
+  the sweep ran, and what the other direction would have enumerated; a
+  measurement that cannot say so has counted one side.
+- **Grouping.** A grouping someone else drew is a claim about its members.
+  Test each member against the rule. Do not admit one on the strength of
+  its neighbour.
+
+## When to migrate, keep, or delete
+
+- **Migrate** when inherited architecture contradicts a Shekyl security
+  claim. Pre-genesis the cost is bounded. Post-genesis it is forever.
+- **Keep** when the architecture fits the threat model and migrating would
+  touch many sites without proportional benefit.
+- **Document** the disposition. Every inherited subsystem has a recorded
+  why: load-bearing, deletion target, or pending migration
+  (`05-system-thinking.mdc`).
+
+## Pre-genesis
+
+Per `15-deletion-and-debt.mdc`, the pre-launch migration path is
+`rm -rf ~/.shekyl` and re-sync. Structural work lands before genesis.
+"We'll fix it in V3.x" is not a disposition.
+
+## Cost-benefit-defer-to-later
+
+For security-load-bearing structure, the cost of the broken shape
+compounds with every layer that depends on it. When a review offers "fix
+structurally now, or work around now and fix later," fix structurally now
+unless the cost is genuinely prohibitive: multi-quarter scope, or
+cross-component coordination that breaks the discipline budget.
+
+## User-protection defaults in user-absent contexts
+
+Production defaults exist to protect deployed users: graceful degradation,
+staged rollouts, compatibility preservation, opt-in migration, soft
+deprecation, version-skew tolerance. Pre-genesis there are no such users.
+Those defaults invert: loud failure, atomic cutover, delete rather than
+gate (`60-no-monero-legacy.mdc`), `rm -rf ~/.shekyl`, no
+`[[deprecated]]` without a deletion version (`15-deletion-and-debt.mdc`),
+no version dispatch.
+
+When a design "gracefully accepts," "preserves compatibility,"
+"soft-deprecates," or "tolerates skew," ask whether any pre-genesis user
+is protected by that default. If none, the inversion is the disposition.
+The same default re-enters every review under a new name (a new RPC
+field, an FFI parameter, an error code). Ask each time.
+
+## A comment that outlived its architecture
+
+A comment that answers "why not X" with a mechanism becomes an instruction
+to rebuild what was deleted. Principles survive re-architecture. Mechanisms
+do not. When the mechanism is gone, the comment's conclusion is
+unsupported even if it still happens to be right.
+
+The tell: the comment prescribes a step the current architecture cannot
+run, and following it reopens the hazard the architecture closed.
+
+1. When a slice deletes or relocates a mechanism, the comments that reason
+   from it are part of the deletion surface.
+2. Record which premise failed. "Premise refuted" closes the question.
+   "Superseded" invites re-litigation.
+3. Enumerate the callers in the same slice. A surviving caller is the
+   hazard the comment invited.
+4. Write the constraint where the replacement's author will read it. A
+   deletion in disposable code does not carry the constraint forward.
+
+## Audits-are-clean-so-compress
+
+Clean inheritance audits are the result of running the check. They are
+not a reason to skip the next one. The reopening criterion for relaxing
+the check is a substrate change that makes it no longer load-bearing, not
+a run of clean results.
+
+## Where to look
+
+Weight the check by how close the surface is to Shekyl-specific secrets
+and cryptography. Key and signing surfaces carry the findings. Data-flow
+surfaces carry fewer. Pure utility surfaces usually carry none. A design
+that was written for Shekyl (secrets in session state, public material on
+the message path) passes by construction. Inherited CryptoNote architecture
+needs the audit.
+
+## Related rules
+
+`00-mission.mdc` (the hierarchy this operates inside),
+`05-system-thinking.mdc` (recorded why), `15-deletion-and-debt.mdc`
+(pre-genesis discount), `30-cryptography.mdc` and `35-secure-memory.mdc`
+(the commitments inherited code is judged against),
+`36-secret-locality.mdc` (which component owns the secret),
+`60-no-monero-legacy.mdc` (the consensus-level case of this rule).

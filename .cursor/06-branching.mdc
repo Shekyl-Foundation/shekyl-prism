@@ -1,0 +1,199 @@
+---
+description: Branch policy for shekyl-core and shekyl-gui-wallet
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Branch Policy
+
+This repo uses **main = stable, dev = integration**. The AI assistant must
+follow these rules without exception. If a request seems to require violating
+one of these rules, stop and ask the human first.
+
+## Hard rules
+
+1. **Never commit directly to `main`.** Ever. `main` only advances via a
+   merge commit from `dev` (GitHub "Create a merge commit" / `git merge
+   --no-ff dev`), with a signed annotated tag placed on the resulting
+   merge commit. Even a one-line typo fix goes through `dev`. Tag
+   signing policy, maintainer keys, and verification instructions live
+   in [`docs/SIGNING.md`](../../docs/SIGNING.md).
+
+   **Forbidden `dev → main` operations:** fast-forward merges
+   (`--ff-only`), rebase-and-merge, squash-and-merge, and force-push.
+   Each of these either rewrites SHAs or elides the release boundary.
+   The only acceptable `dev → main` operation is a non-fast-forward
+   merge commit. Do not argue for `--ff-only` on the grounds that it is
+   "more conservative" — it is not, and the argument has been had.
+
+2. **Never create a long-lived feature branch.** "Long-lived" means any
+   branch expected to exist for more than ~5 working days or accumulate
+   more than ~10 commits before merging. The cautionary example is
+   `feature/msvc-wallet-core` (closed 2026-04): it accumulated 45 commits
+   and 141-commit dev drift before being merged, and the merge itself
+   became a multi-day project. Do not recreate this pattern.
+
+3. **Never continuously merge `dev` into a feature branch to "keep it current".**
+   This is the failure pattern that produces orphaned branches. If a
+   feature branch is falling behind dev, the answer is to land it on dev
+   sooner, not to repeatedly merge dev into it. If the branch isn't ready
+   to land, the work is too large and must be broken into smaller pieces
+   that can each land on dev behind a feature flag or in disabled state.
+   This does NOT mean that merging cannot be done to fix a problem or just prior 
+   to opening a PR to ensure you are on the current dev branch.
+
+4. **Never push to `dev` without the user's explicit instruction for that
+   specific push.** "Run the tests and push" is not a standing instruction.
+   Each push is a separate authorization.
+
+5. **Never delete a branch without explicit confirmation from the user**,
+   even if it appears stale or merged. Branches may contain unmerged work
+   that isn't obvious from `git log`. If a branch needs deletion, propose
+   it and wait for confirmation, ideally after tagging the HEAD as
+   `archive/<branch-name>-<date>` for recoverability.
+
+6. **Never force-push to `main` or `dev`.** Force-push is permitted only
+   on short-lived branches owned by a single contributor, and only when
+   that contributor has explicitly asked for it.
+
+## Default workflow for any code change
+
+1. Confirm you are on `dev` (or a short-lived branch off `dev`).
+   If on `main`, stop and ask which branch to use.
+2. Make the change.
+3. Run formatters, linters, and tests as defined in the repo's other
+   cursor rules (e.g. `rust-fmt-check.mdc`).
+4. Commit with a message following `commits.mdc`.
+5. **Do not push.** Surface the commit to the user and wait for
+   instruction.
+
+## When a short-lived branch is appropriate
+
+A branch off `dev` is appropriate when:
+
+- The change touches >~5 files or >~200 lines and would benefit from
+  PR review before landing on `dev`.
+- The change is experimental and may be discarded.
+- The change must be coordinated with other contributors before merging.
+
+In all cases the branch should be named `chore/<description>` / `fix/<description>` / `feat/<description>`,
+and should land on `dev` within 5 working days. If it can't, the change
+is too large; break it down.
+
+## The 5-day / 10-commit guidance has one named exception
+
+The 5-working-day / 10-commit splitting guidance in rule 2 and the
+"land on dev within 5 working days" guidance above have a single
+ratified exception: PRs that meet all four criteria of
+[`07-consensus-atomic-cutovers.mdc`](./07-consensus-atomic-cutovers.mdc)
+— consensus-rule boundary, indivisible under flag decomposition,
+surface enumerated in advance with grep evidence, and disposition
+documented in the PR description with reviewer-map and rollback
+procedure. The exception applies only to the PR-splitting guidance;
+every other rule in this file (no direct commits to `main`, no
+`dev`-merges-into-feature, no force-pushes to `main`/`dev`, no
+deletion without confirmation, etc.) is unmodified.
+
+If a PR appears to need the exception, the test is *not* "is this
+analogous to LWMA-1 Phase 4" — it is "does this PR meet the four
+named criteria in `07-consensus-atomic-cutovers.mdc`?" The exception
+is auditable mechanically against the criteria, not by precedent.
+
+## The merge queue tests the merge result
+
+`dev` merges through GitHub's merge queue. A PR's CI runs on the PR's own
+head merged onto the `dev` of the moment it was pushed. The queue reruns
+the required checks on the **actual merge result** just before it lands.
+That is the only check that sees a semantic conflict: two PRs each green
+alone, broken together. The mechanism is the workflows' `merge_group:`
+trigger — every PR gate carries one; a gate that runs on the PR but not
+on the group has a hole exactly where this class lives — plus the `dev`
+ruleset. Consequences:
+
+- **A stacked PR cannot enter the queue until its base merges and it
+  re-targets `dev`.** That was already the discipline; the queue makes it
+  load-bearing. Expect it, do not fight it.
+- **"Require branches to be up to date" is not the cheaper alternative.**
+  It tests the same thing by making every author rebase and re-run CI after
+  every other merge — with six lanes open, each merge invalidates the other
+  five. The queue does the rebase-and-test once, on the group.
+- **`merge_group` takes no `paths` filter.** A path-filtered gate runs on
+  every group; the cheap gates carry the trigger anyway, the expensive
+  non-gate workflows (the depends cross-compiles, the RandomX differential
+  lane, the benchmark comparator) do not, and are named as such in their
+  files.
+- **A failure in the queue is `dev`'s finding, not the PR's** (the PR was
+  green on its own head): read the group's diff against the base, find the
+  other lane's change, fix on the PR, re-queue.
+
+## When to ask the user instead of proceeding
+
+- Any request that mentions `main` directly ("commit this to main",
+  "fix on main", "tag main")
+- Any request to create a branch with `feature/` prefix (the prefix
+  itself is a smell — see rule 2)
+- Any request to merge between long-lived branches
+- Any request to delete a branch
+- Any request to force-push, rewrite history on a shared branch, or
+  use `git reset --hard` on a tracked branch
+- Any operation that would touch git tags (creation, deletion, moving)
+
+## Release flow (for reference, not for AI execution)
+
+1. `dev` is verified: CI green, manual testing complete for GUI
+   changes, PQC/staking/consensus changes reviewed per the normal
+   process.
+2. A PR is opened from `dev` to `main` titled `Release: vX.Y.Z` with
+   the changelog delta in the body. The PR exists for audit trail even
+   when there is only one maintainer.
+3. The PR is merged using GitHub's **"Create a merge commit"** option
+   (equivalently `git merge --no-ff dev` on the CLI). This is the only
+   acceptable merge strategy for `dev → main`. Rebase-and-merge and
+   squash-and-merge are disabled or must not be used.
+4. A **signed annotated tag** is placed on the resulting merge commit
+   on `main`. The tag signature is the cryptographic release marker;
+   the merge commit is the branch-topology release marker. Both are
+   required. The preferred signer from `v3.1.0-alpha.5` onward is the
+   Shekyl Foundation institutional signing key; maintainer keys remain
+   a documented additive fallback. Full key material, the command
+   sequence (`git tag -u <key> -a -s …`), the hardware-token ceremony,
+   and the downstream `git verify-tag` procedure are all in
+   [`docs/SIGNING.md`](../../docs/SIGNING.md).
+5. The tag is pushed: `git push origin vX.Y.Z`. The release artifact is
+   built from `main` at the tag, reproducibly (Guix).
+6. `dev` is not rebased onto `main` after release. Because the merge is
+   non-fast-forward, `dev`'s history is unchanged and new work continues
+   on `dev` normally. If `main` accumulates hotfix commits later (which
+   should itself go through a short-lived branch → dev → main cycle),
+   no special sync step is needed.
+
+The AI does not perform release operations. If asked to "cut a release",
+"tag a version", or "promote to main", stop and confirm the user wants
+to walk through the release flow manually.
+
+## Rationale (why merge commit, not fast-forward)
+
+This section exists so the policy does not get re-litigated every time
+an AI assistant suggests `--ff-only` is "more conservative."
+
+- **Fast-forward fails on any divergence.** Once `main` accumulates any
+  commit not on `dev` — a hotfix, a tag-adjustment, or tree-identical
+  commits with different SHAs (as happened in the alpha.3 cycle) — a
+  fast-forward merge is impossible and the policy contradicts itself.
+  Merge commits handle divergence correctly by construction.
+- **SHA identity between `dev` tip and `main` tip is not security-relevant.**
+  What auditors and node operators verify is (a) the signed tag's
+  signature, and (b) that the tree at the tag matches the reviewed
+  source. Both are independent of whether `main`'s tip is a merge
+  commit or an FF'd `dev` commit. Reproducible Guix builds verify
+  trees, not commit SHAs.
+- **The merge commit is the release boundary.** `git log --graph main`
+  shows each release as a visible two-parent commit. This is the
+  honest representation of what happened: two lines of development
+  (ongoing `dev` work and the stable `main` line) were reconciled at
+  release time.
+- **Append-only `main` is the actual security property.** No
+  force-push, no rebase, no history rewriting on `main`. Merge style
+  is orthogonal to this; both FF and merge-commit preserve SHAs of
+  commits that exist on both branches. The append-only property is
+  enforced by branch protection, not by merge style.

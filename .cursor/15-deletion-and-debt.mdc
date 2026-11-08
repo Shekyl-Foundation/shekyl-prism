@@ -1,0 +1,80 @@
+---
+description: Deletion vs. deferral decisions, and the lifecycle of migration code.
+alwaysApply: true
+---
+
+# When to delete, when to defer
+
+## Default: delete
+
+Code with no live caller, code that handles state that doesn't exist, code
+marked `[[deprecated]]` for more than one release cycle — all of it goes. Dead
+code is audit surface, attack surface, and review fatigue.
+
+## What each disposition leaves behind
+
+Choosing between delete and defer is this rule's subject. **What each choice
+leaves visible — symbols, FOLLOWUPS rows, contract entries — is
+`23-disposition-visibility.mdc`'s**, which defines REJECTED / DEFERRED /
+STAGED / RESERVED by their grep surfaces. Consult it when recording a decision;
+it is not restated here.
+
+## When to use `[[deprecated]]`
+
+Almost never. The annotation is a promise to delete by a specific version. If
+you can't name the version, you can't deprecate — delete now or schedule the
+deletion in `docs/FOLLOWUPS.md`. `[[deprecated]]` without a deletion date is
+debt that compounds.
+
+## Migration code is a permanent attack surface for a one-time problem
+
+Code that detects an old format and converts it runs forever to handle state
+that exists for a finite period.
+
+- **Pre-V3 launch:** `rm -rf ~/.shekyl` and re-sync is the migration path. No
+  in-Shekyl format-detection code is justified. Ruthless about deletion.
+- **Post-V3 launch:** real users have real state. Migration code becomes
+  load-bearing where it exists, but should be the smallest possible code with
+  the clearest possible scope, and should still have a deletion target.
+
+This rule is distinct from `60-no-monero-legacy.mdc`, which says no Monero-era
+compatibility code exists at all — that's a permanent fact about genesis, not
+a transitional policy.
+
+## FOLLOWUPS.md is not a graveyard
+
+Items in `docs/FOLLOWUPS.md` have a `Target:` of **pre-genesis**,
+**post-genesis**, or **V4** (see
+[`95-documentation-lifecycle.mdc`](95-documentation-lifecycle.mdc)).
+Items without one get one within 30 days or get closed as "won't fix."
+`V3.1` / `V3.2` / `V3.x` are not targets.
+
+## "While we're here" is the enemy
+
+Every PR has a stated scope. Changes outside that scope go in a separate PR,
+even when they're obvious improvements. Reviewer attention is finite;
+bisection requires small commits. When you spot something worth fixing
+outside scope, write it down in `FOLLOWUPS.md` and keep going.
+
+However, this does not preclude disciplined "the file I'm editing for
+substantive reasons should be left in good shape after my edit." It's entirely
+appropriate and responsible to fix mechanical formatting errors in a file that 
+is already being modified.
+
+## Three work-item targets (not a V3.x train)
+
+V3 ships with FCMP++ and hybrid PQC from genesis. There is no V3.1 /
+V3.2 / V3.x release train — those labels were how work hid from
+genesis. Allowed targets:
+
+- **pre-genesis** — default. If it should exist at launch, it lands
+  before genesis. Genesis ships as complete as possible.
+- **post-genesis** — exceptional deferral with a named blocker why it
+  cannot land before genesis. The list stays tiny.
+- **V4** — lattice-only transition, **2–5 years**, gated on NIST (or
+  successor) actually approving and releasing primitives such as
+  lattice threshold signatures. Not a parking lot.
+
+If an item does not fit pre-genesis it needs a named post-genesis
+blocker, or it is V4, or it is won't-fix. It does not wait in a fake
+intermediate version.

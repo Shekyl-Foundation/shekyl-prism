@@ -1,0 +1,332 @@
+// Copyright (c) 2025-2026, The Shekyl Foundation
+//
+// All rights reserved.
+// BSD-3-Clause
+
+//! Montgomery curves and the 2-isogeny step a (2,2) chain is built from.
+//!
+//! A split (2,2)-isogeny is a pair of Vélu 2-isogenies, one on each factor.
+//! That is the kernel which is already a product of torsion subgroups. The
+//! glued theta chain in the C reference
+//! (`theta_chain_compute_and_eval_verify`) is the differential target; it is
+//! not this function.
+
+#![forbid(unsafe_code)]
+
+use prism_field::Field;
+
+/// Short Weierstrass `y^2 = x^3 + a4 x + a6`.
+#[derive(Clone, Copy, Debug)]
+pub struct Curve<F> {
+    pub a4: F,
+    pub a6: F,
+}
+
+/// Affine point. The point at infinity is `None` from the isogeny map.
+#[derive(Clone, Copy, Debug)]
+pub struct Point<F> {
+    pub x: F,
+    pub y: F,
+}
+
+impl<F: Field> Curve<F> {
+    /// Montgomery `y^2 = x^3 + A x^2 + x`, translated by `X = x + A/3`.
+    pub fn from_montgomery(coefficient: F) -> Option<Self> {
+        let three = F::from_u64(3);
+        let three_inv = three.inv()?;
+        let shift = coefficient.mul(three_inv);
+        let shift2 = shift.mul(shift);
+        let shift3 = shift2.mul(shift);
+        // a4 = 3 (A/3)^2 + A (-2) (A/3) + 1
+        let a4 = three
+            .mul(shift2)
+            .add(coefficient.mul(F::from_u64(2).negate()).mul(shift))
+            .add(F::one());
+        // a6 = -(A/3)^3 + A (A/3)^2 - A/3
+        let a6 = shift3.negate().add(coefficient.mul(shift2)).sub(shift);
+        Some(Self { a4, a6 })
+    }
+
+    pub fn contains(self, point: Point<F>) -> bool {
+        let y2 = point.y.mul(point.y);
+        let x2 = point.x.mul(point.x);
+        let rhs = point.x.mul(x2).add(self.a4.mul(point.x)).add(self.a6);
+        y2.same(rhs)
+    }
+
+    /// The Montgomery point `(0, 0)` after the translation `X = x + A/3`.
+    pub fn kernel_at_zero(coefficient: F) -> Option<Point<F>> {
+        let three = F::from_u64(3).inv()?;
+        Some(Point {
+            x: coefficient.mul(three),
+            y: F::zero(),
+        })
+    }
+}
+
+impl<F: Field> Point<F> {
+    pub fn negated(self) -> Self {
+        Self {
+            x: self.x,
+            y: self.y.negate(),
+        }
+    }
+}
+
+/// 2-isogeny with kernel a rational point of order 2 (`y = 0`).
+///
+/// Vélu: `t = 3 x0^2 + a4`, `a4' = a4 − 5 t`, `a6' = a6 − 7 x0 t`,
+/// `x' = x + t / (x − x0)`, `y' = y (1 − t / (x − x0)^2)`.
+/// The kernel is sent to the point at infinity.
+pub fn two_isogeny<F: Field>(domain: Curve<F>, kernel: Point<F>) -> Option<Iso<F>> {
+    if !kernel.y.is_zero() || !domain.contains(kernel) {
+        return None;
+    }
+    let x0 = kernel.x;
+    let t = F::from_u64(3).mul(x0.mul(x0)).add(domain.a4);
+    let codomain = Curve {
+        a4: domain.a4.sub(F::from_u64(5).mul(t)),
+        a6: domain.a6.sub(F::from_u64(7).mul(x0).mul(t)),
+    };
+    Some(Iso {
+        domain,
+        codomain,
+        x0,
+        t,
+    })
+}
+
+/// One evaluated 2-isogeny.
+#[derive(Clone, Copy, Debug)]
+pub struct Iso<F> {
+    domain: Curve<F>,
+    codomain: Curve<F>,
+    x0: F,
+    t: F,
+}
+
+impl<F: Field> Iso<F> {
+    pub fn codomain(self) -> Curve<F> {
+        self.codomain
+    }
+
+    /// `None` is the point at infinity, which is where the kernel lands.
+    pub fn image(self, point: Point<F>) -> Option<Point<F>> {
+        if !self.domain.contains(point) {
+            return None;
+        }
+        let gap = point.x.sub(self.x0);
+        let gap_inv = gap.inv()?;
+        let x = point.x.add(self.t.mul(gap_inv));
+        let gap2_inv = gap_inv.mul(gap_inv);
+        let scale = F::one().sub(self.t.mul(gap2_inv));
+        Some(Point {
+            x,
+            y: point.y.mul(scale),
+        })
+    }
+}
+
+/// A split (2,2)-isogeny: one 2-isogeny on each factor.
+pub struct SplitTwoTwo<F> {
+    pub left: Iso<F>,
+    pub right: Iso<F>,
+}
+
+impl<F: Field> SplitTwoTwo<F> {
+    pub fn new(
+        left: Curve<F>,
+        left_kernel: Point<F>,
+        right: Curve<F>,
+        right_kernel: Point<F>,
+    ) -> Option<Self> {
+        Some(Self {
+            left: two_isogeny(left, left_kernel)?,
+            right: two_isogeny(right, right_kernel)?,
+        })
+    }
+}
+
+/// `steps` successive split (2,2)-isogenies on the product of a curve with itself.
+///
+/// The walk starts at the Montgomery curve with coefficient `start`. The first
+/// kernel is `(0, 0)`. The two other 2-torsion x-coordinates are `siblings`,
+/// translated into the short-Weierstrass model. Each later kernel is the image
+/// of one sibling; the spare sibling is the third root of the codomain's
+/// 2-division polynomial, `-(r + s)`, which is rational whenever the first two
+/// are.
+pub fn split_chain<F: Field>(start: F, siblings: [F; 2], steps: u32) -> Option<Curve<F>> {
+    let mut curve = Curve::from_montgomery(start)?;
+    if steps == 0 {
+        return Some(curve);
+    }
+    let shift = start.mul(F::from_u64(3).inv()?);
+    let mut kernel = Point {
+        x: shift,
+        y: F::zero(),
+    };
+    let mut spare = Point {
+        x: siblings[0].add(shift),
+        y: F::zero(),
+    };
+    let mut extra = Point {
+        x: siblings[1].add(shift),
+        y: F::zero(),
+    };
+    for i in 0..steps {
+        if !curve.contains(kernel) {
+            return None;
+        }
+        let iso = two_isogeny(curve, kernel)?;
+        curve = iso.codomain();
+        if i + 1 == steps {
+            break;
+        }
+        let next = iso.image(spare)?;
+        let other = iso.image(extra)?;
+        kernel = next;
+        spare = other;
+        extra = Point {
+            x: next.x.add(other.x).negate(),
+            y: F::zero(),
+        };
+    }
+    Some(curve)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{two_isogeny, Curve, Point, SplitTwoTwo};
+    use prism_field::Field;
+
+    #[derive(Clone, Copy, Debug)]
+    struct Toy(u64);
+
+    const P: u64 = 1019;
+
+    impl PartialEq for Toy {
+        fn eq(&self, other: &Self) -> bool {
+            self.0 == other.0
+        }
+    }
+    impl Eq for Toy {}
+
+    impl Field for Toy {
+        fn zero() -> Self {
+            Self(0)
+        }
+        fn one() -> Self {
+            Self(1)
+        }
+        fn from_u64(v: u64) -> Self {
+            Self(v % P)
+        }
+        fn add(self, rhs: Self) -> Self {
+            Self((self.0 + rhs.0) % P)
+        }
+        fn sub(self, rhs: Self) -> Self {
+            Self((self.0 + P - rhs.0) % P)
+        }
+        fn mul(self, rhs: Self) -> Self {
+            Self(((self.0 as u128 * rhs.0 as u128) % P as u128) as u64)
+        }
+        fn negate(self) -> Self {
+            Self((P - self.0) % P)
+        }
+        fn inv(self) -> Option<Self> {
+            if self.0 == 0 {
+                None
+            } else {
+                Some(Self(mod_pow(self.0, P - 2)))
+            }
+        }
+        fn is_zero(self) -> bool {
+            self.0 == 0
+        }
+        fn same(self, rhs: Self) -> bool {
+            self.0 == rhs.0
+        }
+    }
+
+    fn mod_pow(mut base: u64, mut exp: u64) -> u64 {
+        let mut out = 1u64;
+        base %= P;
+        while exp > 0 {
+            if exp & 1 == 1 {
+                out = ((out as u128 * base as u128) % P as u128) as u64;
+            }
+            base = ((base as u128 * base as u128) % P as u128) as u64;
+            exp >>= 1;
+        }
+        out
+    }
+
+    fn point_on_curve() -> (Curve<Toy>, Point<Toy>) {
+        // alpha = 3, A = -(alpha + 1/alpha), the setup checked by hand.
+        let alpha = Toy::from_u64(3);
+        let coefficient = alpha.add(alpha.inv().unwrap()).negate();
+        let curve = Curve::from_montgomery(coefficient).unwrap();
+        let kernel = Curve::kernel_at_zero(coefficient).unwrap();
+        // Use the order-2 point at x = alpha, translated, which was the
+        // hand check. kernel_at_zero is (0, 0). Either is valid; this test
+        // uses alpha so it matches the independent Vélu check.
+        let kernel = Point {
+            x: alpha.add(kernel.x),
+            y: Toy::zero(),
+        };
+        assert!(curve.contains(kernel));
+        (curve, kernel)
+    }
+
+    #[test]
+    fn kernel_lands_at_infinity_and_a_point_lands_on_the_codomain() {
+        let (curve, kernel) = point_on_curve();
+        let iso = two_isogeny(curve, kernel).unwrap();
+        assert!(iso.image(kernel).is_none());
+        let source = Point {
+            x: Toy::from_u64(2).add(Curve::kernel_at_zero(Toy::zero()).unwrap().x),
+            y: Toy::zero(),
+        };
+        // (2, y) may not lie on this curve. Search a small x that does.
+        let mut found = None;
+        for x in 1..80u64 {
+            let point = Point {
+                x: Toy::from_u64(x),
+                y: Toy::zero(),
+            };
+            if curve.contains(point) && !point.x.same(kernel.x) {
+                found = Some(point);
+                break;
+            }
+            let y2 = {
+                let x = Toy::from_u64(x);
+                x.mul(x).mul(x).add(curve.a4.mul(x)).add(curve.a6)
+            };
+            let leg = mod_pow(y2.0, (P - 1) / 2);
+            if leg == 1 {
+                let y = Toy(mod_pow(y2.0, (P + 1) / 4));
+                let point = Point {
+                    x: Toy::from_u64(x),
+                    y,
+                };
+                if curve.contains(point) {
+                    found = Some(point);
+                    break;
+                }
+            }
+        }
+        let point = found.expect("a rational point");
+        let image = iso.image(point).expect("not the kernel");
+        assert!(iso.codomain().contains(image));
+        let _ = source;
+    }
+
+    #[test]
+    fn a_split_two_two_is_a_pair_of_two_isogenies() {
+        let (curve, kernel) = point_on_curve();
+        let split = SplitTwoTwo::new(curve, kernel, curve, kernel).unwrap();
+        let alone = two_isogeny(curve, kernel).unwrap();
+        assert!(split.left.codomain().a4.same(alone.codomain().a4));
+        assert!(split.right.codomain().a6.same(alone.codomain().a6));
+    }
+}

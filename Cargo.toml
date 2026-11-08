@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+members = [
+    "prism-field",
+    "prism-isogeny",
+    "prism-verify",
+    "prism-bench",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.94"
+license = "BSD-3-Clause"
+publish = false
+
+[workspace.dependencies]
+fp2 = { version = "=0.6.0", default-features = false }
+sha3 = "=0.10.9"
+prism-field = { path = "prism-field" }
+prism-isogeny = { path = "prism-isogeny" }
+prism-verify = { path = "prism-verify" }

@@ -1,0 +1,14 @@
+[package]
+name = "prism-isogeny"
+description = "Montgomery curves, Vélu 2-isogenies, and split (2,2) chains"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+prism-field = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"
