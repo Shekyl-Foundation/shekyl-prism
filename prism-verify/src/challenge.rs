@@ -38,13 +38,27 @@ impl ChallengeScalar {
         message: &[u8],
         index: ChallengeIndex,
     ) -> Self {
+        Self::derive_width::<L>(identity, message, index, L::CHALLENGE_BITS)
+    }
+
+    /// The same hash, projected onto the odd integers below `2^bits`.
+    ///
+    /// The instantiated verifier passes [`Level::CHALLENGE_BITS`]. A §5
+    /// vector at chain exponent `e′` passes `e′ − 1`, which is two bits
+    /// shorter, and does not change the verifier's own derivation.
+    pub fn derive_width<L: Level>(
+        identity: &KeyIdentity<'_, L>,
+        message: &[u8],
+        index: ChallengeIndex,
+        bits: u32,
+    ) -> Self {
         let mut hasher: CShake256 = CoreWrapper::from_core(CShake256Core::new(CHALLENGE_DOMAIN));
         hasher.update(identity.as_bytes());
         hasher.update(message);
         hasher.update(&index.to_canonical_bytes());
-        let mut bytes = vec![0u8; L::S_LEN];
+        let mut bytes = vec![0u8; (bits as usize).div_ceil(8)];
         hasher.finalize_xof().read(&mut bytes);
-        project_onto_domain(&mut bytes, L::CHALLENGE_BITS);
+        project_onto_domain(&mut bytes, bits);
         Self { bytes }
     }
 
@@ -134,10 +148,29 @@ pub fn smallest_challenge_index<L: Level>(
     public_key: &[u8],
     message: &[u8],
 ) -> Result<ChallengeIndex, IndexError> {
+    let (index, _) = smallest_at_exponent::<L>(public_key, message, L::E)?;
+    Ok(index)
+}
+
+/// The smallest index whose degree `2^{2·exponent−1} − s^2` is prime.
+///
+/// `exponent` is the chain exponent the scalar is derived for. The
+/// instantiated search passes [`Level::E`]. A §5 vector passes `E − 2`.
+pub fn smallest_at_exponent<L: Level>(
+    public_key: &[u8],
+    message: &[u8],
+    exponent: u32,
+) -> Result<(ChallengeIndex, ChallengeScalar), IndexError> {
     let identity = KeyIdentity::<L>::decode(public_key).map_err(IndexError::Identity)?;
+    let bits = exponent.checked_sub(1).ok_or(IndexError::Exhausted)?;
     ChallengeIndex::search_order()
-        .find(|index| {
-            ChallengeScalar::derive::<L>(&identity, message, *index).degree_is_prime::<L>()
+        .find_map(|index| {
+            let scalar = ChallengeScalar::derive_width::<L>(&identity, message, index, bits);
+            if prime::degree_is_prime(exponent, scalar.as_bytes()) {
+                Some((index, scalar))
+            } else {
+                None
+            }
         })
         .ok_or(IndexError::Exhausted)
 }
