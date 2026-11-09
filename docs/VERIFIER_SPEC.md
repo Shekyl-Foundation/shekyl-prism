@@ -276,13 +276,17 @@ For the authors of ePrint 2026/443:
 3. The §5 strong-unforgeability argument assumes a deterministic
    `H_squares` (Remark 8). Whether the reduction holds when the signature
    carries the search index is theirs to answer.
-4. The step-`e − 1` reading and the step-`e` reading are two theta
-   structures on the same surface. How does a verifier name the
-   transformation between them? Once that transformation is fixed, one sign
-   per factor may remain. Global `−1` is the same relation with `−s`, and
-   the degree depends on `s^2`. Does identifying the structures, or a
-   per-factor sign `(1, −1)` or `(−1, 1)`, accept a `σ` the check on
-   `R`, `T` and `R−T` should refuse?
+4. Can the theta structure at step `e − 1` and the theta structure at
+   step `e` on `A` be related, by matching conditions or by an explicit
+   matrix in `Sp_4(Z/4Z)`, using only the rational `2^e`-torsion? The
+   reading under Identification concludes that the published method cannot: the
+   inheritance along one chain needs `2^{e+2}`-torsion (2024/1180 §4.1),
+   the explicit matrix needs a symplectic basis of `A[4]` and the image
+   of `(E_vk × E_sig)[2^e]` at step `e − 1` is `(Z/2^e)^2 × (Z/2)^2`, and
+   the half-torsion cutting (§5.3, Lemma 29) identifies two chains from
+   the product rather than these two steps. A per-factor sign is a
+   separate question. SQIsignHD's image check accepts one, on Lemma
+   5.7.1 (Appendix A.4), whose proof was not available for this reading.
 
 ## How step 8 compares points
 
@@ -303,11 +307,66 @@ of `([s]X, 0)` at step `e − 1` is `Φ₂([s]X, 0)`, and the image of
 `A` is the midpoint of an odd-exponent endomorphism. In general it is the
 Jacobian of a genus-2 curve, not a product of elliptic curves. The chain
 therefore does not split. The two readings are theta coordinates, each in
-the theta structure of its own step. Two theta structures on one
-principally polarized surface differ by an element of a finite group, the
-symplectic action on the level-2 theta coordinates, up to projective
-scaling. Naming that element is question 4. Until it is named, `verify`
-returns `Unidentified` and does not compare the readings.
+the theta structure of its own step.
+
+### The two structures, from the literature (2026-11-08)
+
+Read against Dartois, ePrint 2024/1180 (arXiv 2407.15492v2), §2.7, §3.2,
+§4.1, §5.3, Remark 18, and Appendix C.2, and against
+`Pierrick-Dartois/Theta_dim4` `KaniEndoHalf` and `base_change_theta_dim2`
+and `Pierrick-Dartois/SQISignHD-lib` `Verification/Verify.py`, both
+Apache-2.0 at the head of their default branches. SQIsignHD (ePrint
+2023/436) §5.4–5.7 and Appendices A.4 and C.2–C.3 are cited by those
+sources; the ePrint PDF did not yield to retrieval here, so the lemma
+text of 2023/436 is taken from Dartois's quotations and from the code.
+
+A level-2 theta structure is induced by a symplectic basis of the
+4-torsion (2024/1180 §2.7, Theorem 5(ii)). Along one chain the later
+steps inherit that structure: once the first step is set so that its
+kernel is the second half of the decomposition, each later step is the
+image of the previous kernel, and no fresh change of basis is computed
+(§4.1). That inheritance needs an isotropic `K″ ⊂ A[2^{e+2}]` with
+`[4]K″` the kernel of the whole chain. These curves have rational
+`2^e`-torsion and no further 2-power. The last two steps are therefore
+the square-root steps. Remark 18 says a codomain null point computed
+from a kernel basis of order 2, without the 8-torsion above it, takes
+`2^g − 1` square roots, and `g(g+1)/2` of the resulting signs are
+arbitrary. In dimension 2 that is three signs. Those signs are the
+unidentified transformation between the step-`e − 1` structure and the
+step-`e` structure.
+
+The method that names the transformation explicitly reads a matrix
+`M ∈ Sp_4(Z/4Z)` from the image of a symplectic basis of `A[4]`, then
+applies the theta transformation formula (2024/1180 Theorem 12;
+`base_change_theta_dim2`). The points of `A` this chain can name are
+images of `(E_vk × E_sig)[2^e]`. At step `e − 1` the kernel so far is
+`(Z/2^{e−1})^2`, so the image is `(Z/2^e)^2 × (Z/2)^2`. Its elements of
+order 4 span a `(Z/4)^2`, not a symplectic basis of `A[4] ≅ (Z/4)^4`.
+The formula cannot be evaluated.
+
+The method that makes two structures agree by construction is the
+half-torsion cutting of §5.3: two chains `F₁` and `F̃₂` from the product,
+each of length at most `⌈e/2⌉`, started from symplectic bases of the
+`2^{⌈e/2⌉+2}`-torsion chosen so the induced structures on the common
+codomain are dual (Appendix C.2, Lemma 29). The check is equality of
+theta-null points after one Hadamard transform, and the second chain is
+then replaced by its dual (`Verify.py`: `C1.zero() == C2.hadamard().zero()`,
+then `F₂ = F̃₂.dual()`). These curves do have `2^{⌈e/2⌉+2}`-torsion. That
+construction identifies two chains that both start at the product. It
+does not name the transformation between step `e − 1` and step `e` of
+the single chain Algorithm 3 prints, and it is not implemented here.
+
+Composing back through `Φ̂₂` meets the same gap at `A`. The return chain
+starts in whichever structure step `e − 1` produced, and the dual
+identification in the code is the one Lemma 29 arranged in advance.
+`Unidentified` stays the result whenever both readings exist. No
+identification code is added.
+
+The image check in `Verify.py` accepts each factor up to sign
+(`FT[0] == ±a₁P` and `FT[1] == ±a₂P`). The argument named for that is
+SQIsignHD Lemma 5.7.1, proved in its Appendix A.4, which was not in the
+text retrieved. This verifier does not adopt that argument. The
+comparison is not performed.
 
 salt-PRISM does split. Its chain requires a product codomain because it
 embeds a full isogeny. `splitting_compute` is that step, and the
@@ -343,8 +402,8 @@ points do not see the substitution.
 
 The comparison, once the two structures are identified, is on `R`, `T`
 and `R−T`. A relative sign flip sends `R−T` to `R+T`, and
-`x(R+T) ≠ x(R−T)` when both points have order greater than 2. What that
-leaves, including a sign per factor, is question 4.
+`x(R+T) ≠ x(R−T)` when both points have order greater than 2. A sign
+per factor is the remainder question 4 names, and it is not adopted.
 
 `E0 × E0` is not the bench's general-key number. The curve `j = 1728` has
 extra automorphisms. The floor-device gate is the level III chain above,
