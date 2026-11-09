@@ -69,17 +69,42 @@ fn judge(line: &str) -> Result<&'static str, String> {
 }
 
 fn decode_hex(text: &str) -> Result<Vec<u8>, String> {
-    if !text.len().is_multiple_of(2) {
-        return Err("scalar hex has an odd length".to_string());
-    }
-    if text.is_empty() {
+    let bytes = text.as_bytes();
+    if bytes.is_empty() {
         return Err("scalar hex is empty".to_string());
     }
-    (0..text.len())
-        .step_by(2)
-        .map(|index| {
-            u8::from_str_radix(&text[index..index + 2], 16)
-                .map_err(|_| "scalar hex is not hexadecimal".to_string())
-        })
+    if !bytes.len().is_multiple_of(2) {
+        return Err("scalar hex has an odd length".to_string());
+    }
+    // Byte pairs, not `str` slices: a multibyte character is still even in
+    // bytes and slicing it would panic on a char boundary.
+    bytes
+        .chunks_exact(2)
+        .map(|pair| Ok(hex_value(pair[0])? << 4 | hex_value(pair[1])?))
         .collect()
+}
+
+fn hex_value(byte: u8) -> Result<u8, String> {
+    match byte {
+        b'0'..=b'9' => Ok(byte - b'0'),
+        b'a'..=b'f' => Ok(byte - b'a' + 10),
+        b'A'..=b'F' => Ok(byte - b'A' + 10),
+        _ => Err("scalar hex is not hexadecimal".to_string()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::judge;
+
+    #[test]
+    fn a_multibyte_scalar_is_refused() {
+        let err = judge("4 a€").expect_err("a split character is not hex");
+        assert_eq!(err, "scalar hex is not hexadecimal");
+    }
+
+    #[test]
+    fn one_is_a_prime_degree_at_exponent_four() {
+        assert_eq!(judge("4 01").expect("1 is hex"), "prime");
+    }
 }
