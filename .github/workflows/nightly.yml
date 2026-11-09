@@ -76,7 +76,36 @@ jobs:
           restore-keys: fuzz-${{ matrix.target }}-
       - id: fuzz
         name: 10 minutes
-        run: cargo +nightly fuzz run ${{ matrix.target }} -- -max_total_time=600
+        env:
+          FUZZ_TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          # The pinned cargo-fuzz binary is musl and defaults --target to that triple, where ASan is refused.
+          cargo +nightly fuzz run "$FUZZ_TARGET" --target x86_64-unknown-linux-gnu -- -max_total_time=600 2>&1 | tee fuzz.log
+          python3 - << 'PY'
+          import os
+          import pathlib
+          import re
+          import sys
+
+          text = pathlib.Path("fuzz.log").read_text(errors="replace")
+          units = [
+              int(match)
+              for match in re.findall(r"stat::number_of_executed_units:\s*(\d+)", text)
+          ]
+          dones = [int(match) for match in re.findall(r"^#(\d+)\s+DONE\b", text, re.M)]
+          count = units[-1] if units else (dones[-1] if dones else 0)
+          corpus = pathlib.Path("fuzz/corpus") / os.environ["FUZZ_TARGET"]
+          files = [path for path in corpus.rglob("*") if path.is_file()] if corpus.is_dir() else []
+          line = f"fuzz {os.environ['FUZZ_TARGET']}: executions {count}, corpus files {len(files)}"
+          print(line)
+          summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary:
+              with open(summary, "a", encoding="utf-8") as handle:
+                  handle.write(f"## {os.environ['FUZZ_TARGET']}\n\n{line}\n")
+          if count < 1000 or not files:
+              sys.exit("fuzz did not execute, or it left an empty corpus")
+          PY
       - name: Save the corpus
         if: steps.fuzz.outcome == 'success' || steps.fuzz.outcome == 'failure'
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
