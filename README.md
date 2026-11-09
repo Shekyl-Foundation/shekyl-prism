@@ -59,8 +59,10 @@ pin, and — when `scripts/`, `external/`, or a `testdata/` directory changed
 — a rebuild of the pinned C tree that must reproduce `testdata/`. The one
 required check is `ci-pass`. `.github/workflows/nightly.yml` is the
 scheduled half: fuzzing, the primality differential, a big-endian test run,
-mutation and coverage as reports. The level III floor-device measurement is
-not either workflow.
+mutation and coverage as reports. The fuzz jobs count only once a run
+records executions; a green job that built nothing is the failure the
+nightly fix removes. The level III floor-device measurement is not either
+workflow.
 
 `cargo run -p prism-bench` prints the userspace counter
 (`cntvct_el0` on aarch64, `rdtsc` on x86_64) and, after a warm-up, the
