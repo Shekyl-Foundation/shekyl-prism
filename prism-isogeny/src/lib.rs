@@ -22,6 +22,7 @@ pub mod montgomery;
 pub mod splitting;
 pub mod theta;
 pub mod theta_step;
+pub mod torsion;
 
 use prism_field::Field;
 

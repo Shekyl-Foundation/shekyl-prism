@@ -135,17 +135,29 @@ an odd integer `s` with `0 < s < 2^{e−1}`:
    through `Φ`, and acceptance only when `[2^{e−1}] Ψ(R') = [s] R'` and
    the same holds for `T'`. The chain length is `e`, not salt-PRISM's `a`.
 
-Step 3 is specified and not yet the accept condition. The known-answer
-source for that chain is the C tree's `theta_chain_compute_and_eval_verify`,
-compared at the function level: the same kernel inputs, the codomain, and
-the evaluated images, with the chain length as a parameter. The chain
-function is shared. The salt-PRISM wrapper around it is not what this
-verifier conforms to. Until a vector from that function matches, `verify`
-returns `Relation` after the public checks and does not return success.
+Step 3 is the accept condition. `chain` matches
+`theta_chain_compute_and_eval` on two length-160 kernels, each the graph of
+an endomorphism of `E0`: one with the extra 8-torsion the reference's
+verify path passes, and one without it, which is the path Algorithm 3 uses
+because a rational point has order dividing `2^e` and not `2^{e+2}`. Both
+were run again with the isotropy checks on, and the codomain and the image
+still match. The vectors are `prism-isogeny/testdata/chain_lvl1.txt` and
+`chain_lvl1_order.txt`. The salt-PRISM wrapper around that function is not
+what this verifier conforms to.
+
+`verify` then runs two chains. The longer one has length `e` and kernel
+`(P_vk, P_sig)`, `(Q_vk, Q_sig)`. The shorter one has length `e − 1` and
+kernel the doubles of those points. The point pushed through the longer
+chain is `([2^{e−1}] R, 0)`; through the shorter one, `([s] R, 0)`. `R` is
+the point the basis index names before multiplication by `f`, so its order
+divides `p + 1`. Acceptance is the two codomains being the same product and
+the two images being the same point. A signature point that is not on
+`E_sig`, or a chain that does not split, is `Kernel`. Images that differ
+are `Image`.
 
 Table 5's 23.0 Mcycles is salt-PRISM. There is no published timing for §5.
-The floor-device gate is a level III run of Algorithm 3 at `e` steps. It is
-not run before that chain exists.
+The floor-device gate is a level III run of a splitting chain at `e` steps.
+The bench sample stops at `Kernel` and is not that run.
 
 ## Challenge index
 
@@ -253,14 +265,14 @@ For the authors of ePrint 2026/443:
 4. The two comparison questions in "How step 8 compares points", below.
    They are written here so the accept condition has a stated
    identification and a stated sign rule before any vector is allowed to
-   turn `Relation` into success. Confirmation that those two readings
+   turn a chain match into a claim about the paper. Confirmation that those two readings
    match the paper is the authors'.
 
 ## How step 8 compares points
 
-`verify` does not accept a signature yet. These two rulings are what the
-comparison will use once `theta_chain_compute_and_eval_verify` has a
-matching vector. They are not an accept condition by themselves.
+These two rulings are how step 8 reads the chain output. The chain
+function now matches the reference on the vectors named above; the
+comparison below is what `verify` requires of that output.
 
 ### Identification
 
@@ -280,13 +292,14 @@ reference calls `M` and applies with `apply_isomorphism` before
 product's Montgomery model, after that one isomorphism. A codomain that
 does not split is a refusal, not a second choice of structure. Verification
 in the pinned tree also requires the vanishing structure to be index 8;
-`splitting_compute` takes that index and refuses any other. `chain` is
-the reference's `_theta_chain_compute_impl` with randomisation left out:
-gluing, the 8-torsion steps, and that split. `verify` does not call it yet.
-A basis of each factor is not by itself a kernel the chain accepts; the
-reference returns failure for `E0 × E0` and for `E0` times a key-generation
-curve. The kernel that succeeds is the graph of a 2-power isogeny, which
-is what Algorithm 3 builds from `(P_vk, P_sig)`.
+`splitting_compute` takes that index and refuses any other when the extra
+torsion is present. Algorithm 3 does not pass the extra torsion, so it
+accepts whichever single structure vanishes. `chain` is
+`_theta_chain_compute_impl` with randomisation left out, and `verify` calls
+it twice. A basis of each factor is not by itself a kernel: the reference
+refuses that product. The kernel that succeeds is the graph of an
+endomorphism, which is what the two length-160 vectors are, and what
+Algorithm 3 builds from `(P_vk, P_sig)`.
 
 ### Sign
 
@@ -327,13 +340,16 @@ check is refused with the earliest of them:
 | 5 | `Sign` | two encodings and a byte comparison on an element already decoded |
 | 6 | `Basis` | up to `2λ` Legendre symbols — 256, 384, 512 — a length the sender chooses with `A` |
 | 7 | `Composite` | one cSHAKE256 squeeze and one Baillie–PSW test — more than everything above it together |
-| 8 | `Relation` | every check above passed |
+| 8 | `Kernel` | the chains, or the discovery that a signature point is off its curve |
+| 9 | `Image` | the two chains split and their images differ |
 
 The order of `Sign` and `Basis` is load-bearing: the basis search is the one
 public check whose length a sender controls, so the free comparison on
 `y(P_sig)` runs first and a junk signature never pays for the search. The
 `VerifyError` variants are declared in this order and compare in it.
 
-`Relation` is the fail-closed stand-in for Algorithm 3 steps 3–8. It is not
-an authorization decision. Nothing in this crate returns success for a
-signature.
+`Kernel` is a chain that does not split, or a signature point off its curve.
+`Image` is a split whose two sides disagree. Agreement is `Ok(())`. The
+prepared sample used by the bench carries canonical zeros for the signature
+points, which are not on `E_sig`, so that run stops at `Kernel` and does
+not time a splitting chain.

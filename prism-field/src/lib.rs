@@ -100,6 +100,8 @@ pub trait Level: Copy + Clone + Eq + Send + Sync + 'static {
     const LAMBDA: u32;
     /// Valuation in `p = f·2^e − 1`.
     const E: u32;
+    /// The odd cofactor `f` in `p + 1 = f·2^e`.
+    const ODD: u64;
     /// §5 chain length. Algorithm 3 walks a `(2^e, 2^e)` chain, so this is
     /// `e`. salt-PRISM's `a` is a different count and is not this constant.
     const CHAIN_STEPS: u32;
@@ -271,6 +273,12 @@ macro_rules! nist_level {
                 const NAME: &'static str = $name;
                 const LAMBDA: u32 = $lambda;
                 const E: u32 = $e;
+                const ODD: u64 = match $e {
+                    248 => 5,
+                    376 => 65,
+                    500 => 27,
+                    _ => panic!("Table 2 has no cofactor for this valuation"),
+                };
                 const CHAIN_STEPS: u32 = $e;
                 const CHALLENGE_BITS: u32 = $e - 1;
                 const FP_LEN: usize = <$fp>::ENCODED_LENGTH;
