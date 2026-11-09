@@ -147,13 +147,25 @@ what this verifier conforms to.
 
 `verify` then runs two chains. The longer one has length `e` and kernel
 `(P_vk, P_sig)`, `(Q_vk, Q_sig)`. The shorter one has length `e − 1` and
-kernel the doubles of those points. The point pushed through the longer
-chain is `([2^{e−1}] R, 0)`; through the shorter one, `([s] R, 0)`. `R` is
-the point the basis index names before multiplication by `f`, so its order
-divides `p + 1`. Acceptance is the two codomains being the same product and
-the two images being the same point. A signature point that is not on
-`E_sig`, or a chain that does not split, is `Kernel`. Images that differ
+kernel the doubles of those points. Each chain is evaluated at
+`([2^{e−1}] R, 0)`, `([2^{e−1}] T, 0)` and `([2^{e−1}](R−T), 0)` on the
+longer chain, and at `([s] R, 0)`, `([s] T, 0)` and `([s](R−T), 0)` on the
+shorter one. `(R, T)` is a basis of `E_vk[p+1]`, specified under "How step
+8 compares points". Acceptance is the two codomains being the same product,
+up to order of the factors and the sign of each Montgomery coefficient, and
+the three images agreeing as x-only points. A signature point that is not
+on `E_sig`, or a chain that does not split, is `Kernel`. Images that differ
 are `Image`.
+
+No vector has yet made this comparison return success. The graph of an
+endomorphism of norm `2^{2e−1} − s^2` does not split in
+`theta_chain_compute_and_eval`, in this port or in the pinned C tree, on
+the canonical basis of `E0` with or without the extra 4-torsion. The kernel
+that does split is the one `fixed_degree_isogeny` builds: norm
+`u·(2^{e−2} − u)`, length `e − 2`, extra 4-torsion. Its codomain is not
+`E0`, so it is not Algorithm 3's endomorphism of the product. That kernel
+is `prism-isogeny/testdata/e0_fixed_lvl1.txt`. The degree-`q` witness that
+the chain refuses is `prism-verify/testdata/e0_endomorphisms.txt`.
 
 Table 5's 23.0 Mcycles is salt-PRISM. There is no published timing for §5.
 The floor-device gate is a level III run of a splitting chain at `e` steps.
@@ -262,11 +274,10 @@ For the authors of ePrint 2026/443:
 3. The §5 strong-unforgeability argument assumes a deterministic
    `H_squares` (Remark 8). Whether the reduction holds when the signature
    carries the search index is theirs to answer.
-4. The two comparison questions in "How step 8 compares points", below.
-   They are written here so the accept condition has a stated
-   identification and a stated sign rule before any vector is allowed to
-   turn a chain match into a claim about the paper. Confirmation that those two readings
-   match the paper is the authors'.
+4. After comparing `R`, `T` and `R−T` as x-only points on each factor, one
+   sign per factor remains. Global `−1` is the same relation with `−s`, and
+   the degree depends on `s^2`. Does a per-factor sign, `(1, −1)` or
+   `(−1, 1)`, accept a `σ` the three-point check should refuse?
 
 ## How step 8 compares points
 
@@ -297,33 +308,59 @@ torsion is present. Algorithm 3 does not pass the extra torsion, so it
 accepts whichever single structure vanishes. `chain` is
 `_theta_chain_compute_impl` with randomisation left out, and `verify` calls
 it twice. A basis of each factor is not by itself a kernel: the reference
-refuses that product. The kernel that succeeds is the graph of an
-endomorphism, which is what the two length-160 vectors are, and what
-Algorithm 3 builds from `(P_vk, P_sig)`.
+refuses that product. The kernels that succeed in the length-160 vectors
+are graphs of endomorphisms whose norm is not `2^{2e−1} − s^2`. The
+graph Algorithm 3 builds from `(P_vk, P_sig)` at that norm does not split;
+see the paragraph above the challenge index.
+
+### The basis
+
+On a public key, `R` is the point the basis index names, before
+multiplication by `f`. `T` is the point whose affine x-coordinate is the
+smallest positive integer at which both points have order exactly `p+1`,
+their images in `E[2^e]` generate that subgroup, and their images in
+`E[f]` generate that subgroup. Order exactly `p+1` is `[p+1]X = O` and
+`[(p+1)/ℓ]X ≠ O` for `ℓ = 2` and every prime divisor of `f`. Two points of
+order `2^e` generate `E[2^e] ≅ (Z/2^e)^2` when their `[2^{e−1}]` images are
+distinct and nonzero: those images are two of the three nonzero vectors of
+`(Z/2)^2`. Two points generate `E[f]` when their images generate each
+`(Z/ℓ)^2` for the prime factors of `f`; a scalar and its negative share an
+x-coordinate, so the multiples run only to `ℓ/2`. The search stops at `2λ`.
+
+On `E0` every point with an abscissa in `F_p` has the same order-2 image,
+`(0, 0)`, the only order-2 point fixed by Frobenius. `R` is still the
+smallest positive integer abscissa of order `p+1`. `T` is the least
+`a + b·i` with `0 ≤ a ≤ 2λ` and `1 ≤ b ≤ 2λ`, ordered by `a` then `b`,
+that completes the same checks.
 
 ### Sign
 
-A Montgomery `(X : Z)` and a theta point `(x : y : z : t)` are both even:
-each identifies a point with its negative. On a product `E1 × E2` the sign
-can flip per factor, not only globally, and an x-only equality of the
-step-8 images would accept a scalar and its negative on each factor.
+The chains compare x-only points. `(X : Z)` does not see a change of sign,
+and it does not see a sign that flips only one factor of a product. The
+three points `R`, `T` and `R−T` pin the relative sign: a flip on one point
+and not the others sends `R−T` to `R+T`, and `x(R+T) ≠ x(R−T)` when both
+points have order greater than 2. What remains is one sign per factor,
+`(ε1, ε2)`. Global `−1` is the relation for `−s`, and the degree depends on
+`s^2`. Question 4 asks the authors whether a mixed per-factor sign can
+accept a wrong `σ`.
 
-The signature carries affine `(x, y)` for `P_sig` and `Q_sig`, so `−P_sig`
-and `P_sig − Q_sig` are exact group-law points, not a choice of square
-root recovered from an x-coordinate. The kernel points of `Φ` are the
-doubles `[2]P_vk`, `[2]P_sig` and their partners. Doubling identifies a
-point with its negative in x-only form, so that kernel does not see the
-global sign. The step-8 equality does. It is compared as affine points on
-the product, with the y-coordinates fixed by the signature's `y` and by
-the same group law, not as x-only or theta coordinates. An image whose
-y-coordinate is the other square root fails the equality.
+The kernel is built with `+P_sig`, where the paper writes `−P_sig`. The
+x-only kernel data cannot tell `⟨(P, P'), (Q, Q')⟩` from
+`⟨(P, −P'), (Q, −Q')⟩`. Those two isogenies differ by `ι(X, Y) = (X, −Y)`,
+and `ι` fixes every point `(T, 0)`. The three evaluated points do not see
+the substitution.
+
+Each codomain factor is normalized so the encoding of `A` is at most the
+encoding of `−A`. The normalization negates that factor's x-coordinates,
+which is what `(x, y) ↦ (−x, i y)` does to x-only points. The comparison
+then accepts either order of the two factors.
 
 `E0 × E0` is not the bench's general-key number. The curve `j = 1728` has
-extra automorphisms, and gluing from it can take a path a random product
-does not. The length-`e` chain on a C-generated general pair is the number
-the floor-device gate reads, plus the verifier's fixed overhead, after a
-positive vector has passed. A fully general end-to-end timing waits for a
-§5 signer.
+extra automorphisms. The length-`e` chain on a C-generated general pair is
+the number the floor-device gate reads, after a positive vector has passed.
+A fully general end-to-end timing waits for a §5 signer. The chain that
+does split on `E0` today is the fixed-degree kernel named above, at length
+`e − 2` with the extra 4-torsion, and its codomain is not `E0`.
 
 ## What `verify` decides today
 

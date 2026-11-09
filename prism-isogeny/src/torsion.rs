@@ -26,9 +26,23 @@ pub struct EvenBasis<F> {
     pub p: Xz<F>,
     pub q: Xz<F>,
     pub difference: Xz<F>,
-    /// The same points before that multiplication. Their order divides `p+1`.
+    /// The same points before that multiplication.
     pub full_p: Xz<F>,
     pub full_q: Xz<F>,
+    pub full_difference: Xz<F>,
+}
+
+/// A basis `(R, T)` of `E[p+1]`, with `R − T`.
+///
+/// `[f]R`, `[f]T` and `[f](R−T)` are [`EvenBasis`]. Both points have order
+/// `p+1`, their even parts generate `E[2^e]`, and their odd parts generate
+/// `E[f]`.
+#[derive(Clone, Copy, Debug)]
+pub struct RationalBasis<F> {
+    pub r: Xz<F>,
+    pub t: Xz<F>,
+    pub difference: Xz<F>,
+    pub even: EvenBasis<F>,
 }
 
 fn conjugate<L: Level>(value: L::Ext) -> L::Ext {
@@ -117,7 +131,236 @@ pub fn even_basis<L: Level>(
         difference: clear_cofactor::<L>(coefficient, difference)?,
         full_p: p,
         full_q: q,
+        full_difference: difference,
     })
+}
+
+/// Multiply by `odd`, then double `doubles` times.
+pub fn mul_odd_then_double<L: Level>(
+    coefficient: L::Ext,
+    point: Xz<L::Ext>,
+    odd: u64,
+    doubles: u32,
+) -> Option<Xz<L::Ext>> {
+    let constant = a24(coefficient)?;
+    let width = usize::try_from(64 - odd.leading_zeros()).unwrap_or(0);
+    let bits = (0..width).rev().map(|shift| (odd >> shift) & 1 == 1);
+    Some(double_times::<L>(
+        coefficient,
+        ladder(constant, bits, point),
+        doubles,
+    ))
+}
+
+fn is_infinity<F: Field>(point: Xz<F>) -> bool {
+    point.z.is_zero()
+}
+
+fn same_x<F: Field>(left: Xz<F>, right: Xz<F>) -> bool {
+    left.x.mul(right.z).same(right.x.mul(left.z))
+}
+
+/// The odd primes dividing `f`. `2` is not among them.
+pub fn odd_primes<L: Level>() -> &'static [u64] {
+    match L::ODD {
+        5 => &[5],
+        27 => &[3],
+        65 => &[5, 13],
+        _ => &[],
+    }
+}
+
+/// `[p+1]X = O`, and `[(p+1)/ℓ]X ≠ O` for `ℓ = 2` and every prime divisor of `f`.
+pub fn has_order_p_plus_one<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
+    let killed = |odd, doubles| {
+        mul_odd_then_double::<L>(coefficient, point, odd, doubles)
+            .is_some_and(is_infinity)
+    };
+    if !killed(L::ODD, L::E) {
+        return false;
+    }
+    if killed(L::ODD, L::E - 1) {
+        return false;
+    }
+    odd_primes::<L>()
+        .iter()
+        .all(|prime| !killed(L::ODD / prime, L::E))
+}
+
+/// `[2^{e−1}]` of two order-`2^e` points are distinct and nonzero.
+///
+/// `E[2^e] ≅ (Z/2^e)^2`, so `E[2]` has three nonzero points and they are the
+/// nonzero vectors of `(Z/2)^2`. Two distinct ones are a basis of that
+/// vector space, and therefore the two points generate `E[2^e]`.
+pub fn even_parts_generate<L: Level>(coefficient: L::Ext, p: Xz<L::Ext>, q: Xz<L::Ext>) -> bool {
+    let p2 = double_times::<L>(coefficient, p, L::E - 1);
+    let q2 = double_times::<L>(coefficient, q, L::E - 1);
+    !is_infinity(p2) && !is_infinity(q2) && !same_x(p2, q2)
+}
+
+fn prime_field_basis<L: Level>(
+    coefficient: L::Ext,
+    left: Xz<L::Ext>,
+    right: Xz<L::Ext>,
+    prime: u64,
+) -> bool {
+    if is_infinity(left) || is_infinity(right) {
+        return false;
+    }
+    // Order dividing `prime` is the caller's. Order exactly `prime` is
+    // nonzero, since `prime` is prime.
+    (1..=prime / 2).all(|scalar| {
+        mul_odd_then_double::<L>(coefficient, right, scalar, 0)
+            .is_some_and(|image| !same_x(left, image))
+    })
+}
+
+/// The images of `R` and `T` in `E[f]` generate `E[f]`.
+///
+/// `E[f]` for these three cofactors splits into prime-power factors. Two
+/// elements generate `(Z/p^k)^2` when their images generate `(Z/p)^2`, and
+/// two elements generate `(Z/q)^2` for a prime `q` when neither is a scalar
+/// multiple of the other. A scalar and its negative have the same
+/// x-coordinate, so the multiples checked run only up to `q/2`.
+pub fn odd_parts_generate<L: Level>(coefficient: L::Ext, r: Xz<L::Ext>, t: Xz<L::Ext>) -> bool {
+    let u = double_times::<L>(coefficient, r, L::E);
+    let v = double_times::<L>(coefficient, t, L::E);
+    match L::ODD {
+        5 => prime_field_basis::<L>(coefficient, u, v, 5),
+        27 => {
+            let Some(u3) = mul_odd_then_double::<L>(coefficient, u, 9, 0) else {
+                return false;
+            };
+            let Some(v3) = mul_odd_then_double::<L>(coefficient, v, 9, 0) else {
+                return false;
+            };
+            prime_field_basis::<L>(coefficient, u3, v3, 3)
+        }
+        65 => {
+            let Some(u5) = mul_odd_then_double::<L>(coefficient, u, 13, 0) else {
+                return false;
+            };
+            let Some(v5) = mul_odd_then_double::<L>(coefficient, v, 13, 0) else {
+                return false;
+            };
+            let Some(u13) = mul_odd_then_double::<L>(coefficient, u, 5, 0) else {
+                return false;
+            };
+            let Some(v13) = mul_odd_then_double::<L>(coefficient, v, 5, 0) else {
+                return false;
+            };
+            prime_field_basis::<L>(coefficient, u5, v5, 5)
+                && prime_field_basis::<L>(coefficient, u13, v13, 13)
+        }
+        _ => false,
+    }
+}
+
+/// `(R, T)` a basis of `E[p+1]`.
+///
+/// `R` is the point named by the basis index, before multiplication by `f`.
+/// `T` is the point whose affine x-coordinate is the smallest positive
+/// integer for which both points have order `p+1`, their even parts generate
+/// `E[2^e]`, and their odd parts generate `E[f]`. The search stops at `2λ`
+/// candidates. `R − T` is [`difference`].
+pub fn rational_basis<L: Level>(
+    coefficient: L::Ext,
+    index: u16,
+    coefficient_is_square: bool,
+) -> Option<RationalBasis<L::Ext>> {
+    let even = even_basis::<L>(coefficient, index, coefficient_is_square)?;
+    if !has_order_p_plus_one::<L>(coefficient, even.full_p) {
+        return None;
+    }
+    let bound = u64::from(2 * L::LAMBDA);
+    for candidate in 1..=bound {
+        let t = Xz::affine(L::Ext::from_u64(candidate));
+        if same_x(t, even.full_p) || !has_order_p_plus_one::<L>(coefficient, t) {
+            continue;
+        }
+        let t_even = clear_cofactor::<L>(coefficient, t)?;
+        if !even_parts_generate::<L>(coefficient, even.p, t_even) {
+            continue;
+        }
+        if !odd_parts_generate::<L>(coefficient, even.full_p, t) {
+            continue;
+        }
+        let difference = difference::<L>(coefficient, even.full_p, t)?;
+        let difference_even = clear_cofactor::<L>(coefficient, difference)?;
+        return Some(RationalBasis {
+            r: even.full_p,
+            t,
+            difference,
+            even: EvenBasis {
+                p: even.p,
+                q: t_even,
+                difference: difference_even,
+                full_p: even.full_p,
+                full_q: t,
+                full_difference: difference,
+            },
+        });
+    }
+    None
+}
+
+fn small_abscissa<L: Level>(real: u64, imag: u64) -> L::Ext {
+    L::Ext::from_u64(real).add(L::ext_i().mul(L::Ext::from_u64(imag)))
+}
+
+/// The basis of `E0[p+1]`, where `E0` is `y^2 = x^3 + x`.
+///
+/// `R` is the point with the smallest positive integer abscissa and order
+/// `p+1`. Every point with an abscissa in `F_p` has the same order-2 image,
+/// `(0, 0)`, because that is the only order-2 point fixed by Frobenius, so
+/// no second point with a real abscissa completes the basis. `T` is the
+/// least `a + b·i` with `0 ≤ a ≤ 2λ` and `1 ≤ b ≤ 2λ`, ordered by `a` then
+/// `b`, for which both points have order `p+1`, their even parts generate
+/// `E[2^e]`, and their odd parts generate `E[f]`.
+pub fn starting_basis<L: Level>() -> Option<RationalBasis<L::Ext>> {
+    let coefficient = L::Ext::zero();
+    let bound = u64::from(2 * L::LAMBDA);
+    let mut r = None;
+    for candidate in 1..=bound {
+        let point = Xz::affine(L::Ext::from_u64(candidate));
+        if has_order_p_plus_one::<L>(coefficient, point) {
+            r = Some(point);
+            break;
+        }
+    }
+    let r = r?;
+    let r_even = clear_cofactor::<L>(coefficient, r)?;
+    for real in 0..=bound {
+        for imag in 1..=bound {
+            let t = Xz::affine(small_abscissa::<L>(real, imag));
+            if !has_order_p_plus_one::<L>(coefficient, t) {
+                continue;
+            }
+            let t_even = clear_cofactor::<L>(coefficient, t)?;
+            if !even_parts_generate::<L>(coefficient, r_even, t_even) {
+                continue;
+            }
+            if !odd_parts_generate::<L>(coefficient, r, t) {
+                continue;
+            }
+            let difference = difference::<L>(coefficient, r, t)?;
+            let difference_even = clear_cofactor::<L>(coefficient, difference)?;
+            return Some(RationalBasis {
+                r,
+                t,
+                difference,
+                even: EvenBasis {
+                    p: r_even,
+                    q: t_even,
+                    difference: difference_even,
+                    full_p: r,
+                    full_q: t,
+                    full_difference: difference,
+                },
+            });
+        }
+    }
+    None
 }
 
 /// `[2^times] point` on the normalized curve. Infinity is `Z = 0`.
@@ -149,6 +392,48 @@ mod tests {
         assert!(!almost.z.is_zero(), "{}", L::NAME);
         let odd_part = double_times::<L>(coefficient, basis.full_p, L::E);
         assert!(!odd_part.z.is_zero(), "{}", L::NAME);
+        let index = u16::from(hint >> 1);
+        let square = hint & 1 == 1;
+        let even = even_basis::<L>(coefficient, index, square).expect(L::NAME);
+        assert!(
+            super::has_order_p_plus_one::<L>(coefficient, even.full_p),
+            "{} R order",
+            L::NAME
+        );
+        assert!(
+            super::has_order_p_plus_one::<L>(coefficient, even.full_q),
+            "{} T order",
+            L::NAME
+        );
+        assert!(
+            super::even_parts_generate::<L>(coefficient, even.p, even.q),
+            "{} even",
+            L::NAME
+        );
+        assert!(
+            super::rational_basis::<L>(coefficient, index, square).is_some(),
+            "{}",
+            L::NAME
+        );
+    }
+
+    fn starting<L: Level>() {
+        assert!(super::starting_basis::<L>().is_some(), "{}", L::NAME);
+    }
+
+    #[test]
+    fn the_starting_curve_has_a_basis_at_level_i() {
+        starting::<Level1>();
+    }
+
+    #[test]
+    fn the_starting_curve_has_a_basis_at_level_iii() {
+        starting::<Level3>();
+    }
+
+    #[test]
+    fn the_starting_curve_has_a_basis_at_level_v() {
+        starting::<Level5>();
     }
 
     #[test]

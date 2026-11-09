@@ -16,6 +16,7 @@
 #![forbid(unsafe_code)]
 
 pub mod chain;
+pub mod endomorphism;
 pub mod gluing;
 pub mod jac;
 pub mod montgomery;
