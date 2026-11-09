@@ -10,5 +10,5 @@ publish.workspace = true
 [dependencies]
 prism-field = { workspace = true }
 
-[lints.rust]
-unsafe_code = "forbid"
+[lints]
+workspace = true

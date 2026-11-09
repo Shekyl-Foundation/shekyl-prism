@@ -1,3 +1,7 @@
 /target
+/fuzz/target
+/fuzz/artifacts
+/fuzz/corpus
 **/*.rs.bk
+__pycache__/
 .DS_Store

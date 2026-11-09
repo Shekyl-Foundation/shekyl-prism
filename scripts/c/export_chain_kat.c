@@ -1,3 +1,9 @@
+/* Copyright (c) 2025-2026, The Shekyl Foundation
+ *
+ * All rights reserved.
+ * BSD-3-Clause
+ */
+
 /* Print one theta-chain known answer from the pinned reference.
 
  * Build against one level. Arguments: the chain length n. The domain is

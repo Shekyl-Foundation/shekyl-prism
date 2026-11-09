@@ -12,5 +12,5 @@ prism-field = { workspace = true }
 prism-isogeny = { workspace = true }
 sha3 = { workspace = true }
 
-[lints.rust]
-unsafe_code = "forbid"
+[lints]
+workspace = true

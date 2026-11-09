@@ -35,3 +35,10 @@ encoding this workspace checks.
 
 A match against that verifier is a match against salt-PRISM, including those
 quirks. It is not conformance to `docs/VERIFIER_SPEC.md`.
+
+`prism-verify/testdata/c_basis_hints.txt` is one key per level from that pin.
+`scripts/export_c_basis_hints.py` rebuilds the tree with mini-gmp and writes
+the file again from a frozen seed (`SEED_BASE` in the script; the file names
+the seed each level accepted). The same seed writes the same bytes. CI diffs
+the file, on a little-endian host: the reference absorbs a salt in native
+byte order, so a big-endian run is not a reproduction of this file.

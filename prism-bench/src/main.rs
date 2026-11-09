@@ -135,6 +135,9 @@ fn counter_name() -> &'static str {
     }
 }
 
+/// `cntvct_el0` and `rdtsc` have no safe wrapper. This is the crate's only
+/// `unsafe_code` allow; the workspace lint is `forbid` everywhere else.
+#[allow(unsafe_code)]
 fn counter() -> u64 {
     #[cfg(target_arch = "aarch64")]
     unsafe {

@@ -1,0 +1,7 @@
+# libFuzzer's runtime is NCSA as well as MIT OR Apache-2.0. This file is
+# loaded only when cargo deny runs in the fuzz workspace. The verifier does
+# not link that crate.
+
+exceptions = [
+    { allow = ["NCSA"], crate = "libfuzzer-sys" },
+]

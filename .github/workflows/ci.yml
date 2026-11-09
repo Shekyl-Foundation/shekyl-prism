@@ -1,0 +1,279 @@
+# Copyright (c) 2025-2026, The Shekyl Foundation
+#
+# All rights reserved.
+# BSD-3-Clause
+#
+# Pull-request and `dev` push gate. One required check: `ci-pass`.
+#
+# The workspace builds in seconds, so the Rust jobs are not path-scoped.
+# The C rebuild is. A workflow-level `paths:` filter would suppress the
+# run, and a required check that never reports waits forever. `c-vectors`
+# is a job-level condition. `ci-pass` treats its skip as a pass only when
+# `c_vectors_scope.py` said the range does not touch the inputs.
+#
+# `fp2` 0.6.0 takes `core::arch` on x86_64 and the portable path elsewhere.
+# `test-aarch64` is that path. Byte order is the nightly s390x run.
+#
+# Actions are pinned to commit SHAs. Checkout does not fetch the submodule
+# except in the two C jobs.
+
+name: ci
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [dev]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      c_vectors: ${{ steps.scope.outputs.c_vectors }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          submodules: false
+      - id: scope
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: python3 scripts/ci/c_vectors_scope.py --base "$BASE" --head "$HEAD"
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+          components: rustfmt, clippy
+      - name: The workflow pin matches rust-toolchain.toml
+        run: |
+          set -euo pipefail
+          channel=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)
+          if [ "$channel" != "1.94.0" ]; then
+            echo "rust-toolchain.toml pins ${channel}; this workflow pins 1.94.0"
+            exit 1
+          fi
+      - name: Format
+        run: |
+          set -euo pipefail
+          cargo fmt --all --check
+          cargo fmt --manifest-path fuzz/Cargo.toml --all --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+  test-x86_64:
+    name: test-x86_64
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+      - name: The runner is x86_64
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "x86_64"
+      - name: Debug, overflow checks on
+        run: cargo test --workspace --locked
+      - name: Release
+        run: cargo test --workspace --locked --release
+
+  test-aarch64:
+    name: test-aarch64
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+      - name: The runner is aarch64
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "aarch64"
+      - name: Debug, the portable fp2 path
+        run: cargo test --workspace --locked
+      - name: Release
+        run: cargo test --workspace --locked --release
+
+  bench-smoke:
+    name: bench-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+      # Timings are printed. A non-zero exit means a sample's outcome was
+      # not the expected refusal, so the bench stopped timing that path.
+      - name: Bench
+        run: cargo run --release --locked -p prism-bench
+
+  deny:
+    name: deny
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+      - name: Install cargo-deny 0.20.2
+        run: python3 scripts/ci/install_pinned_tool.py cargo-deny
+      - name: Licences, advisories, sources, bans
+        run: |
+          set -euo pipefail
+          cargo deny check
+          ( cd fuzz && cargo deny check )
+
+  hygiene:
+    name: hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          submodules: false
+      - name: Gates
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          python3 scripts/ci/check_copyright.py --selftest
+          python3 scripts/ci/check_commit_trailers.py --selftest
+          python3 scripts/ci/check_commit_trailers.py --base "$BASE" --head "$HEAD"
+          python3 scripts/ci/check_workspace_lints.py --selftest
+          python3 scripts/ci/check_action_pins.py --selftest
+          python3 scripts/ci/aggregate.py --selftest
+          python3 scripts/ci/c_vectors_scope.py --selftest
+          python3 scripts/ci/install_pinned_tool.py --selftest
+          python3 scripts/differential_prime.py --selftest
+
+  c-reference-pin:
+    name: c-reference-pin
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: true
+      - name: Pin and recorded quirks
+        run: python3 scripts/check_c_reference.py
+
+  c-vectors:
+    name: c-vectors
+    needs: changes
+    if: needs.changes.outputs.c_vectors == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: true
+      - name: Compiler
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential cmake
+      - name: Rebuild the vectors from the pin
+        run: python3 scripts/export_c_basis_hints.py
+      - name: The committed vectors match
+        run: bash scripts/ci/diff_testdata.sh
+
+  codeql:
+    name: codeql
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+      packages: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+      - uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        with:
+          languages: rust
+          build-mode: none
+          config-file: ./.github/codeql/codeql-config.yml
+      - uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        with:
+          category: /language:rust
+
+  ci-pass:
+    name: ci-pass
+    needs:
+      - changes
+      - lint
+      - test-x86_64
+      - test-aarch64
+      - bench-smoke
+      - deny
+      - hygiene
+      - c-reference-pin
+      - c-vectors
+      - codeql
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - name: Aggregate
+        env:
+          C_VECTORS_NEEDED: ${{ needs.changes.outputs.c_vectors }}
+          JOBS: |
+            changes=${{ needs.changes.result }}
+            lint=${{ needs.lint.result }}
+            test-x86_64=${{ needs['test-x86_64'].result }}
+            test-aarch64=${{ needs['test-aarch64'].result }}
+            bench-smoke=${{ needs['bench-smoke'].result }}
+            deny=${{ needs.deny.result }}
+            hygiene=${{ needs.hygiene.result }}
+            c-reference-pin=${{ needs['c-reference-pin'].result }}
+            c-vectors=${{ needs['c-vectors'].result }}
+            codeql=${{ needs.codeql.result }}
+        run: python3 scripts/ci/aggregate.py

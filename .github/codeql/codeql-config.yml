@@ -1,0 +1,5 @@
+# The pinned C tree is not this workspace's code. The Rust jobs check it
+# out only for the two reference builds; CodeQL does not.
+name: shekyl-prism
+paths-ignore:
+  - external

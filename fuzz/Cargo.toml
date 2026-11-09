@@ -1,0 +1,52 @@
+[package]
+name = "prism-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+license = "BSD-3-Clause"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "=0.4.13"
+prism-field = { version = "0.1.0", path = "../prism-field" }
+prism-verify = { version = "0.1.0", path = "../prism-verify" }
+
+# Own workspace, so the parent workspace does not try to build libFuzzer.
+[workspace]
+
+[[bin]]
+name = "verify_level_1"
+path = "fuzz_targets/verify_level_1.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "verify_level_3"
+path = "fuzz_targets/verify_level_3.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "verify_level_5"
+path = "fuzz_targets/verify_level_5.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "decode_public_key"
+path = "fuzz_targets/decode_public_key.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "decode_signature"
+path = "fuzz_targets/decode_signature.rs"
+test = false
+doc = false
+bench = false
