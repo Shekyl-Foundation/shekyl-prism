@@ -28,6 +28,39 @@ Table 2. `p = f·2^e − 1`. Each `p ≡ 3 (mod 4)`.
 
 A level is a type. A level I encoding is refused by the level V decoder.
 
+### Proposed modulus — PROPOSED 2026-11-09, not instantiated
+
+Table 2 is the modulus in the field crate. The half-chain under
+Identification needs `v₂(p+1) ≥ e+2`, with the chain lengths and
+`q = 2^{2e−1} − s²` left as §5 prints them. `f·2^{e+2} − 1` at Table 2's
+`f` is not that modulus: it is composite (question 4).
+
+`fp2` sizes a limb array by the prime and encodes an element in
+`(bit length + 7) / 8` bytes. The windows that keep today's limb counts
+(4, 6, 8) and byte lengths (32, 48, 64) are 249–256, 377–384, and
+505–512 bits. No prime `p = f·2^v − 1` with `f` odd and `v ≥ e+2` sits
+in the NIST I or NIST III window. The search is exhaustive in those
+windows. NIST V has such primes; the smallest is below.
+
+Smallest prime at each level with `v₂(p+1) ≥ e+2`, each `≡ 3 (mod 4)`,
+Baillie–PSW prime:
+
+| | Prime | Bits | Limbs | `F_p` bytes | Public key | `v₂(p+1)` | Odd cofactor |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| NIST I | `43·2^{251} − 1` | 257 | 5, was 4 | 33, was 32 | 66, was 64 | `e+3` | 43 |
+| NIST III | `171·2^{378} − 1` | 386 | 7, was 6 | 49, was 48 | 98, was 96 | `e+2` | `3²·19` |
+| NIST V | `33·2^{503} − 1` | 509 | 8 | 64 | 128 | `e+3` | `3·11` |
+
+Signature length `5·F_{p^2} + 2` becomes 332, 492, and 642 bytes. NIST V's
+signature length is unchanged. These primes are the modulus the half-chain
+commit will instantiate. This commit does not: the C vectors and the field
+tests are Table 2, and a half-chain on Table 2 does not have the torsion.
+
+Nakagawa and Onuki, ePrint 2025/1602, the paper's reference [53], is the
+recheck still owed: their cost is for a challenge prime `q` dividing
+`(−p)^k − 1`, so it moves when `p` moves. It has not been rerun on these
+three primes.
+
 The public key is the Montgomery coefficient `A` of `E : y^2 = x^3 + A x^2 + x`
 over `F_{p^2}`, little-endian canonical `fp2` encoding (`(bit length + 7) / 8`
 bytes for each of the two `F_p` components). It is the key's identity, and
@@ -276,17 +309,13 @@ For the authors of ePrint 2026/443:
 3. The §5 strong-unforgeability argument assumes a deterministic
    `H_squares` (Remark 8). Whether the reduction holds when the signature
    carries the search index is theirs to answer.
-4. Can the theta structure at step `e − 1` and the theta structure at
-   step `e` on `A` be related, by matching conditions or by an explicit
-   matrix in `Sp_4(Z/4Z)`, using only the rational `2^e`-torsion? The
-   reading under Identification concludes that the published method cannot: the
-   inheritance along one chain needs `2^{e+2}`-torsion (2024/1180 §4.1),
-   the explicit matrix needs a symplectic basis of `A[4]` and the image
-   of `(E_vk × E_sig)[2^e]` at step `e − 1` is `(Z/2^e)^2 × (Z/2)^2`, and
-   the half-torsion cutting (§5.3, Lemma 29) identifies two chains from
-   the product rather than these two steps. A per-factor sign is a
-   separate question. SQIsignHD's image check accepts one, on Lemma
-   5.7.1 (Appendix A.4), whose proof was not available for this reading.
+4. Two parts. (a) Did §5 intend `p = f·2^{e+2} − 1`? With Table 2's `f`
+   that integer is composite at all three levels: NIST III is divisible
+   by 911, NIST V by 49954549, and NIST I is composite by the
+   Baillie–PSW test. (b) Is there an identification of the step-`e − 1`
+   and step-`e` readings that uses only the rational `2^e`-torsion? The
+   reading under Identification found none in the published method. The
+   primes a half-chain can actually run on are under "Proposed modulus".
 
 ## How step 8 compares points
 
@@ -361,6 +390,15 @@ starts in whichever structure step `e − 1` produced, and the dual
 identification in the code is the one Lemma 29 arranged in advance.
 `Unidentified` stays the result whenever both readings exist. No
 identification code is added.
+
+The published route that does identify the codomain is the half-chain
+itself: `Φ₁` of length `e` and `Φ̃₂` of length `e − 1`, both started from
+the product on bases chosen so the codomain structures are dual, then
+`Φ₂ = Φ̃₂` dual, with the check an equality of theta-null points after
+one Hadamard transform. That route needs rational `2^{len+2}`-torsion
+for each chain. Table 2 does not have it. The primes that do are the
+proposed modulus below, and they are not the field this tree
+instantiates.
 
 The image check in `Verify.py` accepts each factor up to sign
 (`FT[0] == ±a₁P` and `FT[1] == ±a₂P`). The argument named for that is
