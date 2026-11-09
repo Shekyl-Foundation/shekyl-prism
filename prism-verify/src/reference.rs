@@ -162,9 +162,9 @@ fn sample<L: Level>(level: Nist) -> Result<Prepared, PreparedError> {
     let key = reference_key(level).map_err(PreparedError::Vector)?;
     let index = smallest_challenge_index::<L>(&key.public_key, SAMPLE_MESSAGE)
         .map_err(PreparedError::Index)?;
-    // The public checks read `y(P)` and the index. The rest of the layout is
-    // Algorithm 3's, which is not the accept condition, so the sample carries
-    // canonical zeros there rather than a curve it has not built.
+    // The public checks read `y(P)` and the index. The sample carries
+    // canonical zeros for the curve and the points, which are not a point of
+    // any curve, so verification stops at `Kernel`.
     let response = Response::<L> {
         curve: L::Ext::zero(),
         p: AffinePoint {

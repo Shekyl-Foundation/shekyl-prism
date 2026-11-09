@@ -64,10 +64,9 @@ not either workflow.
 
 `cargo run -p prism-bench` prints the userspace counter
 (`cntvct_el0` on aarch64, `rdtsc` on x86_64) and, after a warm-up, the
-median and the spread of repeated runs. Until Algorithm 3 exists, that
-output is decode, the challenge hash, and one Baillie–PSW test.
-`outcome=relation` means those checks passed and the isogeny equality is
-still not an acceptance. The consensus gate is the level III line of
-Algorithm 3 at `e` steps on the floor device. Do not run that gate before
-the chain exists. Levels I and V are the same run, so the cost curve is
-measured. A number from any other machine is not that gate.
+median and the spread of repeated runs. The prepared sample's signature
+points are not on a curve, so `outcome=kernel` is the public checks plus
+that refusal, not a splitting chain. The consensus gate is the level III
+line of a splitting chain at `e` steps on the floor device, read after a
+positive vector has passed. Levels I and V are the same run, so the cost
+curve is measured. A number from any other machine is not that gate.
