@@ -9,7 +9,7 @@
 //! projectively.
 
 use prism_field::{Field, Level, Level1};
-use prism_isogeny::chain::chain;
+use prism_isogeny::chain::{chain, chain_surface};
 use prism_isogeny::gluing::{Couple, Kernel};
 use prism_isogeny::montgomery::{Montgomery, Xz};
 
@@ -53,6 +53,62 @@ fn the_length_160_chain_matches_the_reference() {
 #[test]
 fn the_length_160_chain_without_extra_torsion_matches_the_reference() {
     check(include_str!("../testdata/chain_lvl1_order.txt"), false);
+}
+
+#[test]
+fn the_fixed_degree_kernel_on_the_starting_curve_splits() {
+    let text = include_str!("../testdata/e0_fixed_lvl1.txt");
+    let mut lines = text.lines().filter(|line| !line.is_empty());
+    let length: u32 = lines
+        .next()
+        .unwrap()
+        .split_whitespace()
+        .nth(1)
+        .unwrap()
+        .parse()
+        .unwrap();
+    let _u = lines.next().unwrap();
+    let read = |line: &str| {
+        let words: Vec<&str> = line.split_whitespace().skip(1).collect();
+        point(&words)
+    };
+    let domain_p = read(lines.next().unwrap());
+    let domain_q = read(lines.next().unwrap());
+    let domain_d = read(lines.next().unwrap());
+    let image_p = read(lines.next().unwrap());
+    let image_q = read(lines.next().unwrap());
+    let image_d = read(lines.next().unwrap());
+    let zero = Montgomery::normalized(Ext::zero());
+    let kernel = Kernel {
+        t1: Couple {
+            first: domain_p,
+            second: image_p,
+        },
+        t2: Couple {
+            first: domain_q,
+            second: image_q,
+        },
+        difference: Couple {
+            first: domain_d,
+            second: image_d,
+        },
+    };
+    let pushed = Couple {
+        first: domain_p,
+        second: Xz::infinity(),
+    };
+    chain(
+        length,
+        [zero, zero],
+        kernel,
+        true,
+        &[pushed],
+        Level1::ext_i(),
+        true,
+    )
+    .expect("the fixed-degree kernel splits");
+    chain_surface(length, [zero, zero], kernel, true, &[pushed], true)
+        .expect("the same kernel has both theta readings");
 }
 
 fn check(text: &str, extra_torsion: bool) {

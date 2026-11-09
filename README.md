@@ -66,7 +66,7 @@ not either workflow.
 (`cntvct_el0` on aarch64, `rdtsc` on x86_64) and, after a warm-up, the
 median and the spread of repeated runs. The prepared sample's signature
 points are not on a curve, so `outcome=kernel` is the public checks plus
-that refusal, not a splitting chain. The consensus gate is the level III
-line of a splitting chain at `e` steps on the floor device, read after a
-positive vector has passed. Levels I and V are the same run, so the cost
+that refusal, not the Algorithm 3 chain. The consensus gate is the level III
+line of that chain on the floor device, read after a positive vector has
+passed. Levels I and V are the same run, so the cost
 curve is measured. A number from any other machine is not that gate.

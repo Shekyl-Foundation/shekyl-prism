@@ -21,12 +21,72 @@ Table 2. `p = f·2^e − 1`. Each `p ≡ 3 (mod 4)`.
 | `e` | 248 | 376 | 500 |
 | `λ` | 128 | 192 | 256 |
 | Public key | 64 bytes | 96 bytes | 128 bytes |
-| §5 chain length | 248 | 376 | 500 |
+| Instantiated chain length | 248 | 376 | 500 |
 | salt-PRISM `a` | 192 | 256 | 320 |
 | salt-PRISM signature | 191 bytes | 272 bytes | 350 bytes |
 | Table 5 verify, Intel Core Ultra 7 | 9.4 Mcycles | 23.0 Mcycles | 42.2 Mcycles |
 
 A level is a type. A level I encoding is refused by the level V decoder.
+
+### Larger primes — SUPERSEDED 2026-11-09
+
+Checked the same day, and not the modulus. Growing `p` to buy
+`2^{e+2}`-torsion costs a limb at NIST I and NIST III. `fp2` takes one
+64-bit limb per 64 bits of the prime, so a multiplication grows by about
+`(5/4)^2 − 1 ≈ 56%` at NIST I and `(7/6)^2 − 1 ≈ 36%` at NIST III. That is the
+wrong direction for the floor-device gate, and it retires the C chain
+vectors. `f·2^{e+2} − 1` at Table 2's `f` is composite besides (question
+4). The windows that keep today's 4, 6, and 8 limbs are 249–256, 377–384,
+and 505–512 bits, and no prime `f·2^v − 1` with `f` odd and `v ≥ e+2`
+sits in the NIST I or NIST III window.
+
+| | Prime | Bits | Limbs | Status |
+| --- | --- | --- | --- | --- |
+| NIST I | `43·2^{251} − 1` | 257 | 5 | SUPERSEDED |
+| NIST III | `171·2^{378} − 1` | 386 | 7 | SUPERSEDED |
+| NIST V | `33·2^{503} − 1` | 509 | 8 | SUPERSEDED |
+
+### Chain exponent — DECIDED 2026-11-09, not built
+
+Table 2 is salt-PRISM's table. §5 writes its torsion exponent as `e` and
+prints no parameter row of its own, so taking the §5 chain length to be
+Table 2's `e` was this verifier's inference. The corrected proposal keeps
+the printed primes and sets the §5 exponent to `e′ = e − 2` (246, 374,
+498).
+
+`Φ₁` is a `(2^{e′}, 2^{e′})`-chain and `Φ₂` a `(2^{e′−1}, 2^{e′−1})`-chain.
+A chain of length `len` in the SQIsignHD construction needs rational
+`2^{len+2}`-torsion (Dartois 2024/1180 §4.1, Lemma 29). For `Φ₁` that is
+`2^{e′+2} = 2^e`, which these curves have exactly. For `Φ₂` it is
+`2^{e−1}`, and `2^e` supplies one further doubling. The codomain check is
+equality of theta-null points after one Hadamard transform, with the dual
+structures arranged before either chain starts.
+
+`q = 2^{2e′−1} − s² = 2^{2e−5} − s²`, with `s` odd and `0 < s < 2^{e′−1}`.
+That is §5's formula with `e′` in place of its exponent. The degree loses
+four bits against `2^{2e−1}` and stays far above `2^{2λ}` (491, 747, and
+995 bits against 256, 384, and 512). The paper's norm condition, read at
+`e′`, is `N² > 2^{2e′} + 1`. With `N = p + 1 = f·2^e`, the ratio
+`N² / 2^{2e′}` is `f²·2^4`, at least `25·16 = 400` since `f ≥ 5`. And
+`s < 2^{e′−1}` still gives `4s² < 2^{2e′}`.
+
+The signer keeps the full `2^e`-torsion for IdealToIsogeny (§7.1) and
+evaluates `σ` on `E_vk[2^{e′}]`. The field, the limb counts, the key
+size, the signature length, and the C chain vectors stay as they are.
+The signature does not carry `s`. What moves, when this is built, is the
+width of the derived challenge scalar, from `e − 1` bits to `e − 3`.
+
+The instantiated verifier still walks a chain of length `e` and returns
+`Unidentified`. No chain at `e′` is built in this tree. The gate in front
+of that chain is the Nakagawa–Onuki recheck (ePrint 2025/1602, the
+paper's [53]). `p` is unchanged, so their analysis of `q | (−p)^k − 1`
+carries over and only the `q` window shifts. The recheck runs on a sample
+of `q` drawn at `e′`, and it lands before any chain at `e′`.
+
+A third reading for the authors — whether the §5 chain was meant to run
+two steps shorter than the rational 2-torsion — is held. It goes out with
+the follow-up if question 4(a) and 4(b) come back unanswered. An answer
+to either makes it moot, so it is not part of the letter now.
 
 The public key is the Montgomery coefficient `A` of `E : y^2 = x^3 + A x^2 + x`
 over `F_{p^2}`, little-endian canonical `fp2` encoding (`(bit length + 7) / 8`
@@ -133,7 +193,11 @@ an odd integer `s` with `0 < s < 2^{e−1}`:
    `E_vk × E_sig` in the theta model (gluing from the product, `(2, 2)`
    steps, splitting, point evaluation), a basis of `E_vk[p+1]` pushed
    through `Φ`, and acceptance only when `[2^{e−1}] Ψ(R') = [s] R'` and
-   the same holds for `T'`. The chain length is `e`, not salt-PRISM's `a`.
+   the same holds for `T'`. The instantiated chain length is Table 2's
+   `e`. §5 uses that letter for its own exponent and prints no row, so
+   equating the two was this verifier's inference. The corrected exponent
+   is `e′ = e − 2`, decided above and not built. salt-PRISM's `a` is a
+   third count.
 
 Step 3 is the accept condition. `chain` matches
 `theta_chain_compute_and_eval` on two length-160 kernels, each the graph of
@@ -145,19 +209,33 @@ still match. The vectors are `prism-isogeny/testdata/chain_lvl1.txt` and
 `chain_lvl1_order.txt`. The salt-PRISM wrapper around that function is not
 what this verifier conforms to.
 
-`verify` then runs two chains. The longer one has length `e` and kernel
-`(P_vk, P_sig)`, `(Q_vk, Q_sig)`. The shorter one has length `e − 1` and
-kernel the doubles of those points. The point pushed through the longer
-chain is `([2^{e−1}] R, 0)`; through the shorter one, `([s] R, 0)`. `R` is
-the point the basis index names before multiplication by `f`, so its order
-divides `p + 1`. Acceptance is the two codomains being the same product and
-the two images being the same point. A signature point that is not on
-`E_sig`, or a chain that does not split, is `Kernel`. Images that differ
-are `Image`.
+`verify` then runs one chain of length `e` on
+`K = ⟨(P_vk, −P_sig), (Q_vk, −Q_sig)⟩`, and does not split the codomain.
+The chain is evaluated at `([s]X, 0)` and `([2^{e−1}]X, 0)` for
+`X ∈ {R, T, R−T}`. `(R, T)` is a basis of `E_vk[p+1]`, specified under
+"How step 8 compares points". The images of `([s]X, 0)` are read at step
+`e − 1`. The images of `([2^{e−1}]X, 0)` are read at step `e`. Those two
+steps are the same surface `A` in two theta structures. A signature point
+that is not on `E_sig`, or a chain that stops before both readings, is
+`Kernel`. Both readings existing is `Unidentified`: the transformation
+between the structures is open, so the comparison is not decided and the
+function does not return success. The degree-`q` witness in
+`prism-verify/testdata/e0_endomorphisms.txt` does not reach that refusal:
+at step 3 a theta coordinate of the step's kernel vanishes, and the
+(2,2) step refuses. The reference calls that vanishing an unexpected
+split. Both readings are not produced, so the result is `Kernel`.
+
+`A` is not required to be a product of elliptic curves. salt-PRISM's chain
+splits because it embeds a full isogeny whose codomain is a product. §5's
+half-isogenies end at the midpoint of an odd-exponent endomorphism, which
+is in general the Jacobian of a genus-2 curve. The kernel
+`fixed_degree_isogeny` builds does split; that is a chain known-answer
+test, `prism-isogeny/testdata/e0_fixed_lvl1.txt`, not Algorithm 3. The
+degree-`q` witness is `prism-verify/testdata/e0_endomorphisms.txt`.
 
 Table 5's 23.0 Mcycles is salt-PRISM. There is no published timing for §5.
-The floor-device gate is a level III run of a splitting chain at `e` steps.
-The bench sample stops at `Kernel` and is not that run.
+The floor-device gate is a level III run of this chain. The bench sample
+stops at `Kernel` and is not that run.
 
 ## Challenge index
 
@@ -262,11 +340,14 @@ For the authors of ePrint 2026/443:
 3. The §5 strong-unforgeability argument assumes a deterministic
    `H_squares` (Remark 8). Whether the reduction holds when the signature
    carries the search index is theirs to answer.
-4. The two comparison questions in "How step 8 compares points", below.
-   They are written here so the accept condition has a stated
-   identification and a stated sign rule before any vector is allowed to
-   turn a chain match into a claim about the paper. Confirmation that those two readings
-   match the paper is the authors'.
+4. Two parts, in the letter. (a) Did §5 intend `p = f·2^{e+2} − 1`?
+   With Table 2's `f` that integer is composite at all three levels:
+   NIST III is divisible by 911, NIST V by 49954549, and NIST I is
+   composite by the Baillie–PSW test. (b) Is there an identification of
+   the step-`e − 1` and step-`e` readings that uses only the rational
+   `2^e`-torsion? The reading under Identification found none in the
+   published method. A third reading, whether the chain was meant to run
+   at `e − 2`, is held for the follow-up (see Chain exponent).
 
 ## How step 8 compares points
 
@@ -276,54 +357,128 @@ comparison below is what `verify` requires of that output.
 
 ### Identification
 
-Step 4 builds `Φ` as `e − 1` (2,2)-steps. Step 5 builds `Ψ` as one more
-step, so the chain a node evaluates has length `e`. The paper's
-factorization `Φ₁ = Ψ_e ∘ Φ₂ ∘ ι` says those two computations land on the
-same abelian surface. A theta-model implementation does not land in a
-unique coordinate system: each step chooses a theta structure, and two
-structures on one surface differ by a signed permutation of the four
-theta coordinates.
+`Φ = Φ̂₂ ∘ Φ₁` is an endomorphism of `E_vk × E_sig` of degree `2^{2e−1}`.
+`Φ₁` is a `(2^e, 2^e)`-isogeny and `Φ₂` is a `(2^{e−1}, 2^{e−1})`-isogeny.
+Both start at `E_vk × E_sig` and end at the same surface `A`. The kernel
+of `Φ₁` is `K`. The first `e − 1` steps of the chain for `K` are
+`Φ₂ ∘ ι`, and the last step is `Ψ`. `ι` fixes every `(X, 0)`, so the image
+of `([s]X, 0)` at step `e − 1` is `Φ₂([s]X, 0)`, and the image of
+`([2^{e−1}]X, 0)` at step `e` is `Ψ` applied to that.
 
-The comparison is not made in those raw coordinates. The splitting step
-records the isomorphism back to an elliptic product — the matrix the C
-reference calls `M` and applies with `apply_isomorphism` before
-`theta_point_to_montgomery_point`. `splitting_compute` and
-`montgomery_couple` are that pair. Both sides of step 8 are read in that
-product's Montgomery model, after that one isomorphism. A codomain that
-does not split is a refusal, not a second choice of structure. Verification
-in the pinned tree also requires the vanishing structure to be index 8;
-`splitting_compute` takes that index and refuses any other when the extra
-torsion is present. Algorithm 3 does not pass the extra torsion, so it
-accepts whichever single structure vanishes. `chain` is
-`_theta_chain_compute_impl` with randomisation left out, and `verify` calls
-it twice. A basis of each factor is not by itself a kernel: the reference
-refuses that product. The kernel that succeeds is the graph of an
-endomorphism, which is what the two length-160 vectors are, and what
-Algorithm 3 builds from `(P_vk, P_sig)`.
+`A` is the midpoint of an odd-exponent endomorphism. In general it is the
+Jacobian of a genus-2 curve, not a product of elliptic curves. The chain
+therefore does not split. The two readings are theta coordinates, each in
+the theta structure of its own step.
+
+### The two structures, from the literature (2026-11-08)
+
+Read against Dartois, ePrint 2024/1180 (arXiv 2407.15492v2), §2.7, §3.2,
+§4.1, §5.3, Remark 18, and Appendix C.2, and against
+`Pierrick-Dartois/Theta_dim4` `KaniEndoHalf` and `base_change_theta_dim2`
+and `Pierrick-Dartois/SQISignHD-lib` `Verification/Verify.py`, both
+Apache-2.0 at the head of their default branches. SQIsignHD (ePrint
+2023/436) §5.4–5.7 and Appendices A.4 and C.2–C.3 are cited by those
+sources; the ePrint PDF did not yield to retrieval here, so the lemma
+text of 2023/436 is taken from Dartois's quotations and from the code.
+
+A level-2 theta structure is induced by a symplectic basis of the
+4-torsion (2024/1180 §2.7, Theorem 5(ii)). Along one chain the later
+steps inherit that structure: once the first step is set so that its
+kernel is the second half of the decomposition, each later step is the
+image of the previous kernel, and no fresh change of basis is computed
+(§4.1). That inheritance needs an isotropic `K″ ⊂ A[2^{e+2}]` with
+`[4]K″` the kernel of the whole chain. These curves have rational
+`2^e`-torsion and no further 2-power. The last two steps are therefore
+the square-root steps. Remark 18 says a codomain null point computed
+from a kernel basis of order 2, without the 8-torsion above it, takes
+`2^g − 1` square roots, and `g(g+1)/2` of the resulting signs are
+arbitrary. In dimension 2 that is three signs. Those signs are the
+unidentified transformation between the step-`e − 1` structure and the
+step-`e` structure.
+
+The method that names the transformation explicitly reads a matrix
+`M ∈ Sp_4(Z/4Z)` from the image of a symplectic basis of `A[4]`, then
+applies the theta transformation formula (2024/1180 Theorem 12;
+`base_change_theta_dim2`). The points of `A` this chain can name are
+images of `(E_vk × E_sig)[2^e]`. At step `e − 1` the kernel so far is
+`(Z/2^{e−1})^2`, so the image is `(Z/2^e)^2 × (Z/2)^2`. Its elements of
+order 4 span a `(Z/4)^2`, not a symplectic basis of `A[4] ≅ (Z/4)^4`.
+The formula cannot be evaluated.
+
+The method that makes two structures agree by construction is the
+half-torsion cutting of §5.3: two chains `F₁` and `F̃₂` from the product,
+each of length at most `⌈e/2⌉`, started from symplectic bases of the
+`2^{⌈e/2⌉+2}`-torsion chosen so the induced structures on the common
+codomain are dual (Appendix C.2, Lemma 29). The check is equality of
+theta-null points after one Hadamard transform, and the second chain is
+then replaced by its dual (`Verify.py`: `C1.zero() == C2.hadamard().zero()`,
+then `F₂ = F̃₂.dual()`). These curves do have `2^{⌈e/2⌉+2}`-torsion. That
+construction identifies two chains that both start at the product. It
+does not name the transformation between step `e − 1` and step `e` of
+the single chain Algorithm 3 prints, and it is not implemented here.
+
+Composing back through `Φ̂₂` meets the same gap at `A`. The return chain
+starts in whichever structure step `e − 1` produced, and the dual
+identification in the code is the one Lemma 29 arranged in advance.
+`Unidentified` stays the result whenever both readings exist. No
+identification code is added.
+
+The published route that identifies the codomain is two chains from the
+product, `Φ₁` and `Φ̃₂`, with the dual structures of Lemma 29 arranged
+before either starts, `Φ₂` the dual of `Φ̃₂`, and the check an equality
+of theta-null points after one Hadamard transform. Each chain needs
+rational `2^{len+2}`-torsion. On Table 2 that holds when the lengths are
+`e′ = e − 2` and `e′ − 1`, which is the chain-exponent decision above.
+It is not built here, and `Unidentified` stays the result of the
+length-`e` chain whenever both readings exist.
+
+The image check in `Verify.py` accepts each factor up to sign
+(`FT[0] == ±a₁P` and `FT[1] == ±a₂P`). The argument named for that is
+SQIsignHD Lemma 5.7.1, proved in its Appendix A.4, which was not in the
+text retrieved. This verifier does not adopt that argument. The
+comparison is not performed.
+
+salt-PRISM does split. Its chain requires a product codomain because it
+embeds a full isogeny. `splitting_compute` is that step, and the
+fixed-degree known-answer test still runs it. Algorithm 3 does not.
+
+### The basis
+
+On a public key, `R` is the point the basis index names, before
+multiplication by `f`. `T` is the point whose affine x-coordinate is the
+smallest positive integer at which both points have order exactly `p+1`,
+their images in `E[2^e]` generate that subgroup, and their images in
+`E[f]` generate that subgroup. Order exactly `p+1` is `[p+1]X = O` and
+`[(p+1)/ℓ]X ≠ O` for `ℓ = 2` and every prime divisor of `f`. Two points of
+order `2^e` generate `E[2^e] ≅ (Z/2^e)^2` when their `[2^{e−1}]` images are
+distinct and nonzero: those images are two of the three nonzero vectors of
+`(Z/2)^2`. Two points generate `E[f]` when their images generate each
+`(Z/ℓ)^2` for the prime factors of `f`; a scalar and its negative share an
+x-coordinate, so the multiples run only to `ℓ/2`. The search stops at `2λ`.
+
+On `E0` every point with an abscissa in `F_p` has the same order-2 image,
+`(0, 0)`, the only order-2 point fixed by Frobenius. `R` is still the
+smallest positive integer abscissa of order `p+1`. `T` is the least
+`a + b·i` with `0 ≤ a ≤ 2λ` and `1 ≤ b ≤ 2λ`, ordered by `a` then `b`,
+that completes the same checks.
 
 ### Sign
 
-A Montgomery `(X : Z)` and a theta point `(x : y : z : t)` are both even:
-each identifies a point with its negative. On a product `E1 × E2` the sign
-can flip per factor, not only globally, and an x-only equality of the
-step-8 images would accept a scalar and its negative on each factor.
+The kernel in the paper is `⟨(P_vk, −P_sig), (Q_vk, −Q_sig)⟩`. The chain
+is given x-only points, and `x(−P) = x(P)`, so that kernel and
+`⟨(P_vk, P_sig), (Q_vk, Q_sig)⟩` are the same input. They differ by
+`ι(X, Y) = (X, −Y)`, and `ι` fixes every `(X, 0)`. The six evaluated
+points do not see the substitution.
 
-The signature carries affine `(x, y)` for `P_sig` and `Q_sig`, so `−P_sig`
-and `P_sig − Q_sig` are exact group-law points, not a choice of square
-root recovered from an x-coordinate. The kernel points of `Φ` are the
-doubles `[2]P_vk`, `[2]P_sig` and their partners. Doubling identifies a
-point with its negative in x-only form, so that kernel does not see the
-global sign. The step-8 equality does. It is compared as affine points on
-the product, with the y-coordinates fixed by the signature's `y` and by
-the same group law, not as x-only or theta coordinates. An image whose
-y-coordinate is the other square root fails the equality.
+The comparison, once the two structures are identified, is on `R`, `T`
+and `R−T`. A relative sign flip sends `R−T` to `R+T`, and
+`x(R+T) ≠ x(R−T)` when both points have order greater than 2. A sign
+per factor is the remainder question 4 names, and it is not adopted.
 
 `E0 × E0` is not the bench's general-key number. The curve `j = 1728` has
-extra automorphisms, and gluing from it can take a path a random product
-does not. The length-`e` chain on a C-generated general pair is the number
-the floor-device gate reads, plus the verifier's fixed overhead, after a
-positive vector has passed. A fully general end-to-end timing waits for a
-§5 signer.
+extra automorphisms. The floor-device gate is the level III chain above,
+after a vector has passed the comparison. A fully general end-to-end
+timing waits for a §5 signer.
 
 ## What `verify` decides today
 
@@ -340,16 +495,17 @@ check is refused with the earliest of them:
 | 5 | `Sign` | two encodings and a byte comparison on an element already decoded |
 | 6 | `Basis` | up to `2λ` Legendre symbols — 256, 384, 512 — a length the sender chooses with `A` |
 | 7 | `Composite` | one cSHAKE256 squeeze and one Baillie–PSW test — more than everything above it together |
-| 8 | `Kernel` | the chains, or the discovery that a signature point is off its curve |
-| 9 | `Image` | the two chains split and their images differ |
+| 8 | `Kernel` | the chain, or the discovery that a signature point is off its curve |
+| 9 | `Unidentified` | both theta readings exist, and the structures are not yet matched |
 
 The order of `Sign` and `Basis` is load-bearing: the basis search is the one
 public check whose length a sender controls, so the free comparison on
 `y(P_sig)` runs first and a junk signature never pays for the search. The
 `VerifyError` variants are declared in this order and compare in it.
 
-`Kernel` is a chain that does not split, or a signature point off its curve.
-`Image` is a split whose two sides disagree. Agreement is `Ok(())`. The
-prepared sample used by the bench carries canonical zeros for the signature
-points, which are not on `E_sig`, so that run stops at `Kernel` and does
-not time a splitting chain.
+`Kernel` is a chain that stops before both readings, or a signature point
+off its curve. `Unidentified` is both readings, with the comparison not
+yet decided. The function does not return success. The prepared sample
+used by the bench carries canonical zeros for the signature points, which
+are not on `E_sig`, so that run stops at `Kernel` and does not time the
+chain.

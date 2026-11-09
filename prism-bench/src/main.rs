@@ -6,8 +6,8 @@
 //! Time a verification at NIST I, III, and V.
 //!
 //! The sample signature's points are not on a curve, so the run stops at
-//! `Kernel` before either chain. It is not the floor-device gate. That gate
-//! is a level III run of a splitting chain at `e` steps, on a Raspberry Pi 4
+//! `Kernel` before the chain. It is not the floor-device gate. That gate
+//! is a level III run of the Algorithm 3 chain, on a Raspberry Pi 4
 //! Model B, after a positive vector has passed. The counter is the userspace
 //! timer, named below: `cntvct_el0` on aarch64 and `rdtsc` on x86_64.
 
