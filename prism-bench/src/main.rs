@@ -3,12 +3,13 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! Time decode, the challenge hash, and one Baillie–PSW test at NIST I, III, and V.
+//! Time a verification at NIST I, III, and V.
 //!
-//! Algorithm 3 is not implemented, so this is not the floor-device gate.
-//! That gate is a level III run of Algorithm 3 at `e` steps, on a Raspberry
-//! Pi 4 Model B. The counter is the userspace timer, named below:
-//! `cntvct_el0` on aarch64 and `rdtsc` on x86_64.
+//! The sample signature's points are not on a curve, so the run stops at
+//! `Kernel` before either chain. It is not the floor-device gate. That gate
+//! is a level III run of a splitting chain at `e` steps, on a Raspberry Pi 4
+//! Model B, after a positive vector has passed. The counter is the userspace
+//! timer, named below: `cntvct_el0` on aarch64 and `rdtsc` on x86_64.
 
 use std::process::ExitCode;
 use std::time::Instant;
@@ -21,10 +22,8 @@ const WARMUP: usize = 5;
 /// Odd, so the median is a sample rather than a mean of two.
 const SAMPLES: usize = 31;
 
-/// The outcome every sampled run must report. Nothing in `prism-verify`
-/// returns success, so a different outcome means the sample is not timing
-/// the public checks.
-const EXPECTED: Result<(), VerifyError> = Err(VerifyError::Relation);
+/// The sample has no point on its curve, so every run stops at the kernel check.
+const EXPECTED: Result<(), VerifyError> = Err(VerifyError::Kernel);
 
 fn main() -> ExitCode {
     println!("field-backend={FIELD_BACKEND}");
@@ -33,7 +32,7 @@ fn main() -> ExitCode {
     for level in Nist::ALL {
         match measure(level) {
             Ok(timing) => println!(
-                "level={level} outcome=relation samples={SAMPLES} median_ns={} spread_ns={} median_counter={} counter_spread={}",
+                "level={level} outcome=kernel samples={SAMPLES} median_ns={} spread_ns={} median_counter={} counter_spread={}",
                 timing.median_ns, timing.spread_ns, timing.median_counter, timing.counter_spread
             ),
             Err(err) => {
@@ -62,7 +61,7 @@ enum BenchError {
     Prepare(PreparedError),
     /// A run reported something other than [`EXPECTED`].
     Refused(VerifyError),
-    /// The run reported success, which no signature may get.
+    /// The run reported something other than the kernel refusal.
     Accepted,
 }
 

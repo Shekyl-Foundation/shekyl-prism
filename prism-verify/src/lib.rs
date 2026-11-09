@@ -5,11 +5,10 @@
 
 //! A pure verifier. It takes bytes and returns a typed refusal.
 //!
-//! Success is not implemented. Algorithm 3 steps 3–8 of ePrint 2026/443
-//! are specified in `docs/VERIFIER_SPEC.md` and are not this crate's accept
-//! condition. `Relation` is what a signature gets once the public checks
-//! have passed, so a missing isogeny equality cannot be mistaken for a
-//! valid authorization. The one-dimensional walk is not one of those checks.
+//! Success is Algorithm 3 steps 3–8 of ePrint 2026/443, specified in
+//! `docs/VERIFIER_SPEC.md`. The public checks run first. A signature that
+//! passes them is accepted only when the two chains in [`relation`] land on
+//! the same product and the same image.
 //!
 //! Each public check owns a module: [`identity`] decodes the key,
 //! [`signature`] decodes the response and normalizes its sign, [`basis`]
@@ -25,6 +24,7 @@ pub mod identity;
 pub mod level;
 mod prime;
 pub mod reference;
+mod relation;
 pub mod signature;
 
 use prism_field::Level;
@@ -65,8 +65,10 @@ pub enum VerifyError {
     Basis,
     /// `2^{2e−1} − s_j^2` is not a Baillie–PSW prime.
     Composite,
-    /// Algorithm 3 steps 3–8 are not yet an accept condition.
-    Relation,
+    /// The `(2,2)` chain did not split, or a signature point is not on its curve.
+    Kernel,
+    /// The two chains of Algorithm 3 split, and step 8's images differ.
+    Image,
 }
 
 impl core::fmt::Display for VerifyError {
@@ -79,7 +81,8 @@ impl core::fmt::Display for VerifyError {
             Self::Sign => "y(P) is not the normalized representative",
             Self::Basis => "no basis index within the search bound",
             Self::Composite => "the challenge degree is composite",
-            Self::Relation => "the isogeny relation is not an accept condition yet",
+            Self::Kernel => "the isogeny kernel does not split",
+            Self::Image => "the isogeny images differ",
         };
         f.write_str(reason)
     }
@@ -87,14 +90,14 @@ impl core::fmt::Display for VerifyError {
 
 impl std::error::Error for VerifyError {}
 
-/// Run the public checks, then refuse with [`VerifyError::Relation`].
+/// Run the public checks, then Algorithm 3.
 pub fn verify<L: Level>(
     public_key: &[u8],
     message: &[u8],
     signature: &[u8],
 ) -> Result<(), VerifyError> {
-    checked::<L>(public_key, message, signature)?;
-    Err(VerifyError::Relation)
+    let (identity, response, scalar) = checked::<L>(public_key, message, signature)?;
+    relation::relate(&identity, &response, &scalar)
 }
 
 /// The public checks, cheapest refusal first.
@@ -106,11 +109,11 @@ pub fn verify<L: Level>(
 /// with `A` — up to [`search_bound`] Legendre symbols. The challenge hash
 /// and the one Baillie–PSW test are last: they cost more than everything
 /// above them together.
-fn checked<L: Level>(
-    public_key: &[u8],
+fn checked<'a, L: Level>(
+    public_key: &'a [u8],
     message: &[u8],
     signature: &[u8],
-) -> Result<(), VerifyError> {
+) -> Result<(KeyIdentity<'a, L>, Response<L>, ChallengeScalar), VerifyError> {
     if public_key.len() != L::PUBLIC_KEY_LEN || signature.len() != L::SIGNATURE_LEN {
         return Err(VerifyError::Length);
     }
@@ -124,7 +127,7 @@ fn checked<L: Level>(
     if !scalar.degree_is_prime::<L>() {
         return Err(VerifyError::Composite);
     }
-    Ok(())
+    Ok((identity, response, scalar))
 }
 
 #[cfg(test)]
@@ -151,7 +154,8 @@ mod tests {
             VerifyError::Sign,
             VerifyError::Basis,
             VerifyError::Composite,
-            VerifyError::Relation,
+            VerifyError::Kernel,
+            VerifyError::Image,
         ];
         let mut sorted = order;
         sorted.sort_unstable();
@@ -344,7 +348,7 @@ mod tests {
                 sample.message,
                 &sample.signature
             ),
-            Err(VerifyError::Relation)
+            Err(VerifyError::Kernel)
         );
         let response = Response::<Level1>::decode(&sample.signature).expect("the sample decodes");
         if let Some(later) = response.index.next() {
@@ -356,7 +360,7 @@ mod tests {
             let identity = KeyIdentity::<Level1>::decode(&sample.public_key).expect("the key");
             let scalar = ChallengeScalar::derive(&identity, sample.message, later);
             if scalar.degree_is_prime::<Level1>() {
-                assert_eq!(err, Err(VerifyError::Relation));
+                assert_eq!(err, Err(VerifyError::Kernel));
             } else {
                 assert_eq!(err, Err(VerifyError::Composite));
             }

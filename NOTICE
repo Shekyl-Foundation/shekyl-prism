@@ -1,0 +1,28 @@
+Theta arithmetic
+================
+
+`prism-isogeny/src/theta.rs` ports the theta-coordinate doubling from
+`external/PRISM_v2/src/hd/ref/lvlx/theta_structure.c` and the inline
+transforms in `theta_structure.h`.
+
+`prism-isogeny/src/theta_step.rs` and `prism-isogeny/src/splitting.rs` port
+the (2,2)-step, the splitting isomorphism, and the product-to-Montgomery
+maps from `theta_isogenies.c`, and the splitting-matrix table from
+`src/precomp/ref/lvl1/hd_splitting_transforms.c`. The signing-only
+normalisation matrices are not included: verification calls splitting with
+randomisation off.
+
+`prism-isogeny/src/jac.rs` ports Jacobian doubling and addition, and the
+basis lift, from `src/ec/ref/lvlx/ec_jac.c` and `basis.c`.
+
+`prism-isogeny/src/gluing.rs` and `prism-isogeny/src/chain.rs` port the
+gluing isogeny and `_theta_chain_compute_impl` from `theta_isogenies.c`.
+The signing-only randomisation of the final model is not included.
+
+That code is Apache-2.0. Its authors, as named in those files, are
+Antonin Leroux and the SQIsign authors. The PRISM_v2 repository
+(https://github.com/mariascrs/PRISM_v2, commit
+87fad7da5f12f79112521677f4f5530672afe9ba) carries the same license and
+states that it is built on Qlapoti and the SQIsign reference.
+
+The rest of this repository is BSD-3-Clause, The Shekyl Foundation.
