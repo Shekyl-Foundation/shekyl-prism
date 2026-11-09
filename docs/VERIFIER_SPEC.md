@@ -220,10 +220,16 @@ that is not on `E_sig`, or a chain that stops before both readings, is
 `Kernel`. Both readings existing is `Unidentified`: the transformation
 between the structures is open, so the comparison is not decided and the
 function does not return success. The degree-`q` witness in
-`prism-verify/testdata/e0_endomorphisms.txt` does not reach that refusal:
-at step 3 a theta coordinate of the step's kernel vanishes, and the
-(2,2) step refuses. The reference calls that vanishing an unexpected
-split. Both readings are not produced, so the result is `Kernel`.
+`prism-verify/testdata/e0_endomorphisms.txt` does not reach that refusal.
+It is the graph of one endomorphism of `E0` (`j = 1728`), built in the C
+tree by `endomorphism_application_even_basis` on `BASIS_EVEN` of
+`CURVE_E0` and pushed by `theta_chain_compute_and_eval` with the extra
+torsion off. The same kernel in the Rust port dies at isogeny step 3,
+where a theta coordinate of the step's kernel is zero. The reference
+calls that vanishing an unexpected split. Both readings are not produced,
+so the result is `Kernel`. The stop is the starting curve: a random
+`E_vk` meets a product, or a vanishing coordinate, about `1/p` of the
+time at each step.
 
 `A` is not required to be a product of elliptic curves. salt-PRISM's chain
 splits because it embeds a full isogeny whose codomain is a product. §5's
@@ -259,6 +265,23 @@ searches and the signature carries. The verifier tests exactly one `q`.
   The verifier derives `s_j`.
 - The verifier does not check that `j` is the smallest. It derives `s_j`,
   tests `q_j` once, and refuses on composite.
+
+An intermediate surface of an honest chain can still split, or a theta
+coordinate can vanish. On a random key that is about `1/p` at each step,
+so over a chain of length `e′` the chance is about `e′/p`. The signer
+moves to the next index. The index that is carried is the smallest `j`
+whose `q_j` is prime and whose chain completes, which keeps signing
+deterministic. This verifier does not yet apply the second half: the
+chain at `e′` is not built, so a vector here is the smallest prime index
+only. Those vectors derive `s_j` and `q_j` at `e′`. The checks above
+still derive them at Table 2's `e`. One vector per level is
+`prism-verify/testdata/s5_lvl{1,3,5}.txt`, produced by
+`scripts/c/export_s5_vectors.c` from the pinned tree's
+`quat_sampling_random_ideal_O0_given_norm`, `quat_lideal_inter`, and
+`dim2id2iso_arbitrary_isogeny_evaluation`, with `t = s^{-1} mod 2^{e′}`
+and the image doubled down to `E[2^{e′}]`. The `q` line of each file is
+the sample the Nakagawa–Onuki recheck reads. The length-`e` relation
+refuses these points before the chain, because their order is `2^{e′}`.
 
 The hit rate per candidate is low, so recomputing the search in the verifier
 lets an attacker grind messages whose search runs long and make every node

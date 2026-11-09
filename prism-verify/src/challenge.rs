@@ -38,13 +38,27 @@ impl ChallengeScalar {
         message: &[u8],
         index: ChallengeIndex,
     ) -> Self {
+        Self::derive_width::<L>(identity, message, index, L::CHALLENGE_BITS)
+    }
+
+    /// The same hash, projected onto the odd integers below `2^bits`.
+    ///
+    /// The instantiated verifier passes [`Level::CHALLENGE_BITS`]. A §5
+    /// vector at chain exponent `e′` passes `e′ − 1`, which is two bits
+    /// shorter, and does not change the verifier's own derivation.
+    pub fn derive_width<L: Level>(
+        identity: &KeyIdentity<'_, L>,
+        message: &[u8],
+        index: ChallengeIndex,
+        bits: u32,
+    ) -> Self {
         let mut hasher: CShake256 = CoreWrapper::from_core(CShake256Core::new(CHALLENGE_DOMAIN));
         hasher.update(identity.as_bytes());
         hasher.update(message);
         hasher.update(&index.to_canonical_bytes());
-        let mut bytes = vec![0u8; L::S_LEN];
+        let mut bytes = vec![0u8; (bits as usize).div_ceil(8)];
         hasher.finalize_xof().read(&mut bytes);
-        project_onto_domain(&mut bytes, L::CHALLENGE_BITS);
+        project_onto_domain(&mut bytes, bits);
         Self { bytes }
     }
 
@@ -134,10 +148,35 @@ pub fn smallest_challenge_index<L: Level>(
     public_key: &[u8],
     message: &[u8],
 ) -> Result<ChallengeIndex, IndexError> {
+    let (index, _) = smallest_at_exponent::<L>(public_key, message, L::E)?;
+    Ok(index)
+}
+
+/// The smallest index whose degree `2^{2·exponent−1} − s^2` is prime.
+///
+/// `exponent` is the chain exponent the scalar is derived for. The
+/// instantiated search passes [`Level::E`]. A §5 vector passes `E − 2`.
+pub fn smallest_at_exponent<L: Level>(
+    public_key: &[u8],
+    message: &[u8],
+    exponent: u32,
+) -> Result<(ChallengeIndex, ChallengeScalar), IndexError> {
     let identity = KeyIdentity::<L>::decode(public_key).map_err(IndexError::Identity)?;
+    // `0 < s < 2^{exponent−1}` has a positive odd `s` only once the upper
+    // bound is at least 2. Exponent 1 leaves the empty integer, whose
+    // degree is the prime 2, and that integer is not a challenge scalar.
+    if exponent < 2 {
+        return Err(IndexError::Exhausted);
+    }
+    let bits = exponent - 1;
     ChallengeIndex::search_order()
-        .find(|index| {
-            ChallengeScalar::derive::<L>(&identity, message, *index).degree_is_prime::<L>()
+        .find_map(|index| {
+            let scalar = ChallengeScalar::derive_width::<L>(&identity, message, index, bits);
+            if prime::degree_is_prime(exponent, scalar.as_bytes()) {
+                Some((index, scalar))
+            } else {
+                None
+            }
         })
         .ok_or(IndexError::Exhausted)
 }
@@ -199,6 +238,15 @@ mod tests {
         check_domain::<Level1>();
         check_domain::<Level3>();
         check_domain::<Level5>();
+    }
+
+    #[test]
+    fn an_exponent_below_two_names_no_scalar() {
+        let key = <Level1 as Level>::ext_encode(<Level1 as Level>::Ext::from_u64(3));
+        let err = super::smallest_at_exponent::<Level1>(&key, b"m", 1);
+        assert!(matches!(err, Err(IndexError::Exhausted)));
+        assert!(!crate::prime::degree_is_prime(1, &[]));
+        assert!(!crate::prime::degree_is_prime(1, &[0]));
     }
 
     #[test]

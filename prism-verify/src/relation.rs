@@ -251,9 +251,12 @@ mod e0_vectors {
     fn exercise<L: Level>(block: &str) {
         let (p, q, s) = signature::<L>(block);
         let zero = L::Ext::zero();
-        // The chain is the one-chain shape. This witness's kernel makes a
-        // theta coordinate vanish at step 3, which the (2,2) step refuses,
-        // so both readings are not produced.
+        // The chain is the one-chain shape. This witness is the graph of one
+        // endomorphism of E0. In the C tree that kernel is
+        // `endomorphism_application_even_basis` on `BASIS_EVEN` of
+        // `CURVE_E0`, and `theta_chain_compute_and_eval` stops the same way.
+        // A theta coordinate of the step's kernel vanishes at step 3, which
+        // the (2,2) step refuses, so both readings are not produced.
         assert_eq!(
             relate_points::<L>(zero, zero, p, q, &s),
             Err(VerifyError::Kernel)
@@ -269,5 +272,200 @@ mod e0_vectors {
             let err = verify::<Level1>(&[0u8; Level1::PUBLIC_KEY_LEN], b"m", &vec![0u8; length]);
             assert_eq!(err, Err(VerifyError::Length));
         }
+    }
+}
+
+#[cfg(test)]
+mod s5_vectors {
+    use super::{on_curve, order_two_pow, relate_points};
+    use crate::basis::basis_hint;
+    use crate::challenge::ChallengeScalar;
+    use crate::identity::KeyIdentity;
+    use crate::prime::degree_is_prime;
+    use crate::signature::{canonical_sign, AffinePoint, Response};
+    use crate::verify;
+    use crate::VerifyError;
+    use prism_field::{ChallengeIndex, Field, Level, Level1, Level3, Level5};
+    use prism_isogeny::montgomery::Xz;
+
+    fn line<'a>(text: &'a str, label: &str) -> &'a str {
+        text.lines()
+            .find_map(|line| line.strip_prefix(label))
+            .unwrap()
+            .trim()
+    }
+
+    fn hex_bytes(text: &str) -> Vec<u8> {
+        (0..text.len())
+            .step_by(2)
+            .map(|index| u8::from_str_radix(&text[index..index + 2], 16).unwrap())
+            .collect()
+    }
+
+    fn decimal_le(text: &str) -> Vec<u8> {
+        let mut bytes = vec![0u8];
+        for digit in text.bytes() {
+            let mut carry = u16::from(digit - b'0');
+            for byte in &mut bytes {
+                carry += u16::from(*byte) * 10;
+                *byte = carry as u8;
+                carry >>= 8;
+            }
+            while carry > 0 {
+                bytes.push(carry as u8);
+                carry >>= 8;
+            }
+        }
+        bytes
+    }
+
+    struct Sample<L: Level> {
+        key: Vec<u8>,
+        response: Response<L>,
+        scalar: Vec<u8>,
+    }
+
+    fn sample<L: Level>(text: &str) -> Sample<L> {
+        let key = hex_bytes(line(text, "A "));
+        let identity = KeyIdentity::<L>::decode(&key).expect("key");
+        let index = ChallengeIndex::from_canonical_bytes(
+            line(text, "j ").parse::<u16>().unwrap().to_le_bytes(),
+        );
+        let scalar =
+            ChallengeScalar::derive_width::<L>(&identity, b"shekyl-prism-s5", index, L::E - 3);
+        let mut from_file = decimal_le(line(text, "s "));
+        from_file.resize(scalar.as_bytes().len(), 0);
+        assert_eq!(from_file, scalar.as_bytes());
+        let point = |x, y| AffinePoint::<L> {
+            x: L::ext_decode(&hex_bytes(line(text, x))).unwrap(),
+            y: L::ext_decode(&hex_bytes(line(text, y))).unwrap(),
+        };
+        Sample {
+            key,
+            response: Response {
+                curve: L::ext_decode(&hex_bytes(line(text, "E "))).unwrap(),
+                p: point("Px ", "Py "),
+                q: point("Qx ", "Qy "),
+                index,
+            },
+            scalar: scalar.as_bytes().to_vec(),
+        }
+    }
+
+    fn honest<L: Level>(text: &str) {
+        let sample = sample::<L>(text);
+        assert!(
+            basis_hint::<L>(KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient()).is_ok()
+        );
+        assert!(canonical_sign::<L>(sample.response.p.y));
+        assert!(on_curve::<L>(
+            sample.response.curve,
+            sample.response.p.x,
+            sample.response.p.y
+        ));
+        assert!(degree_is_prime(L::E - 2, &sample.scalar));
+        // The points are a basis of E[2^{e'}], e' = e-2. The length-e
+        // relation asks for order exactly 2^e and returns before the chain.
+        let x = Xz::affine(sample.response.p.x);
+        assert!(!order_two_pow::<L>(sample.response.curve, x));
+        let coefficient = KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient();
+        assert_eq!(
+            relate_points::<L>(
+                coefficient,
+                sample.response.curve,
+                sample.response.p,
+                sample.response.q,
+                &sample.scalar,
+            ),
+            Err(VerifyError::Kernel)
+        );
+        // The instantiated verifier derives s at exponent e, so this
+        // signature is composite there, still before any chain.
+        assert_eq!(
+            verify::<L>(&sample.key, b"shekyl-prism-s5", &sample.response.encode()),
+            Err(VerifyError::Composite)
+        );
+
+        let mut wrong_sign = sample.response;
+        wrong_sign.p.y = wrong_sign.p.y.negate();
+        wrong_sign.q.y = wrong_sign.q.y.negate();
+        assert_eq!(
+            verify::<L>(&sample.key, b"shekyl-prism-s5", &wrong_sign.encode()),
+            Err(VerifyError::Sign)
+        );
+
+        let mut flipped = sample.response;
+        let mut curve = L::ext_encode(flipped.curve);
+        curve[0] ^= 0x01;
+        flipped.curve = L::ext_decode(&curve).expect("still canonical");
+        assert!(!on_curve::<L>(flipped.curve, flipped.p.x, flipped.p.y));
+        assert_eq!(
+            relate_points::<L>(
+                coefficient,
+                flipped.curve,
+                flipped.p,
+                flipped.q,
+                &sample.scalar,
+            ),
+            Err(VerifyError::Kernel)
+        );
+
+        let j = u16::from_le_bytes(sample.response.index.to_canonical_bytes());
+        let next = ChallengeIndex::from_canonical_bytes(j.wrapping_add(1).to_le_bytes());
+        let identity = KeyIdentity::<L>::decode(&sample.key).unwrap();
+        let next_scalar =
+            ChallengeScalar::derive_width::<L>(&identity, b"shekyl-prism-s5", next, L::E - 3);
+        // j+1 is a different degree. When that degree is composite the
+        // refusal, once the exponent is e', is Composite, before the chain.
+        assert!(!degree_is_prime(L::E - 2, next_scalar.as_bytes()));
+
+        // (P, −Q) keeps the normalized y(P). The length-e order check
+        // refuses it with the same Kernel as the honest vector. Telling
+        // them apart is the comparison, Unidentified once the chain is e'.
+        let mut negated_q = sample.response;
+        negated_q.q.y = negated_q.q.y.negate();
+        assert!(canonical_sign::<L>(negated_q.p.y));
+        assert_eq!(
+            relate_points::<L>(
+                coefficient,
+                negated_q.curve,
+                negated_q.p,
+                negated_q.q,
+                &sample.scalar,
+            ),
+            Err(VerifyError::Kernel)
+        );
+
+        let swapped = Response {
+            p: sample.response.q,
+            q: sample.response.p,
+            ..sample.response
+        };
+        if canonical_sign::<L>(swapped.p.y) {
+            // Same order check as the honest vector. The comparison is what
+            // separates a swapped factor, and that is Unidentified at e'.
+            assert_eq!(
+                relate_points::<L>(
+                    coefficient,
+                    swapped.curve,
+                    swapped.p,
+                    swapped.q,
+                    &sample.scalar,
+                ),
+                Err(VerifyError::Kernel)
+            );
+        } else {
+            assert_eq!(
+                verify::<L>(&sample.key, b"shekyl-prism-s5", &swapped.encode()),
+                Err(VerifyError::Sign)
+            );
+        }
+    }
+
+    #[test]
+    fn the_s5_vectors_are_prime_at_e_prime_and_refused_before_the_length_e_chain() {
+        honest::<Level1>(include_str!("../testdata/s5_lvl1.txt"));
+        honest::<Level3>(include_str!("../testdata/s5_lvl3.txt"));
+        honest::<Level5>(include_str!("../testdata/s5_lvl5.txt"));
     }
 }

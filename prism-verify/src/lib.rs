@@ -31,7 +31,9 @@ pub mod signature;
 use prism_field::Level;
 
 pub use basis::{basis_hint, search_bound, BasisHint, C_HINT_MAX_INDEX};
-pub use challenge::{smallest_challenge_index, ChallengeScalar, IndexError, CHALLENGE_DOMAIN};
+pub use challenge::{
+    smallest_at_exponent, smallest_challenge_index, ChallengeScalar, IndexError, CHALLENGE_DOMAIN,
+};
 pub use identity::KeyIdentity;
 pub use level::{verify_level, Nist, UnknownLevel};
 pub use prime::{degree_is_prime, is_baillie_psw};
