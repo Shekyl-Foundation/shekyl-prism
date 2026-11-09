@@ -21,45 +21,72 @@ Table 2. `p = f·2^e − 1`. Each `p ≡ 3 (mod 4)`.
 | `e` | 248 | 376 | 500 |
 | `λ` | 128 | 192 | 256 |
 | Public key | 64 bytes | 96 bytes | 128 bytes |
-| §5 chain length | 248 | 376 | 500 |
+| Instantiated chain length | 248 | 376 | 500 |
 | salt-PRISM `a` | 192 | 256 | 320 |
 | salt-PRISM signature | 191 bytes | 272 bytes | 350 bytes |
 | Table 5 verify, Intel Core Ultra 7 | 9.4 Mcycles | 23.0 Mcycles | 42.2 Mcycles |
 
 A level is a type. A level I encoding is refused by the level V decoder.
 
-### Proposed modulus — PROPOSED 2026-11-09, not instantiated
+### Larger primes — SUPERSEDED 2026-11-09
 
-Table 2 is the modulus in the field crate. The half-chain under
-Identification needs `v₂(p+1) ≥ e+2`, with the chain lengths and
-`q = 2^{2e−1} − s²` left as §5 prints them. `f·2^{e+2} − 1` at Table 2's
-`f` is not that modulus: it is composite (question 4).
+Checked the same day, and not the modulus. Growing `p` to buy
+`2^{e+2}`-torsion costs a limb at NIST I and NIST III. `fp2` takes one
+64-bit limb per 64 bits of the prime, so a multiplication grows by about
+`(5/4)^2 − 1 ≈ 56%` at NIST I and `(7/6)^2 − 1 ≈ 36%` at NIST III. That is the
+wrong direction for the floor-device gate, and it retires the C chain
+vectors. `f·2^{e+2} − 1` at Table 2's `f` is composite besides (question
+4). The windows that keep today's 4, 6, and 8 limbs are 249–256, 377–384,
+and 505–512 bits, and no prime `f·2^v − 1` with `f` odd and `v ≥ e+2`
+sits in the NIST I or NIST III window.
 
-`fp2` sizes a limb array by the prime and encodes an element in
-`(bit length + 7) / 8` bytes. The windows that keep today's limb counts
-(4, 6, 8) and byte lengths (32, 48, 64) are 249–256, 377–384, and
-505–512 bits. No prime `p = f·2^v − 1` with `f` odd and `v ≥ e+2` sits
-in the NIST I or NIST III window. The search is exhaustive in those
-windows. NIST V has such primes; the smallest is below.
+| | Prime | Bits | Limbs | Status |
+| --- | --- | --- | --- | --- |
+| NIST I | `43·2^{251} − 1` | 257 | 5 | SUPERSEDED |
+| NIST III | `171·2^{378} − 1` | 386 | 7 | SUPERSEDED |
+| NIST V | `33·2^{503} − 1` | 509 | 8 | SUPERSEDED |
 
-Smallest prime at each level with `v₂(p+1) ≥ e+2`, each `≡ 3 (mod 4)`,
-Baillie–PSW prime:
+### Chain exponent — DECIDED 2026-11-09, not built
 
-| | Prime | Bits | Limbs | `F_p` bytes | Public key | `v₂(p+1)` | Odd cofactor |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| NIST I | `43·2^{251} − 1` | 257 | 5, was 4 | 33, was 32 | 66, was 64 | `e+3` | 43 |
-| NIST III | `171·2^{378} − 1` | 386 | 7, was 6 | 49, was 48 | 98, was 96 | `e+2` | `3²·19` |
-| NIST V | `33·2^{503} − 1` | 509 | 8 | 64 | 128 | `e+3` | `3·11` |
+Table 2 is salt-PRISM's table. §5 writes its torsion exponent as `e` and
+prints no parameter row of its own, so taking the §5 chain length to be
+Table 2's `e` was this verifier's inference. The corrected proposal keeps
+the printed primes and sets the §5 exponent to `e′ = e − 2` (246, 374,
+498).
 
-Signature length `5·F_{p^2} + 2` becomes 332, 492, and 642 bytes. NIST V's
-signature length is unchanged. These primes are the modulus the half-chain
-commit will instantiate. This commit does not: the C vectors and the field
-tests are Table 2, and a half-chain on Table 2 does not have the torsion.
+`Φ₁` is a `(2^{e′}, 2^{e′})`-chain and `Φ₂` a `(2^{e′−1}, 2^{e′−1})`-chain.
+A chain of length `len` in the SQIsignHD construction needs rational
+`2^{len+2}`-torsion (Dartois 2024/1180 §4.1, Lemma 29). For `Φ₁` that is
+`2^{e′+2} = 2^e`, which these curves have exactly. For `Φ₂` it is
+`2^{e−1}`, and `2^e` supplies one further doubling. The codomain check is
+equality of theta-null points after one Hadamard transform, with the dual
+structures arranged before either chain starts.
 
-Nakagawa and Onuki, ePrint 2025/1602, the paper's reference [53], is the
-recheck still owed: their cost is for a challenge prime `q` dividing
-`(−p)^k − 1`, so it moves when `p` moves. It has not been rerun on these
-three primes.
+`q = 2^{2e′−1} − s² = 2^{2e−5} − s²`, with `s` odd and `0 < s < 2^{e′−1}`.
+That is §5's formula with `e′` in place of its exponent. The degree loses
+four bits against `2^{2e−1}` and stays far above `2^{2λ}` (491, 747, and
+995 bits against 256, 384, and 512). The paper's norm condition, read at
+`e′`, is `N² > 2^{2e′} + 1`. With `N = p + 1 = f·2^e`, the ratio
+`N² / 2^{2e′}` is `f²·2^4`, at least `25·16 = 400` since `f ≥ 5`. And
+`s < 2^{e′−1}` still gives `4s² < 2^{2e′}`.
+
+The signer keeps the full `2^e`-torsion for IdealToIsogeny (§7.1) and
+evaluates `σ` on `E_vk[2^{e′}]`. The field, the limb counts, the key
+size, the signature length, and the C chain vectors stay as they are.
+The signature does not carry `s`. What moves, when this is built, is the
+width of the derived challenge scalar, from `e − 1` bits to `e − 3`.
+
+The instantiated verifier still walks a chain of length `e` and returns
+`Unidentified`. No chain at `e′` is built in this tree. The gate in front
+of that chain is the Nakagawa–Onuki recheck (ePrint 2025/1602, the
+paper's [53]). `p` is unchanged, so their analysis of `q | (−p)^k − 1`
+carries over and only the `q` window shifts. The recheck runs on a sample
+of `q` drawn at `e′`, and it lands before any chain at `e′`.
+
+A third reading for the authors — whether the §5 chain was meant to run
+two steps shorter than the rational 2-torsion — is held. It goes out with
+the follow-up if question 4(a) and 4(b) come back unanswered. An answer
+to either makes it moot, so it is not part of the letter now.
 
 The public key is the Montgomery coefficient `A` of `E : y^2 = x^3 + A x^2 + x`
 over `F_{p^2}`, little-endian canonical `fp2` encoding (`(bit length + 7) / 8`
@@ -166,7 +193,11 @@ an odd integer `s` with `0 < s < 2^{e−1}`:
    `E_vk × E_sig` in the theta model (gluing from the product, `(2, 2)`
    steps, splitting, point evaluation), a basis of `E_vk[p+1]` pushed
    through `Φ`, and acceptance only when `[2^{e−1}] Ψ(R') = [s] R'` and
-   the same holds for `T'`. The chain length is `e`, not salt-PRISM's `a`.
+   the same holds for `T'`. The instantiated chain length is Table 2's
+   `e`. §5 uses that letter for its own exponent and prints no row, so
+   equating the two was this verifier's inference. The corrected exponent
+   is `e′ = e − 2`, decided above and not built. salt-PRISM's `a` is a
+   third count.
 
 Step 3 is the accept condition. `chain` matches
 `theta_chain_compute_and_eval` on two length-160 kernels, each the graph of
@@ -309,13 +340,14 @@ For the authors of ePrint 2026/443:
 3. The §5 strong-unforgeability argument assumes a deterministic
    `H_squares` (Remark 8). Whether the reduction holds when the signature
    carries the search index is theirs to answer.
-4. Two parts. (a) Did §5 intend `p = f·2^{e+2} − 1`? With Table 2's `f`
-   that integer is composite at all three levels: NIST III is divisible
-   by 911, NIST V by 49954549, and NIST I is composite by the
-   Baillie–PSW test. (b) Is there an identification of the step-`e − 1`
-   and step-`e` readings that uses only the rational `2^e`-torsion? The
-   reading under Identification found none in the published method. The
-   primes a half-chain can actually run on are under "Proposed modulus".
+4. Two parts, in the letter. (a) Did §5 intend `p = f·2^{e+2} − 1`?
+   With Table 2's `f` that integer is composite at all three levels:
+   NIST III is divisible by 911, NIST V by 49954549, and NIST I is
+   composite by the Baillie–PSW test. (b) Is there an identification of
+   the step-`e − 1` and step-`e` readings that uses only the rational
+   `2^e`-torsion? The reading under Identification found none in the
+   published method. A third reading, whether the chain was meant to run
+   at `e − 2`, is held for the follow-up (see Chain exponent).
 
 ## How step 8 compares points
 
@@ -391,14 +423,14 @@ identification in the code is the one Lemma 29 arranged in advance.
 `Unidentified` stays the result whenever both readings exist. No
 identification code is added.
 
-The published route that does identify the codomain is the half-chain
-itself: `Φ₁` of length `e` and `Φ̃₂` of length `e − 1`, both started from
-the product on bases chosen so the codomain structures are dual, then
-`Φ₂ = Φ̃₂` dual, with the check an equality of theta-null points after
-one Hadamard transform. That route needs rational `2^{len+2}`-torsion
-for each chain. Table 2 does not have it. The primes that do are the
-proposed modulus below, and they are not the field this tree
-instantiates.
+The published route that identifies the codomain is two chains from the
+product, `Φ₁` and `Φ̃₂`, with the dual structures of Lemma 29 arranged
+before either starts, `Φ₂` the dual of `Φ̃₂`, and the check an equality
+of theta-null points after one Hadamard transform. Each chain needs
+rational `2^{len+2}`-torsion. On Table 2 that holds when the lengths are
+`e′ = e − 2` and `e′ − 1`, which is the chain-exponent decision above.
+It is not built here, and `Unidentified` stays the result of the
+length-`e` chain whenever both readings exist.
 
 The image check in `Verify.py` accepts each factor up to sign
 (`FT[0] == ±a₁P` and `FT[1] == ±a₂P`). The argument named for that is
