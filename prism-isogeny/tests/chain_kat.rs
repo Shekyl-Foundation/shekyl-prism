@@ -9,7 +9,7 @@
 //! projectively.
 
 use prism_field::{Field, Level, Level1};
-use prism_isogeny::chain::chain;
+use prism_isogeny::chain::{chain, chain_surface};
 use prism_isogeny::gluing::{Couple, Kernel};
 use prism_isogeny::montgomery::{Montgomery, Xz};
 
@@ -107,6 +107,8 @@ fn the_fixed_degree_kernel_on_the_starting_curve_splits() {
         true,
     )
     .expect("the fixed-degree kernel splits");
+    chain_surface(length, [zero, zero], kernel, true, &[pushed], true)
+        .expect("the same kernel has both theta readings");
 }
 
 fn check(text: &str, extra_torsion: bool) {

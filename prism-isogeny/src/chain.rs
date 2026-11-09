@@ -10,14 +10,14 @@
 // loop; the reference switches to a Weierstrass formula for long runs, which
 // is the same group law.
 
-//! A (2,2)-isogeny chain from an elliptic product back to an elliptic product.
+//! A (2,2)-isogeny chain.
 //!
 //! `steps` is the C argument `n`. With `extra_torsion`, the kernel points
 //! have order `2^{n+2}` and every step is the 8-torsion formula. Without it,
 //! they have order `2^n` and the last two steps are the 4-torsion and
-//! 2-torsion formulas. Verification in the pinned tree sets the flag.
-//! The codomain is refused unless it splits, and when the flag is set the
-//! vanishing structure must be index 8.
+//! 2-torsion formulas. [`chain`] then requires the codomain to split, which
+//! is the salt-PRISM path. [`chain_surface`] stops before that split and
+//! returns the theta images at step `n − 1` and step `n`.
 
 use prism_field::Field;
 
@@ -35,6 +35,23 @@ use crate::theta_step::{
 pub struct ChainResult<F> {
     pub codomain: [Montgomery<F>; 2],
     pub images: Vec<Couple<F>>,
+}
+
+/// Theta images of the input points, in one theta structure.
+#[derive(Clone, Debug)]
+pub struct SurfaceReading<F> {
+    /// The theta-null point of this structure.
+    pub null: ThetaPoint<F>,
+    pub images: Vec<ThetaPoint<F>>,
+}
+
+/// The chain at step `n − 1` and at step `n`, with no splitting step.
+#[derive(Clone, Debug)]
+pub struct SurfaceReadings<F> {
+    /// After step `n − 1`.
+    pub earlier: SurfaceReading<F>,
+    /// After step `n`.
+    pub last: SurfaceReading<F>,
 }
 
 fn double_jac<F: Field>(
@@ -65,6 +82,83 @@ pub fn chain<F: Field>(
     i: F,
     verify: bool,
 ) -> Option<ChainResult<F>> {
+    match run(
+        steps,
+        curves,
+        kernel,
+        points,
+        i,
+        Mode {
+            extra_torsion,
+            verify,
+            split: true,
+        },
+    )? {
+        Finish::Product(result) => Some(result),
+        Finish::Surface(_) => None,
+    }
+}
+
+/// The same chain as [`chain`], stopped before the splitting step.
+///
+/// `earlier` is the images after step `steps − 1`. `last` is the images
+/// after step `steps`. Both are theta coordinates on the codomain surface.
+pub fn chain_surface<F: Field>(
+    steps: u32,
+    curves: [Montgomery<F>; 2],
+    kernel: Kernel<F>,
+    extra_torsion: bool,
+    points: &[Couple<F>],
+    verify: bool,
+) -> Option<SurfaceReadings<F>> {
+    match run(
+        steps,
+        curves,
+        kernel,
+        points,
+        F::zero(),
+        Mode {
+            extra_torsion,
+            verify,
+            split: false,
+        },
+    )? {
+        Finish::Surface(readings) => Some(readings),
+        Finish::Product(_) => None,
+    }
+}
+
+enum Finish<F> {
+    Product(ChainResult<F>),
+    Surface(SurfaceReadings<F>),
+}
+
+struct Mode {
+    extra_torsion: bool,
+    verify: bool,
+    split: bool,
+}
+
+fn reading<F: Field>(null: ThetaPoint<F>, images: &[ThetaPoint<F>]) -> SurfaceReading<F> {
+    SurfaceReading {
+        null,
+        images: images.to_vec(),
+    }
+}
+
+fn run<F: Field>(
+    steps: u32,
+    curves: [Montgomery<F>; 2],
+    kernel: Kernel<F>,
+    points: &[Couple<F>],
+    i: F,
+    mode: Mode,
+) -> Option<Finish<F>> {
+    let Mode {
+        extra_torsion,
+        verify,
+        split,
+    } = mode;
     if points.iter().any(|point| !one_factor_infinite(*point)) {
         return None;
     }
@@ -132,6 +226,8 @@ pub fn chain<F: Field>(
     };
     let mut which = 1u32;
     let mut last_step = None;
+    let mut earlier = None;
+    let mut last = None;
 
     while let Some(mut at) = current {
         if todo[at] == 0 {
@@ -173,6 +269,14 @@ pub fn chain<F: Field>(
             *image = isogeny_eval(&step, *image);
         }
         null = step.codomain;
+        if !split && extra_torsion {
+            if which == steps - 2 {
+                earlier = Some(reading(null, &images));
+            }
+            if which == steps - 1 {
+                last = Some(reading(null, &images));
+            }
+        }
         if at > 0 {
             for index in 0..at {
                 theta_1[index] = isogeny_eval(&step, theta_1[index]);
@@ -202,11 +306,20 @@ pub fn chain<F: Field>(
             theta_2[0] = isogeny_eval(&step, theta_2[0]);
         }
         null = step.codomain;
+        earlier = Some(reading(null, &images));
         let step = isogeny_compute_2(null, theta_1.first().copied()?, true, false)?;
         for image in &mut images {
             *image = isogeny_eval(&step, *image);
         }
         null = step.codomain;
+        last = Some(reading(null, &images));
+    }
+
+    if !split {
+        return Some(Finish::Surface(SurfaceReadings {
+            earlier: earlier?,
+            last: last?,
+        }));
     }
 
     let expected = extra_torsion.then_some(8);
@@ -223,7 +336,7 @@ pub fn chain<F: Field>(
             })
         })
         .collect::<Option<Vec<_>>>()?;
-    Some(ChainResult {
+    Some(Finish::Product(ChainResult {
         codomain: [
             Montgomery {
                 a: product.first.a,
@@ -235,7 +348,7 @@ pub fn chain<F: Field>(
             },
         ],
         images,
-    })
+    }))
 }
 
 fn write_at<F: Field>(points: &mut Vec<ThetaPoint<F>>, index: usize, point: ThetaPoint<F>) {

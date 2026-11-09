@@ -173,8 +173,7 @@ pub fn odd_primes<L: Level>() -> &'static [u64] {
 /// `[p+1]X = O`, and `[(p+1)/ℓ]X ≠ O` for `ℓ = 2` and every prime divisor of `f`.
 pub fn has_order_p_plus_one<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
     let killed = |odd, doubles| {
-        mul_odd_then_double::<L>(coefficient, point, odd, doubles)
-            .is_some_and(is_infinity)
+        mul_odd_then_double::<L>(coefficient, point, odd, doubles).is_some_and(is_infinity)
     };
     if !killed(L::ODD, L::E) {
         return false;

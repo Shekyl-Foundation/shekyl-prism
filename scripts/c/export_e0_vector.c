@@ -1,3 +1,9 @@
+/* Copyright (c) 2025-2026, The Shekyl Foundation
+ *
+ * All rights reserved.
+ * BSD-3-Clause
+ */
+
 /* The kernel `fixed_degree_isogeny` builds on E0: an endomorphism of norm
  * u·(2^L − u), scaled by u^{-1} mod 2^{L+2}, on the canonical basis.
  * L = e − 2 and the chain is run with the extra 4-torsion. That is the

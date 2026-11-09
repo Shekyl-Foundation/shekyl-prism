@@ -5,10 +5,11 @@
 
 //! A pure verifier. It takes bytes and returns a typed refusal.
 //!
-//! Success is Algorithm 3 steps 3–8 of ePrint 2026/443, specified in
-//! `docs/VERIFIER_SPEC.md`. The public checks run first. A signature that
-//! passes them is accepted only when the two chains in [`relation`] land on
-//! the same product and the same image.
+//! Algorithm 3 of ePrint 2026/443 is specified in `docs/VERIFIER_SPEC.md`.
+//! The public checks run first. A signature that passes them is run through
+//! one chain with no splitting step. Both theta readings existing is
+//! [`VerifyError::Unidentified`]: the transformation between the two
+//! structures on the codomain is not fixed, so nothing here returns success.
 //!
 //! Each public check owns a module: [`identity`] decodes the key,
 //! [`signature`] decodes the response and normalizes its sign, [`basis`]
@@ -65,10 +66,12 @@ pub enum VerifyError {
     Basis,
     /// `2^{2e−1} − s_j^2` is not a Baillie–PSW prime.
     Composite,
-    /// The `(2,2)` chain did not split, or a signature point is not on its curve.
+    /// The `(2,2)` chain stopped before both readings, or a signature point
+    /// is not on its curve.
     Kernel,
-    /// The two chains of Algorithm 3 split, and step 8's images differ.
-    Image,
+    /// Both theta readings exist, and the transformation between their
+    /// structures is not fixed. This is not acceptance.
+    Unidentified,
 }
 
 impl core::fmt::Display for VerifyError {
@@ -81,8 +84,8 @@ impl core::fmt::Display for VerifyError {
             Self::Sign => "y(P) is not the normalized representative",
             Self::Basis => "no basis index within the search bound",
             Self::Composite => "the challenge degree is composite",
-            Self::Kernel => "the isogeny kernel does not split",
-            Self::Image => "the isogeny images differ",
+            Self::Kernel => "the isogeny chain stopped before both readings",
+            Self::Unidentified => "the two readings on the codomain are not identified",
         };
         f.write_str(reason)
     }
@@ -155,7 +158,7 @@ mod tests {
             VerifyError::Basis,
             VerifyError::Composite,
             VerifyError::Kernel,
-            VerifyError::Image,
+            VerifyError::Unidentified,
         ];
         let mut sorted = order;
         sorted.sort_unstable();

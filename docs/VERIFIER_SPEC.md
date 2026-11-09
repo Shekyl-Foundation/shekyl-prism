@@ -145,31 +145,33 @@ still match. The vectors are `prism-isogeny/testdata/chain_lvl1.txt` and
 `chain_lvl1_order.txt`. The salt-PRISM wrapper around that function is not
 what this verifier conforms to.
 
-`verify` then runs two chains. The longer one has length `e` and kernel
-`(P_vk, P_sig)`, `(Q_vk, Q_sig)`. The shorter one has length `e − 1` and
-kernel the doubles of those points. Each chain is evaluated at
-`([2^{e−1}] R, 0)`, `([2^{e−1}] T, 0)` and `([2^{e−1}](R−T), 0)` on the
-longer chain, and at `([s] R, 0)`, `([s] T, 0)` and `([s](R−T), 0)` on the
-shorter one. `(R, T)` is a basis of `E_vk[p+1]`, specified under "How step
-8 compares points". Acceptance is the two codomains being the same product,
-up to order of the factors and the sign of each Montgomery coefficient, and
-the three images agreeing as x-only points. A signature point that is not
-on `E_sig`, or a chain that does not split, is `Kernel`. Images that differ
-are `Image`.
+`verify` then runs one chain of length `e` on
+`K = ⟨(P_vk, −P_sig), (Q_vk, −Q_sig)⟩`, and does not split the codomain.
+The chain is evaluated at `([s]X, 0)` and `([2^{e−1}]X, 0)` for
+`X ∈ {R, T, R−T}`. `(R, T)` is a basis of `E_vk[p+1]`, specified under
+"How step 8 compares points". The images of `([s]X, 0)` are read at step
+`e − 1`. The images of `([2^{e−1}]X, 0)` are read at step `e`. Those two
+steps are the same surface `A` in two theta structures. A signature point
+that is not on `E_sig`, or a chain that stops before both readings, is
+`Kernel`. Both readings existing is `Unidentified`: the transformation
+between the structures is open, so the comparison is not decided and the
+function does not return success. The degree-`q` witness in
+`prism-verify/testdata/e0_endomorphisms.txt` does not reach that refusal:
+at step 3 a theta coordinate of the step's kernel vanishes, and the
+(2,2) step refuses. The reference calls that vanishing an unexpected
+split. Both readings are not produced, so the result is `Kernel`.
 
-No vector has yet made this comparison return success. The graph of an
-endomorphism of norm `2^{2e−1} − s^2` does not split in
-`theta_chain_compute_and_eval`, in this port or in the pinned C tree, on
-the canonical basis of `E0` with or without the extra 4-torsion. The kernel
-that does split is the one `fixed_degree_isogeny` builds: norm
-`u·(2^{e−2} − u)`, length `e − 2`, extra 4-torsion. Its codomain is not
-`E0`, so it is not Algorithm 3's endomorphism of the product. That kernel
-is `prism-isogeny/testdata/e0_fixed_lvl1.txt`. The degree-`q` witness that
-the chain refuses is `prism-verify/testdata/e0_endomorphisms.txt`.
+`A` is not required to be a product of elliptic curves. salt-PRISM's chain
+splits because it embeds a full isogeny whose codomain is a product. §5's
+half-isogenies end at the midpoint of an odd-exponent endomorphism, which
+is in general the Jacobian of a genus-2 curve. The kernel
+`fixed_degree_isogeny` builds does split; that is a chain known-answer
+test, `prism-isogeny/testdata/e0_fixed_lvl1.txt`, not Algorithm 3. The
+degree-`q` witness is `prism-verify/testdata/e0_endomorphisms.txt`.
 
 Table 5's 23.0 Mcycles is salt-PRISM. There is no published timing for §5.
-The floor-device gate is a level III run of a splitting chain at `e` steps.
-The bench sample stops at `Kernel` and is not that run.
+The floor-device gate is a level III run of this chain. The bench sample
+stops at `Kernel` and is not that run.
 
 ## Challenge index
 
@@ -274,10 +276,13 @@ For the authors of ePrint 2026/443:
 3. The §5 strong-unforgeability argument assumes a deterministic
    `H_squares` (Remark 8). Whether the reduction holds when the signature
    carries the search index is theirs to answer.
-4. After comparing `R`, `T` and `R−T` as x-only points on each factor, one
-   sign per factor remains. Global `−1` is the same relation with `−s`, and
-   the degree depends on `s^2`. Does a per-factor sign, `(1, −1)` or
-   `(−1, 1)`, accept a `σ` the three-point check should refuse?
+4. The step-`e − 1` reading and the step-`e` reading are two theta
+   structures on the same surface. How does a verifier name the
+   transformation between them? Once that transformation is fixed, one sign
+   per factor may remain. Global `−1` is the same relation with `−s`, and
+   the degree depends on `s^2`. Does identifying the structures, or a
+   per-factor sign `(1, −1)` or `(−1, 1)`, accept a `σ` the check on
+   `R`, `T` and `R−T` should refuse?
 
 ## How step 8 compares points
 
@@ -287,31 +292,26 @@ comparison below is what `verify` requires of that output.
 
 ### Identification
 
-Step 4 builds `Φ` as `e − 1` (2,2)-steps. Step 5 builds `Ψ` as one more
-step, so the chain a node evaluates has length `e`. The paper's
-factorization `Φ₁ = Ψ_e ∘ Φ₂ ∘ ι` says those two computations land on the
-same abelian surface. A theta-model implementation does not land in a
-unique coordinate system: each step chooses a theta structure, and two
-structures on one surface differ by a signed permutation of the four
-theta coordinates.
+`Φ = Φ̂₂ ∘ Φ₁` is an endomorphism of `E_vk × E_sig` of degree `2^{2e−1}`.
+`Φ₁` is a `(2^e, 2^e)`-isogeny and `Φ₂` is a `(2^{e−1}, 2^{e−1})`-isogeny.
+Both start at `E_vk × E_sig` and end at the same surface `A`. The kernel
+of `Φ₁` is `K`. The first `e − 1` steps of the chain for `K` are
+`Φ₂ ∘ ι`, and the last step is `Ψ`. `ι` fixes every `(X, 0)`, so the image
+of `([s]X, 0)` at step `e − 1` is `Φ₂([s]X, 0)`, and the image of
+`([2^{e−1}]X, 0)` at step `e` is `Ψ` applied to that.
 
-The comparison is not made in those raw coordinates. The splitting step
-records the isomorphism back to an elliptic product — the matrix the C
-reference calls `M` and applies with `apply_isomorphism` before
-`theta_point_to_montgomery_point`. `splitting_compute` and
-`montgomery_couple` are that pair. Both sides of step 8 are read in that
-product's Montgomery model, after that one isomorphism. A codomain that
-does not split is a refusal, not a second choice of structure. Verification
-in the pinned tree also requires the vanishing structure to be index 8;
-`splitting_compute` takes that index and refuses any other when the extra
-torsion is present. Algorithm 3 does not pass the extra torsion, so it
-accepts whichever single structure vanishes. `chain` is
-`_theta_chain_compute_impl` with randomisation left out, and `verify` calls
-it twice. A basis of each factor is not by itself a kernel: the reference
-refuses that product. The kernels that succeed in the length-160 vectors
-are graphs of endomorphisms whose norm is not `2^{2e−1} − s^2`. The
-graph Algorithm 3 builds from `(P_vk, P_sig)` at that norm does not split;
-see the paragraph above the challenge index.
+`A` is the midpoint of an odd-exponent endomorphism. In general it is the
+Jacobian of a genus-2 curve, not a product of elliptic curves. The chain
+therefore does not split. The two readings are theta coordinates, each in
+the theta structure of its own step. Two theta structures on one
+principally polarized surface differ by an element of a finite group, the
+symplectic action on the level-2 theta coordinates, up to projective
+scaling. Naming that element is question 4. Until it is named, `verify`
+returns `Unidentified` and does not compare the readings.
+
+salt-PRISM does split. Its chain requires a product codomain because it
+embeds a full isogeny. `splitting_compute` is that step, and the
+fixed-degree known-answer test still runs it. Algorithm 3 does not.
 
 ### The basis
 
@@ -335,32 +335,21 @@ that completes the same checks.
 
 ### Sign
 
-The chains compare x-only points. `(X : Z)` does not see a change of sign,
-and it does not see a sign that flips only one factor of a product. The
-three points `R`, `T` and `R−T` pin the relative sign: a flip on one point
-and not the others sends `R−T` to `R+T`, and `x(R+T) ≠ x(R−T)` when both
-points have order greater than 2. What remains is one sign per factor,
-`(ε1, ε2)`. Global `−1` is the relation for `−s`, and the degree depends on
-`s^2`. Question 4 asks the authors whether a mixed per-factor sign can
-accept a wrong `σ`.
+The kernel in the paper is `⟨(P_vk, −P_sig), (Q_vk, −Q_sig)⟩`. The chain
+is given x-only points, and `x(−P) = x(P)`, so that kernel and
+`⟨(P_vk, P_sig), (Q_vk, Q_sig)⟩` are the same input. They differ by
+`ι(X, Y) = (X, −Y)`, and `ι` fixes every `(X, 0)`. The six evaluated
+points do not see the substitution.
 
-The kernel is built with `+P_sig`, where the paper writes `−P_sig`. The
-x-only kernel data cannot tell `⟨(P, P'), (Q, Q')⟩` from
-`⟨(P, −P'), (Q, −Q')⟩`. Those two isogenies differ by `ι(X, Y) = (X, −Y)`,
-and `ι` fixes every point `(T, 0)`. The three evaluated points do not see
-the substitution.
-
-Each codomain factor is normalized so the encoding of `A` is at most the
-encoding of `−A`. The normalization negates that factor's x-coordinates,
-which is what `(x, y) ↦ (−x, i y)` does to x-only points. The comparison
-then accepts either order of the two factors.
+The comparison, once the two structures are identified, is on `R`, `T`
+and `R−T`. A relative sign flip sends `R−T` to `R+T`, and
+`x(R+T) ≠ x(R−T)` when both points have order greater than 2. What that
+leaves, including a sign per factor, is question 4.
 
 `E0 × E0` is not the bench's general-key number. The curve `j = 1728` has
-extra automorphisms. The length-`e` chain on a C-generated general pair is
-the number the floor-device gate reads, after a positive vector has passed.
-A fully general end-to-end timing waits for a §5 signer. The chain that
-does split on `E0` today is the fixed-degree kernel named above, at length
-`e − 2` with the extra 4-torsion, and its codomain is not `E0`.
+extra automorphisms. The floor-device gate is the level III chain above,
+after a vector has passed the comparison. A fully general end-to-end
+timing waits for a §5 signer.
 
 ## What `verify` decides today
 
@@ -377,16 +366,17 @@ check is refused with the earliest of them:
 | 5 | `Sign` | two encodings and a byte comparison on an element already decoded |
 | 6 | `Basis` | up to `2λ` Legendre symbols — 256, 384, 512 — a length the sender chooses with `A` |
 | 7 | `Composite` | one cSHAKE256 squeeze and one Baillie–PSW test — more than everything above it together |
-| 8 | `Kernel` | the chains, or the discovery that a signature point is off its curve |
-| 9 | `Image` | the two chains split and their images differ |
+| 8 | `Kernel` | the chain, or the discovery that a signature point is off its curve |
+| 9 | `Unidentified` | both theta readings exist, and the structures are not yet matched |
 
 The order of `Sign` and `Basis` is load-bearing: the basis search is the one
 public check whose length a sender controls, so the free comparison on
 `y(P_sig)` runs first and a junk signature never pays for the search. The
 `VerifyError` variants are declared in this order and compare in it.
 
-`Kernel` is a chain that does not split, or a signature point off its curve.
-`Image` is a split whose two sides disagree. Agreement is `Ok(())`. The
-prepared sample used by the bench carries canonical zeros for the signature
-points, which are not on `E_sig`, so that run stops at `Kernel` and does
-not time a splitting chain.
+`Kernel` is a chain that stops before both readings, or a signature point
+off its curve. `Unidentified` is both readings, with the comparison not
+yet decided. The function does not return success. The prepared sample
+used by the bench carries canonical zeros for the signature points, which
+are not on `E_sig`, so that run stops at `Kernel` and does not time the
+chain.

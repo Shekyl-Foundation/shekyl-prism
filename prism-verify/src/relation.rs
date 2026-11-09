@@ -5,22 +5,21 @@
 
 //! Algorithm 3 steps 3–8.
 //!
-//! Two chains, both matching `theta_chain_compute_and_eval`. The longer has
-//! length `e` and kernel `(P, P_sig), (Q, Q_sig)`. The shorter has length
-//! `e − 1` and kernel the doubles. Each chain is evaluated at `(R, 0)`,
-//! `(T, 0)` and `(R−T, 0)`, where `(R, T)` is a basis of `E_vk[p+1]`.
+//! One chain of length `e` on `K = ⟨(P_vk, −P_sig), (Q_vk, −Q_sig)⟩`, with
+//! no splitting step. It is evaluated at `([s]X, 0)` and `([2^{e−1}]X, 0)`
+//! for `X ∈ {R, T, R−T}`. The `[s]` images are the chain at step `e − 1`;
+//! the `[2^{e−1}]` images are the chain at step `e`.
 //!
-//! Using `P_sig` rather than `−P_sig` replaces the kernel by its image under
-//! `ι(X, Y) = (X, −Y)`. `ι` fixes every point `(T, 0)`, so the three
+//! The x-only kernel cannot tell `+P_sig` from `−P_sig`. Those kernels
+//! differ by `ι(X, Y) = (X, −Y)`, and `ι` fixes every `(X, 0)`, so the
 //! evaluated points do not see the sign. `docs/VERIFIER_SPEC.md` records this.
 //!
-//! The chains may order the product factors differently and may return `A`
-//! or `−A`. Each factor is normalized so the encoding of `A` is at most the
-//! encoding of `−A`, which negates that factor's x-coordinates, and the
-//! comparison accepts either order of the factors.
+//! The two readings lie on the same surface in two theta structures. The
+//! transformation between them is not fixed, so both readings existing is
+//! [`VerifyError::Unidentified`], not acceptance.
 
 use prism_field::{Field, Level};
-use prism_isogeny::chain::{chain, ChainResult};
+use prism_isogeny::chain::chain_surface;
 use prism_isogeny::gluing::{Couple, Kernel};
 use prism_isogeny::jac::{add, to_xz, Jac};
 use prism_isogeny::montgomery::{a24, ladder, Montgomery, Xz};
@@ -59,17 +58,6 @@ pub fn relate_points<L: Level>(
     q_sig: AffinePoint<L>,
     scalar: &[u8],
 ) -> Result<(), VerifyError> {
-    relate_len::<L>(vk, sig, p_sig, q_sig, scalar, L::E)
-}
-
-pub(crate) fn relate_len<L: Level>(
-    vk: L::Ext,
-    sig: L::Ext,
-    p_sig: AffinePoint<L>,
-    q_sig: AffinePoint<L>,
-    scalar: &[u8],
-    steps: u32,
-) -> Result<(), VerifyError> {
     let basis = if vk.is_zero() {
         starting_basis::<L>()
     } else {
@@ -104,25 +92,17 @@ pub(crate) fn relate_len<L: Level>(
         return Err(VerifyError::Kernel);
     }
     let curves = [Montgomery::normalized(vk), Montgomery::normalized(sig)];
-    let long_points = evaluated::<L>(vk, &basis, scalar, true);
-    let short_points = evaluated::<L>(vk, &basis, scalar, false);
-    let left = chain(steps, curves, kernel, false, &long_points, L::ext_i(), true)
-        .ok_or(VerifyError::Kernel)?;
-    let right = chain(
-        steps - 1,
-        curves,
-        double_kernel::<L>(vk, sig, kernel),
-        false,
-        &short_points,
-        L::ext_i(),
-        true,
-    )
-    .ok_or(VerifyError::Kernel)?;
-    if images_agree::<L>(&left, &right) {
-        Ok(())
-    } else {
-        Err(VerifyError::Image)
+    let points = pushed::<L>(vk, &basis, scalar);
+    let readings =
+        chain_surface(L::E, curves, kernel, false, &points, true).ok_or(VerifyError::Kernel)?;
+    if readings.earlier.images.len() != points.len() || readings.last.images.len() != points.len() {
+        return Err(VerifyError::Kernel);
     }
+    // `readings.earlier` holds the step `e − 1` images of `([s]X, 0)`.
+    // `readings.last` holds the step `e` images of `([2^{e−1}]X, 0)`.
+    // Comparing them needs the transformation between the two theta
+    // structures, which is open.
+    Err(VerifyError::Unidentified)
 }
 
 fn order_two_pow<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
@@ -131,27 +111,23 @@ fn order_two_pow<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
     full.z.is_zero() && !almost.z.is_zero()
 }
 
-fn evaluated<L: Level>(
+fn pushed<L: Level>(
     vk: L::Ext,
     basis: &RationalBasis<L::Ext>,
     scalar: &[u8],
-    long: bool,
-) -> [Couple<L::Ext>; 3] {
-    let prepare = |point: Xz<L::Ext>| {
-        let first = if long {
-            double_times::<L>(vk, point, L::E - 1)
-        } else {
-            scale::<L>(vk, point, scalar)
-        };
-        Couple {
-            first,
-            second: Xz::infinity(),
-        }
+) -> [Couple<L::Ext>; 6] {
+    let at = |point: Xz<L::Ext>| Couple {
+        first: point,
+        second: Xz::infinity(),
     };
+    let bases = [basis.r, basis.t, basis.difference];
     [
-        prepare(basis.r),
-        prepare(basis.t),
-        prepare(basis.difference),
+        at(scale::<L>(vk, bases[0], scalar)),
+        at(scale::<L>(vk, bases[1], scalar)),
+        at(scale::<L>(vk, bases[2], scalar)),
+        at(double_times::<L>(vk, bases[0], L::E - 1)),
+        at(double_times::<L>(vk, bases[1], L::E - 1)),
+        at(double_times::<L>(vk, bases[2], L::E - 1)),
     ]
 }
 
@@ -184,24 +160,6 @@ fn difference<L: Level>(
     ))
 }
 
-fn double_kernel<L: Level>(vk: L::Ext, sig: L::Ext, kernel: Kernel<L::Ext>) -> Kernel<L::Ext> {
-    let once = |curve, point: Xz<L::Ext>| double_times::<L>(curve, point, 1);
-    Kernel {
-        t1: Couple {
-            first: once(vk, kernel.t1.first),
-            second: once(sig, kernel.t1.second),
-        },
-        t2: Couple {
-            first: once(vk, kernel.t2.first),
-            second: once(sig, kernel.t2.second),
-        },
-        difference: Couple {
-            first: once(vk, kernel.difference.first),
-            second: once(sig, kernel.difference.second),
-        },
-    }
-}
-
 fn scale<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>, scalar: &[u8]) -> Xz<L::Ext> {
     let Some(constant) = a24(coefficient) else {
         return Xz::infinity();
@@ -219,86 +177,6 @@ fn scale<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>, scalar: &[u8]) -> Xz<
         return Xz::infinity();
     }
     ladder(constant, bits.into_iter(), point)
-}
-
-struct Factor<F> {
-    curve: Montgomery<F>,
-    points: [Xz<F>; 3],
-}
-
-fn canonical_factor<L: Level>(
-    curve: Montgomery<L::Ext>,
-    points: [Xz<L::Ext>; 3],
-) -> Factor<L::Ext> {
-    let Some(inverse) = curve.c.inv() else {
-        return Factor { curve, points };
-    };
-    let affine = curve.a.mul(inverse);
-    let negative = affine.negate();
-    if L::ext_encode(negative) < L::ext_encode(affine) {
-        Factor {
-            curve: Montgomery::normalized(negative),
-            points: points.map(|point| Xz {
-                x: point.x.negate(),
-                z: point.z,
-            }),
-        }
-    } else {
-        Factor {
-            curve: Montgomery::normalized(affine),
-            points,
-        }
-    }
-}
-
-fn side<L: Level>(result: &ChainResult<L::Ext>) -> [Factor<L::Ext>; 2] {
-    let points = |which: usize| {
-        [
-            if which == 0 {
-                result.images[0].first
-            } else {
-                result.images[0].second
-            },
-            if which == 0 {
-                result.images[1].first
-            } else {
-                result.images[1].second
-            },
-            if which == 0 {
-                result.images[2].first
-            } else {
-                result.images[2].second
-            },
-        ]
-    };
-    [
-        canonical_factor::<L>(result.codomain[0], points(0)),
-        canonical_factor::<L>(result.codomain[1], points(1)),
-    ]
-}
-
-fn factor_agrees<L: Level>(left: &Factor<L::Ext>, right: &Factor<L::Ext>) -> bool {
-    left.curve.a.same(right.curve.a)
-        && left
-            .points
-            .iter()
-            .zip(right.points)
-            .all(|(left_point, right_point)| {
-                left_point
-                    .x
-                    .mul(right_point.z)
-                    .same(right_point.x.mul(left_point.z))
-            })
-}
-
-fn images_agree<L: Level>(left: &ChainResult<L::Ext>, right: &ChainResult<L::Ext>) -> bool {
-    if left.images.len() != 3 || right.images.len() != 3 {
-        return false;
-    }
-    let left = side::<L>(left);
-    let right = side::<L>(right);
-    (factor_agrees::<L>(&left[0], &right[0]) && factor_agrees::<L>(&left[1], &right[1]))
-        || (factor_agrees::<L>(&left[0], &right[1]) && factor_agrees::<L>(&left[1], &right[0]))
 }
 
 #[cfg(test)]
@@ -373,8 +251,9 @@ mod e0_vectors {
     fn exercise<L: Level>(block: &str) {
         let (p, q, s) = signature::<L>(block);
         let zero = L::Ext::zero();
-        // The reference chain refuses this graph too: an endomorphism of norm
-        // 2^{2e−1} − s^2 is not the kernel `fixed_degree_isogeny` evaluates.
+        // The chain is the one-chain shape. This witness's kernel makes a
+        // theta coordinate vanish at step 3, which the (2,2) step refuses,
+        // so both readings are not produced.
         assert_eq!(
             relate_points::<L>(zero, zero, p, q, &s),
             Err(VerifyError::Kernel)
@@ -382,7 +261,7 @@ mod e0_vectors {
     }
 
     #[test]
-    fn a_prime_norm_endomorphism_of_the_starting_curve_does_not_split() {
+    fn the_degree_q_graph_stops_before_both_readings() {
         let text = include_str!("../testdata/e0_endomorphisms.txt");
         let block = text.split("NIST-").find(|block| !block.is_empty()).unwrap();
         exercise::<Level1>(block);

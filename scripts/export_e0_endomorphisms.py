@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025-2026, The Shekyl Foundation
+#
+# All rights reserved.
+# BSD-3-Clause
 """Find one endomorphism of E0 of norm q = 2^{2e-1} - s^2 for each level.
 
 q is prime, s is a small odd positive integer, and
 q - p(c^2 + d^2) = a^2 + b^2 with p = f·2^e - 1 and c, d odd and small.
-The graph of this endomorphism does not split in theta_chain_compute_and_eval.
-The kernel that does split is the fixed-degree one from scripts/c/export_e0_vector.c.
+The Rust test pushes the resulting points through the Algorithm 3 chain.
 """
 
 import pathlib
