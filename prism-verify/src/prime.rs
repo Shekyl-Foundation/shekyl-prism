@@ -641,6 +641,12 @@ pub fn degree_is_prime(exponent: u32, scalar: &[u8]) -> bool {
     let Some(scalar) = Nat::from_le_bytes(scalar) else {
         return false;
     };
+    // `s` is a positive odd integer. Zero makes `q` a power of two, which
+    // is the prime 2 exactly when the exponent is 1, and that is not a
+    // challenge degree.
+    if scalar.is_zero() || scalar.is_even() {
+        return false;
+    }
     let Some(power) = degree_exponent(exponent).and_then(Nat::power_of_two) else {
         return false;
     };

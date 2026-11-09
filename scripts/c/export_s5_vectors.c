@@ -66,6 +66,17 @@ int gmp_printf(const char *fmt, ...) {
 #include "signature.h"
 #include "torsion_constants.h"
 
+static void affine_from_jac(fp2_t *x, fp2_t *y, const jac_point_t *point) {
+    fp2_t inverse;
+    fp2_t inverse_square;
+    fp2_copy(&inverse, &point->z);
+    fp2_inv(&inverse);
+    fp2_sqr(&inverse_square, &inverse);
+    fp2_mul(x, &point->x, &inverse_square);
+    fp2_mul(&inverse, &inverse_square, &inverse);
+    fp2_mul(y, &point->y, &inverse);
+}
+
 static void hex_fp2(const fp2_t *value) {
     unsigned char bytes[FP2_ENCODED_BYTES];
     fp2_encode(bytes, value);
@@ -251,25 +262,32 @@ static int sign(const char *scratch, const char *scalar_text) {
         return 1;
     }
 
-    ec_curve_t shown = codomain;
-    ec_normalize_curve(&shown);
-    ec_normalize_point(&canonical.P);
-    ec_normalize_point(&canonical.Q);
-    fp2_t py;
-    fp2_t qy;
-    if (!ec_recover_y(&py, &canonical.P.x, &shown) || !ec_recover_y(&qy, &canonical.Q.x, &shown)) {
+    /* Okeya–Sakurai, via lift_basis: Q's sign is the one for which
+     * x(P−Q) is the basis difference. Two independent square roots can
+     * export (P, −Q), and the later global sign flip cannot repair that. */
+    ec_basis_t basis = canonical;
+    ec_curve_t curve = codomain;
+    jac_point_t lifted_p;
+    jac_point_t lifted_q;
+    if (lift_basis(&lifted_p, &lifted_q, &basis, &curve) == 0) {
         fprintf(stderr, "y recovery failed\n");
         return 1;
     }
+    fp2_t px;
+    fp2_t py;
+    fp2_t qx;
+    fp2_t qy;
+    affine_from_jac(&px, &py, &lifted_p);
+    affine_from_jac(&qx, &qy, &lifted_q);
 
     printf("E ");
-    hex_fp2(&shown.A);
+    hex_fp2(&curve.A);
     printf("\nPx ");
-    hex_fp2(&canonical.P.x);
+    hex_fp2(&px);
     printf("\nPy ");
     hex_fp2(&py);
     printf("\nQx ");
-    hex_fp2(&canonical.Q.x);
+    hex_fp2(&qx);
     printf("\nQy ");
     hex_fp2(&qy);
     printf("\n");

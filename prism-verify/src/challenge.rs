@@ -162,7 +162,13 @@ pub fn smallest_at_exponent<L: Level>(
     exponent: u32,
 ) -> Result<(ChallengeIndex, ChallengeScalar), IndexError> {
     let identity = KeyIdentity::<L>::decode(public_key).map_err(IndexError::Identity)?;
-    let bits = exponent.checked_sub(1).ok_or(IndexError::Exhausted)?;
+    // `0 < s < 2^{exponent−1}` has a positive odd `s` only once the upper
+    // bound is at least 2. Exponent 1 leaves the empty integer, whose
+    // degree is the prime 2, and that integer is not a challenge scalar.
+    if exponent < 2 {
+        return Err(IndexError::Exhausted);
+    }
+    let bits = exponent - 1;
     ChallengeIndex::search_order()
         .find_map(|index| {
             let scalar = ChallengeScalar::derive_width::<L>(&identity, message, index, bits);
@@ -232,6 +238,15 @@ mod tests {
         check_domain::<Level1>();
         check_domain::<Level3>();
         check_domain::<Level5>();
+    }
+
+    #[test]
+    fn an_exponent_below_two_names_no_scalar() {
+        let key = <Level1 as Level>::ext_encode(<Level1 as Level>::Ext::from_u64(3));
+        let err = super::smallest_at_exponent::<Level1>(&key, b"m", 1);
+        assert!(matches!(err, Err(IndexError::Exhausted)));
+        assert!(!crate::prime::degree_is_prime(1, &[]));
+        assert!(!crate::prime::degree_is_prime(1, &[0]));
     }
 
     #[test]

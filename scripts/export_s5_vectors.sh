@@ -5,16 +5,19 @@
 # Usage: PRISM_REF_BUILD=/path/to/cmake-build scripts/export_s5_vectors.sh
 # The build is the pinned tree configured with -DPRISM_BUILD_TYPE=ref
 # -DGMP_LIBRARY=MINI -DENABLE_SIGN=ON, and it must already contain the
-# per-level static libraries. The scratch files that hold secret keys are
-# created under ${TMPDIR:-/tmp} and are not part of the repository.
+# per-level static libraries. Secret-key scratch lives in a private
+# temporary directory and is removed when the script exits.
 set -eu
 
 root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 build=${PRISM_REF_BUILD:?set PRISM_REF_BUILD to the reference cmake build}
 src=$root/external/PRISM_v2
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
 # The pinned ideal-to-isogeny aborts on some seeds (mini-gmp divides by
 # zero). The seeds below are the ones that produced the committed vectors.
-# Each number is the byte repeated 48 times.
+# Each number is the byte repeated 48 times. Scratch files live in a
+# private directory from mktemp, removed on every exit.
 
 compile() {
     variant=$1
@@ -54,14 +57,14 @@ one() {
     sign_seed=$4
     variant=lvl$n
     compile "$variant"
-    scratch=${TMPDIR:-/tmp}/s5-sk-$variant.bin
+    scratch=$work/$variant-key
     python3 -c "import sys; sys.stdout.buffer.write(bytes([$key_seed]) * 48)" | "$build/export_s5_$variant" keygen "$scratch" > "$scratch.pub"
     coefficient=$(awk '{print $2}' "$scratch.pub")
     pair=$(cargo run --quiet --manifest-path "$root/Cargo.toml" --bin s5_vector -- index "$name" "$coefficient")
     scalar=$(printf '%s\n' "$pair" | sed -n '2p')
     python3 -c "import sys; sys.stdout.buffer.write(bytes([$sign_seed]) * 48)" | "$build/export_s5_$variant" sign "$scratch" "$scalar" > "$scratch.sig"
     cat "$scratch.pub" "$scratch.sig" | cargo run --quiet --manifest-path "$root/Cargo.toml" --bin s5_vector -- commit "$name" "$root/prism-verify/testdata/s5_lvl$n.txt"
-    rm -f "$scratch" "$scratch.pub" "$scratch.sig"
+    printf 'keygen_seed %s\nsign_seed %s\n' "$key_seed" "$sign_seed" >> "$root/prism-verify/testdata/s5_lvl$n.txt"
 }
 
 one 1 I 17 17
