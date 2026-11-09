@@ -14,3 +14,9 @@ prism-verify = { workspace = true }
 [[bin]]
 name = "prism-verify-bench"
 path = "src/main.rs"
+
+# Cargo will not let a member both inherit workspace lints and override one
+# of them. The counter is `mrs` / `rdtsc`, so this crate states `deny` itself
+# and allows that one function. Every other member inherits `forbid`.
+[lints.rust]
+unsafe_code = "deny"

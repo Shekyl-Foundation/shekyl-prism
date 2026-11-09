@@ -7,8 +7,9 @@
 //! built from them.
 //!
 //! The vectors are written by `scripts/export_c_basis_hints.py` against the
-//! submodule commit `docs/C_REFERENCE.md` pins, and they are pinned rather
-//! than generated here: the implementation is tested against them.
+//! submodule commit `docs/C_REFERENCE.md` pins, from that script's frozen
+//! seed, and they are pinned rather than generated here: the implementation
+//! is tested against them. A `#` line in the file is provenance, ignored.
 
 use std::sync::OnceLock;
 

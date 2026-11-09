@@ -17,6 +17,12 @@ publish = false
 [workspace.dependencies]
 fp2 = { version = "=0.6.0", default-features = false }
 sha3 = "=0.10.9"
-prism-field = { path = "prism-field" }
-prism-isogeny = { path = "prism-isogeny" }
-prism-verify = { path = "prism-verify" }
+prism-field = { version = "0.1.0", path = "prism-field" }
+prism-isogeny = { version = "0.1.0", path = "prism-isogeny" }
+prism-verify = { version = "0.1.0", path = "prism-verify" }
+
+# Library members inherit this. prism-bench cannot: Cargo rejects a member
+# that both inherits and overrides, and its counter has no safe form.
+# scripts/ci/check_workspace_lints.py is what keeps that the only exception.
+[workspace.lints.rust]
+unsafe_code = "forbid"

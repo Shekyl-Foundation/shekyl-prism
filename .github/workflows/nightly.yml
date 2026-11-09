@@ -1,0 +1,229 @@
+# Copyright (c) 2025-2026, The Shekyl Foundation
+#
+# All rights reserved.
+# BSD-3-Clause
+#
+# Nightly gate. A red run opens or comments on the issue `nightly RED`
+# (`report-red`), except a dispatched run, which reports only when asked.
+# The person who dispatched it is reading it.
+#
+# `mutants` and `coverage` are report-only until the first `dev` → `main`
+# cut: a surviving mutant or a coverage figure is written to the job
+# summary and does not fail the run. A tool that fails to install still
+# fails, and that failure is a red nightly.
+#
+# The schedule runs the default branch's copy of this file. The level III
+# floor-device measurement is not this workflow, and it is not started by
+# a pull request: a public fork must not execute on owned hardware.
+
+name: nightly
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      report:
+        description: "Open or comment on the tracking issue if a job is red."
+        type: boolean
+        default: false
+
+concurrency:
+  group: nightly-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    name: fuzz (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - verify_level_1
+          - verify_level_3
+          - verify_level_5
+          - decode_public_key
+          - decode_signature
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+      - name: Nightly toolchain and clang
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang
+          rustup toolchain install nightly --profile minimal --component rust-src
+      - name: Install cargo-fuzz 0.13.2
+        run: python3 scripts/ci/install_pinned_tool.py cargo-fuzz
+      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: fuzz/corpus
+          key: fuzz-${{ matrix.target }}-${{ hashFiles(format('fuzz/fuzz_targets/{0}.rs', matrix.target)) }}
+          restore-keys: fuzz-${{ matrix.target }}-
+      - name: 10 minutes
+        run: cargo +nightly fuzz run ${{ matrix.target }} -- -max_total_time=600
+
+  differential-prime:
+    name: differential-prime
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+      - name: sympy 1.14.0
+        run: python3 -m pip install --break-system-packages 'sympy==1.14.0'
+      - name: 10_000 degrees per level, zero disagreements
+        run: python3 scripts/differential_prime.py
+
+  big-endian:
+    name: big-endian
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+      - name: Install cross 0.2.5
+        run: python3 scripts/ci/install_pinned_tool.py cross
+      - name: s390x under qemu
+        run: cross test --target s390x-unknown-linux-gnu --workspace --locked
+
+  c-vectors-full:
+    name: c-vectors-full
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: true
+      - name: Compiler
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential cmake
+      - name: Rebuild the vectors from the pin
+        run: python3 scripts/export_c_basis_hints.py
+      - name: The committed vectors match
+        run: bash scripts/ci/diff_testdata.sh
+
+  mutants:
+    name: mutants
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+      - name: Install cargo-mutants 27.1.0
+        run: python3 scripts/ci/install_pinned_tool.py cargo-mutants
+      # Report-only. The exit code is recorded and then discarded. The
+      # install step above still fails the job if the tool is not there.
+      - name: Surviving mutants
+        run: |
+          set +e
+          cargo mutants -p prism-verify -p prism-field --no-shuffle > mutants.txt
+          code=$?
+          set -e
+          {
+            echo "## cargo mutants"
+            echo "exit ${code} (report-only until dev → main)"
+            echo '```'
+            tail -n 80 mutants.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+          components: llvm-tools-preview
+      - name: Install cargo-llvm-cov 0.9.1
+        run: python3 scripts/ci/install_pinned_tool.py cargo-llvm-cov
+      - name: Coverage summary
+        run: |
+          set +e
+          cargo llvm-cov --workspace --locked --summary-only > coverage.txt
+          code=$?
+          set -e
+          {
+            echo "## cargo llvm-cov"
+            echo "exit ${code} (report-only until dev → main)"
+            echo '```'
+            cat coverage.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  report-red:
+    name: report-red
+    needs: [fuzz, differential-prime, big-endian, c-vectors-full, mutants, coverage]
+    if: ${{ failure() && (github.event_name == 'schedule' || inputs.report) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      issues: write
+    steps:
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+              owner,
+              repo,
+              run_id: context.runId,
+              per_page: 100,
+            });
+            const passing = new Set(['success', 'skipped', 'neutral']);
+            const red = jobs.filter((job) => job.conclusion && !passing.has(job.conclusion) && job.name !== 'report-red');
+            if (red.length === 0) {
+              core.setFailed('report-red ran and found no red job: a job was renamed, or the run failed somewhere this job does not read.');
+              return;
+            }
+            const title = 'nightly RED';
+            const body = [
+              `Run: ${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`,
+              '',
+              'Jobs that did not pass:',
+              ...red.map((job) => `- [${job.name}](${job.html_url}): ${job.conclusion}`),
+            ].join('\n');
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const existing = open.find((issue) => !issue.pull_request && issue.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: existing.number, body });
+            } else {
+              await github.rest.issues.create({ owner, repo, title, body });
+            }

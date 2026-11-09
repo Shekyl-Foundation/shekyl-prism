@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025-2026, The Shekyl Foundation
+#
+# All rights reserved.
+# BSD-3-Clause
+
 """Confirm the pinned PRISM_v2 tree still has the verifier quirks the spec records.
 
 The Rust crates do not link this tree. A hit here is salt-PRISM, not
