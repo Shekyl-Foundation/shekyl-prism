@@ -46,7 +46,7 @@ sits in the NIST I or NIST III window.
 | NIST III | `171·2^{378} − 1` | 386 | 7 | SUPERSEDED |
 | NIST V | `33·2^{503} − 1` | 509 | 8 | SUPERSEDED |
 
-### Chain exponent — DECIDED 2026-11-09, not built
+### Chain exponent — DECIDED 2026-11-09, chain built, identification not
 
 Table 2 is salt-PRISM's table. §5 writes its torsion exponent as `e` and
 prints no parameter row of its own, so taking the §5 chain length to be
@@ -73,13 +73,18 @@ four bits against `2^{2e−1}` and stays far above `2^{2λ}` (491, 747, and
 The signer keeps the full `2^e`-torsion for IdealToIsogeny (§7.1) and
 evaluates `σ` on `E_vk[2^{e′}]`. The field, the limb counts, the key
 size, the signature length, and the C chain vectors stay as they are.
-The signature does not carry `s`. What moves, when this is built, is the
-width of the derived challenge scalar, from `e − 1` bits to `e − 3`.
+The signature does not carry `s`. The derived challenge scalar is `e − 3`
+bits wide, which is `e′ − 1`. At Table 2's three levels that is the same
+byte length as the `e − 1` width.
 
-The instantiated verifier still walks a chain of length `e` and returns
-`Unidentified`. No chain at `e′` is built in this tree. The Nakagawa–Onuki
-recheck below has cleared the way for a chain at `e′`: no degree in that
-window meets the small-extension bound.
+The instantiated verifier walks a chain of length `e′`. Levels I and III
+of the §5 vectors pass the order and span checks, the kernel glues, and
+the pushed points evaluate. An isogeny step then stops — step 2 at level
+I, step 1 at level III — and that stop is `Kernel`. Level V stops earlier:
+the first on-curve basis point does not have order `p + 1`. Both readings
+are not produced, so none of the three is `Unidentified`. The dual-basis
+identification is not built. The Nakagawa–Onuki recheck below cleared the
+degrees: no `q` in the `e′` window meets the small-extension bound.
 
 A third reading for the authors — whether the §5 chain was meant to run
 two steps shorter than the rational 2-torsion — is held. It goes out with
@@ -143,8 +148,10 @@ norm to `F_p` and a Legendre symbol.
 The byte the C function returns is `(index << 1)` with the low bit set when
 `A` is a square. It is not stored in the key, so the seven-bit width of that
 byte is not a ceiling on the search: indices above 127 are searched too,
-which is where the C's own fallback lives. The order-`2^e` test of the
-resulting points is part of Algorithm 3 and is not yet run.
+which is where the C's own fallback lives. The order-`p+1` test of the
+resulting point runs in the relation. A point that is on the curve and
+not of that order is `Kernel` before the chain. The level V §5 vector is
+that case.
 
 ### The search covers the reference's fallback, under a cost bound
 
@@ -216,17 +223,17 @@ an odd integer `s` with `0 < s < 2^{e−1}`:
    is an order-2 point and is refused: it cannot be a basis image. This
    follows Algorithm 2's normalization. Algorithm 3 line 1 states the
    opposite inequality; see the open questions.
-2. Let `q = 2^{2e−1} − s^2`. Refuse unless `q` is prime. The verifier tests
-   exactly one `q`, the one named by the carried index.
-3. The isogeny check is Algorithm 3 steps 3–8: a `(2^e, 2^e)` chain on
+2. Let `q = 2^{2e′−1} − s^2`. Refuse unless `q` is prime. The verifier tests
+   exactly one `q`, the one named by the carried index. The paper prints
+   `2^{2e−1}`.
+3. The isogeny check is Algorithm 3 steps 3–8: a `(2^{e′}, 2^{e′})` chain on
    `E_vk × E_sig` in the theta model (gluing from the product, `(2, 2)`
    steps, splitting, point evaluation), a basis of `E_vk[p+1]` pushed
-   through `Φ`, and acceptance only when `[2^{e−1}] Ψ(R') = [s] R'` and
-   the same holds for `T'`. The instantiated chain length is Table 2's
-   `e`. §5 uses that letter for its own exponent and prints no row, so
-   equating the two was this verifier's inference. The corrected exponent
-   is `e′ = e − 2`, decided above and not built. salt-PRISM's `a` is a
-   third count.
+   through `Φ`, and acceptance only when `[2^{e′−1}] Ψ(R') = [s] R'` and
+   the same holds for `T'`. The instantiated chain length is `e′`. The
+   paper prints `e` for that exponent and prints no row, so equating it
+   with Table 2 was this verifier's inference. The comparison itself is
+   not built. salt-PRISM's `a` is a third count.
 
 Step 3 is the accept condition. `chain` matches
 `theta_chain_compute_and_eval` on two length-160 kernels, each the graph of
@@ -238,17 +245,18 @@ still match. The vectors are `prism-isogeny/testdata/chain_lvl1.txt` and
 `chain_lvl1_order.txt`. The salt-PRISM wrapper around that function is not
 what this verifier conforms to.
 
-`verify` then runs one chain of length `e` on
+`verify` then runs one chain of length `e′` on
 `K = ⟨(P_vk, −P_sig), (Q_vk, −Q_sig)⟩`, and does not split the codomain.
-The chain is evaluated at `([s]X, 0)` and `([2^{e−1}]X, 0)` for
+The chain is evaluated at `([s]X, 0)` and `([2^{e′−1}]X, 0)` for
 `X ∈ {R, T, R−T}`. `(R, T)` is a basis of `E_vk[p+1]`, specified under
-"How step 8 compares points". The images of `([s]X, 0)` are read at step
-`e − 1`. The images of `([2^{e−1}]X, 0)` are read at step `e`. Those two
-steps are the same surface `A` in two theta structures. A signature point
-that is not on `E_sig`, or a chain that stops before both readings, is
-`Kernel`. Both readings existing is `Unidentified`: the transformation
-between the structures is open, so the comparison is not decided and the
-function does not return success. The degree-`q` witness in
+"How step 8 compares points". The images of `([s]X, 0)` would be read at
+step `e′ − 1`, and the images of `([2^{e′−1}]X, 0)` at step `e′`. The §5
+vectors do not reach either reading: levels I and III stop at an isogeny
+step, and level V stops because its basis point is not order `p + 1`. A
+signature point that is not on `E_sig`, or a chain that stops before both
+readings, is `Kernel`. Both readings existing is `Unidentified`: the
+transformation between the structures is open, so the comparison is not
+decided and the function does not return success. The degree-`q` witness in
 `prism-verify/testdata/e0_endomorphisms.txt` does not reach that refusal.
 It is the graph of one endomorphism of `E0` (`j = 1728`), built in the C
 tree by `endomorphism_application_even_basis` on `BASIS_EVEN` of
@@ -278,15 +286,16 @@ Ruled 2026-11-07. The challenge degree is found by a counter the signer
 searches and the signature carries. The verifier tests exactly one `q`.
 
 - `s_j = cSHAKE256(N = "", S = "shekyl-prism-challenge-v1"; public_key_identity ‖ message ‖ LE16(j))`,
-  read as `⌈(e−1)/8⌉` bytes little-endian, low bit forced to 1, bits at and
-  above `e−1` cleared. The top byte keeps `((e−2) mod 8) + 1` bits, which is
-  `1..=8`: a width that is a multiple of eight keeps the whole byte, and no
-  width keeps none of it, so the projection needs no special case. The
+  read little-endian, low bit forced to 1, bits at and above `e′ − 1 = e − 3`
+  cleared. The byte length at Table 2's three levels is still `⌈(e−1)/8⌉`,
+  because `e − 1` and `e − 3` fall in the same byte. The top byte keeps
+  `((e − 4) mod 8) + 1` bits, which is `1..=8`: a width that is a multiple of
+  eight keeps the whole byte, and no width keeps none of it. The
   customization string stays `-v1`: nothing has consumed it.
 - The public key's identity is the byte string the key decoder accepted, at
   `PUBLIC_KEY_LEN` bytes. The signer and the verifier reach the hash through
   the same decoder, so neither can absorb a different string.
-- `q_j = 2^{2e−1} − s_j^2`.
+- `q_j = 2^{2e′−1} − s_j^2 = 2^{2e−5} − s_j^2`.
 - The signer takes the smallest `j` in `0..=65535` for which `q_j` passes
   Baillie–PSW, so signing is deterministic for a given key and message.
   Exhausting the range is a signing error, not a fallback.
@@ -300,18 +309,19 @@ coordinate can vanish. On a random key that is about `1/p` at each step,
 so over a chain of length `e′` the chance is about `e′/p`. The signer
 moves to the next index. The index that is carried is the smallest `j`
 whose `q_j` is prime and whose chain completes, which keeps signing
-deterministic. This verifier does not yet apply the second half: the
-chain at `e′` is not built, so a vector here is the smallest prime index
-only. Those vectors derive `s_j` and `q_j` at `e′`. The checks above
-still derive them at Table 2's `e`. One vector per level is
+deterministic. This verifier does not yet apply the second half: it
+does not skip an index whose chain fails to complete. The carried index
+of a vector here is the smallest prime index. One vector per level is
 `prism-verify/testdata/s5_lvl{1,3,5}.txt`, produced by
 `scripts/c/export_s5_vectors.c` from the pinned tree's
 `quat_sampling_random_ideal_O0_given_norm`, `quat_lideal_inter`, and
 `dim2id2iso_arbitrary_isogeny_evaluation`, with `t = s^{-1} mod 2^{e′}`
 and the image doubled down to `E[2^{e′}]`. The `q` line of each file is
 one degree at `e′`. The small-extension sample is the thousand degrees
-per level in Small-extension torsion, not these three lines. The length-`e` relation
-refuses these points before the chain, because their order is `2^{e′}`.
+per level in Small-extension torsion, not these three lines. The relation derives `s_j` at `e′`. Levels I and III enter the
+length-`e′` chain, the kernel glues, and an isogeny step returns
+`Kernel`. Level V returns `Kernel` before the chain, because the basis
+point is not order `p + 1`.
 
 The hit rate per candidate is low, so recomputing the search in the verifier
 lets an attacker grind messages whose search runs long and make every node
@@ -490,14 +500,15 @@ product, `Φ₁` and `Φ₂`, with the dual structures of Lemma 29 arranged
 before either starts. The basis conditions that arrangement has to meet
 are the next section. Each chain needs rational `2^{len+2}`-torsion. On
 Table 2 that holds when the lengths are `e′ = e − 2` and `e′ − 1`, which
-is the chain-exponent decision above. It is not built here, and
-`Unidentified` stays the result of the length-`e` chain whenever both
-readings exist.
+is the chain-exponent decision above. The two chains are not built. The
+single chain at `e′` stops before both readings, so its result is
+`Kernel`. `Unidentified` is the result when both readings exist.
 
 ### Dual structures at `e′` — PLANNED 2026-11-10
 
 Not built. This is the construction the identification code has to meet.
-Nothing in the tree computes it yet, and `Unidentified` is unchanged.
+Nothing in the tree computes these bases yet. The live chain is the
+single chain at `e′`, and it stops before both readings.
 The factors are the ones Identification names, read at exponent `e′`
 rather than `e`. Dartois writes `F̃₂` for our `Φ₂` and `F₂` for our
 `Φ̂₂`. The names `domain` and `codomain` are local to this section:
