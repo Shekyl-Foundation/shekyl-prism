@@ -401,6 +401,15 @@ For the authors of ePrint 2026/443:
    `2^e`-torsion? The reading under Identification found none in the
    published method. A third reading, whether the chain was meant to run
    at `e − 2`, is held for the follow-up (see Chain exponent).
+5. Deterministic Baillie–PSW is the test this verifier runs. ePrint
+   2026/906 shows that a weak primality test breaks the standard-model
+   assumption, and that random-base Miller–Rabin suffices in the random
+   oracle model. The signer chooses the message and the index, so it can
+   grind for a pseudoprime, and two consensus verifiers cannot draw bases
+   without risking a split. Whether the authors accept deterministic
+   Baillie–PSW against that signer, Baillie–PSW plus further fixed-parameter
+   Lucas rounds, or a signer-supplied certificate, goes in the follow-up.
+   No second test is added before they answer.
 
 ## How step 8 compares points
 
@@ -477,7 +486,7 @@ identification in the code is the one Lemma 29 arranged in advance.
 identification code is added.
 
 The published route that identifies the codomain is two chains from the
-product, `Φ₁` and `Φ̃₂`, with the dual structures of Lemma 29 arranged
+product, `Φ₁` and `Φ₂`, with the dual structures of Lemma 29 arranged
 before either starts. The basis conditions that arrangement has to meet
 are the next section. Each chain needs rational `2^{len+2}`-torsion. On
 Table 2 that holds when the lengths are `e′ = e − 2` and `e′ − 1`, which
@@ -489,121 +498,154 @@ readings exist.
 
 Not built. This is the construction the identification code has to meet.
 Nothing in the tree computes it yet, and `Unidentified` is unchanged.
+The factors are the ones Identification names, read at exponent `e′`
+rather than `e`. Dartois writes `F̃₂` for our `Φ₂` and `F₂` for our
+`Φ̂₂`. The names `domain` and `codomain` are local to this section:
+`domain` is the product `E_vk × E_sig`, and `codomain` is the common
+middle of the two chains. Neither is the Montgomery coefficient, and
+neither is the midpoint the length-`e` chain calls `A`.
 
-Dartois's Lemma 29 is SQIsignHD's Corollary 58 (ePrint 2023/436,
-Appendix F.3), stated there for `E₁² × E₂²`. Algorithm 3's domain is the
-product of two elliptic curves, so the same statement with two points
-instead of four. `KaniEndoHalf` is a dimension-4 chain; the basis it
-builds before any dimension-4 step is this dimension-2 product basis
-(`base_change_canonical_dim2` in `Theta_dim4`). The dimension-4 block
-matrix in that code is SQIsignHD's endomorphism on `E² × E²`. The
-dimension-2 matrix for §5 is written below; it is the same shape with
-one scalar.
-
-The torsion on each factor is `2^e = 2^{e′+2}`. Write `A = E_vk × E_sig`.
-`Φ₁` has length `e′` and `Φ̃₂` has length `e′ − 1`. Set `c₁ = 4` and
-`c₂ = 8`: those are `2^{e − len}` for the two lengths, which is Dartois's
-`c_i = 2^{e′+2−e_i}` once his torsion exponent is our `e`.
-
-Let `(X₁, X₂, Y₁, Y₂)` and `(U₁, U₂, V₁, V₂)` be `ζ`-symplectic bases of
-`A[2^{e′+2}]`, for one primitive `2^{e′+2}`-th root `ζ`, such that:
-
-1. `ker(Φ₁) = [4]⟨Y₁, Y₂⟩` and `ker(Φ̃₂) = [8]⟨V₁, V₂⟩`.
-2. `[8]Φ(X_l) = −[8]V_l` and `[4]Φ̂(U_l) = [4]Y_l` for `l ∈ {1, 2}`.
-
-Lemma 29 then gives bases of `C[4]`,
+The endomorphism is §5's, read at exponent `e′`. Dartois's equation (26)
+is `ι ∘ Φ ∘ ι` for `ι(X, Y) = (X, −Y)`: the off-diagonal signs are
+opposite, and that map is not the one Algorithm 3 factors.
 
 ```text
-B₁ = ([2^{e′}]Φ₁(X₁), [2^{e′}]Φ₁(X₂), [4]Φ₁(Y₁), [4]Φ₁(Y₂))
-B₂ = ([2^{e′}]Φ̃₂(U₁), [2^{e′}]Φ̃₂(U₂), [8]Φ̃₂(V₁), [8]Φ̃₂(V₂))
+Φ(X, Y) = ([s]X − σ̂(Y), σ(X) + [s]Y)
 ```
 
-related by `B₂ = J B₁` with
+`s² + q = 2^{2e′−1}` and `t = s^{-1} mod 2^{e′}`, so
+`q ≡ −s² (mod 2^{e′})` and `tq ≡ −s (mod 2^{e′})`. The response `σ` is
+defined from the normalized signature points, the normalization having
+already chosen the sign: `P_sig = [t]σ(P_vk)` and
+`Q_sig = [t]σ(Q_vk)`. Then `σ(P_vk) = [s]P_sig` and
+`σ̂(P_sig) = [tq]P_vk = −[s]P_vk`, and the same for `Q`. On
+`domain[2^{e′}]`,
 
 ```text
-J = |  0  −I₂ |  ∈ Sp₄(Z/4Z).
+σ(a P_vk + b Q_vk) = [s](a P_sig + b Q_sig)
+σ̂(a P_sig + b Q_sig) = −[s](a P_vk + b Q_vk)
+```
+
+`Φ(P_vk, −P_sig) = ([s]P_vk + σ̂(P_sig), σ(P_vk) − [st]σ(P_vk)) = (0, 0)`,
+and the same for `Q`. These points have order `2^{e′}`, so
+
+```text
+ker(Φ₁) = ⟨(P_vk, −P_sig), (Q_vk, −Q_sig)⟩
+```
+
+`Φ₁` has length `e′`. This is the negative-pair kernel the length-`e`
+chain already takes, at the shorter order.
+
+Doubling the long kernel gives the negative pairs of order `2^{e′−1}`.
+Algorithm 3 line 4 builds its first chain on the positive doubles, which
+is `ι` of that subgroup and not the subgroup itself:
+
+```text
+ker(Φ₂) = ι([2]ker Φ₁) = ⟨([2]P_vk, [2]P_sig), ([2]Q_vk, [2]Q_sig)⟩
+```
+
+`Φ₂` has length `e′ − 1`. Both chains start at the product. Both kernels
+are full points. The length-`e` chain takes the negative pairs as x-only
+input, and that input cannot tell the sign; here the sign is part of the
+kernel. Step 8 still does not see `ι`: it is given `(X, 0)`, and `ι`
+fixes every such point.
+
+Lemma 29 is Dartois, ePrint 2024/1180, Appendix C.2. He cites it as
+SQIsignHD Corollary 58 (ePrint 2023/436, Appendix F.3). The statements
+differ, and this section follows Lemma 29. Corollary 58 asks for one
+theta structure, with `F(c₂ y′) = c₂ v′` and no sign. Lemma 29 asks for
+dual structures, related by
+
+```text
+J = |  0  −I₂ |  ∈ Sp₄(Z/4Z),
     |  I₂   0 |
 ```
 
-The level-2 theta coordinates these bases induce are dual: one Hadamard
-transform takes one theta-null point to the other. The codomain check is
-that equality. `Φ₂` is the dual of `Φ̃₂`, and step 8 evaluates through
-`Φ₁` and then `Φ₂`.
+so one Hadamard takes one theta-null point to the other. Dartois writes
+`I₄` and `Sp₈` for `E₁² × E₂²`. The product of two elliptic curves is
+that statement with two points. The codomain check is the Hadamard
+equality. Step 8 is the composition `Φ̂₂ ∘ Φ₁`.
 
-The bases are built in that order, which is the order
-`base_change_canonical_dim2` and `complete_symplectic_matrix_dim2` use.
-
-The product basis comes first. Take a basis `(P₁, P₂)` of
-`E_vk[2^{e′+2}]` and its image `(R₁, R₂)` on `E_sig` under the degree-`q`
-response. The Weil pairing scales by `q`, so a product basis is symplectic only
-after `R₂` is multiplied by `λ = q^{-1} mod 2^{e′+2}`:
-`e(P₁, P₂) = e(R₁, [λ]R₂)`. The order-4 step in
-`base_change_canonical_dim2` multiplies by `q^{-1} mod 4`, which is that
-scalar reduced; the full-torsion basis needs the inverse modulo
-`2^{e′+2}`. Double both bases `e′` times, to order 4, and replace each
-by a canonical symplectic basis of the 4-torsion that keeps the pairing
-(`make_canonical` with the pairing preserved). The product theta
-structure is the one for
+Each factor has rational `2^e`-torsion, and `2^e = 2^{e′+2}`. A chain of
+length `len` needs a symplectic basis of `domain[2^{len+2}]`. The two
+lengths and Dartois's kernel multiples are one family:
 
 ```text
-((T₁, 0), (0, U₁), (T₂, 0), (0, U₂)).
+len₁ = e′      c₁ = 2^{e − len₁} = 2^2 = 4
+len₂ = e′ − 1  c₂ = 2^{e − len₂} = 2^3 = 8
 ```
 
-The sign is fixed here, before either chain runs. `s² + q = 2^{2e′−1}`,
-so §5's `Φ` is Kani's endomorphism in dimension 2 with `a₁ = s` and
-`a₂ = 0`. The choice whose kernel is the positive pairs is
+Dartois writes `c_i = 2^{e′+2−e_i}` for a basis of the `2^{e′+2}`-torsion.
+Here that exponent is our `e`, and `e_i` is the chain length. Let
+`(X₁, X₂, Y₁, Y₂)` and `(U₁, U₂, V₁, V₂)` be `ζ`-symplectic
+bases of `domain[2^e]`, for one primitive `2^e`-th root `ζ`, with
+
+1. `ker(Φ₁) = [c₁]⟨Y₁, Y₂⟩` and `ker(Φ₂) = [c₂]⟨V₁, V₂⟩`.
+2. `[4]V_l = −[4]Φ(X_l)` and `[4]Y_l = [4]Φ̂(U_l)` for `l ∈ {1, 2}`.
+
+`[4]X_l` and `[4]U_l` lie in `domain[2^{e′}]`, which is the subgroup the
+signature determines. The signature does not carry `σ` of
+`E_vk[2^e]`. The order-`2^e` points are the rational torsion on each
+factor. Condition 2 is how those points meet the signature.
+
+Lemma 29 prints `[c₂]Φ(X_l) = −[c₂]V_l` and `[c₁]Φ̂(U_l) = [c₁]Y_l`.
+At these lengths that is `[8]Φ(X_l) = −[8]V_l` and
+`[4]Φ̂(U_l) = [4]Y_l`. The first of those leaves a shear. Replacing `V₁`
+by `V₁ + [2^{e′−1}]U₁` keeps the symplectic form, both kernels, and both
+printed projections, because `[8][2^{e′−1}] = [2^{e′+2}] = 0` on this
+torsion. The same replacement adds `[2^{e′}]Φ₂(U₁)` to the order-4 image
+below, and that point is the complement component of `B₂`. The equation
+`[4]V_l = −[4]Φ(X_l)` rejects the shear:
+`[4][2^{e′−1}]U₁ = [2^{e′+1}]U₁` has order 2.
+
+The codomain bases are bases of `codomain[4]`. Multiplying the kernel
+half by `c_i` does not give one. `[c_i]Y_l` is in the kernel, so
+`[c_i]Φ₁(Y_l) = 0`, and likewise `[c₂]Φ₂(V_l) = 0`. The multiple that
+lands on order 4 is `c_i / 4`, which is `1` on the long chain and `2` on
+the short chain:
 
 ```text
-Φ = |  s   σ̂ |
-    | −σ   s |
+B₁ = ([2^{e′}]Φ₁(X₁), [2^{e′}]Φ₁(X₂), Φ₁(Y₁), Φ₁(Y₂))
+B₂ = ([2^{e′}]Φ₂(U₁), [2^{e′}]Φ₂(U₂), [2]Φ₂(V₁), [2]Φ₂(V₂))
 ```
 
-that is `Φ(X, Y) = ([s]X + σ̂(Y), −σ(X) + [s]Y)`. Let
-`t = s^{-1} mod 2^{e′}`. Then `q ≡ −s² (mod 2^{e′})`, so `tq ≡ −s`. The
-response points are `P_sig = [t]σ(P_vk)` and `Q_sig = [t]σ(Q_vk)`, hence
-`σ(P_vk) = [s]P_sig` and `σ̂(P_sig) = [tq]P_vk = −[s]P_vk`, and the same
-for `Q`. The first row sends `(P_vk, P_sig)` to
-`[s]P_vk + σ̂([t]σ(P_vk)) = [s]P_vk + [tq]P_vk = [s]P_vk − [s]P_vk = 0`,
-and the second row sends it to `−σ(P_vk) + [st]σ(P_vk) = 0`. So
+Lemma 29's relation is `B₂ = J B₁`. The complement coefficient
+`2^{e′}` is his, for both chains: it is the available exponent, not the
+chain length.
 
-```text
-ker(Φ₁) = ⟨(P_vk, P_sig), (Q_vk, Q_sig)⟩.
-```
-
-The opposite off-diagonal signs kill `⟨(P_vk, −P_sig), (Q_vk, −Q_sig)⟩`,
-which is `ι` of this kernel, `ι(X, Y) = (X, −Y)`. That is a different
-endomorphism. This section uses the matrix above, so `Φ₁`'s kernel is
-the positive pairs and `Φ̃₂`'s kernel is `ι` of their doubles.
-
-`ker(Φ̃₂)` is `ι([2]ker Φ₁)`, not `[2]ker Φ₁`:
-
-```text
-⟨([2]P_vk, −[2]P_sig), ([2]Q_vk, −[2]Q_sig)⟩.
-```
-
-Step 8 does not see `ι`, because it is given x-only points and `ι` fixes
-every `(X, 0)`. These bases are full points.
-
-The lift of `ker(Φ₁)` to `A[2^{e′+2}]` makes its generators `[4]Y₁` and
-`[4]Y₂`. Given that kernel as the right-hand blocks `C` and `D`, the
-left-hand blocks `G` and `H` are the solution of
+`[4]V_l = −[4]Φ(X_l)` fixes `V_l` modulo `domain[4]`. A difference of
+order 4 need not die under `[2]Φ₂`, so that congruence does not by
+itself make `[2]Φ₂(V_l)` one point. The same holds for `Y_l` and
+`Φ₁(Y_l)`. The symplectic completion is the three block equations of
+`complete_symplectic_matrix_dim2`, over `Z/2^e Z`, with the kernel in
+the right-hand blocks `(C, D)` and the complement in `(G, H)`:
 
 ```text
 HᵀG = GᵀH,    CᵀD = DᵀC,    GᵀD − HᵀC = I₂
 ```
 
-over `Z/2^{e′+2}Z`. That is `complete_symplectic_matrix_dim2`. The `Y`
-half is the kernel and the `X` half is the complement.
+Those equations complete a known half. They do not choose the
+`domain[4]` lift. The lift is part of building the bases. It is not a
+search through `Sp₄(Z/4Z)` after the bases exist, and it is not settled
+by taking any point of order `2^e` with the right image under `[8]`.
+`Unidentified` stays until the bases that were built satisfy
+`B₂ = J B₁`.
 
-Condition 2 is this matrix acting on the complement, which is the port
-of `starting_two_symplectic_matrices` at `a₁ = s`, `a₂ = 0`. It only
-needs `Φ` on `[8]A[2^{e′+2}] = A[2^{e′−1}]`. There `σ` and `σ̂` are the
-signature: `σ(a P_vk + b Q_vk) = [s](a P_sig + b Q_sig)` and
-`σ̂(a P_sig + b Q_sig) = −[s](a P_vk + b Q_vk)`. Choose `(X, Y)` with
-`[4]⟨Y⟩ = ker Φ₁`. Set each `V_l` to any point of order `2^{e′+2}` with
-`[8]V_l = −Φ([8]X_l)`, and complete `(U, V)` by the same three block
-equations. No search through `Sp₄(Z/4Z)` remains. The comparison of the
-two codomains is the Hadamard equality of their theta-null points.
+The product theta structure comes first. Take a basis `(P₁, P₂)` of
+`E_vk[2^e]` and points `(R₁, R₂)` of `E_sig[2^e]` whose `[4]` images are
+the response basis. The Weil pairing scales by `q`, so the product basis
+is symplectic once `R₂` is multiplied by `q_inverse = q^{-1} mod 2^e`:
+`e(P₁, P₂) = e(R₁, [q_inverse]R₂)`. Doubling `e′` times lands on order
+4. Each order-4 basis is then replaced by a canonical symplectic basis
+that keeps the pairing. The product theta structure is the one for
+
+```text
+((T₁, 0), (0, U₁), (T₂, 0), (0, U₂)).
+```
+
+`q_inverse` reduced modulo 4 is the scalar in
+`base_change_canonical_dim2`. The basis of `domain[2^e]` uses the
+inverse modulo `2^e`.
 
 The image check in `Verify.py` accepts each factor up to sign
 (`FT[0] == ±a₁P` and `FT[1] == ±a₂P`). The argument named for that is
@@ -641,9 +683,10 @@ The kernel in the paper is `⟨(P_vk, −P_sig), (Q_vk, −Q_sig)⟩`. The chain
 is given x-only points, and `x(−P) = x(P)`, so that kernel and
 `⟨(P_vk, P_sig), (Q_vk, Q_sig)⟩` are the same input. They differ by
 `ι(X, Y) = (X, −Y)`, and `ι` fixes every `(X, 0)`. The six evaluated
-points do not see the substitution. The dual-structure bases do: they
-are full points, and the section above fixes the positive pairs
-`(P_vk, P_sig)`, `(Q_vk, Q_sig)` before step 8 runs.
+points do not see the substitution. The dual-structure bases do. They
+are full points. `Φ₁` takes the negative pairs, and `Φ₂` takes
+`ι` of their doubles, the positive pairs
+`([2]P_vk, [2]P_sig)`, `([2]Q_vk, [2]Q_sig)`, before step 8 runs.
 
 The comparison, once the two structures are identified, is on `R`, `T`
 and `R−T`. A relative sign flip sends `R−T` to `R+T`, and

@@ -18,6 +18,11 @@ the verifier quirks the spec records:
 - `src/verification/ref/lvlx/verify.c` calls
   `theta_chain_compute_and_eval_verify`
 
+A mini-gmp divide-by-zero has been seen on the pinned ideal-to-isogeny
+path. The failing seeds are not recorded, so `scripts/check_c_reference.py`
+does not check it. A pin move that starts crashing there records the seeds
+in this list before the pin changes.
+
 `ec_curve_to_basis_2f_from_hint` in `src/ec/ref/lvlx/basis.c` carries a
 recovery path the script does not pin, because `prism-verify` reaches the
 same answer without it: a hint of zero means the key-generation search
