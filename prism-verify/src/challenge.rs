@@ -32,20 +32,19 @@ pub struct ChallengeScalar {
 
 impl ChallengeScalar {
     /// `s_j = cSHAKE256(S = CHALLENGE_DOMAIN; identity ‖ message ‖ LE16(j))`,
-    /// projected onto the odd integers below `2^{e−1}`.
+    /// projected onto the odd integers below `2^{e′−1}`, `e′ = e − 2`.
     pub fn derive<L: Level>(
         identity: &KeyIdentity<'_, L>,
         message: &[u8],
         index: ChallengeIndex,
     ) -> Self {
-        Self::derive_width::<L>(identity, message, index, L::CHALLENGE_BITS)
+        Self::derive_width::<L>(identity, message, index, L::E - 3)
     }
 
     /// The same hash, projected onto the odd integers below `2^bits`.
     ///
-    /// The instantiated verifier passes [`Level::CHALLENGE_BITS`]. A §5
-    /// vector at chain exponent `e′` passes `e′ − 1`, which is two bits
-    /// shorter, and does not change the verifier's own derivation.
+    /// The instantiated verifier passes `e′ − 1` bits. [`Level::CHALLENGE_BITS`]
+    /// is the longer Table 2 width and is not this derivation.
     pub fn derive_width<L: Level>(
         identity: &KeyIdentity<'_, L>,
         message: &[u8],
@@ -67,7 +66,7 @@ impl ChallengeScalar {
         &self.bytes
     }
 
-    /// `true` when `q = 2^{2e−1} − s^2` is a Baillie–PSW prime.
+    /// `true` when `q = 2^{2e′−1} − s^2` is a Baillie–PSW prime, `e′ = e − 2`.
     pub fn degree_is_prime<L: Level>(&self) -> bool {
         const {
             assert!(
@@ -75,7 +74,7 @@ impl ChallengeScalar {
                 "this level's challenge degree is wider than the primality module"
             );
         }
-        prime::degree_is_prime(L::E, &self.bytes)
+        prime::degree_is_prime(L::E - 2, &self.bytes)
     }
 }
 
@@ -143,19 +142,20 @@ impl std::error::Error for IndexError {
 ///
 /// The key goes through the same [`KeyIdentity::decode`] the verifier uses,
 /// so the signer cannot search against a key the verifier would refuse, and
-/// the two cannot disagree on the byte string they hash.
+/// the two cannot disagree on the byte string they hash. The search is at
+/// exponent `e′ = e − 2`.
 pub fn smallest_challenge_index<L: Level>(
     public_key: &[u8],
     message: &[u8],
 ) -> Result<ChallengeIndex, IndexError> {
-    let (index, _) = smallest_at_exponent::<L>(public_key, message, L::E)?;
+    let (index, _) = smallest_at_exponent::<L>(public_key, message, L::E - 2)?;
     Ok(index)
 }
 
 /// The smallest index whose degree `2^{2·exponent−1} − s^2` is prime.
 ///
 /// `exponent` is the chain exponent the scalar is derived for. The
-/// instantiated search passes [`Level::E`]. A §5 vector passes `E − 2`.
+/// instantiated search passes `E − 2`.
 pub fn smallest_at_exponent<L: Level>(
     public_key: &[u8],
     message: &[u8],
@@ -221,14 +221,14 @@ mod tests {
             assert_eq!(bytes.len(), L::S_LEN, "{} {index}", L::NAME);
             let low = bytes.first().copied().expect("one byte at least");
             assert_eq!(low & 1, 1, "{} {index} is even", L::NAME);
-            // `0 < s < 2^{e−1}`: the bit length does not reach `e − 1`.
+            // `0 < s < 2^{e′−1}`: the bit length does not reach `e − 3`.
             let high = bytes.last().copied().expect("one byte at least");
             let bit_len = (bytes.len() - 1) * 8 + (8 - high.leading_zeros() as usize);
             assert!(
-                bit_len <= L::CHALLENGE_BITS as usize,
+                bit_len <= (L::E - 3) as usize,
                 "{} {index} reaches 2^{{{}}}",
                 L::NAME,
-                L::CHALLENGE_BITS
+                L::E - 3
             );
         }
     }
