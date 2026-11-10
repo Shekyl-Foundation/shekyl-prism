@@ -62,7 +62,7 @@ A GitHub ruleset on `dev` requires a pull request and a green `ci-pass`. An appr
 
 RULED by Rick 2026-11-08: the level III Pi 4 gate is a manual run, and its output is committed with the commit SHA. No self-hosted runner.
 
-Proposed (not yet ruled): an operation-count metric as CI's machine-independent cost signal.
+RULED by Rick 2026-11-08: an operation-count metric as CI's machine-independent cost signal.
 - A test-only feature in `prism-field` counts Fp2 multiplications, squarings, inversions and square roots.
 - The bench prints the counts per level. They are deterministic, so CI can fail on an unexplained rise.
 - The Pi run measures cycles per operation once, which turns the counts into a Pi estimate between manual runs.
