@@ -50,7 +50,7 @@ Wall clock is about 4–5 min, dominated by the C build when it runs.
 
 ## Required on `dev` (applied 2026-11-09, ruleset 26902731)
 
-A GitHub ruleset on `dev` requires `ci-pass`, one approving review, and no bypass. Deletion and force-push are blocked. #4, #6 and #7 merged before the ruleset existed.
+A GitHub ruleset on `dev` requires a pull request and a green `ci-pass`. An approving review is not required: the repository has one maintainer, and GitHub does not accept that maintainer's approval of their own pull request. Deletion and force-push are blocked. There is no bypass. #4, #6 and #7 merged before the ruleset existed.
 
 ## When Algorithm 3 lands
 
