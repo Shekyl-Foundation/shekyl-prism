@@ -48,9 +48,9 @@ Wall clock is about 4–5 min, dominated by the C build when it runs.
 | `mutants` | `cargo mutants -p prism-verify -p prism-field` (the suite runs in seconds, so the full set is cheap); surviving mutants listed in the job summary | report-only (core ruling) |
 | `coverage` | `cargo llvm-cov` | report-only |
 
-## Required on `dev` (not yet applied, 2026-11-09)
+## Required on `dev` (applied 2026-11-09, ruleset 26902731)
 
-A GitHub ruleset on `dev`: `ci-pass` required, one review, no bypass. #4, #6 and #7 merged without one. This is a settings change by Rick, not a PR.
+A GitHub ruleset on `dev` requires a pull request and a green `ci-pass`. An approving review is not required: the repository has one maintainer, and GitHub does not accept that maintainer's approval of their own pull request. Deletion and force-push are blocked. There is no bypass. #4, #6 and #7 merged before the ruleset existed.
 
 ## When Algorithm 3 lands
 
