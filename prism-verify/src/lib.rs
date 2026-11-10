@@ -36,7 +36,7 @@ pub use challenge::{
 };
 pub use identity::KeyIdentity;
 pub use level::{verify_level, Nist, UnknownLevel};
-pub use prime::{degree_is_prime, is_baillie_psw};
+pub use prime::{challenge_degree, degree_is_prime, is_baillie_psw};
 pub use prism_field::ChallengeIndex;
 pub use reference::{prepared, reference_key, Prepared, PreparedError, ReferenceKey, VectorError};
 pub use signature::{AffinePoint, Response};

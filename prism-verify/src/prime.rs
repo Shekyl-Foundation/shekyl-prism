@@ -121,6 +121,18 @@ impl Nat {
         (self.limbs[limb] >> (index % LIMB_BITS)) & 1 == 1
     }
 
+    /// Little-endian bytes, without high zeros. Zero is a single zero byte.
+    fn to_le_bytes(self) -> Vec<u8> {
+        let mut out = Vec::with_capacity(LIMBS * 8);
+        for limb in self.limbs {
+            out.extend_from_slice(&limb.to_le_bytes());
+        }
+        while out.len() > 1 && out.last() == Some(&0) {
+            out.pop();
+        }
+        out
+    }
+
     /// Position of the highest set bit, counting from one. Zero has none.
     fn bit_len(self) -> usize {
         for (index, limb) in self.limbs.iter().enumerate().rev() {
@@ -631,6 +643,24 @@ fn is_prime(n: Nat) -> bool {
     miller_rabin_base2(n) && strong_lucas_selfridge(n)
 }
 
+/// The challenge degree `q = 2^{2·exponent−1} − s^2`, little-endian.
+///
+/// `None` when `s` is not a positive odd integer strictly below
+/// `2^{exponent−1}`. Zero would make `q` a power of two, the prime 2
+/// exactly at exponent 1, and that integer is not a challenge degree.
+pub fn challenge_degree(exponent: u32, scalar: &[u8]) -> Option<Vec<u8>> {
+    let scalar = Nat::from_le_bytes(scalar)?;
+    if scalar.is_zero() || scalar.is_even() {
+        return None;
+    }
+    let power = degree_exponent(exponent).and_then(Nat::power_of_two)?;
+    let square = scalar.checked_square()?;
+    if square >= power {
+        return None;
+    }
+    Some(power.wrapping_sub(square).to_le_bytes())
+}
+
 /// `true` when the challenge degree `q = 2^{2e−1} − s^2` is a Baillie–PSW
 /// prime.
 ///
@@ -638,25 +668,7 @@ fn is_prime(n: Nat) -> bool {
 /// at or above `2^{e−1}` names no degree and is refused here rather than
 /// reduced: `verify` reads that as `Composite`.
 pub fn degree_is_prime(exponent: u32, scalar: &[u8]) -> bool {
-    let Some(scalar) = Nat::from_le_bytes(scalar) else {
-        return false;
-    };
-    // `s` is a positive odd integer. Zero makes `q` a power of two, which
-    // is the prime 2 exactly when the exponent is 1, and that is not a
-    // challenge degree.
-    if scalar.is_zero() || scalar.is_even() {
-        return false;
-    }
-    let Some(power) = degree_exponent(exponent).and_then(Nat::power_of_two) else {
-        return false;
-    };
-    let Some(square) = scalar.checked_square() else {
-        return false;
-    };
-    if square >= power {
-        return false;
-    }
-    is_prime(power.wrapping_sub(square))
+    challenge_degree(exponent, scalar).is_some_and(|degree| is_baillie_psw(&degree))
 }
 
 /// `2e − 1`, the exponent in `q = 2^{2e−1} − s^2`.
@@ -684,7 +696,9 @@ mod probe {
 #[cfg(test)]
 mod self_test {
     use super::probe;
-    use super::{degree_is_prime, is_baillie_psw, Mod, Nat, TRIAL_PRIMES, WIDTH_BITS};
+    use super::{
+        challenge_degree, degree_is_prime, is_baillie_psw, Mod, Nat, TRIAL_PRIMES, WIDTH_BITS,
+    };
 
     /// The primes below 300, for a dense sweep of the small cases.
     const PRIMES_BELOW_300: &[u32] = &[
@@ -722,6 +736,16 @@ mod self_test {
         // refusing everything above one limb.
         assert!(is_baillie_psw(&le((1u128 << 64) + 13)));
         assert!(!is_baillie_psw(&le((1u128 << 64) + 15)));
+    }
+
+    #[test]
+    fn the_degree_is_the_power_of_two_minus_the_square() {
+        // `s = 1` at exponent 4: `q = 2^7 − 1 = 127`.
+        assert_eq!(challenge_degree(4, &[1]).as_deref(), Some(&[127][..]));
+        assert!(degree_is_prime(4, &[1]));
+        // An even scalar names no degree. `12^2` is already past `2^7`.
+        assert!(challenge_degree(4, &[2]).is_none());
+        assert!(challenge_degree(4, &[12]).is_none());
     }
 
     #[test]
