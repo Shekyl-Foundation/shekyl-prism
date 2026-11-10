@@ -45,6 +45,19 @@ pub struct SurfaceReading<F> {
     pub images: Vec<ThetaPoint<F>>,
 }
 
+/// Where a surface chain stopped before both readings existed.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SurfaceStop {
+    /// The points, the lift, the doubling, or the gluing did not produce a chain.
+    Kernel,
+    /// `isogeny_compute` refused at this 1-based step, after the kernel had glued
+    /// and the pushed points had evaluated.
+    Step(u32),
+    /// The kernel glued, and a one-factor point did not stay one-factor in
+    /// theta coordinates.
+    Image,
+}
+
 /// The chain at step `n − 1` and at step `n`, with no splitting step.
 #[derive(Clone, Debug)]
 pub struct SurfaceReadings<F> {
@@ -93,9 +106,9 @@ pub fn chain<F: Field>(
             verify,
             split: true,
         },
-    )? {
-        Finish::Product(result) => Some(result),
-        Finish::Surface(_) => None,
+    ) {
+        Ok(Finish::Product(result)) => Some(result),
+        _ => None,
     }
 }
 
@@ -110,7 +123,7 @@ pub fn chain_surface<F: Field>(
     extra_torsion: bool,
     points: &[Couple<F>],
     verify: bool,
-) -> Option<SurfaceReadings<F>> {
+) -> Result<SurfaceReadings<F>, SurfaceStop> {
     match run(
         steps,
         curves,
@@ -122,10 +135,15 @@ pub fn chain_surface<F: Field>(
             verify,
             split: false,
         },
-    )? {
-        Finish::Surface(readings) => Some(readings),
-        Finish::Product(_) => None,
+    ) {
+        Ok(Finish::Surface(readings)) => Ok(readings),
+        Ok(Finish::Product(_)) => Err(SurfaceStop::Kernel),
+        Err(stop) => Err(stop),
     }
+}
+
+fn stop<T>(value: Option<T>) -> Result<T, SurfaceStop> {
+    value.ok_or(SurfaceStop::Kernel)
 }
 
 enum Finish<F> {
@@ -153,32 +171,36 @@ fn run<F: Field>(
     points: &[Couple<F>],
     i: F,
     mode: Mode,
-) -> Option<Finish<F>> {
+) -> Result<Finish<F>, SurfaceStop> {
     let Mode {
         extra_torsion,
         verify,
         split,
     } = mode;
     if points.iter().any(|point| !one_factor_infinite(*point)) {
-        return None;
+        return Err(SurfaceStop::Kernel);
     }
     let extra = if extra_torsion { 2 } else { 0 };
-    let start = steps.checked_add(extra)?.checked_sub(2)?;
+    let start = stop(
+        steps
+            .checked_add(extra)
+            .and_then(|value| value.checked_sub(2)),
+    )?;
     if start == 0 {
-        return None;
+        return Err(SurfaceStop::Kernel);
     }
-    let (curve_1, t1_1, t2_1) = lift_basis(
+    let (curve_1, t1_1, t2_1) = stop(lift_basis(
         curves[0],
         kernel.t1.first,
         kernel.t2.first,
         kernel.difference.first,
-    )?;
-    let (curve_2, t1_2, t2_2) = lift_basis(
+    ))?;
+    let (curve_2, t1_2, t2_2) = stop(lift_basis(
         curves[1],
         kernel.t1.second,
         kernel.t2.second,
         kernel.difference.second,
-    )?;
+    ))?;
     let curves = [curve_1, curve_2];
     let mut jac_1 = vec![CoupleJac {
         first: t1_1,
@@ -195,10 +217,10 @@ fn run<F: Field>(
         let times = if previous >= 16 {
             previous / 2
         } else {
-            previous.checked_sub(1)?
+            stop(previous.checked_sub(1))?
         };
         if times == 0 || times >= previous {
-            return None;
+            return Err(SurfaceStop::Kernel);
         }
         current += 1;
         jac_1.push(double_jac(curves, jac_1[current - 1], times));
@@ -206,11 +228,17 @@ fn run<F: Field>(
         todo.push(previous - times);
     }
 
-    let gluing = gluing_compute(curves, jac_1[current], jac_2[current], verify)?;
+    let gluing = stop(gluing_compute(
+        curves,
+        jac_1[current],
+        jac_2[current],
+        verify,
+    ))?;
     let mut images = points
         .iter()
         .map(|point| gluing_eval_special(&gluing, *point))
-        .collect::<Option<Vec<_>>>()?;
+        .collect::<Option<Vec<_>>>()
+        .ok_or(SurfaceStop::Image)?;
     let mut theta_1 = Vec::with_capacity(current + 4);
     let mut theta_2 = Vec::with_capacity(current + 4);
     for index in 0..current {
@@ -237,7 +265,7 @@ fn run<F: Field>(
             let previous = todo[at];
             let times = previous / 2;
             if times == 0 || times >= previous {
-                return None;
+                return Err(SurfaceStop::Kernel);
             }
             at += 1;
             let constants = ThetaConstants::from_null(null);
@@ -264,7 +292,8 @@ fn run<F: Field>(
             domain_hadamard,
             codomain_hadamard,
             check,
-        )?;
+        )
+        .ok_or(SurfaceStop::Step(which))?;
         for image in &mut images {
             *image = isogeny_eval(&step, *image);
         }
@@ -293,11 +322,16 @@ fn run<F: Field>(
 
     if !extra_torsion {
         if steps >= 3 {
-            let step = last_step.as_ref()?;
+            let step = stop(last_step.as_ref())?;
             theta_1[0] = isogeny_eval(step, theta_1[0]);
             theta_2[0] = isogeny_eval(step, theta_2[0]);
         }
-        let step = isogeny_compute_4(null, theta_1.first().copied()?, false, false)?;
+        let step = stop(isogeny_compute_4(
+            null,
+            stop(theta_1.first().copied())?,
+            false,
+            false,
+        ))?;
         for image in &mut images {
             *image = isogeny_eval(&step, *image);
         }
@@ -307,7 +341,12 @@ fn run<F: Field>(
         }
         null = step.codomain;
         earlier = Some(reading(null, &images));
-        let step = isogeny_compute_2(null, theta_1.first().copied()?, true, false)?;
+        let step = stop(isogeny_compute_2(
+            null,
+            stop(theta_1.first().copied())?,
+            true,
+            false,
+        ))?;
         for image in &mut images {
             *image = isogeny_eval(&step, *image);
         }
@@ -316,15 +355,15 @@ fn run<F: Field>(
     }
 
     if !split {
-        return Some(Finish::Surface(SurfaceReadings {
-            earlier: earlier?,
-            last: last?,
+        return Ok(Finish::Surface(SurfaceReadings {
+            earlier: stop(earlier)?,
+            last: stop(last)?,
         }));
     }
 
     let expected = extra_torsion.then_some(8);
-    let splitting = splitting_compute(null, i, expected)?;
-    let product = elliptic_product(splitting.null_point)?;
+    let splitting = stop(splitting_compute(null, i, expected))?;
+    let product = stop(elliptic_product(splitting.null_point))?;
     let images = images
         .into_iter()
         .map(|image| {
@@ -335,8 +374,9 @@ fn run<F: Field>(
                 second: point.second,
             })
         })
-        .collect::<Option<Vec<_>>>()?;
-    Some(Finish::Product(ChainResult {
+        .collect::<Option<Vec<_>>>()
+        .ok_or(SurfaceStop::Kernel)?;
+    Ok(Finish::Product(ChainResult {
         codomain: [
             Montgomery {
                 a: product.first.a,

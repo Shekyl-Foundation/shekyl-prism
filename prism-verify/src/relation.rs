@@ -15,7 +15,7 @@
 //! here. Both readings existing is [`VerifyError::Unidentified`].
 
 use prism_field::{Field, Level};
-use prism_isogeny::chain::chain_surface;
+use prism_isogeny::chain::{chain_surface, SurfaceStop};
 use prism_isogeny::gluing::{Couple, Kernel};
 use prism_isogeny::jac::{add, to_xz, Jac};
 use prism_isogeny::montgomery::{a24, ladder, Montgomery, Xz};
@@ -67,42 +67,54 @@ pub fn relate_points<L: Level>(
     if !order_e_prime::<L>(sig, p_sig_x) || !order_e_prime::<L>(sig, q_sig_x) {
         return Err(VerifyError::Kernel);
     }
-    // The key basis is order `2^e`. Two doublings land on the signature's
-    // order `2^{e′}`.
-    let vk_p = double_times::<L>(vk, basis.even.p, 2);
-    let vk_q = double_times::<L>(vk, basis.even.q, 2);
-    let vk_difference = double_times::<L>(vk, basis.even.difference, 2);
-    let signature_difference = difference::<L>(sig, p_sig.x, p_sig.y, q_sig.x, q_sig.y);
-    let kernel = Kernel {
-        t1: Couple {
-            first: vk_p,
-            second: p_sig_x,
-        },
-        t2: Couple {
-            first: vk_q,
-            second: q_sig_x,
-        },
-        difference: Couple {
-            first: vk_difference,
-            second: signature_difference,
-        },
-    };
     if !span_e_prime::<L>(sig, p_sig_x, q_sig_x) {
         return Err(VerifyError::Kernel);
     }
-    let curves = [Montgomery::normalized(vk), Montgomery::normalized(sig)];
-    let points = pushed::<L>(vk, &basis, scalar);
-    // The kernel glues. `(R, 0)` is then refused: its image under the
-    // gluing is not a zero-factor theta point. That is `Kernel`, before
-    // the two readings the dual basis would compare.
-    let readings =
-        chain_surface(L::E - 2, curves, kernel, false, &points, true).ok_or(VerifyError::Kernel)?;
-    if readings.earlier.images.len() != points.len() || readings.last.images.len() != points.len() {
+    let readings = match e_prime_surface::<L>(vk, &basis, sig, p_sig, q_sig, scalar) {
+        Ok(readings) => readings,
+        // A glued kernel whose one-factor point does not stay one-factor,
+        // and a kernel that never glues, are both a chain that stopped.
+        Err(SurfaceStop::Image | SurfaceStop::Kernel | SurfaceStop::Step(_)) => {
+            return Err(VerifyError::Kernel);
+        }
+    };
+    if readings.earlier.images.len() != 6 || readings.last.images.len() != 6 {
         return Err(VerifyError::Kernel);
     }
     // The two readings are the chain at `e′ − 1` and at `e′`. Identifying
     // them is the dual-basis section, which is not built.
     Err(VerifyError::Unidentified)
+}
+
+/// The `e′` chain for a basis and signature that have already passed the
+/// order and span checks.
+fn e_prime_surface<L: Level>(
+    vk: L::Ext,
+    basis: &RationalBasis<L::Ext>,
+    sig: L::Ext,
+    p_sig: AffinePoint<L>,
+    q_sig: AffinePoint<L>,
+    scalar: &[u8],
+) -> Result<prism_isogeny::chain::SurfaceReadings<L::Ext>, SurfaceStop> {
+    let p_sig_x = Xz::affine(p_sig.x);
+    let q_sig_x = Xz::affine(q_sig.x);
+    let kernel = Kernel {
+        t1: Couple {
+            first: double_times::<L>(vk, basis.even.p, 2),
+            second: p_sig_x,
+        },
+        t2: Couple {
+            first: double_times::<L>(vk, basis.even.q, 2),
+            second: q_sig_x,
+        },
+        difference: Couple {
+            first: double_times::<L>(vk, basis.even.difference, 2),
+            second: difference::<L>(sig, p_sig.x, p_sig.y, q_sig.x, q_sig.y),
+        },
+    };
+    let curves = [Montgomery::normalized(vk), Montgomery::normalized(sig)];
+    let points = pushed::<L>(vk, basis, scalar);
+    chain_surface(L::E - 2, curves, kernel, false, &points, true)
 }
 
 /// Order exactly `2^{e′}`, `e′ = e − 2`.
@@ -285,7 +297,7 @@ mod e0_vectors {
 
 #[cfg(test)]
 mod s5_vectors {
-    use super::{on_curve, order_e_prime, relate_points};
+    use super::{e_prime_surface, on_curve, order_e_prime, relate_points, span_e_prime};
     use crate::basis::basis_hint;
     use crate::challenge::ChallengeScalar;
     use crate::identity::KeyIdentity;
@@ -294,7 +306,9 @@ mod s5_vectors {
     use crate::verify;
     use crate::VerifyError;
     use prism_field::{ChallengeIndex, Field, Level, Level1, Level3, Level5};
+    use prism_isogeny::chain::SurfaceStop;
     use prism_isogeny::montgomery::Xz;
+    use prism_isogeny::torsion::{even_basis, has_order_p_plus_one, rational_basis};
 
     fn line<'a>(text: &'a str, label: &str) -> &'a str {
         text.lines()
@@ -360,7 +374,7 @@ mod s5_vectors {
         }
     }
 
-    fn honest<L: Level>(text: &str) {
+    fn honest<L: Level>(text: &str, chain_step: Option<u32>) {
         let sample = sample::<L>(text);
         assert!(
             basis_hint::<L>(KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient()).is_ok()
@@ -371,12 +385,54 @@ mod s5_vectors {
             sample.response.p.x,
             sample.response.p.y
         ));
+        assert!(on_curve::<L>(
+            sample.response.curve,
+            sample.response.q.x,
+            sample.response.q.y
+        ));
         assert!(degree_is_prime(L::E - 2, &sample.scalar));
-        // The points are a basis of E[2^{e'}]. The relation asks for that
-        // order and then runs the chain.
-        let x = Xz::affine(sample.response.p.x);
-        assert!(order_e_prime::<L>(sample.response.curve, x));
         let coefficient = KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient();
+        let p = Xz::affine(sample.response.p.x);
+        let q = Xz::affine(sample.response.q.x);
+        assert!(order_e_prime::<L>(sample.response.curve, p));
+        assert!(order_e_prime::<L>(sample.response.curve, q));
+        assert!(span_e_prime::<L>(sample.response.curve, p, q));
+        let hint = basis_hint::<L>(coefficient).unwrap();
+        match chain_step {
+            Some(step) => {
+                let basis =
+                    rational_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
+                        .expect("the key has a basis");
+                // Order and span passed, the basis exists, and the chain
+                // stops at this isogeny step: not at gluing, and not at the
+                // one-factor image.
+                assert_eq!(
+                    e_prime_surface::<L>(
+                        coefficient,
+                        &basis,
+                        sample.response.curve,
+                        sample.response.p,
+                        sample.response.q,
+                        &sample.scalar,
+                    )
+                    .err(),
+                    Some(SurfaceStop::Step(step))
+                );
+            }
+            None => {
+                // The index names a point, and that point is not order
+                // `p + 1`, so the relation stops before the chain.
+                let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
+                    .expect("the index names a point");
+                assert!(!has_order_p_plus_one::<L>(coefficient, even.full_p));
+                assert!(rational_basis::<L>(
+                    coefficient,
+                    hint.index(),
+                    hint.coefficient_is_square(),
+                )
+                .is_none());
+            }
+        }
         assert_eq!(
             relate_points::<L>(
                 coefficient,
@@ -427,8 +483,9 @@ mod s5_vectors {
         // refusal, once the exponent is e', is Composite, before the chain.
         assert!(!degree_is_prime(L::E - 2, next_scalar.as_bytes()));
 
-        // (P, −Q) keeps the normalized y(P) and the same order, and the
-        // x-only chain refuses it at the same image check.
+        // (P, −Q) keeps the normalized y(P) and the same order. The
+        // x-only chain refuses it with the same `Kernel` as the honest
+        // vector. The stop inside the chain is not the same at every level.
         let mut negated_q = sample.response;
         negated_q.q.y = negated_q.q.y.negate();
         assert!(canonical_sign::<L>(negated_q.p.y));
@@ -468,9 +525,11 @@ mod s5_vectors {
     }
 
     #[test]
-    fn the_s5_vectors_enter_the_e_prime_chain_and_the_image_is_refused() {
-        honest::<Level1>(include_str!("../testdata/s5_lvl1.txt"));
-        honest::<Level3>(include_str!("../testdata/s5_lvl3.txt"));
-        honest::<Level5>(include_str!("../testdata/s5_lvl5.txt"));
+    fn the_s5_vectors_stop_at_a_named_stage() {
+        // Levels I and III enter the chain and stop at an isogeny step.
+        // Level V's first on-curve basis point is not order `p + 1`.
+        honest::<Level1>(include_str!("../testdata/s5_lvl1.txt"), Some(2));
+        honest::<Level3>(include_str!("../testdata/s5_lvl3.txt"), Some(1));
+        honest::<Level5>(include_str!("../testdata/s5_lvl5.txt"), None);
     }
 }
