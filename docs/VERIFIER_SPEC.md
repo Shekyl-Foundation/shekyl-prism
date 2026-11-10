@@ -77,16 +77,45 @@ The signature does not carry `s`. What moves, when this is built, is the
 width of the derived challenge scalar, from `e − 1` bits to `e − 3`.
 
 The instantiated verifier still walks a chain of length `e` and returns
-`Unidentified`. No chain at `e′` is built in this tree. The gate in front
-of that chain is the Nakagawa–Onuki recheck (ePrint 2025/1602, the
-paper's [53]). `p` is unchanged, so their analysis of `q | (−p)^k − 1`
-carries over and only the `q` window shifts. The recheck runs on a sample
-of `q` drawn at `e′`, and it lands before any chain at `e′`.
+`Unidentified`. No chain at `e′` is built in this tree. The Nakagawa–Onuki
+recheck below has cleared the way for a chain at `e′`: no degree in that
+window meets the small-extension bound.
 
 A third reading for the authors — whether the §5 chain was meant to run
 two steps shorter than the rational 2-torsion — is held. It goes out with
 the follow-up if question 4(a) and 4(b) come back unanswered. An answer
 to either makes it moot, so it is not part of the letter now.
+
+### Small-extension torsion — CLEARED 2026-11-09
+
+ePrint 2025/1602 ([53]) attacks PRISM-id when the challenge prime `q`
+divides `(−p)^k − 1` for a small positive `k`: the `q`-torsion is then
+rational over `F_{p^{2k}}`. Lemma 3, and the general case in its
+Appendix A, computes a `q`-isogeny in `Õ(max{k², k√q})` base-field
+operations once such a `k` is known. Section 5.3 of that paper takes a
+bit length `a = 4λ/3` to hold every variant of the attack at or above
+`2^λ`, and `a = 7λ/6` to hold the variant that may reject challenges
+(Theorem 2, cost `Õ(2^{6a/7})`). The paper says the attacks do not
+affect PRISM-sig.
+
+At `e′` the degree is `q = 2^{2e−5} − s^2`. Because `s < 2^{e′−1}`,
+every such `q` lies in `[2^{2e−6}, 2^{2e−5})` and has bit length `2e−5`:
+491, 747, and 995. That is above both of [53]'s bit-length bounds
+(`7λ/6` is 149, 224, and 299). It is also enough by itself.
+`√q ≥ 2^{e−3}` is `2^245`, `2^373`, and `2^497`, and each of those is
+larger than `2^λ`. Lemma 3's cost is therefore above `2^λ` for every
+positive `k` and every `q` in the window. Moving the window from
+`2^{2e−1}` to `2^{2e−5}` does not produce a degree the attack can use.
+The index search does not gain a `q`-filter.
+
+`p = f·2^e − 1` is a special prime, so the sample checks that `−p` does
+not have a small order modulo these degrees. `scripts/sample_small_extension.py`
+draws the first 1,000 prime `q_j` at exponent `e − 2` for each level,
+through `sample_e_prime` and the verifier's own derivation, over
+deterministic keys and the message prefix `shekyl-prism-small-extension`.
+The order of `−p` modulo `q` was above `2^24` for all 3,000 degrees, and
+for the three committed §5 degrees as well. The median smallest index
+was 63, 100, and 139. The largest was 692, 940, and 1343.
 
 The public key is the Montgomery coefficient `A` of `E : y^2 = x^3 + A x^2 + x`
 over `F_{p^2}`, little-endian canonical `fp2` encoding (`(bit length + 7) / 8`
@@ -280,7 +309,8 @@ still derive them at Table 2's `e`. One vector per level is
 `quat_sampling_random_ideal_O0_given_norm`, `quat_lideal_inter`, and
 `dim2id2iso_arbitrary_isogeny_evaluation`, with `t = s^{-1} mod 2^{e′}`
 and the image doubled down to `E[2^{e′}]`. The `q` line of each file is
-the sample the Nakagawa–Onuki recheck reads. The length-`e` relation
+one degree at `e′`. The small-extension sample is the thousand degrees
+per level in Small-extension torsion, not these three lines. The length-`e` relation
 refuses these points before the chain, because their order is `2^{e′}`.
 
 The hit rate per candidate is low, so recomputing the search in the verifier
