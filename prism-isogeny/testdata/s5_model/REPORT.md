@@ -109,3 +109,10 @@ the cofactor on every key. `EvenBasis.difference` is that point.
 `[f]` of the difference of the uncleared points matches `Q` on 44 / 50 /
 50 keys at I / III / V, and it is not the field. `c-vectors` asserts the
 cleared one.
+
+## Accept vectors
+
+`prism-verify/testdata/accept/` holds further honest signatures the model
+returned Ok on: 20 at NIST-I, 27 at NIST-III, and 20 at NIST-V. A name
+containing `_r` is a repeated-byte seed. The others are SHA-256 seeds.
+The original six files in the parent testdata directory stay as they are.
