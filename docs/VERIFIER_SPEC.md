@@ -315,14 +315,18 @@ whose `q_j` is prime and whose chain completes, which keeps signing
 deterministic. This verifier does not yet apply the second half: it
 does not skip an index whose chain fails to complete. The carried index
 of a vector here is the smallest prime index. One vector per level is
-`prism-verify/testdata/s5_lvl{1,3,5}.txt`, produced by
-`scripts/c/export_s5_vectors.c` from the pinned tree's
-`quat_sampling_random_ideal_O0_given_norm`, `quat_lideal_inter`, and
-`dim2id2iso_arbitrary_isogeny_evaluation`, with `t = s^{-1} mod 2^{e′}`
-and the image doubled down to `E[2^{e′}]`. The `q` line of each file is
-one degree at `e′`. The small-extension sample is the thousand degrees
-per level in Small-extension torsion, not these three lines. The relation derives `s_j` at `e′` and runs the length-`e′` chain on the
-canonical basis. Levels I and III reach both readings (`Unidentified`).
+`prism-verify/testdata/s5_lvl{1,3,5}.txt` and a second key per level in
+`s5_lvl{1,3,5}b.txt`, produced by `scripts/c/export_s5_vectors.c` from the
+pinned tree's `quat_sampling_random_ideal_O0_given_norm`,
+`quat_lideal_inter`, and `dim2id2iso_arbitrary_isogeny_evaluation`, with
+`t = s^{-1} mod 2^e`, the image kept at order `2^e`, and `E_sig` rewritten
+to the least Montgomery model of its isomorphism class. Each file also
+carries the C canonical basis of `E_vk[2^e]` (`VkPx`, `VkPy`, `VkQx`,
+`VkQy`, `VkDx`). The `q` line is still one degree at `e′`. The
+small-extension sample is the thousand degrees per level in
+Small-extension torsion, not these lines. The relation derives `s_j` at
+`e′` and runs the length-`e′` chain on the canonical basis after doubling
+both sides twice. Levels I and III reach both readings (`Unidentified`).
 Level V stops at isogeny step 1 (`Kernel`).
 
 The hit rate per candidate is low, so recomputing the search in the verifier
@@ -526,11 +530,12 @@ opposite, and that map is not the one Algorithm 3 factors.
 Φ(X, Y) = ([s]X − σ̂(Y), σ(X) + [s]Y)
 ```
 
-`s² + q = 2^{2e′−1}` and `t = s^{-1} mod 2^{e′}`, so
-`q ≡ −s² (mod 2^{e′})` and `tq ≡ −s (mod 2^{e′})`. The response `σ` is
-defined from the normalized signature points, the normalization having
-already chosen the sign: `P_sig = [t]σ(P_vk)` and
-`Q_sig = [t]σ(Q_vk)`. Then `σ(P_vk) = [s]P_sig` and
+`s² + q = 2^{2e′−1}` and `t = s^{-1} mod 2^e`, so on the chain's
+torsion `q ≡ −s² (mod 2^{e′})` and `tq ≡ −s (mod 2^{e′})`. The response
+`σ` is defined from the normalized signature points of order `2^e`, the
+normalization having already chosen the sign: `P_sig = [t]σ(P_vk)` and
+`Q_sig = [t]σ(Q_vk)`. The accept path doubles both sides twice before
+the length-`e′` chain. Then `σ(P_vk) = [s]P_sig` and
 `σ̂(P_sig) = [tq]P_vk = −[s]P_vk`, and the same for `Q`. On
 `domain[2^{e′}]`,
 

@@ -5,14 +5,14 @@
 
 //! Algorithm 3 steps 3–8, at exponent `e′ = e − 2`.
 //!
-//! One chain of length `e′`. On a public key the kernel is the canonical
-//! basis of `E_vk[2^e]`, `x(Q) = −x(P) − A`, doubled twice to order
-//! `2^{e′}` to meet the committed signature points. The chain is evaluated
-//! at `([s]X, 0)` and `([2^{e′−1}]X, 0)` for that same basis.
+//! The signature points have order `2^e` (Algorithm 2 as printed). One chain
+//! of length `e′` still runs here: both sides of the kernel are doubled
+//! twice to order `2^{e′}`. The chain is evaluated at `([s]X, 0)` and
+//! `([2^{e′−1}]X, 0)` for the canonical basis of `E_vk[2^e]`.
 //!
 //! The x-only kernel cannot tell `+P_sig` from `−P_sig`. The dual-basis
-//! section of `docs/VERIFIER_SPEC.md` fixes that sign, and it is not built
-//! here. Both readings existing is [`VerifyError::Unidentified`].
+//! accept path of `docs/VERIFIER_SPEC.md` replaces this transitional chain;
+//! both readings existing is still [`VerifyError::Unidentified`].
 
 use prism_field::{Field, Level};
 use prism_isogeny::chain::{chain_surface, SurfaceStop};
@@ -69,10 +69,10 @@ pub fn relate_points<L: Level>(
     }
     let p_sig_x = Xz::affine(p_sig.x);
     let q_sig_x = Xz::affine(q_sig.x);
-    if !order_e_prime::<L>(sig, p_sig_x) || !order_e_prime::<L>(sig, q_sig_x) {
+    if !order_e::<L>(sig, p_sig_x) || !order_e::<L>(sig, q_sig_x) {
         return Err(VerifyError::Kernel);
     }
-    if !span_e_prime::<L>(sig, p_sig_x, q_sig_x) {
+    if !span_e::<L>(sig, p_sig_x, q_sig_x) {
         return Err(VerifyError::Kernel);
     }
     let readings = match e_prime_surface::<L>(vk, &even, push, sig, p_sig, q_sig, scalar) {
@@ -104,18 +104,19 @@ fn e_prime_surface<L: Level>(
 ) -> Result<prism_isogeny::chain::SurfaceReadings<L::Ext>, SurfaceStop> {
     let p_sig_x = Xz::affine(p_sig.x);
     let q_sig_x = Xz::affine(q_sig.x);
+    let diff = difference::<L>(sig, p_sig.x, p_sig.y, q_sig.x, q_sig.y);
     let kernel = Kernel {
         t1: Couple {
             first: double_times::<L>(vk, even.p, 2),
-            second: p_sig_x,
+            second: double_times::<L>(sig, p_sig_x, 2),
         },
         t2: Couple {
             first: double_times::<L>(vk, even.q, 2),
-            second: q_sig_x,
+            second: double_times::<L>(sig, q_sig_x, 2),
         },
         difference: Couple {
             first: double_times::<L>(vk, even.difference, 2),
-            second: difference::<L>(sig, p_sig.x, p_sig.y, q_sig.x, q_sig.y),
+            second: double_times::<L>(sig, diff, 2),
         },
     };
     let curves = [Montgomery::normalized(vk), Montgomery::normalized(sig)];
@@ -123,17 +124,17 @@ fn e_prime_surface<L: Level>(
     chain_surface(L::E - 2, curves, kernel, false, &points, true)
 }
 
-/// Order exactly `2^{e′}`, `e′ = e − 2`.
-fn order_e_prime<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
-    let full = double_times::<L>(coefficient, point, L::E - 2);
-    let almost = double_times::<L>(coefficient, point, L::E - 3);
+/// Order exactly `2^e`.
+fn order_e<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
+    let full = double_times::<L>(coefficient, point, L::E);
+    let almost = double_times::<L>(coefficient, point, L::E - 1);
     full.z.is_zero() && !almost.z.is_zero()
 }
 
-/// `[2^{e′−1}]` of two order-`2^{e′}` points are distinct and nonzero.
-fn span_e_prime<L: Level>(coefficient: L::Ext, p: Xz<L::Ext>, q: Xz<L::Ext>) -> bool {
-    let p2 = double_times::<L>(coefficient, p, L::E - 3);
-    let q2 = double_times::<L>(coefficient, q, L::E - 3);
+/// `[2^{e−1}]` of two order-`2^e` points are distinct and nonzero.
+fn span_e<L: Level>(coefficient: L::Ext, p: Xz<L::Ext>, q: Xz<L::Ext>) -> bool {
+    let p2 = double_times::<L>(coefficient, p, L::E - 1);
+    let q2 = double_times::<L>(coefficient, q, L::E - 1);
     !p2.is_infinity() && !q2.is_infinity() && !p2.x.mul(q2.z).same(q2.x.mul(p2.z))
 }
 
@@ -298,7 +299,7 @@ mod e0_vectors {
 
 #[cfg(test)]
 mod s5_vectors {
-    use super::{e_prime_surface, on_curve, order_e_prime, relate_points, span_e_prime};
+    use super::{e_prime_surface, on_curve, order_e, relate_points, span_e};
     use crate::basis::basis_hint;
     use crate::challenge::ChallengeScalar;
     use crate::identity::KeyIdentity;
@@ -434,9 +435,9 @@ mod s5_vectors {
         let coefficient = KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient();
         let p = Xz::affine(sample.response.p.x);
         let q = Xz::affine(sample.response.q.x);
-        assert!(order_e_prime::<L>(sample.response.curve, p));
-        assert!(order_e_prime::<L>(sample.response.curve, q));
-        assert!(span_e_prime::<L>(sample.response.curve, p, q));
+        assert!(order_e::<L>(sample.response.curve, p));
+        assert!(order_e::<L>(sample.response.curve, q));
+        assert!(span_e::<L>(sample.response.curve, p, q));
         let hint = basis_hint::<L>(coefficient).unwrap();
         assert_eq!(
             has_order_p_plus_one::<L>(
@@ -535,15 +536,19 @@ mod s5_vectors {
             ..sample.response
         };
         if canonical_sign::<L>(swapped.p.y) {
-            assert_eq!(
-                relate_points::<L>(
-                    coefficient,
-                    swapped.curve,
-                    swapped.p,
-                    swapped.q,
-                    &sample.scalar,
-                ),
-                Err(VerifyError::Kernel)
+            // The transitional length-e′ chain can still reach both readings
+            // on a swap at level V; the accept path of §6 refuses it.
+            let err = relate_points::<L>(
+                coefficient,
+                swapped.curve,
+                swapped.p,
+                swapped.q,
+                &sample.scalar,
+            )
+            .expect_err("swapped points must not accept");
+            assert!(
+                matches!(err, VerifyError::Kernel | VerifyError::Unidentified),
+                "{err:?}"
             );
         } else {
             assert_eq!(
@@ -553,12 +558,58 @@ mod s5_vectors {
         }
     }
 
+    fn assert_vk_basis<L: Level>(text: &str) {
+        // The exporter writes the C canonical basis of E[2^e]. That is the
+        // image of Rust's even_basis after clear_cofactor (multiply by the odd
+        // part of p+1), not the preimage abscissa in full_p.
+        let sample = sample::<L>(text);
+        let coefficient = KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient();
+        let hint = basis_hint::<L>(coefficient).unwrap();
+        let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
+            .expect("canonical basis");
+        let vk_px = L::ext_decode(&hex_bytes(line(text, "VkPx "))).unwrap();
+        let vk_qx = L::ext_decode(&hex_bytes(line(text, "VkQx "))).unwrap();
+        let vk_dx = L::ext_decode(&hex_bytes(line(text, "VkDx "))).unwrap();
+        let p = even.p.x_affine().expect("P");
+        let q = even.q.x_affine().expect("Q");
+        // C's difference_point on the cleared basis, not clear_cofactor of the
+        // preimage difference: the two need not agree.
+        let d = prism_isogeny::torsion::difference::<L>(coefficient, even.p, even.q)
+            .and_then(|point| point.x_affine())
+            .expect("P−Q");
+        assert!(
+            p.same(vk_px),
+            "{} VkPx disagrees with even_basis.p",
+            L::NAME
+        );
+        assert!(
+            q.same(vk_qx),
+            "{} VkQx disagrees with even_basis.q",
+            L::NAME
+        );
+        assert!(
+            d.same(vk_dx),
+            "{} VkDx disagrees with difference(P, Q)",
+            L::NAME
+        );
+        // Cleared generators need not satisfy x(Q) = −x(P) − A as affine
+        // values; the preimage pair does.
+        assert!(
+            even.full_q
+                .x_affine()
+                .unwrap()
+                .same(even.full_p.x_affine().unwrap().add(coefficient).negate()),
+            "{} full_q is not -full_p-A",
+            L::NAME
+        );
+        let _ = sample;
+    }
+
     #[test]
     fn the_canonical_kernel_reaches_both_readings_except_at_level_v() {
-        // The earlier step-2 and step-1 stops were the kernel's second
-        // point, which was the small-integer `T` rather than `x(Q) = −x(P) − A`.
-        // Level V's honest vector still stops at step 1, and `(P, −Q)` is
-        // the vector that reaches both readings.
+        // Regenerated at order 2^e on the least Montgomery model. The
+        // transitional chain still doubles both sides twice. Level V's
+        // honest vector stops at step 1; `(P, −Q)` reaches both readings.
         honest::<Level1>(
             include_str!("../testdata/s5_lvl1.txt"),
             Stop::Readings,
@@ -577,5 +628,11 @@ mod s5_vectors {
             Stop::Readings,
             false,
         );
+        assert_vk_basis::<Level1>(include_str!("../testdata/s5_lvl1.txt"));
+        assert_vk_basis::<Level3>(include_str!("../testdata/s5_lvl3.txt"));
+        assert_vk_basis::<Level5>(include_str!("../testdata/s5_lvl5.txt"));
+        assert_vk_basis::<Level1>(include_str!("../testdata/s5_lvl1b.txt"));
+        assert_vk_basis::<Level3>(include_str!("../testdata/s5_lvl3b.txt"));
+        assert_vk_basis::<Level5>(include_str!("../testdata/s5_lvl5b.txt"));
     }
 }

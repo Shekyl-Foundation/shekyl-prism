@@ -55,18 +55,22 @@ one() {
     name=$2
     key_seed=$3
     sign_seed=$4
+    out=${5:-s5_lvl$n.txt}
     variant=lvl$n
     compile "$variant"
-    scratch=$work/$variant-key
+    scratch=$work/$variant-$out-key
     python3 -c "import sys; sys.stdout.buffer.write(bytes([$key_seed]) * 48)" | "$build/export_s5_$variant" keygen "$scratch" > "$scratch.pub"
     coefficient=$(awk '{print $2}' "$scratch.pub")
     pair=$(cargo run --quiet --manifest-path "$root/Cargo.toml" --bin s5_vector -- index "$name" "$coefficient")
     scalar=$(printf '%s\n' "$pair" | sed -n '2p')
     python3 -c "import sys; sys.stdout.buffer.write(bytes([$sign_seed]) * 48)" | "$build/export_s5_$variant" sign "$scratch" "$scalar" > "$scratch.sig"
-    cat "$scratch.pub" "$scratch.sig" | cargo run --quiet --manifest-path "$root/Cargo.toml" --bin s5_vector -- commit "$name" "$root/prism-verify/testdata/s5_lvl$n.txt"
-    printf 'keygen_seed %s\nsign_seed %s\n' "$key_seed" "$sign_seed" >> "$root/prism-verify/testdata/s5_lvl$n.txt"
+    cat "$scratch.pub" "$scratch.sig" | cargo run --quiet --manifest-path "$root/Cargo.toml" --bin s5_vector -- commit "$name" "$root/prism-verify/testdata/$out"
+    printf 'keygen_seed %s\nsign_seed %s\n' "$key_seed" "$sign_seed" >> "$root/prism-verify/testdata/$out"
 }
 
 one 1 I 17 17
+one 1 I 1 1 s5_lvl1b.txt
 one 3 III 48 18
+one 3 III 8 20 s5_lvl3b.txt
 one 5 V 17 22
+one 5 V 3 18 s5_lvl5b.txt
