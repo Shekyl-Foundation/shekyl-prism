@@ -1,0 +1,137 @@
+// Copyright (c) 2025-2026, The Shekyl Foundation
+//
+// All rights reserved.
+// BSD-3-Clause
+
+//! Print the order-`2^e` basis Rust derives from `A`, for the C differential.
+//!
+//! `even_basis <I|III|V> <A-hex>` prints four affine x-coordinates: `P`,
+//! the point `R` with `x(R) = −x(P) − A`, `difference(P, R)` computed on
+//! those order-`2^e` points, and `[f]` of the difference of the points
+//! before the cofactor. `sample <I|III|V> <count>` prints that many
+//! coefficients that have a basis.
+
+use std::env;
+use std::process::ExitCode;
+
+use prism_field::{Field, Level, Level1, Level3, Level5};
+use prism_isogeny::torsion::{difference, even_basis};
+use prism_verify::basis::basis_hint;
+use sha3::{Digest, Sha3_256};
+
+fn main() -> ExitCode {
+    let mut args = env::args().skip(1);
+    let Some(command) = args.next() else {
+        eprintln!("usage: even_basis <I|III|V> <A-hex> | sample <I|III|V> <count>");
+        return ExitCode::from(2);
+    };
+    if command == "sample" {
+        let Some(level) = args.next() else {
+            return ExitCode::from(2);
+        };
+        let Some(count) = args.next().and_then(|text| text.parse::<u32>().ok()) else {
+            return ExitCode::from(2);
+        };
+        return match level.as_str() {
+            "I" => sample::<Level1>(count),
+            "III" => sample::<Level3>(count),
+            "V" => sample::<Level5>(count),
+            _ => ExitCode::from(2),
+        };
+    }
+    let Some(coefficient) = args.next() else {
+        return ExitCode::from(2);
+    };
+    match command.as_str() {
+        "I" => show::<Level1>(&coefficient),
+        "III" => show::<Level3>(&coefficient),
+        "V" => show::<Level5>(&coefficient),
+        _ => ExitCode::from(2),
+    }
+}
+
+fn show<L: Level>(hex: &str) -> ExitCode {
+    let Ok(bytes) = decode_hex(hex) else {
+        eprintln!("A is not hex");
+        return ExitCode::FAILURE;
+    };
+    let Some(coefficient) = L::ext_decode(&bytes) else {
+        eprintln!("A does not decode");
+        return ExitCode::FAILURE;
+    };
+    let Ok(hint) = basis_hint::<L>(coefficient) else {
+        eprintln!("no basis index");
+        return ExitCode::FAILURE;
+    };
+    let Some(even) = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
+    else {
+        eprintln!("no even basis");
+        return ExitCode::FAILURE;
+    };
+    let Some(on_cleared) = difference::<L>(coefficient, even.p, even.q) else {
+        eprintln!("no difference of the cleared points");
+        return ExitCode::FAILURE;
+    };
+    for point in [even.p, even.q, on_cleared, even.difference] {
+        let Some(x) = point.x_affine() else {
+            eprintln!("a basis point is infinite");
+            return ExitCode::FAILURE;
+        };
+        println!("{}", hex_encode(&L::ext_encode(x)));
+    }
+    ExitCode::SUCCESS
+}
+
+fn sample<L: Level>(count: u32) -> ExitCode {
+    let mut produced = 0u32;
+    let mut counter = 0u64;
+    while produced < count {
+        counter += 1;
+        let mut bytes = vec![0u8; L::FP2_LEN];
+        let mut filled = 0;
+        let mut block = 0u64;
+        while filled < bytes.len() {
+            let mut hasher = Sha3_256::new();
+            hasher.update(L::NAME.as_bytes());
+            hasher.update(counter.to_le_bytes());
+            hasher.update(block.to_le_bytes());
+            let digest = hasher.finalize();
+            let take = (bytes.len() - filled).min(digest.len());
+            bytes[filled..filled + take].copy_from_slice(&digest[..take]);
+            filled += take;
+            block += 1;
+        }
+        let Some(coefficient) = L::ext_decode(&bytes) else {
+            continue;
+        };
+        if coefficient.mul(coefficient).same(L::Ext::from_u64(4)) || coefficient.is_zero() {
+            continue;
+        }
+        if basis_hint::<L>(coefficient).is_err() {
+            continue;
+        }
+        println!("{}", hex_encode(&L::ext_encode(coefficient)));
+        produced += 1;
+    }
+    ExitCode::SUCCESS
+}
+
+fn decode_hex(text: &str) -> Result<Vec<u8>, ()> {
+    if !text.len().is_multiple_of(2) {
+        return Err(());
+    }
+    (0..text.len())
+        .step_by(2)
+        .map(|index| u8::from_str_radix(&text[index..index + 2], 16).map_err(|_| ()))
+        .collect()
+}
+
+fn hex_encode(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        out.push(HEX[(byte >> 4) as usize] as char);
+        out.push(HEX[(byte & 0xf) as usize] as char);
+    }
+    out
+}

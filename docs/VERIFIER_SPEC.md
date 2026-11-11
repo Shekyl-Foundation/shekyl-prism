@@ -81,11 +81,14 @@ The instantiated verifier walks a chain of length `e′`. The kernel is the
 canonical basis of `E_vk[2^e]`, with `x(Q) = −x(P) − A`, doubled twice to
 order `2^{e′}`. Levels I and III of the §5 vectors reach both readings, so
 the result is `Unidentified`. `(P, −Q)` stops at isogeny step 1. Level V's
-honest vector stops at isogeny step 1, and `(P, −Q)` is the one that
-reaches both readings. The cause of that relative sign is open. Level V's
-index point is still not of order `p + 1`; the verify path does not consult
-that search. The dual-basis identification is not built. The
-Nakagawa–Onuki recheck below cleared the degrees: no `q` in the `e′`
+honest vector stops at isogeny step 1, and `(P, −Q)` reaches both readings.
+That file was written when the exporter recovered `y(P)` and `y(Q)` by two
+independent square roots. The lift from the basis difference replaced that
+recovery, and only the level I file was written again. On this key `P − Q`
+is the same point either way it is chosen, so the stop is the exported
+sign. Level V's index point is still not of order `p + 1`; the verify path
+does not consult that search. The dual-basis identification is not built.
+The Nakagawa–Onuki recheck below cleared the degrees: no `q` in the `e′`
 window meets the small-extension bound.
 
 A third reading for the authors — whether the §5 chain was meant to run
