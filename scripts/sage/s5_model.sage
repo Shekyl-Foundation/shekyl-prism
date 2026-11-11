@@ -9,6 +9,7 @@
 import os
 import sys
 import json
+import subprocess
 from pathlib import Path
 
 # Sage's run-file copies this script to a temp path; locate the repo from cwd
@@ -73,6 +74,8 @@ def claim(kind, name, detail=""):
 
 
 def fail(name, detail):
+    if getattr(fail, "soft", False):
+        return
     print(f"[REFUTED] {name}: {detail}", flush=True)
     sys.exit(1)
 
@@ -216,7 +219,60 @@ def pairing_power(E, P, Q, order, exponent):
     return weil_pairing_pari(P, Q, order) ** exponent
 
 
-def run_vector(path, run_chains=True):
+def evaluate_chains(B_K1, B_K2, Theta12, N1, N2, e_prime, P1, P2, Psig, Qsig, s, Esig):
+    """Codomain and step 8. Returns (verdict, detail) with verdict in
+    Kernel / Codomain / Image / Ok."""
+    try:
+        chain1 = IsogenyChainDim2(B_K1, Theta12, N1, e_prime)
+        chain2 = IsogenyChainDim2(B_K2, Theta12, N2, e_prime - 1)
+    except Exception as err:
+        return "Kernel", {"error": str(err)}
+    C1z = chain1._codomain.zero().coords()
+    C2hz = chain2._codomain.hadamard().zero().coords()
+    nulls1 = [[str(c) for c in phi._codomain.zero().coords()] for phi in chain1._phis]
+    nulls2 = [[str(c) for c in phi._codomain.zero().coords()] for phi in chain2._phis]
+    detail = {"nulls1": nulls1, "nulls2": nulls2, "step8": {}}
+    if not projective_equal(C1z, C2hz):
+        return "Codomain", detail
+    dual2 = chain2.dual()
+
+    def Phi(pt):
+        return dual2(chain1(pt))
+
+    images = {}
+    for name, X, Y in [
+        ("P", P1, Psig),
+        ("Q", P2, Qsig),
+        ("PmQ", P1 - P2, Psig - Qsig),
+    ]:
+        try:
+            img = Phi(TuplePoint(X, Esig(0)))
+        except Exception as err:
+            detail["error"] = str(err)
+            return "Kernel", detail
+        target_x = s * X
+        target_y = s * Y
+        left_ok = img[0] in (target_x, -target_x)
+        right_ok = img[1] in (target_y, -target_y)
+        images[name] = {
+            "left_ok": left_ok,
+            "right_ok": right_ok,
+            "img0": str(img[0]),
+            "img1": str(img[1]),
+        }
+        if not (left_ok and right_ok):
+            detail["step8"] = images
+            return "Image", detail
+    detail["step8"] = images
+    return "Ok", detail
+
+
+def run_vector(path, run_chains=True, soft=None):
+    """`soft` is a mutation. Algebraic `fail` calls are skipped and the
+    chain verdict is returned, so a negative is classified by Codomain,
+    Image, or Kernel rather than by an identity the verifier does not check.
+    """
+    fail.soft = soft is not None
     rows = load_vector(path)
     level = rows["level"]
     params = LEVELS[level]
@@ -246,12 +302,17 @@ def run_vector(path, run_chains=True):
     Pvk = point(Evk, fp2_from_hex(rows["VkPx"], Fp2, fp_len), fp2_from_hex(rows["VkPy"], Fp2, fp_len))
     Qvk = point(Evk, fp2_from_hex(rows["VkQx"], Fp2, fp_len), fp2_from_hex(rows["VkQy"], Fp2, fp_len))
 
-    # Orders
+    # Orders. A mutation that drops the order is Kernel, before any chain.
     order = 1 << e
-    assert (order * Pvk).is_zero() and not ((order // 2) * Pvk).is_zero()
-    assert (order * Qvk).is_zero() and not ((order // 2) * Qvk).is_zero()
-    assert (order * Psig).is_zero() and not ((order // 2) * Psig).is_zero()
-    assert (order * Qsig).is_zero() and not ((order // 2) * Qsig).is_zero()
+
+    def exact_order(pt):
+        return (order * pt).is_zero() and not ((order // 2) * pt).is_zero()
+
+    if soft is None:
+        assert exact_order(Pvk) and exact_order(Qvk)
+        assert exact_order(Psig) and exact_order(Qsig)
+    elif not exact_order(Psig) or not exact_order(Qsig):
+        return "Kernel"
 
     # Independent basis index (§4.1)
     index, square = basis_index(A, e, odd, lam)
@@ -277,7 +338,27 @@ def run_vector(path, run_chains=True):
     # in the report established the correspondence.)
     P1 = Pvk
     P2 = Qvk
-    if "VkDx" in rows:
+    if soft is not None:
+        if "Psig" in soft:
+            Psig = soft["Psig"]
+        if "Qsig" in soft:
+            Qsig = soft["Qsig"]
+        if "Esig" in soft:
+            Esig = soft["Esig"]
+        if "s" in soft:
+            s = soft["s"]
+            q = soft["q"]
+        if "P1" in soft:
+            P1 = soft["P1"]
+            P2 = soft["P2"]
+            Evk = P1.curve()
+        if not exact_order(Psig) or not exact_order(Qsig):
+            return "Kernel"
+        p2 = (order // 2) * Psig
+        q2 = (order // 2) * Qsig
+        if p2.is_zero() or q2.is_zero() or p2[0] == q2[0]:
+            return "Kernel"
+    if soft is None and "VkDx" in rows:
         if fp2_from_hex(rows["VkDx"], Fp2, fp_len) != (P1 - P2)[0]:
             fail(f"{path.name} VkDx", "x(VkP - VkQ) differs from VkDx")
         claim("Ran", f"{path.name} VkDx = x(VkP-VkQ)", "")
@@ -450,73 +531,417 @@ def run_vector(path, run_chains=True):
             [str(pt[0][0]), str(pt[0][1]), str(pt[1][0]), str(pt[1][1])] for pt in B_K2
         ],
     }
-    (OUT / f"{stem}_matrices.json").write_text(json.dumps(kat, indent=2) + "\n")
+    if soft is None:
+        (OUT / f"{stem}_matrices.json").write_text(json.dumps(kat, indent=2) + "\n")
 
     if not run_chains or os.environ.get("S5_ALGEBRA_ONLY"):
-        return
+        return "algebra"
 
-    # Two chains (§4.5), kernels from the matrices (computed above)
-    claim("Open", f"{path.name} starting chains", f"len1={e_prime} len2={e_prime-1}")
-    print(f"  computing chain1 length {e_prime}…", flush=True)
-    chain1 = IsogenyChainDim2(B_K1, Theta12, N1, e_prime)
-    print(f"  computing chain2 length {e_prime-1}…", flush=True)
-    chain2 = IsogenyChainDim2(B_K2, Theta12, N2, e_prime - 1)
-
-    C1z = chain1._codomain.zero().coords()
-    C2hz = chain2._codomain.hadamard().zero().coords()
-    if not projective_equal(C1z, C2hz):
-        fail(
-            f"{path.name} Codomain",
-            f"C1.zero() != C2.hadamard().zero()\n  C1={C1z}\n  C2h={C2hz}",
+    try:
+        verdict, images = evaluate_chains(
+            B_K1, B_K2, Theta12, N1, N2, e_prime, P1, P2, Psig, Qsig, s, Esig
         )
-    claim("Derived", f"{path.name} Codomain C1.zero()==C2.hadamard().zero()", "confirmed")
-
-    # Emit per-step null points
-    nulls1 = []
-    for phi in chain1._phis:
-        nulls1.append([str(c) for c in phi._codomain.zero().coords()])
-    nulls2 = []
-    for phi in chain2._phis:
-        nulls2.append([str(c) for c in phi._codomain.zero().coords()])
+    except Exception:
+        return "Kernel"
+    if soft is not None:
+        return verdict
+    if verdict != "Ok":
+        fail.soft = False
+        fail(f"{path.name} {verdict}", "honest vector")
+    fail.soft = False
+    nulls1 = images["nulls1"]
+    nulls2 = images["nulls2"]
     (OUT / f"{stem}_nulls.json").write_text(
         json.dumps({"chain1": nulls1, "chain2": nulls2}, indent=2) + "\n"
     )
-
-    # Step 8 (§2b / §4.5)
-    dual2 = chain2.dual()
-
-    def Phi(pt):
-        return dual2(chain1(pt))
-
-    images = {}
-    for name, X, Y in [
-        ("P", P1, Psig),
-        ("Q", P2, Qsig),
-        ("PmQ", P1 - P2, Psig - Qsig),
-    ]:
-        img = Phi(TuplePoint(X, Esig(0)))
-        # Expect (±[s]X, ±[s]Y) up to projective on each factor — full points
-        target_x = s * X
-        target_y = s * Y
-        left_ok = img[0] in (target_x, -target_x)
-        right_ok = img[1] in (target_y, -target_y)
-        images[name] = {
-            "left_ok": left_ok,
-            "right_ok": right_ok,
-            "img0": str(img[0]),
-            "img1": str(img[1]),
-        }
-        if not (left_ok and right_ok):
-            fail(
-                f"{path.name} Image step8 {name}",
-                f"Φ(X,0) not ±([s]X,[s]Y); left_ok={left_ok} right_ok={right_ok}",
-            )
+    (OUT / f"{stem}_step8.json").write_text(json.dumps(images["step8"], indent=2) + "\n")
+    claim("Derived", f"{path.name} Codomain C1.zero()==C2.hadamard().zero()", "confirmed")
     claim("Derived", f"{path.name} Image step 8", "confirmed")
-    (OUT / f"{stem}_step8.json").write_text(json.dumps(images, indent=2) + "\n")
     claim("Ran", f"{path.name} accept path Ok", "")
+    return "Ok"
+
+
+SHORT = {"NIST-I": "I", "NIST-III": "III", "NIST-V": "V"}
+SIBLING = {
+    "s5_lvl1.txt": "s5_lvl1b.txt",
+    "s5_lvl1b.txt": "s5_lvl1.txt",
+    "s5_lvl3.txt": "s5_lvl3b.txt",
+    "s5_lvl3b.txt": "s5_lvl3.txt",
+    "s5_lvl5.txt": "s5_lvl5b.txt",
+    "s5_lvl5b.txt": "s5_lvl5.txt",
+}
+
+
+def parts(z):
+    coeffs = list(z.polynomial())
+    re = ZZ(coeffs[0]) if coeffs else ZZ(0)
+    im = ZZ(coeffs[1]) if len(coeffs) > 1 else ZZ(0)
+    return re, im
+
+
+def ext_less(left, right):
+    left_re, left_im = parts(left)
+    right_re, right_im = parts(right)
+    if left_re != right_re:
+        return left_re < right_re
+    return left_im < right_im
+
+
+def canonical_sign(y):
+    return y != 0 and ext_less(y, -y)
+
+
+def montgomery_coefficients(A):
+    """The Montgomery coefficients of A's isomorphism class that the
+    exporter enumerates: ±A, and ± the two moves of a rational 2-torsion
+    point to (0, 0)."""
+    found = [A, -A]
+    disc = A**2 - 4
+    if not disc.is_square():
+        return found
+    root = disc.sqrt()
+    for alpha in ((-A + root) / 2, (-A - root) / 2):
+        lam2 = alpha**2 - 1
+        if lam2 == 0 or not lam2.is_square():
+            continue
+        lam = lam2.sqrt()
+        moved = (3 * alpha + A) / lam
+        found.append(moved)
+        found.append(-moved)
+    return found
+
+
+def is_least_model(A):
+    best = A
+    for coefficient in montgomery_coefficients(A):
+        if ext_less(coefficient, best):
+            best = coefficient
+    return best == A
+
+
+def challenge_scalar(level, coefficient_hex, message, index):
+    binary = ROOT / "target" / "release" / "s5_challenge"
+    proc = subprocess.run(
+        [str(binary), SHORT[level], coefficient_hex, message, str(index)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    scalar_hex, verdict = proc.stdout.split()
+    scalar = ZZ(int.from_bytes(bytes.fromhex(scalar_hex), "little"))
+    return scalar, verdict
+
+
+def transport(A, P, Q, alpha):
+    lam2 = alpha**2 - 1
+    if lam2 == 0 or not lam2.is_square():
+        return None
+    for lam in (lam2.sqrt(), -lam2.sqrt()):
+        if lam == 0 or not lam.is_square():
+            continue
+        scale = lam * lam.sqrt()
+        if scale == 0:
+            continue
+        coefficient = (3 * alpha + A) / lam
+        curve = montgomery(coefficient)
+
+        def image(point, lam=lam, scale=scale, alpha=alpha, curve=curve):
+            return curve((point[0] - alpha) / lam, point[1] / scale)
+
+        try:
+            return curve, coefficient, image(P), image(Q)
+        except Exception:
+            continue
+    return None
+
+
+def negate_model(A, P, Q):
+    i = A.parent().gen()
+    curve = montgomery(-A)
+    return curve, -A, curve(-P[0], i * P[1]), curve(-Q[0], i * Q[1])
+
+
+def other_models(A, P, Q):
+    """The five Montgomery models other than (A, P, Q), points transported."""
+    models = [negate_model(A, P, Q)]
+    disc = A**2 - 4
+    if not disc.is_square():
+        return models
+    root = disc.sqrt()
+    for alpha in ((-A + root) / 2, (-A - root) / 2):
+        moved = transport(A, P, Q, alpha)
+        if moved is None:
+            continue
+        models.append(moved)
+        curve, coefficient, left, right = moved
+        models.append(negate_model(coefficient, left, right))
+    # Drop anything whose coefficient is A's, and keep five when the class has six.
+    others = [model for model in models if model[1] != A]
+    return others
+
+
+def renormalize(point):
+    if canonical_sign(point[1]):
+        return point
+    return -point
+
+
+def order4_translates(curve):
+    """Nonzero points of `E[4]` that are not in `E[2]`."""
+    found = []
+    for point in curve(0).division_points(4):
+        if point.is_zero() or (2 * point).is_zero():
+            continue
+        found.append(point)
+    return found
+
+
+def chain_verdict(path, **soft):
+    try:
+        try:
+            verdict = run_vector(path, run_chains=True, soft=soft)
+        except Exception as err:
+            if os.environ.get("S5_CHAIN_EXC") == "1":
+                print(f"  chain exception: {type(err).__name__}: {err}", flush=True)
+            return "Kernel"
+        if verdict in ("Ok", "Kernel", "Codomain", "Image"):
+            return verdict
+        return "Kernel"
+    finally:
+        fail.soft = False
+
+
+def run_negatives():
+    """§6, primary vector at each level. Chain verdicts use the accept path."""
+    primary = [VECTORS[0], VECTORS[1], VECTORS[2]]
+    report = {}
+    for path in primary:
+        rows = load_vector(path)
+        level = rows["level"]
+        params = LEVELS[level]
+        e = params["e"]
+        e_prime = e - 2
+        fp_len = params["fp_len"]
+        p = params["odd"] * (1 << e) - 1
+        Fp2 = GF(p**2, name="i", modulus=ZZ["x"]("x^2+1"))
+        A_sig = fp2_from_hex(rows["E"], Fp2, fp_len)
+        Esig = montgomery(A_sig)
+        P = point(Esig, fp2_from_hex(rows["Px"], Fp2, fp_len), fp2_from_hex(rows["Py"], Fp2, fp_len))
+        Q = point(Esig, fp2_from_hex(rows["Qx"], Fp2, fp_len), fp2_from_hex(rows["Qy"], Fp2, fp_len))
+        message = rows["message"]
+        index = int(rows["j"])
+        key = rows["A"]
+        name = path.name
+        row = {}
+        print(f"=== negatives {name} ===", flush=True)
+
+        if not is_least_model(A_sig):
+            fail(f"{name} Model self-check", "honest E_sig is not the least model")
+        if not canonical_sign(P[1]):
+            fail(f"{name} Sign self-check", "honest P fails the sign check")
+
+        # 1. an index whose degree is composite
+        composite_at = None
+        for candidate in range(index):
+            _scalar, verdict = challenge_scalar(level, key, message, candidate)
+            if verdict == "composite":
+                composite_at = candidate
+                break
+        if composite_at is None:
+            _scalar, verdict = challenge_scalar(level, key, message, index + 1)
+            # The committed index is prime; a later composite still names the check.
+            for candidate in range(index + 1, index + 30):
+                _scalar, verdict = challenge_scalar(level, key, message, candidate)
+                if verdict == "composite":
+                    composite_at = candidate
+                    break
+        row["1"] = "Composite" if composite_at is not None else "MISSING"
+        print(f"  1 -> {row['1']} at {composite_at}", flush=True)
+
+        # 2. the next index whose degree is prime
+        next_prime = None
+        next_s = None
+        next_q = None
+        for candidate in range(index + 1, index + 400):
+            scalar, verdict = challenge_scalar(level, key, message, candidate)
+            if verdict == "prime":
+                next_prime = candidate
+                next_s = scalar
+                next_q = (1 << (2 * e_prime - 1)) - scalar**2
+                break
+        if next_prime is None:
+            row["2"] = "MISSING"
+        else:
+            row["2"] = chain_verdict(path, s=next_s, q=next_q)
+        print(f"  2 -> {row['2']}", flush=True)
+
+        # 3. both signs flipped
+        row["3"] = "Sign" if not canonical_sign((-P)[1]) else chain_verdict(path, Psig=-P, Qsig=-Q)
+        print(f"  3 -> {row['3']}", flush=True)
+
+        # 4. relative sign
+        if not canonical_sign(P[1]):
+            row["4"] = "Sign"
+        else:
+            row["4"] = chain_verdict(path, Qsig=-Q)
+        print(f"  4 -> {row['4']}", flush=True)
+
+        # 5. swapped
+        if not canonical_sign(Q[1]):
+            row["5"] = "Sign"
+        else:
+            row["5"] = chain_verdict(path, Psig=Q, Qsig=P)
+        print(f"  5 -> {row['5']}", flush=True)
+
+        # 6. one byte of A_sig flipped. Sage's preparser can swallow
+        # `^=` on a bytearray, so the xor is a Python int assignment.
+        raw = bytearray(bytes.fromhex(rows["E"]))
+        # `^` is exponentiation in Sage, and a bare `1` is a Sage integer.
+        raw[0] = int(raw[0]).__xor__(int("1"))
+        re = int.from_bytes(raw[:fp_len], "little")
+        im = int.from_bytes(raw[fp_len:], "little")
+        if re >= p or im >= p:
+            row["6"] = "Canonical"
+        else:
+            flipped = Fp2([re, im])
+            if flipped == A_sig:
+                fail(f"{name} item 6", "the byte flip did not change A_sig")
+            flipped_curve = montgomery(flipped)
+            if flipped**2 == 4:
+                row["6"] = "Singular"
+            elif not is_least_model(flipped):
+                row["6"] = "Model"
+            elif not (
+                flipped_curve.is_on_curve(P[0], P[1])
+                and flipped_curve.is_on_curve(Q[0], Q[1])
+            ):
+                row["6"] = "Kernel"
+            else:
+                row["6"] = chain_verdict(
+                    path, Psig=flipped_curve(P[0], P[1]), Qsig=flipped_curve(Q[0], Q[1]), Esig=flipped_curve
+                )
+        print(f"  6 -> {row['6']}", flush=True)
+
+        # 7. translates by E_sig[4]
+        translates = order4_translates(Esig)
+        seven = []
+        for torsion in translates:
+            for label, left, right in (
+                ("P", P + torsion, Q),
+                ("Q", P, Q + torsion),
+                ("both", P + torsion, Q + torsion),
+            ):
+                if not canonical_sign(left[1]):
+                    seven.append(f"{label}:Sign")
+                    continue
+                try:
+                    left.curve()(left[0], left[1])
+                    right.curve()(right[0], right[1])
+                except Exception:
+                    seven.append(f"{label}:Kernel")
+                    continue
+                verdict = chain_verdict(path, Psig=left, Qsig=right)
+                seven.append(f"{label}:{verdict}")
+                if verdict == "Ok":
+                    fail(f"{name} item 7", f"{label} accepted")
+        row["7"] = seven
+        print(f"  7 -> {len(seven)} cases, ok={seven.count('Ok') if False else sum(1 for item in seven if item.endswith(':Ok'))}", flush=True)
+
+        # 8. the old doubled-twice points
+        row["8"] = chain_verdict(path, Psig=4 * P, Qsig=4 * Q)
+        print(f"  8 -> {row['8']}", flush=True)
+
+        # 9. odd scalars that preserve order
+        nine = {}
+        for scalar in (ZZ(3), ZZ(1 << (e - 1)) + 1):
+            left = scalar * P
+            right = scalar * Q
+            if not canonical_sign(left[1]):
+                # Record the sign refusal; do not renormalize. The item forbids Ok.
+                nine[str(scalar)] = "Sign"
+            else:
+                nine[str(scalar)] = chain_verdict(path, Psig=left, Qsig=right)
+        row["9"] = nine
+        print(f"  9 -> {nine}", flush=True)
+
+        # 10. the other Montgomery models, sign re-normalized
+        ten = []
+        transported = other_models(A_sig, P, Q)
+        for curve, coefficient, left, right in transported:
+            left = renormalize(left)
+            right = renormalize(right)
+            if is_least_model(coefficient):
+                ten.append("LEAST")
+                continue
+            if not canonical_sign(left[1]):
+                ten.append("Sign")
+                continue
+            ten.append("Model")
+        row["10"] = ten
+        print(f"  10 -> {ten}", flush=True)
+
+        # 11. different message, same carried index
+        other_message = message + "-other"
+        scalar, verdict = challenge_scalar(level, key, other_message, index)
+        if verdict == "composite":
+            row["11"] = "Composite"
+        else:
+            degree = (1 << (2 * e_prime - 1)) - scalar**2
+            row["11"] = chain_verdict(path, s=scalar, q=degree)
+        print(f"  11 -> {row['11']}", flush=True)
+
+        # 12. the other key at this level, same signature
+        sibling = load_vector(ROOT / "prism-verify" / "testdata" / SIBLING[name])
+        scalar, verdict = challenge_scalar(level, sibling["A"], message, index)
+        if verdict == "composite":
+            row["12"] = "Composite"
+        else:
+            A_other = fp2_from_hex(sibling["A"], Fp2, fp_len)
+            Evk = montgomery(A_other)
+            P1 = point(
+                Evk,
+                fp2_from_hex(sibling["VkPx"], Fp2, fp_len),
+                fp2_from_hex(sibling["VkPy"], Fp2, fp_len),
+            )
+            P2 = point(
+                Evk,
+                fp2_from_hex(sibling["VkQx"], Fp2, fp_len),
+                fp2_from_hex(sibling["VkQy"], Fp2, fp_len),
+            )
+            degree = (1 << (2 * e_prime - 1)) - scalar**2
+            row["12"] = chain_verdict(path, s=scalar, q=degree, P1=P1, P2=P2)
+        print(f"  12 -> {row['12']}", flush=True)
+
+        # 13. item 7 already never took Model. Item 10 with Model disabled.
+        thirteen_models = []
+        accepted = False
+        for curve, coefficient, left, right in transported:
+            left = renormalize(left)
+            right = renormalize(right)
+            if not canonical_sign(left[1]):
+                thirteen_models.append("Sign")
+                continue
+            verdict = chain_verdict(path, Psig=left, Qsig=right, Esig=curve, s=ZZ(rows["s"]), q=ZZ(rows["q"]))
+            thirteen_models.append(verdict)
+            if verdict == "Ok":
+                accepted = True
+        seven_ok = any(item.endswith(":Ok") for item in seven)
+        row["13"] = {
+            "item7_reaches_ok": seven_ok,
+            "item10_without_model": thirteen_models,
+            "any_item10_ok": accepted,
+        }
+        print(f"  13 -> item7_ok={seven_ok} item10={thirteen_models}", flush=True)
+        report[name] = row
+
+    (OUT / "negatives.json").write_text(json.dumps(report, indent=2) + "\n")
+    print("wrote negatives.json", flush=True)
 
 
 def main():
+    if os.environ.get("S5_NEGATIVES") == "1":
+        run_negatives()
+        return
     only = os.environ.get("S5_CHAIN_VECTOR")
     if only is not None:
         path = VECTORS[int(only)]
@@ -534,4 +959,5 @@ def main():
     run_vector(VECTORS[0], run_chains=True)
 
 
-main()
+if os.environ.get("S5_IMPORT") != "1":
+    main()

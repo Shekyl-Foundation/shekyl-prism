@@ -56,6 +56,47 @@ changed.
 ## Known-answer files
 
 Per vector: `*_matrices.json` (`Φ`, `M1`, `M2`, mod-4 reductions, theta
-base changes `N1`, `N2`, chain kernel bases `BK1`, `BK2`). For
-`s5_lvl1.txt`: `*_nulls.json` (theta-null point after every step of both
-chains) and `*_step8.json` (step 8 images).
+base changes `N1`, `N2`, chain kernel bases `BK1`, `BK2`). For every
+vector, both NIST-I keys and both keys at III and V: `*_nulls.json`
+(theta-null point after every step of both chains) and `*_step8.json`
+(step 8 images). Codomain and Image are confirmed on all six.
+
+## Limit of a pairing check (for the §7 arguments)
+
+`e(R₁, R₂) = e(P₁, P₂)^q` holds for every determinant-±1 image of the
+true preimages, not only for the preimage pair. The vk export's Q↔PmQ
+swap emitted `VkP = −P`, `VkQ = Q − P`, a determinant −1 shear. Every
+algebraic check in this model accepted it. The chains did not. A
+pairing-level validation of an exported basis does not identify the pair
+the signature corresponds to. The chain is the check that does.
+
+## §6 negatives (primary vector at each level)
+
+Recorded in `negatives.json`. The challenge scalar is the verifier's
+own `s5_challenge` (cSHAKE, Baillie–PSW), not a second hash.
+
+| # | NIST-I | NIST-III | NIST-V |
+| --- | --- | --- | --- |
+| 1 composite index | Composite | Composite | Composite |
+| 2 next prime index | Image | Image | Image |
+| 3 `(−P, −Q)` | Sign | Sign | Sign |
+| 4 `(P, −Q)` | Codomain | Codomain | Codomain |
+| 5 `P`, `Q` swapped | Sign | Sign | Codomain |
+| 6 one byte of `A_sig` | Kernel | Kernel | Kernel |
+| 7 `E_sig[4]` translates | no Ok (Sign, Codomain, or Image) | same | same |
+| 8 doubled twice | Kernel | Kernel | Kernel |
+| 9 `[3]` and `[2^{e−1}+1]` | Sign, Sign | Codomain, Image | Codomain, Image |
+| 10 other models | Model ×5 | Model ×5 | Model ×5 |
+| 11 other message | Composite | Composite | Composite |
+| 12 other key | Composite | Composite | Composite |
+
+Item 4 is Codomain at every level, where the brief named Kernel: both
+chains finish, and the theta-null points disagree. Item 5 at NIST-V is
+Codomain; at I and III the swapped `P` fails Sign.
+
+Item 13, Model disabled. No translate from item 7 reaches Ok. Of the five
+other Montgomery models, with points transported and the sign
+re-normalized: NIST-I accepts 2, NIST-III accepts 4, NIST-V accepts 4.
+The ones that do not accept are Codomain. Model is what stops those
+accepts. The `(−A, (−x, i·y))` model is among the ones that accept at
+NIST-I.
