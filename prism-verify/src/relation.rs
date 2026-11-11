@@ -559,9 +559,11 @@ mod s5_vectors {
     }
 
     fn assert_vk_basis<L: Level>(text: &str) {
-        // The exporter writes the C canonical basis of E[2^e]. That is the
-        // image of Rust's even_basis after clear_cofactor (multiply by the odd
-        // part of p+1), not the preimage abscissa in full_p.
+        // The exporter writes the C canonical pair (P, Q) of E[2^e] whose
+        // t·σ image is the signature: P is the cleared index point and Q is
+        // the C's difference_point(P, R), which in Rust terms is
+        // difference(even.p, even.q). The exported VkDx is x(P − Q) = x(R),
+        // the cleared −x−A point, which is even_basis.q.
         let sample = sample::<L>(text);
         let coefficient = KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient();
         let hint = basis_hint::<L>(coefficient).unwrap();
@@ -571,12 +573,10 @@ mod s5_vectors {
         let vk_qx = L::ext_decode(&hex_bytes(line(text, "VkQx "))).unwrap();
         let vk_dx = L::ext_decode(&hex_bytes(line(text, "VkDx "))).unwrap();
         let p = even.p.x_affine().expect("P");
-        let q = even.q.x_affine().expect("Q");
-        // C's difference_point on the cleared basis, not clear_cofactor of the
-        // preimage difference: the two need not agree.
-        let d = prism_isogeny::torsion::difference::<L>(coefficient, even.p, even.q)
+        let r = even.q.x_affine().expect("R");
+        let q = prism_isogeny::torsion::difference::<L>(coefficient, even.p, even.q)
             .and_then(|point| point.x_affine())
-            .expect("P−Q");
+            .expect("difference(P, R)");
         assert!(
             p.same(vk_px),
             "{} VkPx disagrees with even_basis.p",
@@ -584,12 +584,12 @@ mod s5_vectors {
         );
         assert!(
             q.same(vk_qx),
-            "{} VkQx disagrees with even_basis.q",
+            "{} VkQx disagrees with difference(P, R)",
             L::NAME
         );
         assert!(
-            d.same(vk_dx),
-            "{} VkDx disagrees with difference(P, Q)",
+            r.same(vk_dx),
+            "{} VkDx disagrees with even_basis.q (R)",
             L::NAME
         );
         // Cleared generators need not satisfy x(Q) = −x(P) − A as affine

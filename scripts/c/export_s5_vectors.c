@@ -442,17 +442,14 @@ static int sign(const char *scratch, const char *scalar_text) {
         return 1;
     }
 
-    /* Emit the verification-key basis from the secret. In this tree the
-     * canonical basis stores Q = difference_point(P, R) and PmQ = R with
-     * x(R) = −x(P) − A. Swap into the Rust even_basis layout before lift
-     * so Q is R and PmQ is the difference. */
+    /* Emit the verification-key basis from the secret, unswapped: the
+     * response is t*sigma of exactly (canonical_basis.P, canonical_basis.Q),
+     * so the exported pair must be that pair (up to one global sign from
+     * lift_basis, which [-1]-composes sigma and is harmless). The earlier
+     * Q<->PmQ swap exported (P, P-Q) instead and silently broke the
+     * correspondence the verifier's Kani construction depends on. */
     ec_curve_t vk_curve = secret.curve;
     ec_basis_t vk_basis = secret.canonical_basis;
-    {
-        ec_point_t swapped = vk_basis.Q;
-        vk_basis.Q = vk_basis.PmQ;
-        vk_basis.PmQ = swapped;
-    }
     jac_point_t vk_p;
     jac_point_t vk_q;
     if (lift_basis(&vk_p, &vk_q, &vk_basis, &vk_curve) == 0) {
