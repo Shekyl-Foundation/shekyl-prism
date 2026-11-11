@@ -222,16 +222,16 @@ static int choose_canonical_model(mont_model_t *out, const mont_model_t *in) {
     if (!two_torsion_roots(&alpha, &beta, &in->a)) {
         return 0;
     }
-    if (!move_two_torsion_at(&candidates[count], in, &alpha)) {
-        return 0;
+    /* A move whose scale is not a square cannot transport y. Skip that
+     * candidate. The coefficient itself needs only sqrt(alpha^2 - 1). */
+    if (move_two_torsion_at(&candidates[count], in, &alpha)) {
+        negate_model(&candidates[count + 1], &candidates[count]);
+        count += 2;
     }
-    negate_model(&candidates[count + 1], &candidates[count]);
-    count += 2;
-    if (!move_two_torsion_at(&candidates[count], in, &beta)) {
-        return 0;
+    if (move_two_torsion_at(&candidates[count], in, &beta)) {
+        negate_model(&candidates[count + 1], &candidates[count]);
+        count += 2;
     }
-    negate_model(&candidates[count + 1], &candidates[count]);
-    count += 2;
 
     int best = 0;
     for (int i = 1; i < count; i++) {

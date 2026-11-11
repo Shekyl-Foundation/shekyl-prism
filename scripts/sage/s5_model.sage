@@ -12,13 +12,25 @@ import json
 import subprocess
 from pathlib import Path
 
-# Sage's run-file copies this script to a temp path; locate the repo from cwd
-# or from an explicit PRISM_ROOT.
-ROOT = Path(__file__).resolve().parents[2]
-if not (ROOT / "external" / "Theta_dim4").is_dir():
-    ROOT = Path.cwd()
-if not (ROOT / "external" / "Theta_dim4").is_dir():
-    ROOT = Path(os.environ.get("PRISM_ROOT", "/home/torvaldsl/shekyl/shekyl-prism"))
+# Sage's run-file copies this script to a temp path. The repo is the
+# working directory, or PRISM_ROOT when that is set. There is no fallback
+# path: a missing root is a failed run.
+def find_root():
+    candidates = []
+    if os.environ.get("PRISM_ROOT"):
+        candidates.append(Path(os.environ["PRISM_ROOT"]))
+    candidates.append(Path.cwd())
+    here = Path(__file__).resolve()
+    candidates.append(here.parents[2] if len(here.parents) > 2 else here)
+    for candidate in candidates:
+        if (candidate / "external" / "Theta_dim4").is_dir():
+            return candidate
+    raise SystemExit(
+        "shekyl-prism root not found (set PRISM_ROOT, or run from the repo)"
+    )
+
+
+ROOT = find_root()
 sys.path.insert(0, str(ROOT / "external" / "Theta_dim4" / "Theta_dim4_sage"))
 
 from sage.all import (
@@ -116,17 +128,23 @@ def rhs_square(A, x):
 
 
 def basis_index(A, e, odd, lam):
-    """Spec index search, independently of Rust (brief §4.1)."""
+    """The verifier's index search.
+
+    `1 + b^2` is tested in `F_p`. Testing it as an integer square accepts
+    an index whose abscissa lies on the quadratic twist.
+    """
     bound = 2 * lam
+    prime = A.parent().characteristic()
+    base = GF(prime)
     square = A.is_square()
     Fp2 = A.parent()
     i = Fp2.gen()
     assert i**2 == -1
     if square:
         for b in range(1, bound + 1):
-            if (1 + b * b).is_square():
+            if base(1 + b * b).is_square():
                 continue
-            z = 1 + i * b
+            z = 1 + i * ZZ(b)
             # A^2 (z-1) - z^2 non-square
             if not ((A * A) * (z - 1) - z * z).is_square():
                 return ZZ(b), True
@@ -319,18 +337,17 @@ def run_vector(path, run_chains=True, soft=None):
     claim("Ran", f"{path.name} basis index", f"index={index} square={square}")
     xp = abscissa(A, index, square)
     xr = -xp - A
-    # The index abscissa may lie on the quadratic twist; the x-only ladder
-    # still clears the cofactor. Compare x after [odd] when a lift exists,
-    # otherwise compare the exported VkDx against −x(P)−A style relations.
-    if rhs_square(A, xp):
-        Pclr = clear_odd(Evk, Evk.lift_x(xp), odd)
-        if Pclr[0] != Pvk[0] and (-Pclr)[0] != Pvk[0]:
-            fail(f"{path.name} VkP", "derived cleared P disagrees with export")
-        claim("Ran", f"{path.name} VkP matches cleared index abscissa", "")
-    else:
-        # Twist case (common when A is square): confirm the export is order 2^e
-        # and that x(Q)+x(P)+A = 0 for VkQ = R after the exporter swap.
-        claim("Ran", f"{path.name} index abscissa on twist; trust export", f"index={index}")
+    # The search names a point on the curve. An abscissa on the twist is a
+    # failed search, not a vector the export is trusted to repair.
+    if not rhs_square(A, xp):
+        fail(
+            f"{path.name} index abscissa",
+            f"not on the curve (index {index}, square={square})",
+        )
+    Pclr = clear_odd(Evk, Evk.lift_x(xp), odd)
+    if Pclr[0] != Pvk[0] and (-Pclr)[0] != Pvk[0]:
+        fail(f"{path.name} VkP", "derived cleared P disagrees with export")
+    claim("Ran", f"{path.name} VkP matches cleared index abscissa", "")
     # The exporter emits the preimage pair itself: (VkP, VkQ) is, up to one
     # global sign, the C canonical basis (P, Q) whose t*sigma image is the
     # signature. VkDx cross-checks the pair. (The earlier export swapped
@@ -371,7 +388,11 @@ def run_vector(path, run_chains=True, soft=None):
     left = weil_pairing_pari(R1, R2, order)
     right = weil_pairing_pari(P1, P2, order) ** q
     if left != right:
-        fail(f"{path.name} Weil", "e(R1,R2) != e(P1,P2)^q")
+        # After order and span, before any chain. A mismatch is Pairing
+        # whether or not the chains would have finished.
+        if soft is not None:
+            return "Pairing"
+        fail(f"{path.name} Pairing", "e(R1,R2) != e(P1,P2)^q")
     claim("Ran", f"{path.name} Weil e(R1,R2)=e(P1,P2)^q", "")
     lamb = inverse_mod(q, order)
     # Symplectic product basis (§2a): e(P1,P2)=e(R1,[λ]R2)
@@ -680,10 +701,13 @@ def other_models(A, P, Q):
     return others
 
 
-def renormalize(point):
-    if canonical_sign(point[1]):
-        return point
-    return -point
+def normalize_joint(left, right):
+    """Negate both points or neither, decided by `left`."""
+    if left[1] == 0:
+        return left, right
+    if canonical_sign(left[1]):
+        return left, right
+    return -left, -right
 
 
 def order4_translates(curve):
@@ -704,16 +728,24 @@ def chain_verdict(path, **soft):
             if os.environ.get("S5_CHAIN_EXC") == "1":
                 print(f"  chain exception: {type(err).__name__}: {err}", flush=True)
             return "Kernel"
-        if verdict in ("Ok", "Kernel", "Codomain", "Image"):
+        if verdict in ("Ok", "Kernel", "Pairing", "Codomain", "Image"):
             return verdict
         return "Kernel"
     finally:
         fail.soft = False
 
 
+def first_prime_index(level, key_hex, message, start=0, limit=800):
+    for candidate in range(start, start + limit):
+        scalar, prime = challenge_scalar(level, key_hex, message, candidate)
+        if prime == "prime":
+            return candidate, scalar
+    return None, None
+
+
 def run_negatives():
-    """§6, primary vector at each level. Chain verdicts use the accept path."""
-    primary = [VECTORS[0], VECTORS[1], VECTORS[2]]
+    """§6 on both keys at each level. Chain verdicts use the accept path."""
+    primary = list(VECTORS)
     report = {}
     for path in primary:
         rows = load_vector(path)
@@ -786,11 +818,9 @@ def run_negatives():
             row["4"] = chain_verdict(path, Qsig=-Q)
         print(f"  4 -> {row['4']}", flush=True)
 
-        # 5. swapped
-        if not canonical_sign(Q[1]):
-            row["5"] = "Sign"
-        else:
-            row["5"] = chain_verdict(path, Psig=Q, Qsig=P)
+        # 5. swapped, then normalized jointly. Only row 3 may report Sign.
+        swapped_p, swapped_q = normalize_joint(Q, P)
+        row["5"] = chain_verdict(path, Psig=swapped_p, Qsig=swapped_q)
         print(f"  5 -> {row['5']}", flush=True)
 
         # 6. one byte of A_sig flipped. Sage's preparser can swallow
@@ -826,19 +856,14 @@ def run_negatives():
         translates = order4_translates(Esig)
         seven = []
         for torsion in translates:
-            for label, left, right in (
+            for label, raw_left, raw_right in (
                 ("P", P + torsion, Q),
                 ("Q", P, Q + torsion),
                 ("both", P + torsion, Q + torsion),
             ):
-                if not canonical_sign(left[1]):
+                left, right = normalize_joint(raw_left, raw_right)
+                if left[1] == 0:
                     seven.append(f"{label}:Sign")
-                    continue
-                try:
-                    left.curve()(left[0], left[1])
-                    right.curve()(right[0], right[1])
-                except Exception:
-                    seven.append(f"{label}:Kernel")
                     continue
                 verdict = chain_verdict(path, Psig=left, Qsig=right)
                 seven.append(f"{label}:{verdict}")
@@ -854,85 +879,102 @@ def run_negatives():
         # 9. odd scalars that preserve order
         nine = {}
         for scalar in (ZZ(3), ZZ(1 << (e - 1)) + 1):
-            left = scalar * P
-            right = scalar * Q
-            if not canonical_sign(left[1]):
-                # Record the sign refusal; do not renormalize. The item forbids Ok.
-                nine[str(scalar)] = "Sign"
-            else:
-                nine[str(scalar)] = chain_verdict(path, Psig=left, Qsig=right)
+            left, right = normalize_joint(scalar * P, scalar * Q)
+            nine[str(scalar)] = chain_verdict(path, Psig=left, Qsig=right)
         row["9"] = nine
         print(f"  9 -> {nine}", flush=True)
 
         # 10. the other Montgomery models, sign re-normalized
         ten = []
         transported = other_models(A_sig, P, Q)
-        for curve, coefficient, left, right in transported:
-            left = renormalize(left)
-            right = renormalize(right)
+        normalized_models = []
+        for curve, coefficient, raw_left, raw_right in transported:
+            left, right = normalize_joint(raw_left, raw_right)
+            normalized_models.append((curve, coefficient, left, right))
             if is_least_model(coefficient):
                 ten.append("LEAST")
-                continue
-            if not canonical_sign(left[1]):
+            elif left[1] == 0:
                 ten.append("Sign")
-                continue
-            ten.append("Model")
+            else:
+                ten.append("Model")
         row["10"] = ten
         print(f"  10 -> {ten}", flush=True)
 
-        # 11. different message, same carried index
+        # 11. different message, at an index whose degree is prime
         other_message = message + "-other"
-        scalar, verdict = challenge_scalar(level, key, other_message, index)
-        if verdict == "composite":
-            row["11"] = "Composite"
+        prime_index, scalar = first_prime_index(level, key, other_message)
+        if prime_index is None:
+            row["11"] = "MISSING"
         else:
             degree = (1 << (2 * e_prime - 1)) - scalar**2
             row["11"] = chain_verdict(path, s=scalar, q=degree)
-        print(f"  11 -> {row['11']}", flush=True)
+        print(f"  11 -> {row['11']} index {prime_index}", flush=True)
 
-        # 12. the other key at this level, same signature
+        # 12. the other key, at an index whose degree is prime for that key
         sibling = load_vector(ROOT / "prism-verify" / "testdata" / SIBLING[name])
-        scalar, verdict = challenge_scalar(level, sibling["A"], message, index)
-        if verdict == "composite":
-            row["12"] = "Composite"
+        prime_index, scalar = first_prime_index(level, sibling["A"], message)
+        if prime_index is None:
+            row["12"] = "MISSING"
         else:
             A_other = fp2_from_hex(sibling["A"], Fp2, fp_len)
-            Evk = montgomery(A_other)
-            P1 = point(
-                Evk,
+            other_curve = montgomery(A_other)
+            other_p = point(
+                other_curve,
                 fp2_from_hex(sibling["VkPx"], Fp2, fp_len),
                 fp2_from_hex(sibling["VkPy"], Fp2, fp_len),
             )
-            P2 = point(
-                Evk,
+            other_q = point(
+                other_curve,
                 fp2_from_hex(sibling["VkQx"], Fp2, fp_len),
                 fp2_from_hex(sibling["VkQy"], Fp2, fp_len),
             )
             degree = (1 << (2 * e_prime - 1)) - scalar**2
-            row["12"] = chain_verdict(path, s=scalar, q=degree, P1=P1, P2=P2)
-        print(f"  12 -> {row['12']}", flush=True)
+            row["12"] = chain_verdict(
+                path, s=scalar, q=degree, P1=other_p, P2=other_q
+            )
+        print(f"  12 -> {row['12']} index {prime_index}", flush=True)
 
-        # 13. item 7 already never took Model. Item 10 with Model disabled.
+        # 13. row 10 with Model off. Joint normalization. All five must accept.
         thirteen_models = []
-        accepted = False
-        for curve, coefficient, left, right in transported:
-            left = renormalize(left)
-            right = renormalize(right)
-            if not canonical_sign(left[1]):
+        for curve, coefficient, left, right in normalized_models:
+            if left[1] == 0:
                 thirteen_models.append("Sign")
                 continue
-            verdict = chain_verdict(path, Psig=left, Qsig=right, Esig=curve, s=ZZ(rows["s"]), q=ZZ(rows["q"]))
+            verdict = chain_verdict(
+                path,
+                Psig=left,
+                Qsig=right,
+                Esig=curve,
+                s=ZZ(rows["s"]),
+                q=ZZ(rows["q"]),
+            )
             thirteen_models.append(verdict)
-            if verdict == "Ok":
-                accepted = True
         seven_ok = any(item.endswith(":Ok") for item in seven)
         row["13"] = {
             "item7_reaches_ok": seven_ok,
             "item10_without_model": thirteen_models,
-            "any_item10_ok": accepted,
+            "all_ok": thirteen_models == ["Ok"] * 5,
         }
         print(f"  13 -> item7_ok={seven_ok} item10={thirteen_models}", flush=True)
+
+        # 14. determinant-one transforms of the signature pair
+        fourteen = {}
+        for label, raw_left, raw_right in (
+            ("Q+P", P, Q + P),
+            ("P+Q", P + Q, Q),
+            ("Q,-P", Q, -P),
+        ):
+            left, right = normalize_joint(raw_left, raw_right)
+            fourteen[label] = chain_verdict(path, Psig=left, Qsig=right)
+        row["14"] = fourteen
+        print(f"  14 -> {fourteen}", flush=True)
         report[name] = row
+        (OUT / "negatives.json").write_text(json.dumps(report, indent=2) + "\n")
+        if not row["13"]["all_ok"]:
+            fail(
+                f"{name} item 13",
+                f"a transported model did not accept: {thirteen_models}",
+            )
 
     (OUT / "negatives.json").write_text(json.dumps(report, indent=2) + "\n")
     print("wrote negatives.json", flush=True)

@@ -70,33 +70,40 @@ algebraic check in this model accepted it. The chains did not. A
 pairing-level validation of an exported basis does not identify the pair
 the signature corresponds to. The chain is the check that does.
 
-## §6 negatives (primary vector at each level)
+## Index search
 
-Recorded in `negatives.json`. The challenge scalar is the verifier's
-own `s5_challenge` (cSHAKE, Baillie–PSW), not a second hash.
+The first search tested `1 + b^2` as an integer square. Under that test
+`s5_lvl3.txt` and `s5_lvl5.txt` (`A` a square) named an abscissa on the
+twist. The verifier tests `1 + b^2` in `F_p`. With that test every
+committed vector's abscissa is on the curve (`s5_lvl3.txt` index 10,
+`s5_lvl5.txt` index 4), and an abscissa off the curve is a failure.
 
-| # | NIST-I | NIST-III | NIST-V |
-| --- | --- | --- | --- |
-| 1 composite index | Composite | Composite | Composite |
-| 2 next prime index | Image | Image | Image |
-| 3 `(−P, −Q)` | Sign | Sign | Sign |
-| 4 `(P, −Q)` | Codomain | Codomain | Codomain |
-| 5 `P`, `Q` swapped | Sign | Sign | Codomain |
-| 6 one byte of `A_sig` | Kernel | Kernel | Kernel |
-| 7 `E_sig[4]` translates | no Ok (Sign, Codomain, or Image) | same | same |
-| 8 doubled twice | Kernel | Kernel | Kernel |
-| 9 `[3]` and `[2^{e−1}+1]` | Sign, Sign | Codomain, Image | Codomain, Image |
-| 10 other models | Model ×5 | Model ×5 | Model ×5 |
-| 11 other message | Composite | Composite | Composite |
-| 12 other key | Composite | Composite | Composite |
+## §6 after joint normalization and the pairing check
 
-Item 4 is Codomain at every level, where the brief named Kernel: both
-chains finish, and the theta-null points disagree. Item 5 at NIST-V is
-Codomain; at I and III the swapped `P` fails Sign.
+Both keys at each level. Sign is decided on `P` after negating both
+points or neither. `Pairing` is `e(R_1, R_2) = e(P_1, P_2)^q` before
+either chain. No row differs from the expected set.
 
-Item 13, Model disabled. No translate from item 7 reaches Ok. Of the five
-other Montgomery models, with points transported and the sign
-re-normalized: NIST-I accepts 2, NIST-III accepts 4, NIST-V accepts 4.
-The ones that do not accept are Codomain. Model is what stops those
-accepts. The `(−A, (−x, i·y))` model is among the ones that accept at
-NIST-I.
+| # | All six vectors |
+| --- | --- |
+| 1 | Composite |
+| 2 | Image |
+| 3 | Sign |
+| 4 | Pairing |
+| 5 | Pairing |
+| 6 | Kernel |
+| 7 | 30 Pairing, 6 Codomain; never Ok |
+| 8 | Kernel |
+| 9 | `[3]` Pairing, `[2^{e-1}+1]` Image |
+| 10 | Model, five times |
+| 11 | Image, at a prime index |
+| 12 | Pairing, at a prime index for the other key |
+| 13 | Ok five times, with Model off |
+| 14 | Codomain for `(P, Q+P)`, `(P+Q, Q)`, `(Q, -P)` |
+
+## Basis rule
+
+Over 101 keys at each level (the committed `A` plus 100 samples), Rust's
+`P` and `R` match the C basis, and the C `Q` is the cofactor-cleared
+difference on every key. The uncleared `[f]`-difference matches `Q` on
+44 / 50 / 50 keys at I / III / V. `c-vectors` asserts the cleared one.

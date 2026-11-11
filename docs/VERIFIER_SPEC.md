@@ -380,6 +380,40 @@ step; bytes per input are half of the authorization-leg cost question.
 NIST I is 322 bytes, NIST III is 482 bytes, NIST V is 642 bytes. Wrong
 length or a non-canonical element is a refusal.
 
+## Accept-path model findings (2026-11-11)
+
+These are what `scripts/sage/s5_model.sage` established. They are not yet
+what `relation.rs` does: that file is still the transitional chain, and
+the port replaces it.
+
+- A pairing check `e(R₁, R₂) = e(P₁, P₂)^q`, with `R_i = [s]` of the
+  signature points, pins the determinant of the basis change and nothing
+  more. It is what makes every kernel handed to a chain isotropic. It is
+  not a proof that the pair is the signature's preimage: any
+  determinant-one image of the true pair, including `(P, Q+P)`, passes it.
+- A chain that finishes proves nothing about the pair. The transitional
+  chain pairs `R = P − Q` with `Q_sig` and still reaches both readings.
+- `Codomain` does not depend on `s`. The kernel is the graph of
+  `P ↦ P_sig` for any odd `s`. Row 2 of the model negatives, the next
+  prime index, is `Image`, not `Codomain`. `Image` is the check that
+  binds the message.
+- Some order-4 translates pass `Codomain` and are refused only by the
+  second component of step 8. That component is required for strong
+  unforgeability.
+
+The Montgomery class of `E_sig` has up to six coefficients: `±A`, and for
+each rational 2-torsion abscissa `α ≠ 0` the two signs of
+`(3α + A) / λ` with `λ² = α² − 1`. The coefficient is in `F_{p²}` when
+`α² − 1` is a square. Transporting `y` also divides by `λ^{3/2}`, so the
+exporter needs `λ` itself to be a square. The verifier's `Model` check
+compares coefficients and does not transport points, so it does not use
+that second test. The exporter skips a move it cannot transport, rather
+than aborting the choice. On a curve with rational `2^e`-torsion and
+`e ≥ 3`, `[4]` is surjective from the rational 8-torsion onto the
+2-torsion, so each nontrivial 2-torsion point has a rational point of
+order 8 above it; both moves on each of the six committed signature
+curves have `λ` a square, which is the condition that transport needs.
+
 ## Open questions
 
 Not built. ePrint 2026/2312 instantiates `RandPK` / `RandSK` on its own

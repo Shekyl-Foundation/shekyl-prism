@@ -210,10 +210,15 @@ jobs:
           submodules: true
       - name: Compiler
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential cmake
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
       - name: Rebuild the vectors from the pin
         run: python3 scripts/export_c_basis_hints.py
       - name: The committed vectors match
         run: bash scripts/ci/diff_testdata.sh
+      - name: C Q is the cleared difference
+        run: python3 scripts/check_even_basis.py 100
 
   codeql:
     name: codeql

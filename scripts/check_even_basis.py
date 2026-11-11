@@ -9,7 +9,10 @@
 The C basis stores ``P``, ``Q = difference_point(P, R)`` and ``PmQ = R``,
 where ``x(R) = -x(P) - A``. Rust's ``even_basis`` stores ``P`` and ``R``,
 and stores ``[f]`` of the difference of the points before the cofactor.
-This script reports which of Rust's two differences equals the C ``Q``.
+C ``Q`` is Rust's cofactor-cleared difference of ``P`` and ``R``, on every
+key this script has been given. The uncleared ``[f]``-difference agrees
+on only about half of them. A key where ``Q`` is not the cleared
+difference is a failure.
 """
 
 import pathlib
@@ -147,10 +150,14 @@ def main():
             row = compare(level, coefficient, binary, exponent)
             for key, ok in row.items():
                 tallies[key] += int(ok)
-            if not (row["p"] and row["r"] and (row["cleared"] or row["cofactor"])):
+            # C's Q is the cofactor-cleared difference, on every key.
+            # The uncleared [f]-difference agrees on only about half of them.
+            if not (row["p"] and row["r"] and row["cleared"]):
                 failures += 1
                 print(f"{level} mismatch {coefficient[:16]}… {row}", flush=True)
         total = len(coefficients)
+        if tallies["cleared"] != total or tallies["p"] != total or tallies["r"] != total:
+            failures += 1
         print(
             f"{level} {total} keys  P {tallies['p']}  R {tallies['r']}  "
             f"diff(cleared) {tallies['cleared']}  [f]diff {tallies['cofactor']}",
