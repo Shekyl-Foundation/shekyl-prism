@@ -77,14 +77,16 @@ The signature does not carry `s`. The derived challenge scalar is `e − 3`
 bits wide, which is `e′ − 1`. At Table 2's three levels that is the same
 byte length as the `e − 1` width.
 
-The instantiated verifier walks a chain of length `e′`. Levels I and III
-of the §5 vectors pass the order and span checks, the kernel glues, and
-the pushed points evaluate. An isogeny step then stops — step 2 at level
-I, step 1 at level III — and that stop is `Kernel`. Level V stops earlier:
-the first on-curve basis point does not have order `p + 1`. Both readings
-are not produced, so none of the three is `Unidentified`. The dual-basis
-identification is not built. The Nakagawa–Onuki recheck below cleared the
-degrees: no `q` in the `e′` window meets the small-extension bound.
+The instantiated verifier walks a chain of length `e′`. The kernel is the
+canonical basis of `E_vk[2^e]`, with `x(Q) = −x(P) − A`, doubled twice to
+order `2^{e′}`. Levels I and III of the §5 vectors reach both readings, so
+the result is `Unidentified`. `(P, −Q)` stops at isogeny step 1. Level V's
+honest vector stops at isogeny step 1, and `(P, −Q)` is the one that
+reaches both readings. The cause of that relative sign is open. Level V's
+index point is still not of order `p + 1`; the verify path does not consult
+that search. The dual-basis identification is not built. The
+Nakagawa–Onuki recheck below cleared the degrees: no `q` in the `e′`
+window meets the small-extension bound.
 
 A third reading for the authors — whether the §5 chain was meant to run
 two steps shorter than the rational 2-torsion — is held. It goes out with
@@ -247,13 +249,11 @@ what this verifier conforms to.
 
 `verify` then runs one chain of length `e′` on
 `K = ⟨(P_vk, −P_sig), (Q_vk, −Q_sig)⟩`, and does not split the codomain.
-The chain is evaluated at `([s]X, 0)` and `([2^{e′−1}]X, 0)` for
-`X ∈ {R, T, R−T}`. `(R, T)` is a basis of `E_vk[p+1]`, specified under
-"How step 8 compares points". The images of `([s]X, 0)` would be read at
-step `e′ − 1`, and the images of `([2^{e′−1}]X, 0)` at step `e′`. The §5
-vectors do not reach either reading: levels I and III stop at an isogeny
-step, and level V stops because its basis point is not order `p + 1`. A
-signature point that is not on `E_sig`, or a chain that stops before both
+The chain is evaluated at `([s]X, 0)` and `([2^{e′−1}]X, 0)` for `X` in
+the canonical basis of `E_vk[2^e]`. The images of `([s]X, 0)` would be read
+at step `e′ − 1`, and the images of `([2^{e′−1}]X, 0)` at step `e′`. Levels
+I and III reach both readings. Level V's honest vector stops at isogeny
+step 1. A signature point that is not on `E_sig`, or a chain that stops before both
 readings, is `Kernel`. Both readings existing is `Unidentified`: the
 transformation between the structures is open, so the comparison is not
 decided and the function does not return success. The degree-`q` witness in
@@ -318,10 +318,9 @@ of a vector here is the smallest prime index. One vector per level is
 `dim2id2iso_arbitrary_isogeny_evaluation`, with `t = s^{-1} mod 2^{e′}`
 and the image doubled down to `E[2^{e′}]`. The `q` line of each file is
 one degree at `e′`. The small-extension sample is the thousand degrees
-per level in Small-extension torsion, not these three lines. The relation derives `s_j` at `e′`. Levels I and III enter the
-length-`e′` chain, the kernel glues, and an isogeny step returns
-`Kernel`. Level V returns `Kernel` before the chain, because the basis
-point is not order `p + 1`.
+per level in Small-extension torsion, not these three lines. The relation derives `s_j` at `e′` and runs the length-`e′` chain on the
+canonical basis. Levels I and III reach both readings (`Unidentified`).
+Level V stops at isogeny step 1 (`Kernel`).
 
 The hit rate per candidate is low, so recomputing the search in the verifier
 lets an attacker grind messages whose search runs long and make every node

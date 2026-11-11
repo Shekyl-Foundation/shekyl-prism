@@ -5,10 +5,10 @@
 
 //! Algorithm 3 steps 3–8, at exponent `e′ = e − 2`.
 //!
-//! One chain of length `e′` on the order-`2^{e′}` kernel. The verification
-//! key's even basis has order `2^e` and is doubled twice to meet the
-//! signature points. The chain is evaluated at `([s]X, 0)` and
-//! `([2^{e′−1}]X, 0)` for `X ∈ {R, T, R−T}`.
+//! One chain of length `e′`. On a public key the kernel is the canonical
+//! basis of `E_vk[2^e]`, `x(Q) = −x(P) − A`, doubled twice to order
+//! `2^{e′}` to meet the committed signature points. The chain is evaluated
+//! at `([s]X, 0)` and `([2^{e′−1}]X, 0)` for that same basis.
 //!
 //! The x-only kernel cannot tell `+P_sig` from `−P_sig`. The dual-basis
 //! section of `docs/VERIFIER_SPEC.md` fixes that sign, and it is not built
@@ -19,7 +19,7 @@ use prism_isogeny::chain::{chain_surface, SurfaceStop};
 use prism_isogeny::gluing::{Couple, Kernel};
 use prism_isogeny::jac::{add, to_xz, Jac};
 use prism_isogeny::montgomery::{a24, ladder, Montgomery, Xz};
-use prism_isogeny::torsion::{double_times, rational_basis, starting_basis, RationalBasis};
+use prism_isogeny::torsion::{double_times, even_basis, starting_basis, EvenBasis};
 
 use crate::basis::basis_hint;
 use crate::challenge::ChallengeScalar;
@@ -52,13 +52,18 @@ pub fn relate_points<L: Level>(
     q_sig: AffinePoint<L>,
     scalar: &[u8],
 ) -> Result<(), VerifyError> {
-    let basis = if vk.is_zero() {
-        starting_basis::<L>()
+    // The starting curve keeps its `E[p+1]` basis: the degree-`q` witness
+    // was built from that basis. A public key uses the canonical basis of
+    // `E[2^e]`, whose second point is `x(Q) = −x(P) − A`.
+    let (even, push) = if vk.is_zero() {
+        let basis = starting_basis::<L>().ok_or(VerifyError::Kernel)?;
+        (basis.even, [basis.r, basis.t, basis.difference])
     } else {
         let hint = basis_hint::<L>(vk)?;
-        rational_basis::<L>(vk, hint.index(), hint.coefficient_is_square())
-    }
-    .ok_or(VerifyError::Kernel)?;
+        let even = even_basis::<L>(vk, hint.index(), hint.coefficient_is_square())
+            .ok_or(VerifyError::Kernel)?;
+        (even, [even.p, even.q, even.difference])
+    };
     if !on_curve::<L>(sig, p_sig.x, p_sig.y) || !on_curve::<L>(sig, q_sig.x, q_sig.y) {
         return Err(VerifyError::Kernel);
     }
@@ -70,7 +75,7 @@ pub fn relate_points<L: Level>(
     if !span_e_prime::<L>(sig, p_sig_x, q_sig_x) {
         return Err(VerifyError::Kernel);
     }
-    let readings = match e_prime_surface::<L>(vk, &basis, sig, p_sig, q_sig, scalar) {
+    let readings = match e_prime_surface::<L>(vk, &even, push, sig, p_sig, q_sig, scalar) {
         Ok(readings) => readings,
         // A glued kernel whose one-factor point does not stay one-factor,
         // and a kernel that never glues, are both a chain that stopped.
@@ -90,7 +95,8 @@ pub fn relate_points<L: Level>(
 /// order and span checks.
 fn e_prime_surface<L: Level>(
     vk: L::Ext,
-    basis: &RationalBasis<L::Ext>,
+    even: &EvenBasis<L::Ext>,
+    push: [Xz<L::Ext>; 3],
     sig: L::Ext,
     p_sig: AffinePoint<L>,
     q_sig: AffinePoint<L>,
@@ -100,20 +106,20 @@ fn e_prime_surface<L: Level>(
     let q_sig_x = Xz::affine(q_sig.x);
     let kernel = Kernel {
         t1: Couple {
-            first: double_times::<L>(vk, basis.even.p, 2),
+            first: double_times::<L>(vk, even.p, 2),
             second: p_sig_x,
         },
         t2: Couple {
-            first: double_times::<L>(vk, basis.even.q, 2),
+            first: double_times::<L>(vk, even.q, 2),
             second: q_sig_x,
         },
         difference: Couple {
-            first: double_times::<L>(vk, basis.even.difference, 2),
+            first: double_times::<L>(vk, even.difference, 2),
             second: difference::<L>(sig, p_sig.x, p_sig.y, q_sig.x, q_sig.y),
         },
     };
     let curves = [Montgomery::normalized(vk), Montgomery::normalized(sig)];
-    let points = pushed::<L>(vk, basis, scalar);
+    let points = pushed::<L>(vk, push, scalar);
     chain_surface(L::E - 2, curves, kernel, false, &points, true)
 }
 
@@ -131,16 +137,11 @@ fn span_e_prime<L: Level>(coefficient: L::Ext, p: Xz<L::Ext>, q: Xz<L::Ext>) -> 
     !p2.is_infinity() && !q2.is_infinity() && !p2.x.mul(q2.z).same(q2.x.mul(p2.z))
 }
 
-fn pushed<L: Level>(
-    vk: L::Ext,
-    basis: &RationalBasis<L::Ext>,
-    scalar: &[u8],
-) -> [Couple<L::Ext>; 6] {
+fn pushed<L: Level>(vk: L::Ext, bases: [Xz<L::Ext>; 3], scalar: &[u8]) -> [Couple<L::Ext>; 6] {
     let at = |point: Xz<L::Ext>| Couple {
         first: point,
         second: Xz::infinity(),
     };
-    let bases = [basis.r, basis.t, basis.difference];
     [
         at(scale::<L>(vk, bases[0], scalar)),
         at(scale::<L>(vk, bases[1], scalar)),
@@ -374,7 +375,46 @@ mod s5_vectors {
         }
     }
 
-    fn honest<L: Level>(text: &str, chain_step: Option<u32>) {
+    /// Both readings, or the isogeny step that stopped the chain.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum Stop {
+        Readings,
+        Step(u32),
+    }
+
+    fn surface_stop<L: Level>(sample: &Sample<L>, q_sign: L::Ext) -> Stop {
+        let coefficient = KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient();
+        let hint = basis_hint::<L>(coefficient).unwrap();
+        let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
+            .expect("the index names a point");
+        assert!(even.full_q.x.same(even.full_p.x.add(coefficient).negate()));
+        let mut q = sample.response.q;
+        q.y = q_sign;
+        match e_prime_surface::<L>(
+            coefficient,
+            &even,
+            [even.p, even.q, even.difference],
+            sample.response.curve,
+            sample.response.p,
+            q,
+            &sample.scalar,
+        )
+        .err()
+        {
+            None => Stop::Readings,
+            Some(SurfaceStop::Step(step)) => Stop::Step(step),
+            Some(other) => panic!("chain stopped at {other:?}"),
+        }
+    }
+
+    fn refusal(stop: Stop) -> VerifyError {
+        match stop {
+            Stop::Readings => VerifyError::Unidentified,
+            Stop::Step(_) => VerifyError::Kernel,
+        }
+    }
+
+    fn honest<L: Level>(text: &str, chain: Stop, negated_q: Stop, full_order: bool) {
         let sample = sample::<L>(text);
         assert!(
             basis_hint::<L>(KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient()).is_ok()
@@ -398,41 +438,25 @@ mod s5_vectors {
         assert!(order_e_prime::<L>(sample.response.curve, q));
         assert!(span_e_prime::<L>(sample.response.curve, p, q));
         let hint = basis_hint::<L>(coefficient).unwrap();
-        match chain_step {
-            Some(step) => {
-                let basis =
-                    rational_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
-                        .expect("the key has a basis");
-                // Order and span passed, the basis exists, and the chain
-                // stops at this isogeny step: not at gluing, and not at the
-                // one-factor image.
-                assert_eq!(
-                    e_prime_surface::<L>(
-                        coefficient,
-                        &basis,
-                        sample.response.curve,
-                        sample.response.p,
-                        sample.response.q,
-                        &sample.scalar,
-                    )
-                    .err(),
-                    Some(SurfaceStop::Step(step))
-                );
-            }
-            None => {
-                // The index names a point, and that point is not order
-                // `p + 1`, so the relation stops before the chain.
-                let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
-                    .expect("the index names a point");
-                assert!(!has_order_p_plus_one::<L>(coefficient, even.full_p));
-                assert!(rational_basis::<L>(
-                    coefficient,
-                    hint.index(),
-                    hint.coefficient_is_square(),
-                )
-                .is_none());
-            }
-        }
+        assert_eq!(
+            has_order_p_plus_one::<L>(
+                coefficient,
+                even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
+                    .unwrap()
+                    .full_p,
+            ),
+            full_order
+        );
+        assert_eq!(
+            rational_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square()).is_some(),
+            full_order
+        );
+        assert_eq!(
+            surface_stop::<L>(&sample, sample.response.q.y),
+            chain,
+            "{}",
+            L::NAME
+        );
         assert_eq!(
             relate_points::<L>(
                 coefficient,
@@ -441,13 +465,12 @@ mod s5_vectors {
                 sample.response.q,
                 &sample.scalar,
             ),
-            Err(VerifyError::Kernel)
+            Err(refusal(chain))
         );
-        // The degree is prime at e', so verify reaches the same chain
-        // refusal rather than Composite.
+        // The degree is prime at e', so verify reaches the chain.
         assert_eq!(
             verify::<L>(&sample.key, b"shekyl-prism-s5", &sample.response.encode()),
-            Err(VerifyError::Kernel)
+            Err(refusal(chain))
         );
 
         let mut wrong_sign = sample.response;
@@ -483,21 +506,27 @@ mod s5_vectors {
         // refusal, once the exponent is e', is Composite, before the chain.
         assert!(!degree_is_prime(L::E - 2, next_scalar.as_bytes()));
 
-        // (P, −Q) keeps the normalized y(P) and the same order. The
-        // x-only chain refuses it with the same `Kernel` as the honest
-        // vector. The stop inside the chain is not the same at every level.
-        let mut negated_q = sample.response;
-        negated_q.q.y = negated_q.q.y.negate();
-        assert!(canonical_sign::<L>(negated_q.p.y));
+        // (P, −Q) keeps the normalized y(P). Its chain stop is the
+        // caller's: step 1 where the honest vector reaches both readings,
+        // and both readings at level V.
+        let mut negated = sample.response;
+        negated.q.y = negated.q.y.negate();
+        assert!(canonical_sign::<L>(negated.p.y));
+        assert_eq!(
+            surface_stop::<L>(&sample, negated.q.y),
+            negated_q,
+            "{}",
+            L::NAME
+        );
         assert_eq!(
             relate_points::<L>(
                 coefficient,
-                negated_q.curve,
-                negated_q.p,
-                negated_q.q,
+                negated.curve,
+                negated.p,
+                negated.q,
                 &sample.scalar,
             ),
-            Err(VerifyError::Kernel)
+            Err(refusal(negated_q))
         );
 
         let swapped = Response {
@@ -525,11 +554,28 @@ mod s5_vectors {
     }
 
     #[test]
-    fn the_s5_vectors_stop_at_a_named_stage() {
-        // Levels I and III enter the chain and stop at an isogeny step.
-        // Level V's first on-curve basis point is not order `p + 1`.
-        honest::<Level1>(include_str!("../testdata/s5_lvl1.txt"), Some(2));
-        honest::<Level3>(include_str!("../testdata/s5_lvl3.txt"), Some(1));
-        honest::<Level5>(include_str!("../testdata/s5_lvl5.txt"), None);
+    fn the_canonical_kernel_reaches_both_readings_except_at_level_v() {
+        // The earlier step-2 and step-1 stops were the kernel's second
+        // point, which was the small-integer `T` rather than `x(Q) = −x(P) − A`.
+        // Level V's honest vector still stops at step 1, and `(P, −Q)` is
+        // the vector that reaches both readings.
+        honest::<Level1>(
+            include_str!("../testdata/s5_lvl1.txt"),
+            Stop::Readings,
+            Stop::Step(1),
+            true,
+        );
+        honest::<Level3>(
+            include_str!("../testdata/s5_lvl3.txt"),
+            Stop::Readings,
+            Stop::Step(1),
+            true,
+        );
+        honest::<Level5>(
+            include_str!("../testdata/s5_lvl5.txt"),
+            Stop::Step(1),
+            Stop::Readings,
+            false,
+        );
     }
 }
