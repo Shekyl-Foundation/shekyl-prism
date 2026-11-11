@@ -1,3 +1,6 @@
 [submodule "external/PRISM_v2"]
 	path = external/PRISM_v2
 	url = https://github.com/mariascrs/PRISM_v2
+[submodule "external/Theta_dim4"]
+	path = external/Theta_dim4
+	url = https://github.com/Pierrick-Dartois/Theta_dim4.git
