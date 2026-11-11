@@ -270,29 +270,27 @@ def run_vector(path, run_chains=True):
         # Twist case (common when A is square): confirm the export is order 2^e
         # and that x(Q)+x(P)+A = 0 for VkQ = R after the exporter swap.
         claim("Ran", f"{path.name} index abscissa on twist; trust export", f"index={index}")
-    # Exporter swaps C's (Q, PmQ)=(difference, R) so VkQ is R with
-    # x(R)=−x(P)−A on the full preimages; after clearing, compare x-sum.
-    # The signature is the image of C's (P, difference).
-    if (Qvk[0] + Pvk[0] + A) == 0:
-        claim("Ran", f"{path.name} VkQ satisfies x(P)+x(Q)+A=0 (R)", "")
-        P2_sig = Pvk - Qvk
-    else:
-        claim("Ran", f"{path.name} VkQ is difference (no x-sum zero)", "")
-        P2_sig = Qvk
-
+    # The exporter emits the preimage pair itself: (VkP, VkQ) is, up to one
+    # global sign, the C canonical basis (P, Q) whose t*sigma image is the
+    # signature. VkDx cross-checks the pair. (The earlier export swapped
+    # Q and PmQ, emitting (P, P-Q); the instrumented exporter run recorded
+    # in the report established the correspondence.)
     P1 = Pvk
-    P2 = P2_sig    # §3 independent validation: e(R1,R2) = e(P1,P2)^q
+    P2 = Qvk
+    if "VkDx" in rows:
+        if fp2_from_hex(rows["VkDx"], Fp2, fp_len) != (P1 - P2)[0]:
+            fail(f"{path.name} VkDx", "x(VkP - VkQ) differs from VkDx")
+        claim("Ran", f"{path.name} VkDx = x(VkP-VkQ)", "")
+
+    # §3 independent validation: e(R1,R2) = e(P1,P2)^q. A global sign on
+    # the exported pair is [-1] composed into sigma and cancels here; any
+    # mismatch is an exporter regression, not something to repair.
     R1 = s * Psig
     R2 = s * Qsig
     left = weil_pairing_pari(R1, R2, order)
     right = weil_pairing_pari(P1, P2, order) ** q
     if left != right:
-        # Orientation of P2
-        if left == weil_pairing_pari(P1, -P2, order) ** q:
-            P2 = -P2
-            claim("Ran", f"{path.name} P2 sign flipped for Weil", "")
-        else:
-            fail(f"{path.name} Weil", f"e(R1,R2) != e(P1,±P2)^q")
+        fail(f"{path.name} Weil", "e(R1,R2) != e(P1,P2)^q")
     claim("Ran", f"{path.name} Weil e(R1,R2)=e(P1,P2)^q", "")
     lamb = inverse_mod(q, order)
     # Symplectic product basis (§2a): e(P1,P2)=e(R1,[λ]R2)
@@ -343,28 +341,37 @@ def run_vector(path, run_chains=True):
         fail(f"{path.name} K″2 isotropic", f"pairing={e_prod2}")
     claim("Derived", f"{path.name} K″2 isotropic", "confirmed")
 
-    # Symplectic matrices (§4.4)
+    # Symplectic matrices (§4.4): exact dim-2 reduction of Dartois's
+    # starting_two_symplectic_matrices. Only M2 is freshly completed; M1 is
+    # the block matrix [complement of M1_0 | −Φ̂(complement of M2)] — it is
+    # NOT re-completed, and its symplecticity is a theorem being checked.
     M1_0 = complete_symplectic_matrix_dim2(C1, D1, order)
     if not is_symplectic_matrix_dim2(M1_0):
         fail(f"{path.name} M1_0", "not symplectic")
     # Complement half = left two columns
     complement = M1_0.matrix_from_columns([0, 1])
-    # Φ of complement → kernel half of M2
-    phi_comp = Mphi * complement
-    C2 = phi_comp.matrix_from_rows([0, 1])
-    D2 = phi_comp.matrix_from_rows([2, 3])
-    # K″2 is [2]⟨…⟩, so work mod 2^{e-1} for the short chain's matrix?
-    # Brief: complete K″1 to M1_0; kernel half of M2 is Φ of complement of M1_0.
+    # Φ of complement → kernel half of M2 (isotropic lift above ker Φ̃2)
+    block_right2 = Mphi * complement
+    C2 = block_right2.matrix_from_rows([0, 1])
+    D2 = block_right2.matrix_from_rows([2, 3])
+    if C2.transpose() * D2 != D2.transpose() * C2:
+        fail(f"{path.name} M2 kernel half", "not isotropic")
     M2 = complete_symplectic_matrix_dim2(C2, D2, order)
     if not is_symplectic_matrix_dim2(M2):
         fail(f"{path.name} M2", "not symplectic")
-    complement2 = M2.matrix_from_columns([0, 1])
-    neg_hat = (-Mhat) * complement2
-    C1b = neg_hat.matrix_from_rows([0, 1])
-    D1b = neg_hat.matrix_from_rows([2, 3])
-    M1 = complete_symplectic_matrix_dim2(C1b, D1b, order)
+    # −Φ̂ of complement of M2 → kernel half of M1
+    block_right1 = Mhat * M2.matrix_from_columns([0, 1])
+    C1b = block_right1.matrix_from_rows([0, 1])
+    D1b = block_right1.matrix_from_rows([2, 3])
+    if C1b.transpose() * D1b != D1b.transpose() * C1b:
+        fail(f"{path.name} M1 kernel half", "not isotropic")
+    A_blk = M1_0.matrix_from_rows_and_columns([0, 1], [0, 1])
+    B_blk = M1_0.matrix_from_rows_and_columns([2, 3], [0, 1])
+    if B_blk.transpose() * A_blk != A_blk.transpose() * B_blk:
+        fail(f"{path.name} M1_0 complement", "not isotropic")
+    M1 = complement.augment(-block_right1)
     if not is_symplectic_matrix_dim2(M1):
-        fail(f"{path.name} M1", "not symplectic")
+        fail(f"{path.name} M1", "glued [complement | −Φ̂·compl(M2)] not symplectic")
     claim("Derived", f"{path.name} symplectic matrices", "confirmed")
 
     # Product theta structure (§4 / Spec)
@@ -396,6 +403,30 @@ def run_vector(path, run_chains=True):
     N1 = base_change_theta_dim2(M0 * M1_4, e4)
     N2 = base_change_theta_dim2(M0 * M2_4, e4)
 
+    # Chain kernels (§4.5): the kernel-half columns of M1, M2 evaluated on
+    # the basis (b1..b4), as kernel_basis does in the dim-4 code. N_i is
+    # adapted to exactly this basis; the hand-written K″ generators span the
+    # right group mod 4 but are a different basis (and for M1 a different
+    # isotropic lift), which breaks the codomain comparison.
+    def matrix_kernel_basis(M, ei):
+        m = 1 << (e - ei - 2)
+        modulus = 1 << (ei + 2)
+        mP1, mP2 = m * P1, m * P2
+        mR1, mlR2 = m * R1, m * (lamb * R2)
+        pts = []
+        for j in (2, 3):
+            c = [ZZ(M[k, j]) % modulus for k in range(4)]
+            pts.append(TuplePoint(c[0] * mP1 + c[2] * mP2, c[1] * mR1 + c[3] * mlR2))
+        return pts
+
+    B_K1 = matrix_kernel_basis(M1, e_prime)
+    B_K2 = matrix_kernel_basis(M2, e_prime - 1)
+    for kname, pts, ei in (("K1", B_K1, e_prime), ("K2", B_K2, e_prime - 1)):
+        o = 1 << (ei + 2)
+        for t, pt in enumerate(pts):
+            if not (pt * o).is_zero() or (pt * (o // 2)).is_zero():
+                fail(f"{path.name} chain kernel {kname}[{t}]", f"order is not 2^{ei+2}")
+
     stem = path.stem
     kat = {
         "level": level,
@@ -412,16 +443,19 @@ def run_vector(path, run_chains=True):
         "M2_4": [[int(M2_4[i, j]) for j in range(4)] for i in range(4)],
         "N1": [[str(N1[i, j]) for j in range(4)] for i in range(4)],
         "N2": [[str(N2[i, j]) for j in range(4)] for i in range(4)],
+        "BK1": [
+            [str(pt[0][0]), str(pt[0][1]), str(pt[1][0]), str(pt[1][1])] for pt in B_K1
+        ],
+        "BK2": [
+            [str(pt[0][0]), str(pt[0][1]), str(pt[1][0]), str(pt[1][1])] for pt in B_K2
+        ],
     }
     (OUT / f"{stem}_matrices.json").write_text(json.dumps(kat, indent=2) + "\n")
 
     if not run_chains or os.environ.get("S5_ALGEBRA_ONLY"):
         return
 
-    # Two chains (§4.5)
-    # Kernel points of order 2^{len+2}
-    B_K1 = [g1, g2]
-    B_K2 = [k1, k2]
+    # Two chains (§4.5), kernels from the matrices (computed above)
     claim("Open", f"{path.name} starting chains", f"len1={e_prime} len2={e_prime-1}")
     print(f"  computing chain1 length {e_prime}…", flush=True)
     chain1 = IsogenyChainDim2(B_K1, Theta12, N1, e_prime)
@@ -460,7 +494,7 @@ def run_vector(path, run_chains=True):
         ("Q", P2, Qsig),
         ("PmQ", P1 - P2, Psig - Qsig),
     ]:
-        img = Phi(TuplePoint(X, Evk(0)))
+        img = Phi(TuplePoint(X, Esig(0)))
         # Expect (±[s]X, ±[s]Y) up to projective on each factor — full points
         target_x = s * X
         target_y = s * Y
@@ -483,6 +517,13 @@ def run_vector(path, run_chains=True):
 
 
 def main():
+    only = os.environ.get("S5_CHAIN_VECTOR")
+    if only is not None:
+        path = VECTORS[int(only)]
+        print(f"=== chains {path.name} ===", flush=True)
+        run_vector(path, run_chains=True)
+        return
+
     # First pass: Weil + algebra on all vectors (fast)
     for path in VECTORS:
         print(f"=== algebra {path.name} ===", flush=True)

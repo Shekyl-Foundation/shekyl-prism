@@ -2,30 +2,60 @@
 
 Pin: `external/Theta_dim4` @ `4770b24a61e6aa15da4cac1b9d82fd7b9a05f459`.
 
-## Confirmed (all six §5 vectors)
+## Accept path Ok (regenerated vectors)
 
-- Ran: Weil `e(R1,R2)=e(P1,P2)^q` after recovering the signature's second
-  basis point as the C difference (the exporter swaps Q/PmQ into VkQ=R).
-- Derived: product basis symplectic after applying `[s]`.
-- Derived: `Φ̂Φ = 2^{2e′−1} I` over `Z/2^e`.
-- Derived: `K″1` and `K″2` isotropic (geometric Weil on the product).
-- Derived: symplectic completions `M1_0`, `M2`, `M1` exist.
+On the regenerated `s5_lvl1.txt` the model runs both chains and confirms:
 
-## Refuted on `s5_lvl1.txt` (honest NIST-I)
+- Derived: `C1.zero() == C2.hadamard().zero()` (step 5 / Codomain).
+- Derived: step 8 images `Φ(X, 0) = (±[s]X, ±[s]Y)` for `X` in
+  `{P_vk, Q_vk, P_vk − Q_vk}`.
+- Ran: accept path Ok.
 
-Step 5 / Codomain:
+All six vectors confirm the algebra: Weil `e(R1,R2)=e(P1,P2)^q` with no
+sign repair, `VkDx = x(VkP − VkQ)`, product basis symplectic after `[s]`,
+`Φ̂Φ = 2^{2e′−1} I`, `K″1`/`K″2` isotropic, symplectic matrices.
 
-```
-C1.zero() != C2.hadamard().zero()
-```
+## The earlier Codomain refutation was the vk export, not the claim
 
-after `IsogenyChainDim2` of lengths `e′=246` and `e′−1=245` with kernels
-`K″1`, `[2]⟨s b1+b2, s b3+q b4⟩` and theta base-change matrices
-`N_i = base_change_theta_dim2(M0·M_i mod 4, e4)`.
+The first model run refuted `C1.zero() == C2.hadamard().zero()` on the
+then-committed NIST-I vectors (both keys). Three findings resolved it:
 
-Stopped per brief §4: do not patch around a refuted Derived claim; do not
-port accept Rust. Construction details that may still be wrong (and would
-make this a model bug rather than a claim refutation) are recorded in
-`scripts/sage/s5_model.sage`: M0 composition order, kernel orientation,
-and whether the dim-2 reduction of `starting_two_symplectic_matrices`
-matches Dartois's matrices exactly.
+1. **Model wiring.** The first model completed `M1` from scratch. In
+   `starting_two_symplectic_matrices` the matrix `M1` is never re-completed:
+   it is the block matrix `[complement of M1_0 | −Φ̂(complement of M2)]`,
+   and its symplecticity is a checked theorem. The chain kernels are the
+   kernel-half columns of `M1`, `M2` evaluated on the basis (`kernel_basis`),
+   not the hand-written `K″` generators: the theta base change `N_i` is
+   adapted to exactly that basis. Both fixes are in `s5_model.sage`; small
+   dim-2 instances (nine `(s, q, e′)` cases, both exporter sign classes,
+   basis and difference second points — 72 runs) and Dartois's own dim-4
+   `KaniEndoHalf` (where `F1.codomain.zero() == F2_dual.codomain.hadamard()
+   .zero()` holds on the nose) confirm the construction.
+
+2. **The refutation survived the wiring fix** on both NIST-I keys, while
+   every small synthetic instance met. Pairings cannot distinguish the
+   exported pair from any unimodular transform of the true preimages, so
+   the vectors were suspected.
+
+3. **Instrumented exporter.** Rebuilding `s5_lvl1.txt` from its committed
+   seeds with a debug exporter and solving 2-adic discrete logs in the
+   image basis gave, exactly: `[s]P_sig = σ(P)`, `[s]Q_sig = σ(Q)` for the
+   C's internal canonical pair `(P, Q)` — the signing pipeline is correct —
+   while the exported points were `VkP = −P`, `VkQ = Q − P`. The exporter's
+   Q↔PmQ swap emitted the pair `(P, P−Q)`: determinant `−1` with a shear,
+   invisible to every pairing check, fatal to the chains. Running the
+   chains with the true preimages `(−VkP, VkQ − VkP)` met immediately.
+
+The fix removes the swap from `scripts/c/export_s5_vectors.c`: the export
+is now the preimage pair itself (up to one global sign from `lift_basis`,
+which composes `[−1]` into `σ` and is harmless), with `VkDx = x(P − Q)`
+(= `x(R)`, the cleared `−x(P)−A` point, Rust's `even_basis.q`). All six
+vectors are regenerated from the same seeds; only `VkQx`, `VkQy`, `VkDx`
+changed.
+
+## Known-answer files
+
+Per vector: `*_matrices.json` (`Φ`, `M1`, `M2`, mod-4 reductions, theta
+base changes `N1`, `N2`, chain kernel bases `BK1`, `BK2`). For
+`s5_lvl1.txt`: `*_nulls.json` (theta-null point after every step of both
+chains) and `*_step8.json` (step 8 images).
