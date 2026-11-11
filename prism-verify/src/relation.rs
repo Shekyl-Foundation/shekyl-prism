@@ -114,6 +114,8 @@ fn e_prime_surface<L: Level>(
             first: double_times::<L>(vk, even.q, 2),
             second: double_times::<L>(sig, q_sig_x, 2),
         },
+        // `even.difference` is `difference` of the cleared points, which is
+        // the C canonical `Q`. Clearing the uncleared difference is not.
         difference: Couple {
             first: double_times::<L>(vk, even.difference, 2),
             second: double_times::<L>(sig, diff, 2),
@@ -507,9 +509,8 @@ mod s5_vectors {
         // refusal, once the exponent is e', is Composite, before the chain.
         assert!(!degree_is_prime(L::E - 2, next_scalar.as_bytes()));
 
-        // (P, −Q) keeps the normalized y(P). Its chain stop is the
-        // caller's: step 1 where the honest vector reaches both readings,
-        // and both readings at level V.
+        // (P, −Q) keeps the normalized y(P). With the canonical difference
+        // the honest vector stops at step 1 and this one reaches both readings.
         let mut negated = sample.response;
         negated.q.y = negated.q.y.negate();
         assert!(canonical_sign::<L>(negated.p.y));
@@ -574,9 +575,10 @@ mod s5_vectors {
         let vk_dx = L::ext_decode(&hex_bytes(line(text, "VkDx "))).unwrap();
         let p = even.p.x_affine().expect("P");
         let r = even.q.x_affine().expect("R");
-        let q = prism_isogeny::torsion::difference::<L>(coefficient, even.p, even.q)
-            .and_then(|point| point.x_affine())
-            .expect("difference(P, R)");
+        let q = even
+            .difference
+            .x_affine()
+            .expect("difference of the cleared points");
         assert!(
             p.same(vk_px),
             "{} VkPx disagrees with even_basis.p",
@@ -606,20 +608,22 @@ mod s5_vectors {
     }
 
     #[test]
-    fn the_canonical_kernel_reaches_both_readings_except_at_level_v() {
-        // Regenerated at order 2^e on the least Montgomery model. The
-        // transitional chain still doubles both sides twice. Level V's
-        // honest vector stops at step 1; `(P, −Q)` reaches both readings.
+    fn the_canonical_kernel_stops_at_step_one() {
+        // The kernel difference is `difference` of the cleared points.
+        // With that point, every committed honest vector stops at step 1
+        // and `(P, −Q)` reaches both readings. The earlier field, the
+        // cofactor of the uncleared difference, let levels I and III reach
+        // both readings. The accept path replaces this chain.
         honest::<Level1>(
             include_str!("../testdata/s5_lvl1.txt"),
-            Stop::Readings,
             Stop::Step(1),
+            Stop::Readings,
             true,
         );
         honest::<Level3>(
             include_str!("../testdata/s5_lvl3.txt"),
-            Stop::Readings,
             Stop::Step(1),
+            Stop::Readings,
             true,
         );
         honest::<Level5>(
@@ -634,5 +638,24 @@ mod s5_vectors {
         assert_vk_basis::<Level1>(include_str!("../testdata/s5_lvl1b.txt"));
         assert_vk_basis::<Level3>(include_str!("../testdata/s5_lvl3b.txt"));
         assert_vk_basis::<Level5>(include_str!("../testdata/s5_lvl5b.txt"));
+        second_key::<Level1>(include_str!("../testdata/s5_lvl1b.txt"));
+        second_key::<Level3>(include_str!("../testdata/s5_lvl3b.txt"));
+        second_key::<Level5>(include_str!("../testdata/s5_lvl5b.txt"));
+    }
+
+    fn second_key<L: Level>(text: &str) {
+        let sample = sample::<L>(text);
+        assert_eq!(
+            surface_stop::<L>(&sample, sample.response.q.y),
+            Stop::Step(1),
+            "{}",
+            L::NAME
+        );
+        assert_eq!(
+            surface_stop::<L>(&sample, sample.response.q.y.negate()),
+            Stop::Readings,
+            "{}",
+            L::NAME
+        );
     }
 }

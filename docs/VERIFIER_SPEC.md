@@ -77,17 +77,15 @@ The signature does not carry `s`. The derived challenge scalar is `e − 3`
 bits wide, which is `e′ − 1`. At Table 2's three levels that is the same
 byte length as the `e − 1` width.
 
-The instantiated verifier walks a chain of length `e′`. The kernel is the
-canonical basis of `E_vk[2^e]`, with `x(Q) = −x(P) − A`, doubled twice to
-order `2^{e′}`. Levels I and III of the §5 vectors reach both readings, so
-the result is `Unidentified`. `(P, −Q)` stops at isogeny step 1. Level V's
-honest vector stops at isogeny step 1, and `(P, −Q)` reaches both readings.
-That file was written when the exporter recovered `y(P)` and `y(Q)` by two
-independent square roots. The lift from the basis difference replaced that
-recovery, and only the level I file was written again. On this key `P − Q`
-is the same point either way it is chosen, so the stop is the exported
-sign. Level V's index point is still not of order `p + 1`; the verify path
-does not consult that search. The dual-basis identification is not built.
+The instantiated verifier walks a chain of length `e′`. The kernel is
+`(P, R, Q)` of `E_vk[2^e]`, doubled twice to order `2^{e′}`, where `Q` is
+`difference(P, R)` after the cofactor. Every committed honest vector stops
+at isogeny step 1, so the result is `Kernel`. `(P, −Q)` reaches both
+readings, so the result is `Unidentified`. The field this chain used
+before 2026-11-11 was the cofactor of the uncleared difference, and with
+that point levels I and III reached both readings. Level V's index point
+is still not of order `p + 1`; the verify path does not consult that
+search. The dual-basis identification is not built.
 The Nakagawa–Onuki recheck below cleared the degrees: no `q` in the `e′`
 window meets the small-extension bound.
 
@@ -254,10 +252,10 @@ what this verifier conforms to.
 `K = ⟨(P_vk, −P_sig), (Q_vk, −Q_sig)⟩`, and does not split the codomain.
 The chain is evaluated at `([s]X, 0)` and `([2^{e′−1}]X, 0)` for `X` in
 the canonical basis of `E_vk[2^e]`. The images of `([s]X, 0)` would be read
-at step `e′ − 1`, and the images of `([2^{e′−1}]X, 0)` at step `e′`. Levels
-I and III reach both readings. Level V's honest vector stops at isogeny
-step 1. A signature point that is not on `E_sig`, or a chain that stops before both
-readings, is `Kernel`. Both readings existing is `Unidentified`: the
+at step `e′ − 1`, and the images of `([2^{e′−1}]X, 0)` at step `e′`. With
+`Q = difference(P, R)` after the cofactor, every committed honest vector
+stops at isogeny step 1. A signature point that is not on `E_sig`, or a
+chain that stops before both readings, is `Kernel`. Both readings existing is `Unidentified`: the
 transformation between the structures is open, so the comparison is not
 decided and the function does not return success. The degree-`q` witness in
 `prism-verify/testdata/e0_endomorphisms.txt` does not reach that refusal.
@@ -326,8 +324,9 @@ carries the C canonical basis of `E_vk[2^e]` (`VkPx`, `VkPy`, `VkQx`,
 small-extension sample is the thousand degrees per level in
 Small-extension torsion, not these lines. The relation derives `s_j` at
 `e′` and runs the length-`e′` chain on the canonical basis after doubling
-both sides twice. Levels I and III reach both readings (`Unidentified`).
-Level V stops at isogeny step 1 (`Kernel`).
+both sides twice. The kernel difference is `difference(P, R)` after the
+cofactor. Every committed honest vector stops at isogeny step 1
+(`Kernel`). `(P, −Q)` reaches both readings (`Unidentified`).
 
 The hit rate per candidate is low, so recomputing the search in the verifier
 lets an attacker grind messages whose search runs long and make every node
@@ -392,7 +391,10 @@ the port replaces it.
   not a proof that the pair is the signature's preimage: any
   determinant-one image of the true pair, including `(P, Q+P)`, passes it.
 - A chain that finishes proves nothing about the pair. The transitional
-  chain pairs `R = P − Q` with `Q_sig` and still reaches both readings.
+  chain's second generator is `R`, paired with `Q_sig`, and its difference
+  generator is now `Q`. On the committed honest vectors that chain stops
+  at step 1. With the earlier difference, the cofactor of the uncleared
+  points, levels I and III reached both readings.
 - `Codomain` does not depend on `s`. The kernel is the graph of
   `P ↦ P_sig` for any odd `s`. Row 2 of the model negatives, the next
   prime index, is `Image`, not `Codomain`. `Image` is the check that
@@ -711,7 +713,17 @@ fixed-degree known-answer test still runs it. Algorithm 3 does not.
 
 ### The basis
 
-On a public key, `R` is the point the basis index names, before
+The signature basis of `E[2^e]` is three x-only points. `P` is the basis
+index's abscissa multiplied by the odd cofactor `f`. `R` is the point
+whose abscissa, before that multiplication, is `−x(P) − A`, also multiplied
+by `f`. `Q` is `difference(P, R)` computed on those cleared points. Clearing
+the difference of the uncleared points is a different point, and it equals
+`Q` on only about half of keys. The C basis stores this `Q`, and `PmQ` is
+`R`. A signer has to publish the image of this pair. `EvenBasis.difference`
+is `Q`.
+
+The `E[p+1]` search is a different basis, and it is not the signature
+pair. Its first point is the basis index's abscissa before
 multiplication by `f`. `T` is the point whose affine x-coordinate is the
 smallest positive integer at which both points have order exactly `p+1`,
 their images in `E[2^e]` generate that subgroup, and their images in

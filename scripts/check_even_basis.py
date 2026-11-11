@@ -7,12 +7,11 @@
 """Compare Rust's order-2^e basis with the pinned C tree's.
 
 The C basis stores ``P``, ``Q = difference_point(P, R)`` and ``PmQ = R``,
-where ``x(R) = -x(P) - A``. Rust's ``even_basis`` stores ``P`` and ``R``,
-and stores ``[f]`` of the difference of the points before the cofactor.
-C ``Q`` is Rust's cofactor-cleared difference of ``P`` and ``R``, on every
-key this script has been given. The uncleared ``[f]``-difference agrees
-on only about half of them. A key where ``Q`` is not the cleared
-difference is a failure.
+where ``x(R) = -x(P) - A`` before the cofactor. Rust's ``even_basis``
+stores ``P``, ``R``, and ``Q = difference(P, R)`` computed after the
+cofactor. The fourth printed value is ``[f]`` of the difference of the
+uncleared points, which agrees with ``Q`` on only about half of keys.
+A key where ``Q`` is not the cleared difference is a failure.
 """
 
 import pathlib

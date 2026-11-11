@@ -6,16 +6,17 @@
 //! Print the order-`2^e` basis Rust derives from `A`, for the C differential.
 //!
 //! `even_basis <I|III|V> <A-hex>` prints four affine x-coordinates: `P`,
-//! the point `R` with `x(R) = −x(P) − A`, `difference(P, R)` computed on
-//! those order-`2^e` points, and `[f]` of the difference of the points
-//! before the cofactor. `sample <I|III|V> <count>` prints that many
-//! coefficients that have a basis.
+//! the cleared point `R`, `Q = difference(P, R)` (the field the verifier
+//! uses), and `[f]` of the difference of the uncleared points. The fourth
+//! value is the rejected variant: it equals `Q` on only about half of keys.
+//! `sample <I|III|V> <count>` prints that many coefficients that have a
+//! basis.
 
 use std::env;
 use std::process::ExitCode;
 
 use prism_field::{Field, Level, Level1, Level3, Level5};
-use prism_isogeny::torsion::{difference, even_basis};
+use prism_isogeny::torsion::{even_basis, mul_odd_then_double};
 use prism_verify::basis::basis_hint;
 use sha3::{Digest, Sha3_256};
 
@@ -68,11 +69,12 @@ fn show<L: Level>(hex: &str) -> ExitCode {
         eprintln!("no even basis");
         return ExitCode::FAILURE;
     };
-    let Some(on_cleared) = difference::<L>(coefficient, even.p, even.q) else {
-        eprintln!("no difference of the cleared points");
+    let Some(rejected) = mul_odd_then_double::<L>(coefficient, even.full_difference, L::ODD, 0)
+    else {
+        eprintln!("no cleared image of the uncleared difference");
         return ExitCode::FAILURE;
     };
-    for point in [even.p, even.q, on_cleared, even.difference] {
+    for point in [even.p, even.q, even.difference, rejected] {
         let Some(x) = point.x_affine() else {
             eprintln!("a basis point is infinite");
             return ExitCode::FAILURE;

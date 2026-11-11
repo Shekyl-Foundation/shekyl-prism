@@ -10,23 +10,31 @@
 //!
 //! The abscissa is the one the basis-index search names. Multiplying by the
 //! odd cofactor `f` clears `p + 1 = f·2^e` down to order dividing `2^e`.
-//! `Q` is the point above `(0, 0)`, `x(Q) = −x(P) − A`, and `P − Q` is the
-//! deterministic difference the reference uses so a later lift can recover
-//! `y`.
+//! `R` is the point above `(0, 0)` before that multiplication,
+//! `x(R) = −x(P) − A`. The canonical second point is not `R`: it is
+//! `difference(P, R)` computed after the cofactor is cleared. Clearing the
+//! difference of the uncleared points is a different point on about half
+//! of keys, and it is not the C basis.
 
 use prism_field::{Field, Level};
 
 use crate::jac::xdbl_iter;
 use crate::montgomery::{a24, ladder, Montgomery, Xz};
 
-/// `(P, Q, P−Q)` in x-only coordinates, each of order dividing `2^e`.
+/// `(P, R, Q)` in x-only coordinates, each of order dividing `2^e`.
+///
+/// `Q` is [`difference`] of the cleared `P` and `R`. `full_difference` is
+/// the difference of the points before the cofactor, and clearing that
+/// point is not `Q`.
 #[derive(Clone, Copy, Debug)]
 pub struct EvenBasis<F> {
     /// Order dividing `2^e`, after multiplication by `f`.
     pub p: Xz<F>,
+    /// Cleared point with full-point abscissa `−x(P) − A`.
     pub q: Xz<F>,
+    /// `difference(p, q)`, the canonical second basis point.
     pub difference: Xz<F>,
-    /// The same points before that multiplication.
+    /// The same `P` and `R` before that multiplication, and their difference.
     pub full_p: Xz<F>,
     pub full_q: Xz<F>,
     pub full_difference: Xz<F>,
@@ -118,20 +126,25 @@ pub fn even_basis<L: Level>(
     index: u16,
     coefficient_is_square: bool,
 ) -> Option<EvenBasis<L::Ext>> {
-    let p = Xz::affine(basis_abscissa::<L>(
+    let full_p = Xz::affine(basis_abscissa::<L>(
         coefficient,
         index,
         coefficient_is_square,
     )?);
-    let q = Xz::affine(p.x.add(coefficient).negate());
+    let full_q = Xz::affine(full_p.x.add(coefficient).negate());
+    let full_difference = difference::<L>(coefficient, full_p, full_q)?;
+    let p = clear_cofactor::<L>(coefficient, full_p)?;
+    let q = clear_cofactor::<L>(coefficient, full_q)?;
+    // After the cofactor, not before. Clearing `full_difference` matches
+    // the C `Q` on only about half of keys.
     let difference = difference::<L>(coefficient, p, q)?;
     Some(EvenBasis {
-        p: clear_cofactor::<L>(coefficient, p)?,
-        q: clear_cofactor::<L>(coefficient, q)?,
-        difference: clear_cofactor::<L>(coefficient, difference)?,
-        full_p: p,
-        full_q: q,
-        full_difference: difference,
+        p,
+        q,
+        difference,
+        full_p,
+        full_q,
+        full_difference,
     })
 }
 

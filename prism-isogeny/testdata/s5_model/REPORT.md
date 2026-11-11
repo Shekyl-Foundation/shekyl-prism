@@ -104,6 +104,8 @@ either chain. No row differs from the expected set.
 ## Basis rule
 
 Over 101 keys at each level (the committed `A` plus 100 samples), Rust's
-`P` and `R` match the C basis, and the C `Q` is the cofactor-cleared
-difference on every key. The uncleared `[f]`-difference matches `Q` on
-44 / 50 / 50 keys at I / III / V. `c-vectors` asserts the cleared one.
+`P` and `R` match the C basis, and the C `Q` is `difference(P, R)` after
+the cofactor on every key. `EvenBasis.difference` is that point.
+`[f]` of the difference of the uncleared points matches `Q` on 44 / 50 /
+50 keys at I / III / V, and it is not the field. `c-vectors` asserts the
+cleared one.
