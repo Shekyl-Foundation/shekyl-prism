@@ -4,6 +4,12 @@ Status on 2026-11-12: executable research signer/verifier, not approved for
 wallet authorization or consensus. Correct execution and security proofs
 are separate requirements. No external reviewer has approved these changes.
 
+The separate [code-matched security argument](SECURITY_ARGUMENT.md) pins
+the merged PR #13 implementation, defines its SUF-CMA game and conditional
+reduction, and records the collision-replay constraint at the actual
+parameters. Its review status is DRAFT; the obligations below remain open.
+Reproduce its integer bounds with `python3 scripts/security_parameters.py`.
+
 ## Implemented and checked
 
 The Rust verifier executes two adapted theta chains, compares dual codomains
@@ -37,17 +43,30 @@ premise and the protocol reduction still require independent review.
 3. **Challenge entropy and collision attacks.** Odd `s` has `e−4` free
    bits: 244, 372, 496. Raw scalar birthday scales are `2^122`, `2^186`,
    `2^248`. A usable replay attack also requires a prime-degree collision
-   at indices the signer will use. For fixed first index and prime fraction
-   `ρ`, the random-function estimate is `sqrt(2^(e−4)/ρ)` hash queries;
+   at indices the signer will use. For fixed first index and fraction `ρ`
+   of scalars with a BPSW-passing degree and successful accepted signing,
+   the random-function estimate is `sqrt(2^(e−4)/ρ)` hash queries;
    the cost of filtering, memory and quantum attacks needs explicit
    accounting. A 491/747/995-bit degree is not itself a challenge-entropy
    argument. Do not claim the paper's security levels without resolving
    this. Salt binding or larger parameters would change the protocol and
-   need new vectors and analysis.
+   need new vectors and analysis. The density thresholds and exact
+   collision-pair expectation are in the security argument §5; a generic
+   odd-integer prime density is not a proved estimate for this family.
+   A real 1,500-search-per-row capture now estimates BPSW-passing density
+   as 1.08909%, 0.71899%, 0.52554%, giving prime-eligible collision exponents
+   125.260, 189.560, 251.786: below nominal in equation (7)'s hash-query
+   model. Native signing success and concrete gate costs remain separate
+   from that estimate. Raw data and reproduction are in the argument §5.
 4. **Carried index.** The verifier accepts any prime index, not a certified
    hash-to-prime output. Give a SUF-CMA argument for that interface and
    the deterministic failure/retry policy. The signer is deterministic
-   for a degree, but that does not by itself repair a reduction.
+   for a degree, but that does not by itself repair a reduction. The index
+   publicly exposes the count of earlier BPSW-passing candidates skipped
+   after failed final verification. A reproducible deterministic native
+   failure or exhaustion can make a message permanently unsignable for
+   that key/backend; transient I/O failures are a separate case. See the
+   security argument §5 for the exact disclosure and availability scope.
 5. **Primality.** BPSW is a reproducible probable-prime predicate. No bypass
    was found, but this is not a certificate or a proof against adversarial
    grinding. Decide on a justified deterministic test policy or a bounded,

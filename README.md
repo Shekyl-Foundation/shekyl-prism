@@ -5,6 +5,9 @@ with a Rust verifier and an experimental deterministic native signer.
 It is not a consensus crate or an adopted wallet authorization scheme.
 The exact protocol still needs cryptographic review; see
 [open security items](docs/SECURITY_REVIEW.md).
+The [security argument draft](docs/SECURITY_ARGUMENT.md) maps the merged
+implementation to its algebraic premises, exact parameter bounds,
+collision-replay attack, and conditional SUF-CMA decomposition.
 
 | Crate | Role |
 | --- | --- |

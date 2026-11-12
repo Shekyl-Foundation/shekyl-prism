@@ -664,9 +664,11 @@ pub fn challenge_degree(exponent: u32, scalar: &[u8]) -> Option<Vec<u8>> {
 /// `true` when the challenge degree `q = 2^{2e−1} − s^2` is a Baillie–PSW
 /// prime.
 ///
-/// `exponent` is the level's `e` and `scalar` is `s` little-endian. A scalar
-/// at or above `2^{e−1}` names no degree and is refused here rather than
-/// reduced: `verify` reads that as `Composite`.
+/// `exponent` is the chain exponent (`E − 2` for the current verifier),
+/// and `scalar` is `s` little-endian. The helper requires a positive odd
+/// scalar with `s² < 2^{2·exponent−1}`; it does not enforce the narrower
+/// challenge domain `s < 2^{exponent−1}`. The verifier gets that domain
+/// from `ChallengeScalar::derive`, rather than reducing supplied bytes.
 pub fn degree_is_prime(exponent: u32, scalar: &[u8]) -> bool {
     challenge_degree(exponent, scalar).is_some_and(|degree| is_baillie_psw(&degree))
 }
