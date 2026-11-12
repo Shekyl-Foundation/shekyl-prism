@@ -1,0 +1,117 @@
+# Copyright (c) 2025-2026, The Shekyl Foundation
+#
+# All rights reserved.
+# BSD-3-Clause
+
+"""Fresh Sage/Rust comparison, without rewriting committed answers.
+
+Run from the repository root after building s5_challenge and verify_bytes:
+  sage scripts/sage/differential.sage
+Requires the two pinned submodules. Optional PRISM_DIFFERENTIAL_LEVEL is
+NIST-I, NIST-III or NIST-V; absence runs all levels.
+"""
+import os
+import runpy
+import subprocess
+from pathlib import Path
+from sage.all import GF, ZZ
+
+os.environ["S5_IMPORT"] = "1"
+os.environ["S5_COMPARE"] = "1"
+m = runpy.run_path(str(Path.cwd() / "scripts/sage/s5_model.sage"))
+root = m["ROOT"]
+count = 0
+
+
+def encoded(z, width):
+    re, im = m["parts"](z)
+    return int(re).to_bytes(width, "little") + int(im).to_bytes(width, "little")
+
+
+def compare(path, label, P=None, Q=None, curve=None, index=None, message=None, sibling=None):
+    global count
+    rows = m["load_vector"](path)
+    level = rows["level"]
+    params = m["LEVELS"][level]
+    e, width = params["e"], params["fp_len"]
+    p = params["odd"] * (1 << e) - 1
+    field = GF(p**2, name="i", modulus=ZZ["x"]("x^2+1"))
+    ext = lambda name: m["fp2_from_hex"](rows[name], field, width)
+    original_curve = m["montgomery"](ext("E"))
+    curve = original_curve if curve is None else curve
+    P = m["point"](original_curve, ext("Px"), ext("Py")) if P is None else P
+    Q = m["point"](original_curve, ext("Qx"), ext("Qy")) if Q is None else Q
+    index = int(rows["j"]) if index is None else index
+    message = rows["message"] if message is None else message
+    key = rows["A"] if sibling is None else sibling["A"]
+    s, prime = m["challenge_scalar"](level, key, message, index)
+    q = (1 << (2*(e-2)-1)) - s**2
+    soft = {"Psig": P, "Qsig": Q, "Esig": curve, "s": s, "q": q}
+    if sibling is not None:
+        other = lambda name: m["fp2_from_hex"](sibling[name], field, width)
+        vk = m["montgomery"](other("A"))
+        soft.update(P1=vk(other("VkPx"), other("VkPy")), P2=vk(other("VkQx"), other("VkQy")))
+    a = curve.a_invariants()[1]
+    if not m["canonical_sign"](P[1]):
+        expected = "Sign"
+    elif a**2 == 4:
+        expected = "Singular"
+    elif a == 0 or a**2 == 3 or 2*a**2 == 9 or not m["is_least_model"](a):
+        expected = "Model"
+    elif prime != "prime":
+        expected = "Composite"
+    else:
+        expected = m["run_vector"](path, run_chains=True, soft=soft, completion="closed")
+    signature = b"".join(encoded(z, width) for z in [a,P[0],P[1],Q[0],Q[1]]) + index.to_bytes(2,"little")
+    record = f"{level} {key} {message.encode().hex() or '-'} {signature.hex()}\n"
+    result = subprocess.run([str(root/"target/release/verify_bytes")],input=record,text=True,capture_output=True,check=True).stdout.strip()
+    if result != expected:
+        raise SystemExit(f"DIFFER {path.name} {label}: Sage={expected}, Rust={result}")
+    count += 1
+    print(f"MATCH {path.name} {label}: {result}", flush=True)
+
+
+for path in m["honest_vectors"]():
+    rows = m["load_vector"](path)
+    if os.environ.get("PRISM_DIFFERENTIAL_LEVEL", rows["level"]) != rows["level"]:
+        continue
+    # Independently execute all algebraic identities for each honest fixture.
+    if m["run_vector"](path, run_chains=True, completion="closed") != "Ok":
+        raise SystemExit(f"honest Sage failure: {path.name}")
+    compare(path,"honest")
+
+for path in m["VECTORS"]:
+    rows = m["load_vector"](path)
+    level = rows["level"]
+    if os.environ.get("PRISM_DIFFERENTIAL_LEVEL", level) != level:
+        continue
+    params = m["LEVELS"][level]
+    e, width = params["e"], params["fp_len"]
+    p = params["odd"] * (1 << e) - 1
+    field = GF(p**2, name="i", modulus=ZZ["x"]("x^2+1"))
+    ext = lambda name: m["fp2_from_hex"](rows[name],field,width)
+    curve = m["montgomery"](ext("E"))
+    P, Q = curve(ext("Px"),ext("Py")), curve(ext("Qx"),ext("Qy"))
+    for label, left, right in [("joint sign",-P,-Q),("relative sign",P,-Q),("swap",Q,P),("shear Q+P",P,Q+P),("shear P+Q",P+Q,Q),("rotation",Q,-P),("scalar 3",3*P,3*Q),("high scalar",((1<<(e-1))+1)*P,((1<<(e-1))+1)*Q),("reduced order",4*P,4*Q)]:
+        if label != "joint sign":
+            left,right = m["normalize_joint"](left,right)
+        compare(path,label,P=left,Q=right)
+    for t in m["row7_translates"](curve):
+        for label,left,right in [("P translate",P+t,Q),("Q translate",P,Q+t),("both translate",P+t,Q+t)]:
+            left,right=m["normalize_joint"](left,right)
+            compare(path,label,P=left,Q=right)
+    for curve2,a,left,right in m["other_models"](ext("E"),P,Q):
+        left,right=m["normalize_joint"](left,right)
+        compare(path,"other model",P=left,Q=right,curve=curve2)
+    for label,message,start in [("next prime",rows["message"],int(rows["j"])+1),("new message",rows["message"]+"-other",0)]:
+        index,_=m["first_prime_index"](level,rows["A"],message,start=start)
+        if index is None:
+            raise SystemExit("prime search exhausted")
+        compare(path,label,index=index,message=message)
+    sibling=m["load_vector"](path.parent/m["SIBLING"][path.name])
+    index,_=m["first_prime_index"](level,sibling["A"],rows["message"])
+    if index is None:
+        raise SystemExit("other-key prime search exhausted")
+    compare(path,"other key",index=index,sibling=sibling)
+
+print(f"Sage/Rust identical on {count} signatures and mutations",flush=True)

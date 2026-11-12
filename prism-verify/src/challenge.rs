@@ -18,7 +18,7 @@ use crate::{prime, VerifyError};
 /// Nothing has consumed `-v1`.
 pub const CHALLENGE_DOMAIN: &[u8] = b"shekyl-prism-challenge-v1";
 
-/// The challenge scalar `s_j`: odd, and strictly below `2^{e−1}`.
+/// The challenge scalar `s_j`: odd, and strictly below `2^{e−3}`.
 ///
 /// Transform-shaped — [`Self::derive`] is its definition — so nothing stores
 /// it and the signature does not carry it. The constructor is the only way
@@ -38,13 +38,12 @@ impl ChallengeScalar {
         message: &[u8],
         index: ChallengeIndex,
     ) -> Self {
-        Self::derive_width::<L>(identity, message, index, L::E - 3)
+        Self::derive_width::<L>(identity, message, index, L::CHALLENGE_BITS)
     }
 
     /// The same hash, projected onto the odd integers below `2^bits`.
     ///
-    /// The instantiated verifier passes `e′ − 1` bits. [`Level::CHALLENGE_BITS`]
-    /// is the longer Table 2 width and is not this derivation.
+    /// The instantiated verifier passes [`Level::CHALLENGE_BITS`], `e′ − 1`.
     pub fn derive_width<L: Level>(
         identity: &KeyIdentity<'_, L>,
         message: &[u8],

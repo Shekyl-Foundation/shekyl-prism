@@ -94,6 +94,9 @@ impl<F: Field> ThetaPoint<F> {
 pub fn projectively_same<F: Field>(left: ThetaPoint<F>, right: ThetaPoint<F>) -> bool {
     let left = left.coords();
     let right = right.coords();
+    if left.iter().all(|v| v.is_zero()) || right.iter().all(|v| v.is_zero()) {
+        return false;
+    }
     (0..4).all(|i| (0..4).all(|j| left[i].mul(right[j]).same(left[j].mul(right[i]))))
 }
 
@@ -243,6 +246,15 @@ mod tests {
             exp >>= 1;
         }
         out
+    }
+
+    #[test]
+    fn zero_coordinates_are_not_a_projective_point() {
+        let invalid = ThetaPoint::from_coords([Toy::zero(); 4]);
+        let valid = ThetaPoint::from_coords([Toy::one(); 4]);
+        assert!(!super::projectively_same(invalid, valid));
+        assert!(!super::projectively_same(valid, invalid));
+        assert!(!super::projectively_same(invalid, invalid));
     }
 
     #[test]

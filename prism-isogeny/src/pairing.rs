@@ -83,11 +83,31 @@ fn miller<F: Field>(curve: Montgomery<F>, p: Jac<F>, q: Jac<F>, log_order: u32) 
             }
         }
     }
-    Some(value)
+    // If the final doubling never reached infinity, P is not of the
+    // claimed order. A truncated Miller function is not a Weil pairing.
+    None
 }
 
-/// `e_{2^k}(P, Q)`. `log_order` is `k`.
+fn on_curve<F: Field>(curve: Montgomery<F>, p: Jac<F>) -> bool {
+    if p.z.is_zero() {
+        return false;
+    }
+    let z2 = p.z.mul(p.z);
+    let x2 = p.x.mul(p.x);
+    p.y.mul(p.y).same(
+        x2.mul(p.x)
+            .add(curve.a.mul(x2).mul(z2))
+            .add(p.x.mul(z2).mul(z2)),
+    )
+}
+
+/// `e_{2^k}(P, Q)`. `log_order` is `k`. This verification routine requires
+/// both points on the normalized curve with exact order `2^k`; it refuses
+/// lower-order inputs, rather than implementing all degenerate pairings.
 pub fn weil<F: Field>(curve: Montgomery<F>, p: Jac<F>, q: Jac<F>, log_order: u32) -> Option<F> {
+    if !curve.c.same(F::one()) || !on_curve(curve, p) || !on_curve(curve, q) {
+        return None;
+    }
     let numerator = miller(curve, p, q, log_order)?;
     let denominator = miller(curve, q, p, log_order)?;
     Some(numerator.mul(denominator.inv()?))
@@ -276,6 +296,22 @@ mod tests {
         let scaled = weil(curve, triple, q, 2).expect("scaled pairing");
         assert!(scaled.same(pow(value, &[3])));
         assert!(scaled.same(Fp2::new(0, 1)));
+    }
+
+    #[test]
+    fn a_truncated_miller_loop_is_not_a_pairing() {
+        let curve = Montgomery::normalized(Fp2::zero());
+        let p = point(Fp2::new(1, 0), Fp2::new(2641, 0));
+        let q = point(Fp2::new(0, 2640), Fp2::new(2640, 2640));
+        assert!(
+            weil(curve, p, q, 1).is_none(),
+            "order-four points are not order-two inputs"
+        );
+        let off_curve = Jac {
+            y: p.y.add(Fp2::one()),
+            ..p
+        };
+        assert!(weil(curve, off_curve, q, 2).is_none());
     }
 
     #[test]

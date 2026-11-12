@@ -5,6 +5,7 @@ members = [
     "prism-isogeny",
     "prism-verify",
     "prism-bench",
+    "prism-signer",
 ]
 
 [workspace.package]
@@ -26,3 +27,11 @@ prism-verify = { version = "0.1.0", path = "prism-verify" }
 # scripts/ci/check_workspace_lints.py is what keeps that the only exception.
 [workspace.lints.rust]
 unsafe_code = "forbid"
+
+# Hundreds of full theta chains are impractical with unoptimized field
+# loops, especially under s390x emulation. Keep the checked test semantics
+# while making the complete positive and negative corpus feasible in CI.
+[profile.test]
+opt-level = 1
+debug-assertions = true
+overflow-checks = true

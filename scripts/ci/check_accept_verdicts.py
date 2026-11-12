@@ -6,7 +6,8 @@
 
 """Every file in ``testdata/accept`` has an ``Ok`` row in the verdict list.
 
-The Sage model does not run in CI. The committed list is what this job
+The Sage model does not run in the PR gate. Rust executes this corpus
+in the workspace acceptance tests. The committed list is what this job
 reads, and it reads the directory rather than a fixed set of names: a
 file with no row, a row with no file, or a verdict other than ``Ok``
 fails. The list sits next to the model report.

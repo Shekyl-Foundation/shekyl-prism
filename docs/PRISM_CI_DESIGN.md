@@ -18,6 +18,13 @@ Inherited from shekyl-core's CI rulings:
 - **Committed test data claims a provenance.** `testdata/c_basis_hints.txt` says it came from the pinned C tree; Algorithm 3's chain KATs will say the same. CI should prove it by regenerating them.
 - **PR #1 carried a `Co-authored-by: Cursor` trailer** past review. Rule 90 is checkable, so check it.
 
+The acceptance implementation adds a required `native-signer` job: build the
+pinned C libraries, apply the cofactor patch, compile the SHAKE256 backend,
+and execute deterministic signing and message-binding tests at all levels.
+Both workspace test jobs execute the full 113-signature acceptance corpus
+and malleability regressions. The accept-list job remains a provenance check.
+The benchmark smoke test now requires successful complete verification.
+
 ## PR gate — `ci.yml` (pull_request, push to `dev`)
 
 | Job | What it runs | Fails when |
@@ -41,7 +48,7 @@ Wall clock is about 4–5 min, dominated by the C build when it runs.
 
 | Job | What it runs | Status |
 | --- | --- | --- |
-| `fuzz` | `cargo-fuzz` (nightly toolchain), 10 min per target, **built for `x86_64-unknown-linux-gnu`** (the pinned binary is musl and would otherwise target musl, where ASan is refused): `verify_level::<L>` for each level; public-key decode; signature decode. Corpus cached between runs. **The step fails unless the log shows ≥1,000 executions and the corpus is non-empty** (PR #7). **Open:** the `verify_level_*` corpora hold 3 files after ~2×10⁸ executions — arbitrary bytes die at `Length`/`Canonical`. Seed each corpus with the `s5_lvl*` vectors and correctly sized canonical variants so the fuzzer reaches `Basis`, `Composite`, `Kernel`. | gate (a crash is red; a run that did not execute is red) |
+| `fuzz` | `cargo-fuzz` (nightly toolchain), 10 min per target, **built for `x86_64-unknown-linux-gnu`** (the pinned binary is musl and would otherwise target musl, where ASan is refused): `verify_level::<L>` for each level; public-key decode; signature decode. Corpus cached between runs. **The step fails unless the log shows ≥1,000 executions and the corpus is non-empty** (PR #7). **Implemented:** `scripts/seed_fuzz_corpus.py` seeds all five targets from the 113 honest signatures before fuzzing; verify seeds include the length framing required by each target. | gate (a crash is red; a run that did not execute is red) |
 | `differential-prime` | 10,000 random challenge degrees per level from a committed Python script, checked against `sympy.isprime` through a small Rust driver; zero disagreements required (this session's one-off run made permanent) | gate |
 | `big-endian` | `cross test --target s390x-unknown-linux-gnu` under qemu | gate |
 | `c-vectors-full` | the C rebuild and diff, unconditionally | gate |

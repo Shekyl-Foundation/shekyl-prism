@@ -17,6 +17,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Fixture builds retain their historical RNG. The signer backend uses
+ * a domain-separated SHAKE256 stream from 384 bits supplied over stdin. */
+#ifdef PRISM_SECURE_RNG
+#include <fips202.h>
+#include <mem.h>
+#include <sys/resource.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+static shake256incctx rng_state;
+void randombytes_init(unsigned char *seed, unsigned char *personalization, int strength) {
+    (void)personalization;
+    (void)strength;
+    static const unsigned char domain[] = "shekyl-prism-signer-stream-v1";
+    prism_secure_clear(&rng_state, sizeof(rng_state));
+    shake256_inc_init(&rng_state);
+    shake256_inc_absorb(&rng_state, domain, sizeof(domain)-1);
+    shake256_inc_absorb(&rng_state, seed, 48);
+    shake256_inc_finalize(&rng_state);
+}
+int randombytes(unsigned char *buffer, unsigned long long length) {
+    shake256_inc_squeeze(buffer, (size_t)length, &rng_state);
+    return 0;
+}
+#else
 /* The reference build's randombytes_init ignores its seed. This generator
  * is the one the harness links, so a 48-byte seed reproduces a key. */
 static uint64_t rng_state[6];
@@ -49,6 +74,8 @@ int randombytes(unsigned char *buffer, unsigned long long length) {
     }
     return 0;
 }
+
+#endif
 
 int gmp_printf(const char *fmt, ...) {
     (void)fmt;
@@ -272,7 +299,7 @@ static int set_decimal(ibz_t *out, const char *text) {
 
 static int read_seed(unsigned char seed[48]) {
     size_t got = fread(seed, 1, 48, stdin);
-    return got == 48;
+    return got == 48 && fgetc(stdin) == EOF;
 }
 
 static int keygen(const char *scratch) {
@@ -282,6 +309,9 @@ static int keygen(const char *scratch) {
         return 1;
     }
     randombytes_init(seed, NULL, 256);
+#ifdef PRISM_SECURE_RNG
+    prism_secure_clear(seed, sizeof(seed));
+#endif
 
     public_key_t public_key;
     secret_key_t secret;
@@ -294,7 +324,13 @@ static int keygen(const char *scratch) {
 
     unsigned char encoded[SECRETKEY_BYTES];
     secret_key_to_bytes(encoded, &secret, &public_key);
+#ifdef PRISM_SECURE_RNG
+    int descriptor = open(scratch, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600);
+    FILE *file = descriptor < 0 ? NULL : fdopen(descriptor, "wb");
+    if (descriptor >= 0 && file == NULL) close(descriptor);
+#else
     FILE *file = fopen(scratch, "wb");
+#endif
     if (file == NULL || fwrite(encoded, 1, SECRETKEY_BYTES, file) != SECRETKEY_BYTES) {
         fprintf(stderr, "scratch write failed\n");
         if (file != NULL) {
@@ -303,7 +339,13 @@ static int keygen(const char *scratch) {
         secret_key_finalize(&secret);
         return 1;
     }
-    fclose(file);
+    if (fclose(file) != 0) {
+        secret_key_finalize(&secret);
+        return 1;
+    }
+#ifdef PRISM_SECURE_RNG
+    prism_secure_clear(encoded, sizeof(encoded));
+#endif
 
     ec_curve_t curve = public_key.curve;
     ec_normalize_curve(&curve);
@@ -321,6 +363,9 @@ static int sign(const char *scratch, const char *scalar_text) {
         return 1;
     }
     randombytes_init(seed, NULL, 256);
+#ifdef PRISM_SECURE_RNG
+    prism_secure_clear(seed, sizeof(seed));
+#endif
 
     FILE *file = fopen(scratch, "rb");
     unsigned char encoded[SECRETKEY_BYTES];
@@ -337,6 +382,9 @@ static int sign(const char *scratch, const char *scalar_text) {
     secret_key_t secret;
     secret_key_init(&secret);
     secret_key_from_bytes(&secret, &public_key, encoded);
+#ifdef PRISM_SECURE_RNG
+    prism_secure_clear(encoded, sizeof(encoded));
+#endif
 
     const int chain_exponent = TORSION_EVEN_POWER - 2;
     const int torsion_exponent = TORSION_EVEN_POWER;
@@ -504,7 +552,22 @@ static int sign(const char *scratch, const char *scalar_text) {
     return 0;
 }
 
+#ifdef PRISM_SECURE_RNG
+static void clear_rng(void) {
+    prism_secure_clear(&rng_state, sizeof(rng_state));
+}
+#endif
 int main(int argc, char **argv) {
+#ifdef PRISM_SECURE_RNG
+    struct rlimit no_core = {0, 0};
+    if (setrlimit(RLIMIT_CORE, &no_core) != 0) return 1;
+    umask(077);
+    atexit(clear_rng);
+    if (argc == 2 && strcmp(argv[1], "backend-version") == 0) {
+        printf("prism-signer-shake256-v1 %d\n", TORSION_EVEN_POWER);
+        return 0;
+    }
+#endif
     if (argc == 3 && strcmp(argv[1], "keygen") == 0) {
         return keygen(argv[2]);
     }

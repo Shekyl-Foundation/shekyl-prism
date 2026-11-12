@@ -11,7 +11,7 @@ set -eu
 
 root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 build=${PRISM_REF_BUILD:?set PRISM_REF_BUILD to the reference cmake build}
-src=$root/external/PRISM_v2
+src=${PRISM_REF_SOURCE:-$root/external/PRISM_v2}
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 # The pinned ideal-to-isogeny aborts on some seeds (mini-gmp divides by
@@ -47,7 +47,7 @@ patched_quaternion() {
 compile() {
     variant=$1
     quat=$(patched_quaternion)
-    /usr/bin/cc -O2 -std=gnu11 -DNDEBUG \
+    /usr/bin/cc -O2 -std=gnu11 -DNDEBUG ${rngflag:-} \
         -DENABLE_SIGN -DGMP_LIMB_BITS=64 -DHAVE_UINT128 -DMINI_GMP \
         -DPRISM_BUILD_TYPE_REF -DPRISM_VARIANT="$variant" -DRADIX_64 \
         -DTARGET_AMD64 -DTARGET_OS_UNIX \
@@ -124,6 +124,17 @@ positive() {
         i=$((i + 1))
     done
 }
+
+# Build only. The caller must point at the pinned source and reference build.
+# These binaries use SHAKE256, not the fixture generator's xorshift stream.
+if [ "${1:-}" = "backend" ]; then
+    rngflag=-DPRISM_SECURE_RNG
+    for variant in lvl1 lvl3 lvl5; do
+        compile "$variant"
+        mv "$build/export_s5_$variant" "$build/prism_signer_$variant"
+    done
+    exit
+fi
 
 if [ "${1:-}" = "positive" ]; then
     positive "$2" "$3" "$4"

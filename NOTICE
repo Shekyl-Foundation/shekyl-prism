@@ -19,8 +19,12 @@ basis lift, from `src/ec/ref/lvlx/ec_jac.c` and `basis.c`.
 matrices whose block equations are `complete_symplectic_matrix_dim2` in
 `external/Theta_dim4` `pkg/basis_change/base_change_dim2.py`
 (Apache-2.0, Pierrick Dartois). `prism-isogeny/src/theta_base.rs` ports
-`base_change_theta_dim2` from that file. The dim-2 isogeny chain in that
-tree is not the accept path yet.
+`base_change_theta_dim2` from that file. The adapted dim-2 chain and its dual evaluation are ported in
+`prism-isogeny/src/dual_chain.rs`. The files `isogeny_chain_dim2.py`,
+`gluing_isogeny_dim2.py`, and `isogeny_dim2.py` additionally carry the MIT
+notice of Pierrick Dartois, Luciano Maino, Giacomo Pope and Damien Robert
+(2023). That notice is retained in `LICENSES/Theta_dim2-MIT.txt`; the
+Theta_dim4 Apache-2.0 license is in `LICENSES/Theta_dim4-Apache-2.0.txt`.
 
 `prism-isogeny/src/gluing.rs` and `prism-isogeny/src/chain.rs` port the
 gluing isogeny and `_theta_chain_compute_impl` from `theta_isogenies.c`.

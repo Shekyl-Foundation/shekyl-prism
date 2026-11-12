@@ -221,6 +221,32 @@ jobs:
       - name: C Q is the cleared difference
         run: python3 scripts/check_even_basis.py 100
 
+  native-signer:
+    name: native-signer
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: true
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+      - name: Compiler
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential cmake
+      - name: Build pinned libraries and SHAKE signer backend
+        run: |
+          set -euo pipefail
+          python3 scripts/check_c_reference.py
+          cmake -S external/PRISM_v2 -B target/native -DCMAKE_BUILD_TYPE=Release -DPRISM_BUILD_TYPE=ref -DGMP_LIBRARY=MINI
+          cmake --build target/native --parallel 4 --target prism_lvl1 prism_lvl3 prism_lvl5
+          PRISM_REF_BUILD="$PWD/target/native" sh scripts/export_s5_vectors.sh backend
+      - name: Deterministic signing, new messages and verification at every level
+        env:
+          PRISM_SIGNER_BACKEND_DIR: ${{ github.workspace }}/target/native
+        run: cargo test -p prism-signer --release --locked --test native -- --ignored
+
   accept-list:
     name: accept-list
     runs-on: ubuntu-latest
@@ -230,7 +256,8 @@ jobs:
         with:
           persist-credentials: false
           submodules: false
-      - name: Every accept vector is listed Ok
+      # This checks provenance. Both Rust test jobs execute the complete corpus.
+      - name: Every accept vector has a recorded model verdict
         run: python3 scripts/ci/check_accept_verdicts.py
 
   codeql:
@@ -272,6 +299,7 @@ jobs:
       - c-reference-pin
       - c-vectors
       - accept-list
+      - native-signer
       - codeql
     if: always() && !cancelled()
     runs-on: ubuntu-latest
@@ -295,5 +323,6 @@ jobs:
             c-reference-pin=${{ needs['c-reference-pin'].result }}
             c-vectors=${{ needs['c-vectors'].result }}
             accept-list=${{ needs['accept-list'].result }}
+            native-signer=${{ needs['native-signer'].result }}
             codeql=${{ needs.codeql.result }}
         run: python3 scripts/ci/aggregate.py

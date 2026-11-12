@@ -6,9 +6,9 @@
 
 """Compare challenge-degree primality with sympy.
 
-Draws odd scalars below `2^{e-1}` for each NIST level, asks
+Draws odd scalars below `2^{e'-1}` for each NIST level, asks
 `prism-verify`'s `degree_is_prime` (`src/bin/degree_check.rs`), and requires
-the same answer as `sympy.isprime` on `q = 2^{2e-1} - s^2`. A short table of
+the same answer as `sympy.isprime` on `q = 2^{2e'-1} - s^2`. A short table of
 degrees whose primality is known without either implementation comes first,
 so a driver and a sympy that fail the same way still go red.
 
@@ -21,8 +21,8 @@ import secrets
 import subprocess
 import sys
 
-# (exponent, scalar, q is prime). q = 2^{2e-1} - s^2, and s is odd and
-# below 2^{e-1}, which is the verifier's domain.
+# (exponent, scalar, q is prime). q = 2^{2e'-1} - s^2, and s is odd and
+# below 2^{e'-1}, which is the verifier's domain.
 KNOWN = (
     (4, 1, True),  # 127
     (4, 3, False),  # 119
@@ -31,9 +31,9 @@ KNOWN = (
 )
 
 LEVELS = (
-    ("NIST-I", 248),
-    ("NIST-III", 376),
-    ("NIST-V", 500),
+    ("NIST-I", 246),
+    ("NIST-III", 374),
+    ("NIST-V", 498),
 )
 
 COUNT = 10_000

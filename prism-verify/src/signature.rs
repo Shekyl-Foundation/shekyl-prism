@@ -35,11 +35,9 @@ pub struct AffinePoint<L: Level> {
 
 /// A decoded signature.
 ///
-/// Every field is canonical, and `p.y` has passed the sign normalization.
-/// `curve`, `p.x` and `q` are read by Algorithm 3 steps 3–8, which
-/// `docs/VERIFIER_SPEC.md` specifies and this crate does not yet run; they
-/// are decoded either way, because a non-canonical element anywhere in the
-/// signature is a refusal.
+/// Every field is canonical. Sign and curve-model normalization are checked
+/// by `verify`, rather than by this byte decoder.
+/// The full verifier checks both image components after the adapted chains.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Response<L: Level> {
     /// `A_sig`, the Montgomery coefficient of `E_sig`.

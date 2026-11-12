@@ -16,11 +16,10 @@ const SINGULAR_SQUARE: u64 = 4;
 /// A decoded public key: the Montgomery coefficient `A` of
 /// `E_vk : y^2 = x^3 + A x^2 + x`, together with the bytes that name it.
 ///
-/// One constructor runs every check that depends on the key and nothing
-/// else, so an identity cannot exist in a form [`crate::verify`] would go on
-/// to refuse. Both the verifier and the signer's index search hold one,
-/// which is what keeps them hashing the same byte string: the key's length
-/// is tested once, against one constant, in [`Self::decode`].
+/// This constructor checks the encoding and excluded coefficients. It is
+/// the challenge identity, not proof of a full rational torsion basis:
+/// the verifier checks that basis's order and span before pairing/chains.
+/// Both verification and index search hash these exact canonical bytes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct KeyIdentity<'key, L: Level> {
     bytes: &'key [u8],

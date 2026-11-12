@@ -74,6 +74,8 @@ jobs:
           path: fuzz/corpus
           key: fuzz-${{ matrix.target }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: fuzz-${{ matrix.target }}-
+      - name: Seed full verification paths
+        run: python3 scripts/seed_fuzz_corpus.py
       - id: fuzz
         name: 10 minutes
         env:

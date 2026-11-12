@@ -1,5 +1,11 @@
 # Sage accept-path model report
 
+Rust status, 2026-11-12: the adapted two-chain path is now implemented.
+All 113 honest fixtures pass the public verifier and every intermediate
+null point of both chains matches the six traces below. The recorded Sage
+runs remain historical evidence; fresh Sage differential execution requires
+Sage and the pinned submodule. See `docs/SECURITY_REVIEW.md`.
+
 Pin: `external/Theta_dim4` @ `4770b24a61e6aa15da4cac1b9d82fd7b9a05f459`.
 
 ## Accept path Ok (regenerated vectors)
@@ -169,5 +175,5 @@ the `_p` batch, and on every negative row of the six original vectors,
 the chain verdict is the same as Dartois's `complete_symplectic_matrix_dim2`.
 The matrix, null-point, and step-8 files are regenerated from the closed
 form. `base_change_theta_dim2` in `prism-isogeny/src/theta_base.rs` matches
-`N1` and `N2` in those files. The dim-2 isogeny chain that consumes them
-is not the accept path yet.
+`N1` and `N2` in those files. The Rust accept path now consumes these adapted structures and compares
+both image components.

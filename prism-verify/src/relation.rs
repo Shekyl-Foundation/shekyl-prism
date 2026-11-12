@@ -3,24 +3,21 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! Algorithm 3 steps 3–8, at exponent `e′ = e − 2`.
-//!
-//! The signature points have order `2^e` (Algorithm 2 as printed). One chain
-//! of length `e′` still runs here: both sides of the kernel are doubled
-//! twice to order `2^{e′}`. The chain is evaluated at `([s]X, 0)` and
-//! `([2^{e′−1}]X, 0)` for the canonical basis of `E_vk[2^e]`.
-//!
-//! The x-only kernel cannot tell `+P_sig` from `−P_sig`. Before that chain,
-//! `e(R₁, R₂) = e(P₁, P₂)^q` with `R_i = [s]` of the signature points. The
-//! dual-basis accept path of `docs/VERIFIER_SPEC.md` replaces this
-//! transitional chain; both readings existing is still
-//! [`VerifyError::Unidentified`].
+//! Order and span checks, the full-order Weil pairing, and the two-chain
+//! accept path at exponent `e′ = e − 2`. Historical single-chain probes
+//! remain in tests to document the former basis and structure failures.
 
 use prism_field::{Field, Level};
+#[cfg(test)]
 use prism_isogeny::chain::{chain_surface, SurfaceStop};
+#[cfg(test)]
 use prism_isogeny::gluing::{Couple, Kernel};
-use prism_isogeny::jac::{add, lift_basis, to_xz, Jac};
-use prism_isogeny::montgomery::{a24, ladder, Montgomery, Xz};
+#[cfg(test)]
+use prism_isogeny::jac::{add, to_xz};
+use prism_isogeny::jac::{lift_basis, Jac};
+#[cfg(test)]
+use prism_isogeny::montgomery::{a24, ladder};
+use prism_isogeny::montgomery::{Montgomery, Xz};
 use prism_isogeny::pairing::{mul, neg_square_mod_pow2, pow, weil};
 use prism_isogeny::torsion::{double_times, even_basis, starting_basis, EvenBasis};
 
@@ -78,26 +75,22 @@ pub fn relate_points<L: Level>(
     if !span_e::<L>(sig, p_sig_x, q_sig_x) {
         return Err(VerifyError::Kernel);
     }
+    // The canonical search names abscissas; arbitrary public keys must
+    // still prove that the resulting signature basis is full rational torsion.
+    if !order_e::<L>(vk, even.p)
+        || !order_e::<L>(vk, even.difference)
+        || !span_e::<L>(vk, even.p, even.difference)
+    {
+        return Err(VerifyError::Kernel);
+    }
     // Before either chain. A mismatch is `Pairing` on a public key and on
     // the starting curve alike; the degree-`q` witness calls the chain
     // helper itself and does not come through here.
     if !pairing_holds::<L>(vk, &even, sig, p_sig, q_sig, scalar) {
         return Err(VerifyError::Pairing);
     }
-    let readings = match e_prime_surface::<L>(vk, &even, push, sig, p_sig, q_sig, scalar) {
-        Ok(readings) => readings,
-        // A glued kernel whose one-factor point does not stay one-factor,
-        // and a kernel that never glues, are both a chain that stopped.
-        Err(SurfaceStop::Image | SurfaceStop::Kernel | SurfaceStop::Step(_)) => {
-            return Err(VerifyError::Kernel);
-        }
-    };
-    if readings.earlier.images.len() != 6 || readings.last.images.len() != 6 {
-        return Err(VerifyError::Kernel);
-    }
-    // The two readings are the chain at `e′ − 1` and at `e′`. Identifying
-    // them is the dual-basis section, which is not built.
-    Err(VerifyError::Unidentified)
+    let _ = push;
+    crate::accept::check::<L>(vk, &even, sig, p_sig, q_sig, scalar)
 }
 
 /// `e_{2^e}([s]P_sig, [s]Q_sig) = e_{2^e}(P, Q)^q`.
@@ -146,6 +139,7 @@ fn pairing_holds<L: Level>(
 
 /// The `e′` chain for a basis and signature that have already passed the
 /// order and span checks.
+#[cfg(test)]
 fn e_prime_surface<L: Level>(
     vk: L::Ext,
     even: &EvenBasis<L::Ext>,
@@ -193,6 +187,7 @@ fn span_e<L: Level>(coefficient: L::Ext, p: Xz<L::Ext>, q: Xz<L::Ext>) -> bool {
     !p2.is_infinity() && !q2.is_infinity() && !p2.x.mul(q2.z).same(q2.x.mul(p2.z))
 }
 
+#[cfg(test)]
 fn pushed<L: Level>(vk: L::Ext, bases: [Xz<L::Ext>; 3], scalar: &[u8]) -> [Couple<L::Ext>; 6] {
     let at = |point: Xz<L::Ext>| Couple {
         first: point,
@@ -214,6 +209,7 @@ fn on_curve<L: Level>(coefficient: L::Ext, x: L::Ext, y: L::Ext) -> bool {
         .same(square.mul(x).add(coefficient.mul(square)).add(x))
 }
 
+#[cfg(test)]
 fn difference<L: Level>(
     coefficient: L::Ext,
     px: L::Ext,
@@ -237,6 +233,7 @@ fn difference<L: Level>(
     ))
 }
 
+#[cfg(test)]
 fn scale<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>, scalar: &[u8]) -> Xz<L::Ext> {
     let Some(constant) = a24(coefficient) else {
         return Xz::infinity();
@@ -263,6 +260,7 @@ mod e0_vectors {
     use crate::verify;
     use crate::VerifyError;
     use prism_field::{Field, Level, Level1};
+    #[cfg(test)]
     use prism_isogeny::chain::SurfaceStop;
     use prism_isogeny::endomorphism::{apply, multiply};
     use prism_isogeny::jac::{lift_basis, Jac};
@@ -375,6 +373,7 @@ mod s5_vectors {
     use crate::verify;
     use crate::VerifyError;
     use prism_field::{ChallengeIndex, Field, Level, Level1, Level3, Level5};
+    #[cfg(test)]
     use prism_isogeny::chain::SurfaceStop;
     use prism_isogeny::jac::Jac;
     use prism_isogeny::montgomery::{Montgomery, Xz};
@@ -477,13 +476,6 @@ mod s5_vectors {
         }
     }
 
-    fn refusal(stop: Stop) -> VerifyError {
-        match stop {
-            Stop::Readings => VerifyError::Unidentified,
-            Stop::Step(_) => VerifyError::Kernel,
-        }
-    }
-
     fn honest<L: Level>(text: &str, chain: Stop, negated_q: Stop, full_order: bool) {
         let sample = sample::<L>(text);
         assert!(
@@ -535,12 +527,12 @@ mod s5_vectors {
                 sample.response.q,
                 &sample.scalar,
             ),
-            Err(refusal(chain))
+            Ok(())
         );
         // The degree is prime at e', so verify reaches the chain.
         assert_eq!(
             verify::<L>(&sample.key, b"shekyl-prism-s5", &sample.response.encode()),
-            Err(refusal(chain))
+            Ok(())
         );
 
         let mut wrong_sign = sample.response;
@@ -733,7 +725,7 @@ mod s5_vectors {
     }
 
     #[test]
-    fn the_canonical_kernel_stops_at_step_one() {
+    fn honest_signatures_accept_and_the_old_chain_still_stops_at_step_one() {
         // The kernel difference is `difference` of the cleared points.
         // With that point, every committed honest vector stops at step 1
         // and `(P, −Q)` reaches both readings. The earlier field, the

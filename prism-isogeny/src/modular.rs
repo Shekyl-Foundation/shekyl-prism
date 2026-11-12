@@ -38,6 +38,23 @@ impl PartialEq for Residue {
 }
 
 impl Residue {
+    /// Reduce a public little-endian scalar modulo `2^bits`.
+    pub fn from_le_bytes(bits: u32, bytes: &[u8]) -> Self {
+        let mut out = Self::zero(bits);
+        for (i, byte) in bytes.iter().take(LIMBS * 8).enumerate() {
+            out.limb[i / 8] |= u64::from(*byte) << (8 * (i % 8));
+        }
+        out.mask();
+        out
+    }
+
+    pub fn to_le_bytes(self) -> Vec<u8> {
+        self.limb
+            .iter()
+            .flat_map(|limb| limb.to_le_bytes())
+            .take(self.bits.div_ceil(8) as usize)
+            .collect()
+    }
     pub fn zero(bits: u32) -> Self {
         let mut out = Self {
             limb: [0; LIMBS],
@@ -67,7 +84,7 @@ impl Residue {
         let mut acc = Self::zero(bits);
         for byte in text.bytes() {
             let digit = Self::from_u64(bits, u64::from(byte - b'0'));
-            acc = acc.mul(ten).add(digit);
+            acc = acc.multiply(ten).add(digit);
         }
         acc
     }
@@ -104,10 +121,10 @@ impl Residue {
     }
 
     fn sub(self, rhs: Self) -> Self {
-        self.add(rhs.neg())
+        self.add(rhs.negate())
     }
 
-    fn neg(self) -> Self {
+    pub fn negate(self) -> Self {
         let mut out = self;
         let mut carry = 1u128;
         for limb in &mut out.limb {
@@ -119,7 +136,7 @@ impl Residue {
         out
     }
 
-    fn mul(self, rhs: Self) -> Self {
+    pub fn multiply(self, rhs: Self) -> Self {
         let mut column = [0u128; LIMBS];
         for i in 0..LIMBS {
             if self.limb[i] == 0 {
@@ -145,7 +162,7 @@ impl Residue {
     }
 
     /// Inverse of an odd residue. `None` when this is even.
-    fn inv(self) -> Option<Self> {
+    pub fn inv(self) -> Option<Self> {
         if !self.is_odd() {
             return None;
         }
@@ -154,12 +171,12 @@ impl Residue {
         // Each step doubles the number of correct bits, from 1 up to `bits`.
         let mut correct = 1u32;
         while correct < self.bits {
-            let product = self.mul(approx);
-            approx = approx.mul(two.sub(product));
+            let product = self.multiply(approx);
+            approx = approx.multiply(two.sub(product));
             correct = correct.saturating_mul(2);
         }
-        let product = self.mul(approx);
-        Some(approx.mul(two.sub(product)))
+        let product = self.multiply(approx);
+        Some(approx.multiply(two.sub(product)))
     }
 }
 
@@ -170,6 +187,9 @@ pub struct Mat4 {
 }
 
 impl Mat4 {
+    pub fn rows(self) -> [[Residue; 4]; 4] {
+        self.row
+    }
     #[cfg(test)]
     fn block(self, rows: [usize; 2], cols: [usize; 2]) -> [[Residue; 2]; 2] {
         [
@@ -191,7 +211,7 @@ fn mul2(left: Block, right: Block) -> Block {
     for (out_row, left_row) in out.iter_mut().zip(left) {
         for (right_row, coeff) in right.iter().zip(left_row) {
             for (cell, factor) in out_row.iter_mut().zip(right_row) {
-                *cell = cell.add(coeff.mul(*factor));
+                *cell = cell.add(coeff.multiply(*factor));
             }
         }
     }
@@ -234,9 +254,9 @@ fn phi(s: Residue, q: Residue) -> Mat4 {
     let one = Residue::one(bits);
     Mat4 {
         row: [
-            [s, q.neg(), zero, zero],
+            [s, q.negate(), zero, zero],
             [one, s, zero, zero],
-            [zero, zero, s, one.neg()],
+            [zero, zero, s, one.negate()],
             [zero, zero, q, s],
         ],
     }
@@ -251,9 +271,9 @@ fn phi_hat(s: Residue, q: Residue) -> Mat4 {
     Mat4 {
         row: [
             [s, q, zero, zero],
-            [one.neg(), s, zero, zero],
+            [one.negate(), s, zero, zero],
             [zero, zero, s, one],
-            [zero, zero, q.neg(), s],
+            [zero, zero, q.negate(), s],
         ],
     }
 }
@@ -265,25 +285,25 @@ pub fn challenge_matrices(s: Residue) -> Option<(Mat4, Mat4, Mat4)> {
     let bits = s.bits;
     let zero = Residue::zero(bits);
     let one = Residue::one(bits);
-    let s2 = s.mul(s);
-    let t2 = t.mul(t);
+    let s2 = s.multiply(s);
+    let t2 = t.multiply(t);
     let m1 = Mat4 {
         row: [
             [zero, zero, s, zero],
-            [zero, t2, one.neg(), zero],
-            [t.neg(), zero, zero, s],
+            [zero, t2, one.negate(), zero],
+            [t.negate(), zero, zero, s],
             [zero, zero, zero, s2],
         ],
     };
     let m2 = Mat4 {
         row: [
-            [one.neg(), zero, zero, one],
+            [one.negate(), zero, zero, one],
             [zero, zero, zero, t],
-            [zero, zero, one.neg(), zero],
-            [zero, s.neg(), s, zero],
+            [zero, zero, one.negate(), zero],
+            [zero, s.negate(), s, zero],
         ],
     };
-    Some((phi(s, s2.neg()), m1, m2))
+    Some((phi(s, s2.negate()), m1, m2))
 }
 
 #[cfg(test)]
@@ -343,13 +363,13 @@ mod tests {
             for (out_row, factor_row) in out.iter_mut().zip(factor.row) {
                 for (column, coeff) in columns.iter().zip(factor_row) {
                     for (cell, entry) in out_row.iter_mut().zip(column) {
-                        *cell = cell.add(coeff.mul(*entry));
+                        *cell = cell.add(coeff.multiply(*entry));
                     }
                 }
             }
             out
         };
-        let dual = super::phi_hat(s, s.mul(s).neg());
+        let dual = super::phi_hat(s, s.multiply(s).negate());
         assert_eq!(
             kernel(m2, [2, 3]),
             image(phi, kernel(m1, [0, 1])),
@@ -358,7 +378,7 @@ mod tests {
         let mut expected = image(dual, kernel(m2, [0, 1]));
         for row in &mut expected {
             for entry in row {
-                *entry = entry.neg();
+                *entry = entry.negate();
             }
         }
         assert_eq!(kernel(m1, [2, 3]), expected, "M1 kernel half");
