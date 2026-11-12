@@ -74,14 +74,19 @@ The signer keeps the full `2^e`-torsion for IdealToIsogeny (§7.1) and
 evaluates `σ` on `E_vk[2^{e′}]`. The field, the limb counts, the key
 size, the signature length, and the C chain vectors stay as they are.
 The signature does not carry `s`. The derived challenge scalar is `e − 3`
-bits wide, which is `e′ − 1`. At Table 2's three levels that is the same
-byte length as the `e − 1` width.
+bits wide, which is `e′ − 1`, so `q` has bit length `2e − 5`: 491, 747,
+and 995. That is the width the margin against `2λ` uses. The paper's
+challenge is `e − 1` bits and its `q` is `2e − 1` bits. At Table 2's
+three levels `e − 3` and `e − 1` occupy the same number of bytes, so
+`CHALLENGE_BITS` stays `e − 1` as that byte width. The security
+accounting uses `e − 3`.
 
 The instantiated verifier walks a chain of length `e′`. The kernel is
 `(P, R, Q)` of `E_vk[2^e]`, doubled twice to order `2^{e′}`, where `Q` is
-`difference(P, R)` after the cofactor. Every committed honest vector stops
-at isogeny step 1, so the result is `Kernel`. `(P, −Q)` reaches both
-readings, so the result is `Unidentified`. The field this chain used
+`difference(P, R)` after the cofactor. Before that chain,
+`e(R₁, R₂) = e(P₁, P₂)^q` with `R_i = [s]` of the signature points.
+`(P, −Q)` fails it, so the result is `Pairing`. An honest vector passes
+it and then stops at isogeny step 1, so the result is `Kernel`. The field this chain used
 before 2026-11-11 was the cofactor of the uncleared difference, and with
 that point levels I and III reached both readings. Level V's index point
 is still not of order `p + 1`; the verify path does not consult that
@@ -325,8 +330,8 @@ small-extension sample is the thousand degrees per level in
 Small-extension torsion, not these lines. The relation derives `s_j` at
 `e′` and runs the length-`e′` chain on the canonical basis after doubling
 both sides twice. The kernel difference is `difference(P, R)` after the
-cofactor. Every committed honest vector stops at isogeny step 1
-(`Kernel`). `(P, −Q)` reaches both readings (`Unidentified`).
+cofactor. The pairing check runs first: `(P, −Q)` is `Pairing`. An
+honest vector passes it and stops at isogeny step 1 (`Kernel`).
 
 The hit rate per candidate is low, so recomputing the search in the verifier
 lets an attacker grind messages whose search runs long and make every node
@@ -435,11 +440,15 @@ For the authors of ePrint 2026/443:
 
 1. §5.1 estimates that a single challenge degree is prime 6.0% / 4.3% /
    3.4% of the time at NIST I / III / V. Over 4,000 odd candidates per
-   level the measured rates are 0.95% / 0.58% / 0.43%. The elementary
-   estimate is the prime density near `2^{2e−1}`, times 2 because `q` is
-   odd, times 3/2 because 3 never divides `q`. The paper's figure is about
-   seven times that. Expected signer search length is about 105 / 174 /
-   235 candidates.
+   level, at the paper's width `e − 1`, the measured rates are 0.95% /
+   0.58% / 0.43%. The elementary estimate at that width is the prime
+   density near `2^{2e−1}`, times 2 because `q` is odd, times 3/2 because
+   3 never divides `q`. The paper's figure is about seven times that.
+   The verifier derives an `e − 3`-bit `s`, so its `q` is the `2e − 5`-bit
+   integer in the chain-exponent section, not this `2e − 1`-bit integer.
+   The four-bit gap changes the density by about `(2e−1)/(2e−5)`, which
+   is not that factor of seven. Expected signer search length at the
+   measured width is about 105 / 174 / 235 candidates.
 2. Algorithm 2 line 8 and Algorithm 3 line 1 state opposite inequalities
    for `y(P_sig)` and `y(−P_sig)`. This verifier follows Algorithm 2.
 3. The §5 strong-unforgeability argument assumes a deterministic
@@ -777,8 +786,9 @@ check is refused with the earliest of them:
 | 5 | `Sign` | two encodings and a byte comparison on an element already decoded |
 | 6 | `Basis` | up to `2λ` Legendre symbols — 256, 384, 512 — a length the sender chooses with `A` |
 | 7 | `Composite` | one cSHAKE256 squeeze and one Baillie–PSW test — more than everything above it together |
-| 8 | `Kernel` | the chain, or the discovery that a signature point is off its curve |
-| 9 | `Unidentified` | both theta readings exist, and the structures are not yet matched |
+| 8 | `Kernel` | a signature point off its curve, or the chain once the pairing has passed |
+| 9 | `Pairing` | `e(R₁, R₂) ≠ e(P₁, P₂)^q`, two Weil pairings of order `2^e` |
+| 10 | `Unidentified` | both theta readings exist, and the structures are not yet matched |
 
 The order of `Sign` and `Basis` is load-bearing: the basis search is the one
 public check whose length a sender controls, so the free comparison on

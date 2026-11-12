@@ -66,11 +66,15 @@ pub enum VerifyError {
     /// exceeds `2λ` — about `2^-λ` of keys, the level's own security target.
     /// `docs/VERIFIER_SPEC.md` records the bound and what it costs.
     Basis,
-    /// `2^{2e−1} − s_j^2` is not a Baillie–PSW prime.
+    /// `2^{2e′−1} − s_j^2` is not a Baillie–PSW prime, `e′ = e − 2`.
     Composite,
     /// The `(2,2)` chain stopped before both readings, or a signature point
     /// is not on its curve.
     Kernel,
+    /// `e(R₁, R₂) ≠ e(P₁, P₂)^q`, with `R_i = [s]` of the signature points.
+    /// This pins the determinant of the basis change. It runs after the
+    /// order and span checks and before either chain.
+    Pairing,
     /// Both theta readings exist, and the transformation between their
     /// structures is not fixed. This is not acceptance.
     Unidentified,
@@ -87,6 +91,7 @@ impl core::fmt::Display for VerifyError {
             Self::Basis => "no basis index within the search bound",
             Self::Composite => "the challenge degree is composite",
             Self::Kernel => "the isogeny chain stopped before both readings",
+            Self::Pairing => "the Weil pairing does not match the challenge degree",
             Self::Unidentified => "the two readings on the codomain are not identified",
         };
         f.write_str(reason)
@@ -160,6 +165,7 @@ mod tests {
             VerifyError::Basis,
             VerifyError::Composite,
             VerifyError::Kernel,
+            VerifyError::Pairing,
             VerifyError::Unidentified,
         ];
         let mut sorted = order;

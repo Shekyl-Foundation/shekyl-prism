@@ -10,15 +10,18 @@
 //! twice to order `2^{e′}`. The chain is evaluated at `([s]X, 0)` and
 //! `([2^{e′−1}]X, 0)` for the canonical basis of `E_vk[2^e]`.
 //!
-//! The x-only kernel cannot tell `+P_sig` from `−P_sig`. The dual-basis
-//! accept path of `docs/VERIFIER_SPEC.md` replaces this transitional chain;
-//! both readings existing is still [`VerifyError::Unidentified`].
+//! The x-only kernel cannot tell `+P_sig` from `−P_sig`. Before that chain,
+//! `e(R₁, R₂) = e(P₁, P₂)^q` with `R_i = [s]` of the signature points. The
+//! dual-basis accept path of `docs/VERIFIER_SPEC.md` replaces this
+//! transitional chain; both readings existing is still
+//! [`VerifyError::Unidentified`].
 
 use prism_field::{Field, Level};
 use prism_isogeny::chain::{chain_surface, SurfaceStop};
 use prism_isogeny::gluing::{Couple, Kernel};
-use prism_isogeny::jac::{add, to_xz, Jac};
+use prism_isogeny::jac::{add, lift_basis, to_xz, Jac};
 use prism_isogeny::montgomery::{a24, ladder, Montgomery, Xz};
+use prism_isogeny::pairing::{mul, neg_square_mod_pow2, pow, weil};
 use prism_isogeny::torsion::{double_times, even_basis, starting_basis, EvenBasis};
 
 use crate::basis::basis_hint;
@@ -54,7 +57,7 @@ pub fn relate_points<L: Level>(
 ) -> Result<(), VerifyError> {
     // The starting curve keeps its `E[p+1]` basis: the degree-`q` witness
     // was built from that basis. A public key uses the canonical basis of
-    // `E[2^e]`, whose second point is `x(Q) = −x(P) − A`.
+    // `E[2^e]`: `Q` is `difference(P, R)` after the cofactor.
     let (even, push) = if vk.is_zero() {
         let basis = starting_basis::<L>().ok_or(VerifyError::Kernel)?;
         (basis.even, [basis.r, basis.t, basis.difference])
@@ -75,6 +78,10 @@ pub fn relate_points<L: Level>(
     if !span_e::<L>(sig, p_sig_x, q_sig_x) {
         return Err(VerifyError::Kernel);
     }
+    // Before either chain. The starting-curve witness is not this identity.
+    if !vk.is_zero() && !pairing_holds::<L>(vk, &even, sig, p_sig, q_sig, scalar) {
+        return Err(VerifyError::Pairing);
+    }
     let readings = match e_prime_surface::<L>(vk, &even, push, sig, p_sig, q_sig, scalar) {
         Ok(readings) => readings,
         // A glued kernel whose one-factor point does not stay one-factor,
@@ -89,6 +96,50 @@ pub fn relate_points<L: Level>(
     // The two readings are the chain at `e′ − 1` and at `e′`. Identifying
     // them is the dual-basis section, which is not built.
     Err(VerifyError::Unidentified)
+}
+
+/// `e_{2^e}([s]P_sig, [s]Q_sig) = e_{2^e}(P, Q)^q`.
+///
+/// `Q` is the cleared difference. `P − Q` for the lift is `R`, the cleared
+/// point whose full-point abscissa is `−x(P) − A`. A global sign on the
+/// lifted pair cancels in the pairing.
+fn pairing_holds<L: Level>(
+    vk: L::Ext,
+    even: &EvenBasis<L::Ext>,
+    sig: L::Ext,
+    p_sig: AffinePoint<L>,
+    q_sig: AffinePoint<L>,
+    scalar: &[u8],
+) -> bool {
+    let Some((vk_curve, p_vk, q_vk)) =
+        lift_basis(Montgomery::normalized(vk), even.p, even.difference, even.q)
+    else {
+        return false;
+    };
+    let sig_curve = Montgomery::normalized(sig);
+    let one = L::Ext::one();
+    let p = Jac {
+        x: p_sig.x,
+        y: p_sig.y,
+        z: one,
+    };
+    let q = Jac {
+        x: q_sig.x,
+        y: q_sig.y,
+        z: one,
+    };
+    let (Some(left), Some(right)) = (
+        weil(
+            sig_curve,
+            mul(sig_curve, p, scalar),
+            mul(sig_curve, q, scalar),
+            L::E,
+        ),
+        weil(vk_curve, p_vk, q_vk, L::E),
+    ) else {
+        return false;
+    };
+    left.same(pow(right, &neg_square_mod_pow2(scalar, L::E)))
 }
 
 /// The `e′` chain for a basis and signature that have already passed the
@@ -509,8 +560,8 @@ mod s5_vectors {
         // refusal, once the exponent is e', is Composite, before the chain.
         assert!(!degree_is_prime(L::E - 2, next_scalar.as_bytes()));
 
-        // (P, −Q) keeps the normalized y(P). With the canonical difference
-        // the honest vector stops at step 1 and this one reaches both readings.
+        // (P, −Q) keeps the normalized y(P). The chain still reaches both
+        // readings. The pairing check refuses it before that chain runs.
         let mut negated = sample.response;
         negated.q.y = negated.q.y.negate();
         assert!(canonical_sign::<L>(negated.p.y));
@@ -528,7 +579,7 @@ mod s5_vectors {
                 negated.q,
                 &sample.scalar,
             ),
-            Err(refusal(negated_q))
+            Err(VerifyError::Pairing)
         );
 
         let swapped = Response {
@@ -537,19 +588,16 @@ mod s5_vectors {
             ..sample.response
         };
         if canonical_sign::<L>(swapped.p.y) {
-            // The transitional length-e′ chain can still reach both readings
-            // on a swap at level V; the accept path of §6 refuses it.
-            let err = relate_points::<L>(
-                coefficient,
-                swapped.curve,
-                swapped.p,
-                swapped.q,
-                &sample.scalar,
-            )
-            .expect_err("swapped points must not accept");
-            assert!(
-                matches!(err, VerifyError::Kernel | VerifyError::Unidentified),
-                "{err:?}"
+            // A swap is determinant −1. The pairing refuses it before the chain.
+            assert_eq!(
+                relate_points::<L>(
+                    coefficient,
+                    swapped.curve,
+                    swapped.p,
+                    swapped.q,
+                    &sample.scalar,
+                ),
+                Err(VerifyError::Pairing)
             );
         } else {
             assert_eq!(

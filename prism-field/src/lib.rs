@@ -105,8 +105,12 @@ pub trait Level: Copy + Clone + Eq + Send + Sync + 'static {
     /// §5 chain length. Algorithm 3 walks a `(2^e, 2^e)` chain, so this is
     /// `e`. salt-PRISM's `a` is a different count and is not this constant.
     const CHAIN_STEPS: u32;
-    /// Bit width of the challenge scalar `s`: Algorithm 3 takes an odd `s`
-    /// with `0 < s < 2^{e−1}`, so this is `e − 1`.
+    /// Byte width of the paper's challenge, `e − 1`.
+    ///
+    /// The verifier derives an `e − 3`-bit scalar (`e′ − 1`). At Table 2
+    /// those two widths occupy the same number of bytes, so this constant
+    /// is that shared byte length and not the security width. The
+    /// derivation passes `e − 3` itself.
     const CHALLENGE_BITS: u32;
     const FP_LEN: usize;
     const FP2_LEN: usize;
