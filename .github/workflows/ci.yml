@@ -77,6 +77,10 @@ jobs:
           set -euo pipefail
           cargo fmt --all --check
           cargo fmt --manifest-path fuzz/Cargo.toml --all --check
+      # The boundary check compiles an isolated consumer with --offline, so
+      # the locked dependencies must be in the registry before it runs.
+      - name: Fetch the locked dependencies
+        run: cargo fetch --locked
       - name: Reduced-width API is absent from default production builds
         run: python3 scripts/ci/check_research_boundary.py
       - name: Clippy
