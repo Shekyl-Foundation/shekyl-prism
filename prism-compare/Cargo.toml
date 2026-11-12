@@ -9,13 +9,29 @@ publish.workspace = true
 
 [features]
 default = []
-experiments = ["prism-verify/research-reduced-width"]
+experiments = ["prism-verify/research-reduced-width", "dep:prism-signer"]
 
 [dependencies]
 prism-field = { workspace = true }
 prism-verify = { workspace = true }
 sha3 = { workspace = true }
 zeroize = "=1.8.2"
+prism-signer = { path = "../prism-signer", optional = true }
 
 [lints]
 workspace = true
+
+[[bin]]
+name = "replay"
+path = "src/bin/replay.rs"
+required-features = ["experiments"]
+
+[[bin]]
+name = "unsignable"
+path = "src/bin/unsignable.rs"
+required-features = ["experiments"]
+
+[[test]]
+name = "native"
+path = "tests/native.rs"
+required-features = ["experiments"]

@@ -124,6 +124,73 @@ pub fn verify_unsalted<L: Level>(
     prism_verify::research::verify_scalar::<L>(key, &response, &scalar, bits)
 }
 
+#[cfg(feature = "experiments")]
+pub mod native;
+
+/// Public-data hex encoding for reproducible experiment records.
+pub fn encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+pub fn decode(text: &str) -> Option<Vec<u8>> {
+    if !text.len().is_multiple_of(2) {
+        return None;
+    }
+    text.as_bytes()
+        .chunks_exact(2)
+        .map(|b| u8::from_str_radix(std::str::from_utf8(b).ok()?, 16).ok())
+        .collect()
+}
+
+/// One archived unsalted vector: level name, message, key, the five
+/// response elements in wire order, and the carried index.
+pub struct Archived {
+    pub file: String,
+    pub level: String,
+    pub message: Vec<u8>,
+    pub key: Vec<u8>,
+    pub response: Vec<u8>,
+    pub index: u16,
+}
+
+/// Every archived unsalted vector kept for the comparison, in name order.
+pub fn archived_vectors() -> Vec<Archived> {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata/unsalted");
+    let mut paths = Vec::new();
+    for dir in [root.clone(), root.join("accept")] {
+        for entry in std::fs::read_dir(dir).expect("archived vector directory") {
+            let path = entry.expect("archived vector entry").path();
+            if path.extension().is_some_and(|s| s == "txt") {
+                paths.push(path);
+            }
+        }
+    }
+    paths.sort();
+    paths
+        .iter()
+        .map(|path| {
+            let text = std::fs::read_to_string(path).expect("archived vector");
+            let rows: std::collections::HashMap<_, _> =
+                text.lines().filter_map(|s| s.split_once(' ')).collect();
+            let mut response = Vec::new();
+            for name in ["E", "Px", "Py", "Qx", "Qy"] {
+                response.extend(decode(rows[name]).expect("archived hex"));
+            }
+            Archived {
+                file: path
+                    .strip_prefix(&root)
+                    .expect("under the archive root")
+                    .to_string_lossy()
+                    .into_owned(),
+                level: rows["level"].to_string(),
+                message: rows["message"].as_bytes().to_vec(),
+                key: decode(rows["A"]).expect("archived key hex"),
+                response,
+                index: rows["j"].parse().expect("archived index"),
+            }
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

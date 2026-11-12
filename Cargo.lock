@@ -87,6 +87,7 @@ name = "prism-compare"
 version = "0.1.0"
 dependencies = [
  "prism-field",
+ "prism-signer",
  "prism-verify",
  "sha3",
  "zeroize",
