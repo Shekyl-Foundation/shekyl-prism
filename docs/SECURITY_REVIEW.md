@@ -65,9 +65,11 @@ premise and the protocol reduction still require independent review.
    endomorphism ring. Neither wallet integration nor key rerandomization
    is implemented. ECLIPSE's salted construction and its stated future
    SUF-CMA work do not provide a proof for this unsalted interface.
-8. **Deployment costs.** Run successful verification on an identified Pi 4
-   Model B, then test adversarial verification costs and resource limits.
-   The floor-device gate has not been measured in this session.
+8. **Deployment costs.** Successful verification has been measured on the
+   Pi 4 Model B: the median of three level III run medians is 449.076 ms
+   under the recorded conditions; see [BENCHMARKING.md](BENCHMARKING.md).
+   A verification budget, adversarial-cost measurements and resource limits
+   remain deployment decisions. This is not an idle-device latency bound.
 
 ## How to review reproducibly
 
@@ -80,6 +82,6 @@ A matching result is evidence of implementation agreement, not a security
 proof. The fresh Sage comparison was not run in this environment.
 
 Before adoption, require an independent review of the exact written
-protocol, its parameter accounting and native signer, plus the recorded
-floor-device measurement. No notification to paper authors or other
+protocol, its parameter accounting and native signer, plus a deployment
+budget evaluated against the recorded floor-device measurement. No notification to paper authors or other
 reviewers has been sent.

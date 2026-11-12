@@ -1,0 +1,40 @@
+PRISM successful-verification floor-device measurement, 2026-11-12
+device=Raspberry Pi 4 Model B Rev 1.4
+cpu=4x Cortex-A72; aarch64; observed clock 1800 MHz; governor ondemand
+rustc=1.94.0 (4a4ef493e 2026-03-02)
+profile=release; field-backend=scalar; counter=cntvct_el0
+implementation_commit=49691c469f23b8abdb4feafe5ad48b694ca5d926
+source_archive_sha256=097c5ee9c7e9a51309fd49341ded5194ab4e91a6e51ca9817b21b8a417a8ad12
+benchmark_binary_sha256=0d30a0e5cb635a088c0bcea1ec384add5c84ec04ced0975ac60f450f7cae6d22
+validation=113 honest signatures and mutation regressions passed natively before timing
+method=3 sequential runs; 5 warmups and 31 timed successful verifications per level per run
+scope=recorded background-load conditions; not an idle-device baseline
+observed_temperature_c=63.296..69.140; telemetry_interval_s=5
+firmware_throttle_flags=unavailable; observed sysfs voltage-alarm readings=0
+counter_units=virtual timer ticks; use median_ns for elapsed time, not CPU cycles
+provenance=full raw records, source bundle/archive and checksums are in shekyl-dev infrastructure/captures/prism-acceptance/2026-11-12/
+
+run=1
+start_utc=2026-11-12T16:57:39Z
+level=NIST-I outcome=accepted samples=31 median_ns=167054266 spread_ns=2757196 median_counter=9020974 counter_spread=148885
+level=NIST-III outcome=accepted samples=31 median_ns=449076008 spread_ns=24630602 median_counter=24250185 counter_spread=1330059
+level=NIST-V outcome=accepted samples=31 median_ns=1024756239 spread_ns=3654065 median_counter=55337000 counter_spread=197302
+end_utc=2026-11-12T16:58:38Z
+
+run=2
+start_utc=2026-11-12T16:58:48Z
+level=NIST-I outcome=accepted samples=31 median_ns=167096673 spread_ns=1153459 median_counter=9023274 counter_spread=62291
+level=NIST-III outcome=accepted samples=31 median_ns=448929564 spread_ns=1602255 median_counter=24242285 counter_spread=86522
+level=NIST-V outcome=accepted samples=31 median_ns=1023212946 spread_ns=19445579 median_counter=55253679 counter_spread=1050062
+end_utc=2026-11-12T16:59:48Z
+
+run=3
+start_utc=2026-11-12T16:59:58Z
+level=NIST-I outcome=accepted samples=31 median_ns=168149763 spread_ns=1988032 median_counter=9080133 counter_spread=107354
+level=NIST-III outcome=accepted samples=31 median_ns=449763839 spread_ns=3283659 median_counter=24287324 counter_spread=177315
+level=NIST-V outcome=accepted samples=31 median_ns=1023399316 spread_ns=6439964 median_counter=55263731 counter_spread=347764
+end_utc=2026-11-12T17:00:57Z
+
+median_of_run_medians level=NIST-I ns=167096673 ms=167.096673
+median_of_run_medians level=NIST-III ns=449076008 ms=449.076008
+median_of_run_medians level=NIST-V ns=1023399316 ms=1023.399316
