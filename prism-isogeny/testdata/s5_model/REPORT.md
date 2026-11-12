@@ -113,15 +113,20 @@ cleared one.
 ## Accept vectors
 
 `prism-verify/testdata/accept/` holds further honest signatures the model
-returned Ok on: 20 at NIST-I, 27 at NIST-III, and 20 at NIST-V. A name
-containing `_r` is a repeated-byte seed. The others are SHA-256 seeds.
-The original six files in the parent testdata directory stay as they are.
-`accept_verdicts.tsv` lists every file in that directory with the verdict
-from a fresh run of the model: 20 NIST-I, 27 NIST-III, 20 NIST-V, each Ok.
+returned Ok on: 20 at NIST-I, 47 at NIST-III, and 40 at NIST-V. A name
+containing `_r` is a repeated-byte seed. A name containing `_p` is one of
+seeds 0 through 19 under
+`SHA-256("shekyl-prism-accept-positive|{III|V}|{counter}")`, expanded to
+the exporter's 48 bytes by appending the digest's first 16 bytes, and
+signed with the positive-cofactor patch below. The other names are the
+earlier SHA-256 seeds. The original six files in the parent testdata
+directory stay as they are. `accept_verdicts.tsv` lists every file in
+that directory with the verdict from a fresh run of the model, each Ok.
 
-The NIST-III rows are the seeds on which keygen returned. In a sample of
-24 SHA-256 seeds, keygen aborted on all 24, so this set is the survivors
-of that fault and not a uniform sample of seeds.
+The earlier NIST-III rows, the ones whose names are not `_p`, are the
+seeds on which keygen returned before that patch. In a sample of 24
+SHA-256 seeds, keygen aborted on all 24, so that earlier set is the
+survivors of that fault.
 
 ## Exporter aborts
 
@@ -146,3 +151,23 @@ basis application failed).
 | I | 24 | 17 | 2 | 5 |
 | III | 24 | 0 | 24 | 0 |
 | V | 24 | 2 | 14 | 8 |
+
+`scripts/c/cornacchia-positive.patch` rejects a non-positive cofactor as
+the first statement of `ibz_cornacchia_prime`, returning 0 before the
+Euclidean loop. `scripts/export_s5_vectors.sh` applies it to a copy of
+`integers.c`, compiles that object, and links the exporter against a
+copy of the quaternion archive. The submodule and the reference build
+are not modified. With that exporter, seeds 0 through 19 at NIST-III and
+NIST-V each produced a signature, and the closed-form model returned Ok
+on all 40.
+
+## Closed form
+
+`M1` and `M2` are the closed form in `docs/VERIFIER_SPEC.md`, with
+`t = s^{-1}` modulo `2^e`. On the 73 honest signatures present before
+the `_p` batch, and on every negative row of the six original vectors,
+the chain verdict is the same as Dartois's `complete_symplectic_matrix_dim2`.
+The matrix, null-point, and step-8 files are regenerated from the closed
+form. `base_change_theta_dim2` in `prism-isogeny/src/theta_base.rs` matches
+`N1` and `N2` in those files. The dim-2 isogeny chain that consumes them
+is not the accept path yet.
