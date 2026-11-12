@@ -24,6 +24,7 @@ pub mod montgomery;
 pub mod pairing;
 pub mod splitting;
 pub mod theta;
+pub mod theta_base;
 pub mod theta_step;
 pub mod torsion;
 

@@ -10,11 +10,17 @@
 //! Integers modulo `2^e` and the 4×4 matrices of the accept path.
 //!
 //! `e` is the torsion exponent, at most 500, so eight `u64` limbs cover
-//! every level. `Φ` matches the known-answer files. `M1` and `M2`
-//! complete the same kernel blocks the model completes. The solution of
-//! the underdetermined system is the one with free variables zero; the
-//! files store PARI `matsolvemod`'s representative, so the test checks
-//! the symplectic identities rather than those bytes.
+//! every level. With `t = s⁻¹` modulo `2^e` and columns in
+//! `(b1, b2, b3, b4)`,
+//!
+//! ```text
+//! M1 = [(0, 0, −t, 0), (0, t², 0, 0) | (s, −1, 0, 0), (0, 0, s, s²)]
+//! M2 = [(−1, 0, 0, 0), (0, 0, 0, −s) | (0, 0, −1, s), (1, t, 0, 0)]
+//! ```
+//!
+//! The right-hand pair is the kernel half. It is `Φ` of `M1`'s complement
+//! for `M2`, and `−Φ̂` of `M2`'s complement for `M1`. `q ≡ −s² (mod 2^e)`,
+//! so the entries are determined by `s`.
 
 const LIMBS: usize = 8;
 
@@ -79,10 +85,6 @@ impl Residue {
                 *limb = 0;
             }
         }
-    }
-
-    fn is_zero(self) -> bool {
-        self.limb.iter().all(|limb| *limb == 0)
     }
 
     fn is_odd(self) -> bool {
@@ -222,18 +224,8 @@ fn is_symplectic(matrix: Mat4) -> bool {
         && sub2(mul2(transpose2(a), d), mul2(transpose2(b), c)) == identity
 }
 
+#[cfg(test)]
 type Block = [[Residue; 2]; 2];
-type Columns = [[Residue; 2]; 4];
-
-fn neg_block(block: Block) -> Block {
-    let mut out = block;
-    for row in &mut out {
-        for entry in row {
-            *entry = entry.neg();
-        }
-    }
-    out
-}
 
 /// `Φ` in the basis `(b1, b2, b3, b4)`, entries modulo `2^e`.
 fn phi(s: Residue, q: Residue) -> Mat4 {
@@ -251,6 +243,7 @@ fn phi(s: Residue, q: Residue) -> Mat4 {
 }
 
 /// `Φ̂`, with `Φ̂Φ = 2^{2e′−1} I`. Modulo `2^e` that product is zero.
+#[cfg_attr(not(test), allow(dead_code))]
 fn phi_hat(s: Residue, q: Residue) -> Mat4 {
     let bits = s.bits;
     let zero = Residue::zero(bits);
@@ -265,152 +258,32 @@ fn phi_hat(s: Residue, q: Residue) -> Mat4 {
     }
 }
 
-/// `(D stacked on −C)`, transposed: a 2×4 matrix.
-fn kernel_frame(top: Block, bottom: Block) -> [[Residue; 4]; 2] {
-    let neg = neg_block(bottom);
-    [
-        [top[0][0], top[1][0], neg[0][0], neg[1][0]],
-        [top[0][1], top[1][1], neg[0][1], neg[1][1]],
-    ]
-}
-
-fn solve(mut rows: Vec<[Residue; 4]>, mut rhs: Vec<Residue>) -> Option<[Residue; 4]> {
-    let n = rows.len();
-    let mut pivot_col = [None; 4];
-    let mut used = [false; 4];
-    for row in 0..n {
-        let pivot = (0..4).find(|col| !used[*col] && rows[row][*col].is_odd())?;
-        used[pivot] = true;
-        pivot_col[row] = Some(pivot);
-        let inv = rows[row][pivot].inv()?;
-        for entry in &mut rows[row] {
-            *entry = entry.mul(inv);
-        }
-        rhs[row] = rhs[row].mul(inv);
-        let pivot_row = rows[row];
-        let pivot_rhs = rhs[row];
-        for (other, target) in rows.iter_mut().enumerate() {
-            if other == row {
-                continue;
-            }
-            let factor = target[pivot];
-            if factor.is_zero() {
-                continue;
-            }
-            for (entry, pivot_entry) in target.iter_mut().zip(pivot_row) {
-                *entry = entry.sub(factor.mul(pivot_entry));
-            }
-            rhs[other] = rhs[other].sub(factor.mul(pivot_rhs));
-        }
-    }
-    let bits = rhs[0].bits;
-    let mut solution = [Residue::zero(bits); 4];
-    for row in 0..n {
-        let col = pivot_col[row]?;
-        solution[col] = rhs[row];
-    }
-    Some(solution)
-}
-
-/// `complete_symplectic_matrix_dim2(C, D)`.
-fn complete(c: Block, d: Block) -> Option<Mat4> {
-    let bits = c[0][0].bits;
-    let frame = kernel_frame(d, c);
-    let xi = solve(
-        frame.to_vec(),
-        vec![Residue::one(bits), Residue::zero(bits)],
-    )?;
-    let v = [xi[2], xi[3], xi[0].neg(), xi[1].neg()];
-    let mut three = frame.to_vec();
-    three.push(v);
-    let yi = solve(
-        three,
-        vec![Residue::zero(bits), Residue::one(bits), Residue::zero(bits)],
-    )?;
-    Some(Mat4 {
-        row: [
-            [xi[0], yi[0], c[0][0], c[0][1]],
-            [xi[1], yi[1], c[1][0], c[1][1]],
-            [xi[2], yi[2], d[0][0], d[0][1]],
-            [xi[3], yi[3], d[1][0], d[1][1]],
-        ],
-    })
-}
-
-fn left_columns(matrix: Mat4) -> Columns {
-    let mut out = [[matrix.row[0][0]; 2]; 4];
-    for (out_row, matrix_row) in out.iter_mut().zip(matrix.row) {
-        out_row[0] = matrix_row[0];
-        out_row[1] = matrix_row[1];
-    }
-    out
-}
-
-fn mul_columns(matrix: Mat4, columns: Columns) -> Columns {
-    let bits = matrix.row[0][0].bits;
-    let mut out = [[Residue::zero(bits); 2]; 4];
-    for (out_row, matrix_row) in out.iter_mut().zip(matrix.row) {
-        for (source, coeff) in columns.iter().zip(matrix_row) {
-            for (cell, factor) in out_row.iter_mut().zip(source) {
-                *cell = cell.add(coeff.mul(*factor));
-            }
-        }
-    }
-    out
-}
-
-fn split_columns(columns: Columns) -> (Block, Block) {
-    (
-        [
-            [columns[0][0], columns[0][1]],
-            [columns[1][0], columns[1][1]],
-        ],
-        [
-            [columns[2][0], columns[2][1]],
-            [columns[3][0], columns[3][1]],
-        ],
-    )
-}
-
-fn augment(left: Columns, right: Columns) -> Mat4 {
-    let mut row = [[left[0][0]; 4]; 4];
-    for i in 0..4 {
-        row[i][0] = left[i][0];
-        row[i][1] = left[i][1];
-        row[i][2] = right[i][0];
-        row[i][3] = right[i][1];
-    }
-    Mat4 { row }
-}
-
-fn neg_columns(columns: Columns) -> Columns {
-    let mut out = columns;
-    for row in &mut out {
-        for entry in row {
-            *entry = entry.neg();
-        }
-    }
-    out
-}
-
-/// `(Φ, M1, M2)` modulo `2^e`, from the challenge scalar. `q` is reduced
-/// modulo `2^e` here: at every level `q ≡ −s² (mod 2^e)`.
+/// `(Φ, M1, M2)` modulo `2^e`, from the challenge scalar.
+/// `None` when `s` is even, so it has no inverse modulo `2^e`.
 pub fn challenge_matrices(s: Residue) -> Option<(Mat4, Mat4, Mat4)> {
-    let q = s.mul(s).neg();
-    let endomorphism = phi(s, q);
-    let dual = phi_hat(s, q);
+    let t = s.inv()?;
     let bits = s.bits;
     let zero = Residue::zero(bits);
-    let c1 = [[s, zero], [Residue::one(bits).neg(), zero]];
-    let d1 = [[zero, s], [zero, q.neg()]];
-    let m1_0 = complete(c1, d1)?;
-    let complement = left_columns(m1_0);
-    let image = mul_columns(endomorphism, complement);
-    let (c2, d2) = split_columns(image);
-    let m2 = complete(c2, d2)?;
-    let dual_image = mul_columns(dual, left_columns(m2));
-    let m1 = augment(complement, neg_columns(dual_image));
-    Some((endomorphism, m1, m2))
+    let one = Residue::one(bits);
+    let s2 = s.mul(s);
+    let t2 = t.mul(t);
+    let m1 = Mat4 {
+        row: [
+            [zero, zero, s, zero],
+            [zero, t2, one.neg(), zero],
+            [t.neg(), zero, zero, s],
+            [zero, zero, zero, s2],
+        ],
+    };
+    let m2 = Mat4 {
+        row: [
+            [one.neg(), zero, zero, one],
+            [zero, zero, zero, t],
+            [zero, zero, one.neg(), zero],
+            [zero, s.neg(), s, zero],
+        ],
+    };
+    Some((phi(s, s2.neg()), m1, m2))
 }
 
 #[cfg(test)]
@@ -452,15 +325,43 @@ mod tests {
         let text = file;
         let s = scalar(text, "s", bits);
         let (phi, m1, m2) = challenge_matrices(s).expect("matrices");
-        // `Φ` is determined by `s`. `M1` and `M2` are a symplectic
-        // completion of the same kernel blocks the model completes.
-        // The files store PARI `matsolvemod`'s representative of that
-        // completion; the representative here is the free-variable-zero
-        // solution of the same system, so the comparison is the
-        // symplectic identities rather than those bytes.
         assert_eq!(phi.row, matrix(text, "Mphi", bits));
+        assert_eq!(m1.row, matrix(text, "M1", bits));
+        assert_eq!(m2.row, matrix(text, "M2", bits));
         assert!(is_symplectic(m1), "M1");
         assert!(is_symplectic(m2), "M2");
+        let kernel = |matrix: super::Mat4, cols: [usize; 2]| {
+            let mut row = [[matrix.row[0][0]; 2]; 4];
+            for (out, source) in row.iter_mut().zip(matrix.row) {
+                out[0] = source[cols[0]];
+                out[1] = source[cols[1]];
+            }
+            row
+        };
+        let image = |factor: super::Mat4, columns: [[Residue; 2]; 4]| {
+            let mut out = [[Residue::zero(bits); 2]; 4];
+            for (out_row, factor_row) in out.iter_mut().zip(factor.row) {
+                for (column, coeff) in columns.iter().zip(factor_row) {
+                    for (cell, entry) in out_row.iter_mut().zip(column) {
+                        *cell = cell.add(coeff.mul(*entry));
+                    }
+                }
+            }
+            out
+        };
+        let dual = super::phi_hat(s, s.mul(s).neg());
+        assert_eq!(
+            kernel(m2, [2, 3]),
+            image(phi, kernel(m1, [0, 1])),
+            "M2 kernel half"
+        );
+        let mut expected = image(dual, kernel(m2, [0, 1]));
+        for row in &mut expected {
+            for entry in row {
+                *entry = entry.neg();
+            }
+        }
+        assert_eq!(kernel(m1, [2, 3]), expected, "M1 kernel half");
     }
 
     #[test]

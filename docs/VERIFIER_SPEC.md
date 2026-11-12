@@ -699,6 +699,21 @@ by taking any point of order `2^e` with the right image under `[8]`.
 `Unidentified` stays until the bases that were built satisfy
 `B₂ = J B₁`.
 
+The completion the verifier uses is closed form. Let `t = s^{-1}`
+modulo `2^e`, and write columns in `(b₁, b₂, b₃, b₄)`. The right-hand
+pair is the kernel half:
+
+```text
+M1 = [(0, 0, −t, 0), (0, t², 0, 0) | (s, −1, 0, 0), (0, 0, s, s²)]
+M2 = [(−1, 0, 0, 0), (0, 0, 0, −s) | (0, 0, −1, s), (1, t, 0, 0)]
+```
+
+`q ≡ −s² (mod 2^e)`, so `s` determines every entry. `M2`'s kernel half
+is `Φ` of `M1`'s complement, and `M1`'s kernel half is `−Φ̂` of `M2`'s
+complement. Both matrices are symplectic. This representative and the
+library completion `complete_symplectic_matrix_dim2` give the same chain
+verdict on every committed honest signature and on every negative row.
+
 The product theta structure comes first. Take a basis `(P₁, P₂)` of
 `E_vk[2^e]` and points `(R₁, R₂)` of `E_sig[2^e]` whose `[4]` images are
 the response basis. The Weil pairing scales by `q`, so the product basis

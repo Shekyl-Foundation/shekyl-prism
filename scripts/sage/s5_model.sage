@@ -237,6 +237,90 @@ def pairing_power(E, P, Q, order, exponent):
     return weil_pairing_pari(P, Q, order) ** exponent
 
 
+def closed_form_matrices(s, modulus):
+    """Columns in `(b1, b2, b3, b4)`, with `t = s^{-1}` modulo `2^e`.
+
+    `M1 = [(0,0,−t,0), (0,t²,0,0) | (s,−1,0,0), (0,0,s,s²)]`
+    `M2 = [(−1,0,0,0), (0,0,0,−s) | (0,0,−1,s), (1,t,0,0)]`
+
+    The right-hand pair of columns is the kernel half and the left-hand
+    pair is the complement. `q ≡ −s² (mod 2^e)`, so the entries use `s`
+    only.
+    """
+    Zn = Integers(modulus)
+    s = Zn(s)
+    t = s**-1
+    M1 = matrix(
+        Zn,
+        [
+            [0, 0, s, 0],
+            [0, t**2, -1, 0],
+            [-t, 0, 0, s],
+            [0, 0, 0, s**2],
+        ],
+    )
+    M2 = matrix(
+        Zn,
+        [
+            [-1, 0, 0, 1],
+            [0, 0, 0, t],
+            [0, 0, -1, 0],
+            [0, -s, s, 0],
+        ],
+    )
+    return M1, M2
+
+
+def assert_closed_form(s, q, modulus, path):
+    """Symplectic, and the two kernel halves are the images under Φ and −Φ̂."""
+    Mphi = phi_matrix(s, q, modulus)
+    Mhat = phi_hat_matrix(s, q, modulus)
+    M1, M2 = closed_form_matrices(s, modulus)
+    if not is_symplectic_matrix_dim2(M1):
+        fail(f"{path.name} closed M1", "not symplectic")
+    if not is_symplectic_matrix_dim2(M2):
+        fail(f"{path.name} closed M2", "not symplectic")
+    if M2.matrix_from_columns([2, 3]) != Mphi * M1.matrix_from_columns([0, 1]):
+        fail(f"{path.name} closed M2 kernel", "not Φ of the M1 complement")
+    if M1.matrix_from_columns([2, 3]) != -(Mhat * M2.matrix_from_columns([0, 1])):
+        fail(f"{path.name} closed M1 kernel", "not −Φ̂ of the M2 complement")
+    return M1, M2
+
+
+def library_symplectic(path, order, Mphi, Mhat):
+    """Dartois's completion: M2 completed, M1 glued and not re-completed."""
+    Zn = Integers(order)
+    s_mod = Mphi[0, 0]
+    C1 = matrix(Zn, [[s_mod, 0], [-1, 0]])
+    D1 = matrix(Zn, [[0, s_mod], [0, Mphi[0, 1]]])
+    M1_0 = complete_symplectic_matrix_dim2(C1, D1, order)
+    if not is_symplectic_matrix_dim2(M1_0):
+        fail(f"{path.name} M1_0", "not symplectic")
+    complement = M1_0.matrix_from_columns([0, 1])
+    block_right2 = Mphi * complement
+    C2 = block_right2.matrix_from_rows([0, 1])
+    D2 = block_right2.matrix_from_rows([2, 3])
+    if C2.transpose() * D2 != D2.transpose() * C2:
+        fail(f"{path.name} M2 kernel half", "not isotropic")
+    M2 = complete_symplectic_matrix_dim2(C2, D2, order)
+    if not is_symplectic_matrix_dim2(M2):
+        fail(f"{path.name} M2", "not symplectic")
+    block_right1 = Mhat * M2.matrix_from_columns([0, 1])
+    C1b = block_right1.matrix_from_rows([0, 1])
+    D1b = block_right1.matrix_from_rows([2, 3])
+    if C1b.transpose() * D1b != D1b.transpose() * C1b:
+        fail(f"{path.name} M1 kernel half", "not isotropic")
+    A_blk = M1_0.matrix_from_rows_and_columns([0, 1], [0, 1])
+    B_blk = M1_0.matrix_from_rows_and_columns([2, 3], [0, 1])
+    if B_blk.transpose() * A_blk != A_blk.transpose() * B_blk:
+        fail(f"{path.name} M1_0 complement", "not isotropic")
+    M1 = complement.augment(-block_right1)
+    if not is_symplectic_matrix_dim2(M1):
+        fail(f"{path.name} M1", "glued [complement | −Φ̂·compl(M2)] not symplectic")
+    claim("Derived", f"{path.name} symplectic matrices", "confirmed")
+    return M1, M2
+
+
 def evaluate_chains(B_K1, B_K2, Theta12, N1, N2, e_prime, P1, P2, Psig, Qsig, s, Esig):
     """Codomain and step 8. Returns (verdict, detail) with verdict in
     Kernel / Codomain / Image / Ok."""
@@ -285,7 +369,7 @@ def evaluate_chains(B_K1, B_K2, Theta12, N1, N2, e_prime, P1, P2, Psig, Qsig, s,
     return "Ok", detail
 
 
-def run_vector(path, run_chains=True, soft=None):
+def run_vector(path, run_chains=True, soft=None, completion="closed"):
     """`soft` is a mutation. Algebraic `fail` calls are skipped and the
     chain verdict is returned, so a negative is classified by Codomain,
     Image, or Kernel rather than by an identity the verifier does not check.
@@ -443,38 +527,17 @@ def run_vector(path, run_chains=True, soft=None):
         fail(f"{path.name} K″2 isotropic", f"pairing={e_prod2}")
     claim("Derived", f"{path.name} K″2 isotropic", "confirmed")
 
-    # Symplectic matrices (§4.4): exact dim-2 reduction of Dartois's
-    # starting_two_symplectic_matrices. Only M2 is freshly completed; M1 is
-    # the block matrix [complement of M1_0 | −Φ̂(complement of M2)] — it is
-    # NOT re-completed, and its symplecticity is a theorem being checked.
-    M1_0 = complete_symplectic_matrix_dim2(C1, D1, order)
-    if not is_symplectic_matrix_dim2(M1_0):
-        fail(f"{path.name} M1_0", "not symplectic")
-    # Complement half = left two columns
-    complement = M1_0.matrix_from_columns([0, 1])
-    # Φ of complement → kernel half of M2 (isotropic lift above ker Φ̃2)
-    block_right2 = Mphi * complement
-    C2 = block_right2.matrix_from_rows([0, 1])
-    D2 = block_right2.matrix_from_rows([2, 3])
-    if C2.transpose() * D2 != D2.transpose() * C2:
-        fail(f"{path.name} M2 kernel half", "not isotropic")
-    M2 = complete_symplectic_matrix_dim2(C2, D2, order)
-    if not is_symplectic_matrix_dim2(M2):
-        fail(f"{path.name} M2", "not symplectic")
-    # −Φ̂ of complement of M2 → kernel half of M1
-    block_right1 = Mhat * M2.matrix_from_columns([0, 1])
-    C1b = block_right1.matrix_from_rows([0, 1])
-    D1b = block_right1.matrix_from_rows([2, 3])
-    if C1b.transpose() * D1b != D1b.transpose() * C1b:
-        fail(f"{path.name} M1 kernel half", "not isotropic")
-    A_blk = M1_0.matrix_from_rows_and_columns([0, 1], [0, 1])
-    B_blk = M1_0.matrix_from_rows_and_columns([2, 3], [0, 1])
-    if B_blk.transpose() * A_blk != A_blk.transpose() * B_blk:
-        fail(f"{path.name} M1_0 complement", "not isotropic")
-    M1 = complement.augment(-block_right1)
-    if not is_symplectic_matrix_dim2(M1):
-        fail(f"{path.name} M1", "glued [complement | −Φ̂·compl(M2)] not symplectic")
-    claim("Derived", f"{path.name} symplectic matrices", "confirmed")
+    # Symplectic matrices (§4.4). `library` is Dartois's completion.
+    # `closed` is the representative with t = s^{-1}: the kernel half of
+    # M2 is Φ of M1's complement, and the kernel half of M1 is −Φ̂ of
+    # M2's complement.
+    if completion == "closed":
+        M1, M2 = assert_closed_form(s, q, order, path)
+        claim("Derived", f"{path.name} closed-form symplectic matrices", "confirmed")
+    elif completion == "library":
+        M1, M2 = library_symplectic(path, order, Mphi, Mhat)
+    else:
+        fail(f"{path.name} completion", f"unknown completion {completion}")
 
     # Product theta structure (§4 / Spec)
     # Order-4 from doubling e-2 times
@@ -543,6 +606,9 @@ def run_vector(path, run_chains=True, soft=None):
         "M2": [[str(M2[i, j]) for j in range(4)] for i in range(4)],
         "M1_4": [[int(M1_4[i, j]) for j in range(4)] for i in range(4)],
         "M2_4": [[int(M2_4[i, j]) for j in range(4)] for i in range(4)],
+        "e4": str(e4),
+        "Mbc1": [[int(ZZ(entry)) for entry in row] for row in (M0 * M1_4)],
+        "Mbc2": [[int(ZZ(entry)) for entry in row] for row in (M0 * M2_4)],
         "N1": [[str(N1[i, j]) for j in range(4)] for i in range(4)],
         "N2": [[str(N2[i, j]) for j in range(4)] for i in range(4)],
         "BK1": [
@@ -552,10 +618,18 @@ def run_vector(path, run_chains=True, soft=None):
             [str(pt[0][0]), str(pt[0][1]), str(pt[1][0]), str(pt[1][1])] for pt in B_K2
         ],
     }
-    if soft is None:
+    comparing = os.environ.get("S5_COMPARE") == "1"
+    # Known-answer files are the six original vectors. Accept-set files are
+    # verdicts only; writing a matrix file for each of them is not the record.
+    original = {item.name for item in (
+        ROOT / "prism-verify" / "testdata" / f"s5_lvl{n}.txt"
+        for n in ("1", "1b", "3", "3b", "5", "5b")
+    )}
+    if soft is None and not comparing and path.name in original:
         (OUT / f"{stem}_matrices.json").write_text(json.dumps(kat, indent=2) + "\n")
 
-    if not run_chains or os.environ.get("S5_ALGEBRA_ONLY"):
+    algebra_only = os.environ.get("S5_ALGEBRA_ONLY") == "1" and not comparing
+    if not run_chains or algebra_only:
         return "algebra"
 
     try:
@@ -564,18 +638,19 @@ def run_vector(path, run_chains=True, soft=None):
         )
     except Exception:
         return "Kernel"
-    if soft is not None:
+    if soft is not None or comparing:
         return verdict
     if verdict != "Ok":
         fail.soft = False
         fail(f"{path.name} {verdict}", "honest vector")
     fail.soft = False
-    nulls1 = images["nulls1"]
-    nulls2 = images["nulls2"]
-    (OUT / f"{stem}_nulls.json").write_text(
-        json.dumps({"chain1": nulls1, "chain2": nulls2}, indent=2) + "\n"
-    )
-    (OUT / f"{stem}_step8.json").write_text(json.dumps(images["step8"], indent=2) + "\n")
+    if path.name in original:
+        nulls1 = images["nulls1"]
+        nulls2 = images["nulls2"]
+        (OUT / f"{stem}_nulls.json").write_text(
+            json.dumps({"chain1": nulls1, "chain2": nulls2}, indent=2) + "\n"
+        )
+        (OUT / f"{stem}_step8.json").write_text(json.dumps(images["step8"], indent=2) + "\n")
     claim("Derived", f"{path.name} Codomain C1.zero()==C2.hadamard().zero()", "confirmed")
     claim("Derived", f"{path.name} Image step 8", "confirmed")
     claim("Ran", f"{path.name} accept path Ok", "")
@@ -710,7 +785,7 @@ def normalize_joint(left, right):
     return -left, -right
 
 
-def item7(path, curve, left_point, right_point):
+def item7(path, curve, left_point, right_point, completion="library"):
     """Translates of the signature pair by every nonzero point of `E[4]`."""
     seven = []
     for torsion in row7_translates(curve):
@@ -725,9 +800,9 @@ def item7(path, curve, left_point, right_point):
             if left[1] == 0:
                 seven.append(f"{tag}:Sign")
                 continue
-            verdict = chain_verdict(path, Psig=left, Qsig=right)
+            verdict = chain_verdict(path, completion, Psig=left, Qsig=right)
             seven.append(f"{tag}:{verdict}")
-            if verdict == "Ok":
+            if verdict == "Ok" and os.environ.get("S5_COMPARE") != "1":
                 fail(f"{path.name} item 7", f"{tag} accepted")
     return seven
 
@@ -747,10 +822,10 @@ def row7_translates(curve):
     return found
 
 
-def chain_verdict(path, **soft):
+def chain_verdict(path, completion="library", **soft):
     try:
         try:
-            verdict = run_vector(path, run_chains=True, soft=soft)
+            verdict = run_vector(path, run_chains=True, soft=soft, completion=completion)
         except Exception as err:
             if os.environ.get("S5_CHAIN_EXC") == "1":
                 print(f"  chain exception: {type(err).__name__}: {err}", flush=True)
@@ -770,7 +845,7 @@ def first_prime_index(level, key_hex, message, start=0, limit=800):
     return None, None
 
 
-def run_negatives():
+def run_negatives(completion="library"):
     """§6 on both keys at each level. Chain verdicts use the accept path."""
     primary = list(VECTORS)
     report = {}
@@ -831,23 +906,27 @@ def run_negatives():
         if next_prime is None:
             row["2"] = "MISSING"
         else:
-            row["2"] = chain_verdict(path, s=next_s, q=next_q)
+            row["2"] = chain_verdict(path, completion, s=next_s, q=next_q)
         print(f"  2 -> {row['2']}", flush=True)
 
         # 3. both signs flipped
-        row["3"] = "Sign" if not canonical_sign((-P)[1]) else chain_verdict(path, Psig=-P, Qsig=-Q)
+        row["3"] = (
+            "Sign"
+            if not canonical_sign((-P)[1])
+            else chain_verdict(path, completion, Psig=-P, Qsig=-Q)
+        )
         print(f"  3 -> {row['3']}", flush=True)
 
         # 4. relative sign
         if not canonical_sign(P[1]):
             row["4"] = "Sign"
         else:
-            row["4"] = chain_verdict(path, Qsig=-Q)
+            row["4"] = chain_verdict(path, completion, Qsig=-Q)
         print(f"  4 -> {row['4']}", flush=True)
 
         # 5. swapped, then normalized jointly. Only row 3 may report Sign.
         swapped_p, swapped_q = normalize_joint(Q, P)
-        row["5"] = chain_verdict(path, Psig=swapped_p, Qsig=swapped_q)
+        row["5"] = chain_verdict(path, completion, Psig=swapped_p, Qsig=swapped_q)
         print(f"  5 -> {row['5']}", flush=True)
 
         # 6. one byte of A_sig flipped. Sage's preparser can swallow
@@ -875,24 +954,28 @@ def run_negatives():
                 row["6"] = "Kernel"
             else:
                 row["6"] = chain_verdict(
-                    path, Psig=flipped_curve(P[0], P[1]), Qsig=flipped_curve(Q[0], Q[1]), Esig=flipped_curve
+                    path,
+                    completion,
+                    Psig=flipped_curve(P[0], P[1]),
+                    Qsig=flipped_curve(Q[0], Q[1]),
+                    Esig=flipped_curve,
                 )
         print(f"  6 -> {row['6']}", flush=True)
 
         # 7. translates by the nonzero points of E_sig[4], order 2 and order 4
-        seven = item7(path, Esig, P, Q)
+        seven = item7(path, Esig, P, Q, completion)
         row["7"] = seven
         print(f"  7 -> {len(seven)} cases, ok={seven.count('Ok') if False else sum(1 for item in seven if item.endswith(':Ok'))}", flush=True)
 
         # 8. the old doubled-twice points
-        row["8"] = chain_verdict(path, Psig=4 * P, Qsig=4 * Q)
+        row["8"] = chain_verdict(path, completion, Psig=4 * P, Qsig=4 * Q)
         print(f"  8 -> {row['8']}", flush=True)
 
         # 9. odd scalars that preserve order
         nine = {}
         for scalar in (ZZ(3), ZZ(1 << (e - 1)) + 1):
             left, right = normalize_joint(scalar * P, scalar * Q)
-            nine[str(scalar)] = chain_verdict(path, Psig=left, Qsig=right)
+            nine[str(scalar)] = chain_verdict(path, completion, Psig=left, Qsig=right)
         row["9"] = nine
         print(f"  9 -> {nine}", flush=True)
 
@@ -919,7 +1002,7 @@ def run_negatives():
             row["11"] = "MISSING"
         else:
             degree = (1 << (2 * e_prime - 1)) - scalar**2
-            row["11"] = chain_verdict(path, s=scalar, q=degree)
+            row["11"] = chain_verdict(path, completion, s=scalar, q=degree)
         print(f"  11 -> {row['11']} index {prime_index}", flush=True)
 
         # 12. the other key, at an index whose degree is prime for that key
@@ -942,7 +1025,7 @@ def run_negatives():
             )
             degree = (1 << (2 * e_prime - 1)) - scalar**2
             row["12"] = chain_verdict(
-                path, s=scalar, q=degree, P1=other_p, P2=other_q
+                path, completion, s=scalar, q=degree, P1=other_p, P2=other_q
             )
         print(f"  12 -> {row['12']} index {prime_index}", flush=True)
 
@@ -954,6 +1037,7 @@ def run_negatives():
                 continue
             verdict = chain_verdict(
                 path,
+                completion,
                 Psig=left,
                 Qsig=right,
                 Esig=curve,
@@ -977,22 +1061,78 @@ def run_negatives():
             ("Q,-P", Q, -P),
         ):
             left, right = normalize_joint(raw_left, raw_right)
-            fourteen[label] = chain_verdict(path, Psig=left, Qsig=right)
+            fourteen[label] = chain_verdict(path, completion, Psig=left, Qsig=right)
         row["14"] = fourteen
         print(f"  14 -> {fourteen}", flush=True)
         report[name] = row
-        (OUT / "negatives.json").write_text(json.dumps(report, indent=2) + "\n")
-        if not row["13"]["all_ok"]:
+        if os.environ.get("S5_COMPARE") != "1":
+            (OUT / "negatives.json").write_text(json.dumps(report, indent=2) + "\n")
+        if os.environ.get("S5_COMPARE") != "1" and not row["13"]["all_ok"]:
             fail(
                 f"{name} item 13",
                 f"a transported model did not accept: {thirteen_models}",
             )
 
-    (OUT / "negatives.json").write_text(json.dumps(report, indent=2) + "\n")
-    print("wrote negatives.json", flush=True)
+    if os.environ.get("S5_COMPARE") != "1":
+        (OUT / "negatives.json").write_text(json.dumps(report, indent=2) + "\n")
+        print("wrote negatives.json", flush=True)
+    return report
+
+
+def honest_vectors():
+    paths = list(VECTORS)
+    accept = ROOT / "prism-verify" / "testdata" / "accept"
+    paths.extend(sorted(accept.glob("s5_*.txt")))
+    return paths
+
+
+def compare_completions():
+    """Chain verdicts of the closed form against the library completion.
+
+    A difference stops the run. Known-answer files are not written.
+    """
+    os.environ["S5_COMPARE"] = "1"
+    paths = honest_vectors()
+    differ = []
+    for path in paths:
+        library = run_vector(path, run_chains=True, completion="library")
+        closed = run_vector(path, run_chains=True, completion="closed")
+        mark = "same" if library == closed else "DIFFER"
+        print(f"CMP {path.name} library={library} closed={closed} {mark}", flush=True)
+        if library != closed:
+            differ.append(path.name)
+            break
+    if differ:
+        print(f"STOPPED honest difference: {differ}", flush=True)
+        sys.exit(1)
+    for path in VECTORS:
+        library = run_negatives_one(path, "library")
+        closed = run_negatives_one(path, "closed")
+        if library != closed:
+            print(f"STOPPED negatives {path.name}", flush=True)
+            print("library", json.dumps(library, indent=2), flush=True)
+            print("closed", json.dumps(closed, indent=2), flush=True)
+            sys.exit(1)
+        print(f"CMP negatives {path.name} same", flush=True)
+    print(
+        f"CMP identical {len(paths)} honest vectors and {len(VECTORS)} negative files",
+        flush=True,
+    )
+
+
+def run_negatives_one(path, completion):
+    saved = list(VECTORS)
+    try:
+        VECTORS[:] = [path]
+        return run_negatives(completion)
+    finally:
+        VECTORS[:] = saved
 
 
 def main():
+    if os.environ.get("S5_COMPARE") == "1":
+        compare_completions()
+        return
     if os.environ.get("S5_NEGATIVES") == "1":
         run_negatives()
         return
