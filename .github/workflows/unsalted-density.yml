@@ -1,0 +1,35 @@
+# Copyright (c) 2025-2026, The Shekyl Foundation
+#
+# All rights reserved.
+# BSD-3-Clause
+
+name: unsalted-density
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/unsalted-density.yml
+      - scripts/measure_unsalted_density.py
+      - prism-verify/src/bin/sample_e_prime.rs
+
+permissions:
+  contents: read
+
+jobs:
+  density:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+      - name: Measure the exact unsalted challenge domain
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD
+          cargo run --release --locked -p prism-verify --bin sample_e_prime -- 1500 > samples.txt 2> sampler.log
+          python3 scripts/measure_unsalted_density.py samples.txt --count 1500 --emit-samples
