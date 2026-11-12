@@ -186,16 +186,95 @@ This comparison omits constant success factors and counts hash queries,
 not equivalent AES gates. It is not a NIST category certification or a
 proof that the rows fail a specified category. Prime density in this
 quadratic family has arithmetic structure; `2/log(q)` is not an established
-estimate for it. Backend acceptance further changes rho. Neither density
-is measured or bounded here. The paper's §5.1 uses conjectural
-prime-plus-square counting; its conclusion cannot be substituted for a
-calculation at these modified parameters.
+estimate for it. The measured density below replaces that generic estimate;
+native signing acceptance further changes rho and is not measured by the
+prime-search driver. The paper's §5.1 conjectural prime-plus-square counting
+does not substitute for measurements at these modified parameters.
+
+### Measured density and the paper's collision criterion
+
+**Ran:** [hosted run 43284546324](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/43284546324)
+executed the real `sample_e_prime` at the verifier's `e−3` challenge width,
+with 1,500 successful first-prime searches per row. Each returned index j
+represents `j+1` candidate hashes and exactly one passing degree, giving
+the empirical density `rho_prime = 1500/sum(j+1)`. These are 1,500 searches,
+not 1,500 total candidate draws. Raw scalar/degree samples, hashes,
+source head and the actual tested merge SHA are committed in
+[comparison/unsalted-density/record.json](comparison/unsalted-density/record.json)
+and [samples.txt](comparison/unsalted-density/samples.txt).
+
+| Row | Searches | Candidate hashes | Measured `rho_prime` | `log2 sqrt(2^b/rho_prime)` | Nominal lambda |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| I | 1500 | 137730 | 1.08909% | 125.260 | 128 |
+| III | 1500 | 208627 | 0.71899% | 189.560 | 192 |
+| V | 1500 | 285423 | 0.52554% | 251.786 | 256 |
+
+**Derived from the run:** at these measured densities, all three rows fall
+below nominal in the conservative hash-query collision criterion used by
+the paper's equation (7). This is a prime-eligible collision estimate, not
+a measured full-width forgery. The predicate is BPSW; identifying passing
+degrees with primes uses A2. Identifying `rho_prime` with the usable density
+rho additionally assumes those degrees produce accepted native responses.
+If their success fraction is eta, substitute `rho_prime*eta` in the cost
+formula. This run tests no native signing responses and certifies no
+whole-domain density or concrete AES-equivalent security level.
+
+For comparison, the paper's §4.4 equation (7) estimates
+`t ≈ 2^((a−2)/2)*sqrt(a)` and selects **a=251** for nominal row I
+(`log2(t)≈128.49`). It then notes its concrete **a=248** choice
+(`log2(t)≈126.98` in that same approximation), crediting hash-evaluation
+complexity for the deficit. Our `125.260` estimate instead uses the actual
+244-free-bit projection and measured prime-plus-square eligibility; it is
+not the paper's a-bit-prime digest domain. Neither a=248 alone nor a
+491-bit isogeny degree supplies a conservative 128-bit hash-query claim.
+
+Reproduce the capture using the source head in `record.json`:
+
+```sh
+cargo run --release --locked -p prism-verify --bin sample_e_prime -- 1500 > samples.txt
+python3 scripts/measure_unsalted_density.py samples.txt --count 1500
+```
+
+The sampler uses its fixed key mixer and counter-based messages, with no
+random seed or native signer. Its synthetic decoded keys exercise the
+challenge hash, not the honest-key generation distribution. To reproduce
+the table from committed raw data without a build:
+
+```sh
+python3 scripts/measure_unsalted_density.py docs/comparison/unsalted-density/samples.txt --count 1500
+```
 
 A same-message/different-index scalar collision can also reuse a response
 prefix by changing the index bytes, which SUF-CMA must cover. The 16-bit
 index allows at most 65536 values per message; it supplies no independent
 challenge entropy and is not a salt. A single-target second-preimage
 attack and an offline chosen-message birthday attack have different costs.
+
+### Public index disclosure and deterministic signing failures
+
+For a returned signature carrying index j, anyone can derive every earlier
+scalar using the public key, message and indices `0,…,j−1`, and run the
+same BPSW predicate. The number of earlier passing degrees is consequently
+public. In the implemented Rust signer, each such earlier candidate
+produced a decoded response that failed final verification; otherwise
+signing would already have returned it. This is a count of secret-sampler
+dependent skipped candidates, not merely a count of public composite
+degrees. Native or malformed-output errors instead terminate the call,
+so the index does not count skipped backend errors in this implementation.
+Fixture exporters that choose the first prime index need not exhibit any
+such skips. Counts on the archived corpus belong to the subsequent
+comparison experiment; no nonzero disclosure has been measured here.
+
+For a fixed key, message and backend build, a reproducible deterministic
+native failure occurs again on retry: the public search order and the
+key/scalar-derived secret streams are unchanged. A message that hits this
+failure before a successful return cannot be signed by the current API
+under that key/build. Deterministic exhaustion of the candidate or index
+bound has the same availability consequence. A transient I/O failure or
+an externally killed process is not evidence of permanent unsignability.
+No concrete unsignable message is claimed by this source-level argument;
+the planned comparison must find and replay one, or publish the search
+budget and a negative result.
 
 ## 6. Conditional SUF-CMA decomposition
 
@@ -282,6 +361,13 @@ above refer to the bundled texts, not an unpinned future revision.
 
 ## 8. Review record and remaining decisions
 
+Maintainer review of `a847368` was accepted with two additions: measured
+challenge-width density/collision costs and the index-disclosure/signing-
+failure limitations. The follow-up in §5 supplies both. That review is
+recorded from the maintainer's instructions; it is not a claim that an
+external cryptographer discharged A1–A3 or the hardness assumptions, nor
+that the follow-up head has already received final review.
+
 This author pass read the challenge, parameter, response, model, identity,
 relation, acceptance, dual-chain, scalar arithmetic, Rust signer and native
 exporter surfaces listed in §3, and the relevant published security
@@ -289,6 +375,11 @@ sections. It found no alternate field encoding in those decoder paths or
 message/index framing ambiguity at a fixed row. These are source-reading
 observations, not independent audit conclusions. The numerical script
 checks exact integer bounds, not primality or map correctness.
+
+The review follow-up measured the implemented BPSW density in §5 using the
+actual challenge width. It did not measure native signing acceptance or
+demonstrate a full-width replay; the reduced-width real-signature experiment
+is the subsequent salted comparison's scope.
 
 This pass did not audit every field operation, prove theta formulas on
 adversarial loci, establish rational model-transport completeness, prove
@@ -306,7 +397,7 @@ does not report a new execution of that corpus.
 | Challenge and concrete costs | Bound usable density, collision/grinding work, memory, and other classical/quantum attacks for these rows | OPEN; §5 exposes the collision constraint |
 | Formal reduction | Resource-bounded proof, including errors, retries and QROM if claimed | OPEN; classical event decomposition only |
 | Implementation security | Review native secrets, timing, allocations, abnormal exits and compiler/backend pin | OPEN; no constant-time claim |
-| Independent approval | Named reviewer, reviewed commit, findings and signed-off scope | PENDING; no review approval recorded |
+| Independent approval | Named cryptographic reviewer, reviewed commit, findings and signed-off scope | PENDING; no independent cryptographic approval recorded |
 
 No external reviewer has been contacted by this work. Human review of the
 separate security PR is required before changing this status. Protocol

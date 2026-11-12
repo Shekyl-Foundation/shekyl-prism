@@ -1,0 +1,44 @@
+{
+  "source_head": "26131c8d50cab273443df4f3641c5d9c83cc9553",
+  "workflow_run": "https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/43284546324",
+  "sampler_command": "cargo run --release --locked -p prism-verify --bin sample_e_prime -- 1500",
+  "summary_command": "python3 scripts/measure_unsalted_density.py docs/comparison/unsalted-density/samples.txt --count 1500",
+  "sample_sha256": "06e003e5697f2fc4bc238fcacad25b54a9326f2f8fa49b3adff6f176fd903a3d",
+  "predicate": "implemented BPSW; not certified primality",
+  "rows": [
+    {
+      "row": "NIST-I",
+      "successful_searches": 1500,
+      "tested_candidates": 137730,
+      "density": 0.010890873448050533,
+      "free_bits": 244,
+      "collision_log2_queries": 125.26036826346882,
+      "nominal": 128,
+      "below_nominal": true
+    },
+    {
+      "row": "NIST-III",
+      "successful_searches": 1500,
+      "tested_candidates": 208627,
+      "density": 0.007189865166061919,
+      "free_bits": 372,
+      "collision_log2_queries": 189.5599097845424,
+      "nominal": 192,
+      "below_nominal": true
+    },
+    {
+      "row": "NIST-V",
+      "successful_searches": 1500,
+      "tested_candidates": 285423,
+      "density": 0.005255357837315143,
+      "free_bits": 496,
+      "collision_log2_queries": 251.7859976420124,
+      "nominal": 256,
+      "below_nominal": true
+    }
+  ],
+  "tested_checkout_sha": "95458e6eb815e5a7dd5199760ac9f52a7c142f02",
+  "base_sha": "d0187579d41d2de275f95fc6fecdf99c272ca324",
+  "sampler_randomness": "none: fixed key mixer and counter messages in sample_e_prime",
+  "scope": "empirical BPSW eligibility; no native signing-success measurement; hash-query cost model"
+}
