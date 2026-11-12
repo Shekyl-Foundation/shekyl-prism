@@ -6,8 +6,8 @@
 
 """Decide whether the C-vector rebuild has to run.
 
-It runs when the range touches `scripts/`, `external/`, or a `testdata/`
-directory. Anything else — a missing base, a git error, an unnamed range —
+It runs when the range touches export scripts, reference sources, testdata,
+Rust field/isogeny/verifier inputs, dependency pins or the compiler/CI setup. Anything else — a missing base, a git error, an unnamed range —
 is `true`. Skipping the rebuild on a guess is the failure; running it is
 the cost.
 """
@@ -21,7 +21,9 @@ import tempfile
 
 
 def wanted(path: str) -> bool:
-    if path.startswith("scripts/") or path.startswith("external/"):
+    if path in ("Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".github/workflows/ci.yml"):
+        return True
+    if path.startswith(("scripts/", "external/", "prism-field/", "prism-isogeny/", "prism-verify/")):
         return True
     return "testdata" in path.split("/")
 
@@ -109,7 +111,7 @@ def emit(needed: bool) -> None:
 
 def commit(root: pathlib.Path, message: str) -> str:
     subprocess.run(
-        ["git", "-c", "user.email=t@example.com", "-c", "user.name=t", "commit", "-qm", message],
+        ["git", "-c", "user.email=t@example.com", "-c", "user.name=t", "-c", "commit.gpgsign=false", "commit", "-qm", message],
         cwd=root,
         check=True,
     )
@@ -121,7 +123,16 @@ def selftest() -> int:
         "scripts/export_c_basis_hints.py": True,
         "external/PRISM_v2/src/prism.c": True,
         "prism-verify/testdata/c_basis_hints.txt": True,
-        "prism-verify/src/lib.rs": False,
+        "prism-verify/src/lib.rs": True,
+        "prism-isogeny/src/torsion.rs": True,
+        "prism-isogeny/src/jac.rs": True,
+        "prism-field/src/lib.rs": True,
+        "prism-field/Cargo.toml": True,
+        "Cargo.toml": True,
+        "Cargo.lock": True,
+        "rust-toolchain.toml": True,
+        ".github/workflows/ci.yml": True,
+        "prism-bench/src/main.rs": False,
         "docs/C_REFERENCE.md": False,
     }
     for path, expect in cases.items():

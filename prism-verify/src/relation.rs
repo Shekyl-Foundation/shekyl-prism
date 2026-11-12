@@ -3,23 +3,23 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! Algorithm 3 steps 3–8, at exponent `e′ = e − 2`.
-//!
-//! One chain of length `e′` on the order-`2^{e′}` kernel. The verification
-//! key's even basis has order `2^e` and is doubled twice to meet the
-//! signature points. The chain is evaluated at `([s]X, 0)` and
-//! `([2^{e′−1}]X, 0)` for `X ∈ {R, T, R−T}`.
-//!
-//! The x-only kernel cannot tell `+P_sig` from `−P_sig`. The dual-basis
-//! section of `docs/VERIFIER_SPEC.md` fixes that sign, and it is not built
-//! here. Both readings existing is [`VerifyError::Unidentified`].
+//! Order and span checks, the full-order Weil pairing, and the two-chain
+//! accept path at exponent `e′ = e − 2`. Historical single-chain probes
+//! remain in tests to document the former basis and structure failures.
 
 use prism_field::{Field, Level};
+#[cfg(test)]
 use prism_isogeny::chain::{chain_surface, SurfaceStop};
+#[cfg(test)]
 use prism_isogeny::gluing::{Couple, Kernel};
-use prism_isogeny::jac::{add, to_xz, Jac};
-use prism_isogeny::montgomery::{a24, ladder, Montgomery, Xz};
-use prism_isogeny::torsion::{double_times, rational_basis, starting_basis, RationalBasis};
+#[cfg(test)]
+use prism_isogeny::jac::{add, to_xz};
+use prism_isogeny::jac::{lift_basis, Jac};
+#[cfg(test)]
+use prism_isogeny::montgomery::{a24, ladder};
+use prism_isogeny::montgomery::{Montgomery, Xz};
+use prism_isogeny::pairing::{mul, neg_square_mod_pow2, pow, weil};
+use prism_isogeny::torsion::{double_times, even_basis, starting_basis, EvenBasis};
 
 use crate::basis::basis_hint;
 use crate::challenge::ChallengeScalar;
@@ -52,45 +52,98 @@ pub fn relate_points<L: Level>(
     q_sig: AffinePoint<L>,
     scalar: &[u8],
 ) -> Result<(), VerifyError> {
-    let basis = if vk.is_zero() {
-        starting_basis::<L>()
+    // The starting curve keeps its `E[p+1]` basis: the degree-`q` witness
+    // was built from that basis. A public key uses the canonical basis of
+    // `E[2^e]`: `Q` is `difference(P, R)` after the cofactor.
+    let (even, push) = if vk.is_zero() {
+        let basis = starting_basis::<L>().ok_or(VerifyError::Kernel)?;
+        (basis.even, [basis.r, basis.t, basis.difference])
     } else {
         let hint = basis_hint::<L>(vk)?;
-        rational_basis::<L>(vk, hint.index(), hint.coefficient_is_square())
-    }
-    .ok_or(VerifyError::Kernel)?;
+        let even = even_basis::<L>(vk, hint.index(), hint.coefficient_is_square())
+            .ok_or(VerifyError::Kernel)?;
+        (even, [even.p, even.q, even.difference])
+    };
     if !on_curve::<L>(sig, p_sig.x, p_sig.y) || !on_curve::<L>(sig, q_sig.x, q_sig.y) {
         return Err(VerifyError::Kernel);
     }
     let p_sig_x = Xz::affine(p_sig.x);
     let q_sig_x = Xz::affine(q_sig.x);
-    if !order_e_prime::<L>(sig, p_sig_x) || !order_e_prime::<L>(sig, q_sig_x) {
+    if !order_e::<L>(sig, p_sig_x) || !order_e::<L>(sig, q_sig_x) {
         return Err(VerifyError::Kernel);
     }
-    if !span_e_prime::<L>(sig, p_sig_x, q_sig_x) {
+    if !span_e::<L>(sig, p_sig_x, q_sig_x) {
         return Err(VerifyError::Kernel);
     }
-    let readings = match e_prime_surface::<L>(vk, &basis, sig, p_sig, q_sig, scalar) {
-        Ok(readings) => readings,
-        // A glued kernel whose one-factor point does not stay one-factor,
-        // and a kernel that never glues, are both a chain that stopped.
-        Err(SurfaceStop::Image | SurfaceStop::Kernel | SurfaceStop::Step(_)) => {
-            return Err(VerifyError::Kernel);
-        }
+    // The canonical search names abscissas; arbitrary public keys must
+    // still prove that the resulting signature basis is full rational torsion.
+    if !order_e::<L>(vk, even.p)
+        || !order_e::<L>(vk, even.difference)
+        || !span_e::<L>(vk, even.p, even.difference)
+    {
+        return Err(VerifyError::Kernel);
+    }
+    // Before either chain. A mismatch is `Pairing` on a public key and on
+    // the starting curve alike; the degree-`q` witness calls the chain
+    // helper itself and does not come through here.
+    if !pairing_holds::<L>(vk, &even, sig, p_sig, q_sig, scalar) {
+        return Err(VerifyError::Pairing);
+    }
+    let _ = push;
+    crate::accept::check::<L>(vk, &even, sig, p_sig, q_sig, scalar)
+}
+
+/// `e_{2^e}([s]P_sig, [s]Q_sig) = e_{2^e}(P, Q)^q`.
+///
+/// `Q` is the cleared difference. `P − Q` for the lift is `R`, the cleared
+/// point whose full-point abscissa is `−x(P) − A`. A global sign on the
+/// lifted pair cancels in the pairing.
+fn pairing_holds<L: Level>(
+    vk: L::Ext,
+    even: &EvenBasis<L::Ext>,
+    sig: L::Ext,
+    p_sig: AffinePoint<L>,
+    q_sig: AffinePoint<L>,
+    scalar: &[u8],
+) -> bool {
+    let Some((vk_curve, p_vk, q_vk)) =
+        lift_basis(Montgomery::normalized(vk), even.p, even.difference, even.q)
+    else {
+        return false;
     };
-    if readings.earlier.images.len() != 6 || readings.last.images.len() != 6 {
-        return Err(VerifyError::Kernel);
-    }
-    // The two readings are the chain at `e′ − 1` and at `e′`. Identifying
-    // them is the dual-basis section, which is not built.
-    Err(VerifyError::Unidentified)
+    let sig_curve = Montgomery::normalized(sig);
+    let one = L::Ext::one();
+    let p = Jac {
+        x: p_sig.x,
+        y: p_sig.y,
+        z: one,
+    };
+    let q = Jac {
+        x: q_sig.x,
+        y: q_sig.y,
+        z: one,
+    };
+    let (Some(left), Some(right)) = (
+        weil(
+            sig_curve,
+            mul(sig_curve, p, scalar),
+            mul(sig_curve, q, scalar),
+            L::E,
+        ),
+        weil(vk_curve, p_vk, q_vk, L::E),
+    ) else {
+        return false;
+    };
+    left.same(pow(right, &neg_square_mod_pow2(scalar, L::E)))
 }
 
 /// The `e′` chain for a basis and signature that have already passed the
 /// order and span checks.
+#[cfg(test)]
 fn e_prime_surface<L: Level>(
     vk: L::Ext,
-    basis: &RationalBasis<L::Ext>,
+    even: &EvenBasis<L::Ext>,
+    push: [Xz<L::Ext>; 3],
     sig: L::Ext,
     p_sig: AffinePoint<L>,
     q_sig: AffinePoint<L>,
@@ -98,49 +151,48 @@ fn e_prime_surface<L: Level>(
 ) -> Result<prism_isogeny::chain::SurfaceReadings<L::Ext>, SurfaceStop> {
     let p_sig_x = Xz::affine(p_sig.x);
     let q_sig_x = Xz::affine(q_sig.x);
+    let diff = difference::<L>(sig, p_sig.x, p_sig.y, q_sig.x, q_sig.y);
     let kernel = Kernel {
         t1: Couple {
-            first: double_times::<L>(vk, basis.even.p, 2),
-            second: p_sig_x,
+            first: double_times::<L>(vk, even.p, 2),
+            second: double_times::<L>(sig, p_sig_x, 2),
         },
         t2: Couple {
-            first: double_times::<L>(vk, basis.even.q, 2),
-            second: q_sig_x,
+            first: double_times::<L>(vk, even.q, 2),
+            second: double_times::<L>(sig, q_sig_x, 2),
         },
+        // `even.difference` is `difference` of the cleared points, which is
+        // the C canonical `Q`. Clearing the uncleared difference is not.
         difference: Couple {
-            first: double_times::<L>(vk, basis.even.difference, 2),
-            second: difference::<L>(sig, p_sig.x, p_sig.y, q_sig.x, q_sig.y),
+            first: double_times::<L>(vk, even.difference, 2),
+            second: double_times::<L>(sig, diff, 2),
         },
     };
     let curves = [Montgomery::normalized(vk), Montgomery::normalized(sig)];
-    let points = pushed::<L>(vk, basis, scalar);
+    let points = pushed::<L>(vk, push, scalar);
     chain_surface(L::E - 2, curves, kernel, false, &points, true)
 }
 
-/// Order exactly `2^{e′}`, `e′ = e − 2`.
-fn order_e_prime<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
-    let full = double_times::<L>(coefficient, point, L::E - 2);
-    let almost = double_times::<L>(coefficient, point, L::E - 3);
+/// Order exactly `2^e`.
+fn order_e<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
+    let full = double_times::<L>(coefficient, point, L::E);
+    let almost = double_times::<L>(coefficient, point, L::E - 1);
     full.z.is_zero() && !almost.z.is_zero()
 }
 
-/// `[2^{e′−1}]` of two order-`2^{e′}` points are distinct and nonzero.
-fn span_e_prime<L: Level>(coefficient: L::Ext, p: Xz<L::Ext>, q: Xz<L::Ext>) -> bool {
-    let p2 = double_times::<L>(coefficient, p, L::E - 3);
-    let q2 = double_times::<L>(coefficient, q, L::E - 3);
+/// `[2^{e−1}]` of two order-`2^e` points are distinct and nonzero.
+fn span_e<L: Level>(coefficient: L::Ext, p: Xz<L::Ext>, q: Xz<L::Ext>) -> bool {
+    let p2 = double_times::<L>(coefficient, p, L::E - 1);
+    let q2 = double_times::<L>(coefficient, q, L::E - 1);
     !p2.is_infinity() && !q2.is_infinity() && !p2.x.mul(q2.z).same(q2.x.mul(p2.z))
 }
 
-fn pushed<L: Level>(
-    vk: L::Ext,
-    basis: &RationalBasis<L::Ext>,
-    scalar: &[u8],
-) -> [Couple<L::Ext>; 6] {
+#[cfg(test)]
+fn pushed<L: Level>(vk: L::Ext, bases: [Xz<L::Ext>; 3], scalar: &[u8]) -> [Couple<L::Ext>; 6] {
     let at = |point: Xz<L::Ext>| Couple {
         first: point,
         second: Xz::infinity(),
     };
-    let bases = [basis.r, basis.t, basis.difference];
     [
         at(scale::<L>(vk, bases[0], scalar)),
         at(scale::<L>(vk, bases[1], scalar)),
@@ -157,6 +209,7 @@ fn on_curve<L: Level>(coefficient: L::Ext, x: L::Ext, y: L::Ext) -> bool {
         .same(square.mul(x).add(coefficient.mul(square)).add(x))
 }
 
+#[cfg(test)]
 fn difference<L: Level>(
     coefficient: L::Ext,
     px: L::Ext,
@@ -180,6 +233,7 @@ fn difference<L: Level>(
     ))
 }
 
+#[cfg(test)]
 fn scale<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>, scalar: &[u8]) -> Xz<L::Ext> {
     let Some(constant) = a24(coefficient) else {
         return Xz::infinity();
@@ -201,11 +255,13 @@ fn scale<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>, scalar: &[u8]) -> Xz<
 
 #[cfg(test)]
 mod e0_vectors {
-    use super::relate_points;
+    use super::e_prime_surface;
     use crate::signature::{canonical_sign, AffinePoint};
     use crate::verify;
     use crate::VerifyError;
     use prism_field::{Field, Level, Level1};
+    #[cfg(test)]
+    use prism_isogeny::chain::SurfaceStop;
     use prism_isogeny::endomorphism::{apply, multiply};
     use prism_isogeny::jac::{lift_basis, Jac};
     use prism_isogeny::montgomery::Montgomery;
@@ -271,16 +327,27 @@ mod e0_vectors {
     fn exercise<L: Level>(block: &str) {
         let (p, q, s) = signature::<L>(block);
         let zero = L::Ext::zero();
+        let basis = starting_basis::<L>().expect("E0 basis");
         // The chain is the one-chain shape. This witness is the graph of one
         // endomorphism of E0. In the C tree that kernel is
         // `endomorphism_application_even_basis` on `BASIS_EVEN` of
         // `CURVE_E0`, and `theta_chain_compute_and_eval` stops the same way.
         // A theta coordinate of the step's kernel vanishes at step 3, which
-        // the (2,2) step refuses, so both readings are not produced.
-        assert_eq!(
-            relate_points::<L>(zero, zero, p, q, &s),
-            Err(VerifyError::Kernel)
-        );
+        // the (2,2) step refuses, so both readings are not produced. The
+        // witness calls the chain helper directly: `relate_points` now runs
+        // the pairing check, which this graph is not.
+        assert!(matches!(
+            e_prime_surface::<L>(
+                zero,
+                &basis.even,
+                [basis.r, basis.t, basis.difference],
+                zero,
+                p,
+                q,
+                &s,
+            ),
+            Err(SurfaceStop::Step(3))
+        ));
     }
 
     #[test]
@@ -297,7 +364,7 @@ mod e0_vectors {
 
 #[cfg(test)]
 mod s5_vectors {
-    use super::{e_prime_surface, on_curve, order_e_prime, relate_points, span_e_prime};
+    use super::{e_prime_surface, on_curve, order_e, relate_points, span_e};
     use crate::basis::basis_hint;
     use crate::challenge::ChallengeScalar;
     use crate::identity::KeyIdentity;
@@ -306,8 +373,11 @@ mod s5_vectors {
     use crate::verify;
     use crate::VerifyError;
     use prism_field::{ChallengeIndex, Field, Level, Level1, Level3, Level5};
+    #[cfg(test)]
     use prism_isogeny::chain::SurfaceStop;
-    use prism_isogeny::montgomery::Xz;
+    use prism_isogeny::jac::Jac;
+    use prism_isogeny::montgomery::{Montgomery, Xz};
+    use prism_isogeny::pairing::{mul, weil};
     use prism_isogeny::torsion::{even_basis, has_order_p_plus_one, rational_basis};
 
     fn line<'a>(text: &'a str, label: &str) -> &'a str {
@@ -374,7 +444,39 @@ mod s5_vectors {
         }
     }
 
-    fn honest<L: Level>(text: &str, chain_step: Option<u32>) {
+    /// Both readings, or the isogeny step that stopped the chain.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum Stop {
+        Readings,
+        Step(u32),
+    }
+
+    fn surface_stop<L: Level>(sample: &Sample<L>, q_sign: L::Ext) -> Stop {
+        let coefficient = KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient();
+        let hint = basis_hint::<L>(coefficient).unwrap();
+        let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
+            .expect("the index names a point");
+        assert!(even.full_q.x.same(even.full_p.x.add(coefficient).negate()));
+        let mut q = sample.response.q;
+        q.y = q_sign;
+        match e_prime_surface::<L>(
+            coefficient,
+            &even,
+            [even.p, even.q, even.difference],
+            sample.response.curve,
+            sample.response.p,
+            q,
+            &sample.scalar,
+        )
+        .err()
+        {
+            None => Stop::Readings,
+            Some(SurfaceStop::Step(step)) => Stop::Step(step),
+            Some(other) => panic!("chain stopped at {other:?}"),
+        }
+    }
+
+    fn honest<L: Level>(text: &str, chain: Stop, negated_q: Stop, full_order: bool) {
         let sample = sample::<L>(text);
         assert!(
             basis_hint::<L>(KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient()).is_ok()
@@ -394,45 +496,29 @@ mod s5_vectors {
         let coefficient = KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient();
         let p = Xz::affine(sample.response.p.x);
         let q = Xz::affine(sample.response.q.x);
-        assert!(order_e_prime::<L>(sample.response.curve, p));
-        assert!(order_e_prime::<L>(sample.response.curve, q));
-        assert!(span_e_prime::<L>(sample.response.curve, p, q));
+        assert!(order_e::<L>(sample.response.curve, p));
+        assert!(order_e::<L>(sample.response.curve, q));
+        assert!(span_e::<L>(sample.response.curve, p, q));
         let hint = basis_hint::<L>(coefficient).unwrap();
-        match chain_step {
-            Some(step) => {
-                let basis =
-                    rational_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
-                        .expect("the key has a basis");
-                // Order and span passed, the basis exists, and the chain
-                // stops at this isogeny step: not at gluing, and not at the
-                // one-factor image.
-                assert_eq!(
-                    e_prime_surface::<L>(
-                        coefficient,
-                        &basis,
-                        sample.response.curve,
-                        sample.response.p,
-                        sample.response.q,
-                        &sample.scalar,
-                    )
-                    .err(),
-                    Some(SurfaceStop::Step(step))
-                );
-            }
-            None => {
-                // The index names a point, and that point is not order
-                // `p + 1`, so the relation stops before the chain.
-                let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
-                    .expect("the index names a point");
-                assert!(!has_order_p_plus_one::<L>(coefficient, even.full_p));
-                assert!(rational_basis::<L>(
-                    coefficient,
-                    hint.index(),
-                    hint.coefficient_is_square(),
-                )
-                .is_none());
-            }
-        }
+        assert_eq!(
+            has_order_p_plus_one::<L>(
+                coefficient,
+                even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
+                    .unwrap()
+                    .full_p,
+            ),
+            full_order
+        );
+        assert_eq!(
+            rational_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square()).is_some(),
+            full_order
+        );
+        assert_eq!(
+            surface_stop::<L>(&sample, sample.response.q.y),
+            chain,
+            "{}",
+            L::NAME
+        );
         assert_eq!(
             relate_points::<L>(
                 coefficient,
@@ -441,13 +527,12 @@ mod s5_vectors {
                 sample.response.q,
                 &sample.scalar,
             ),
-            Err(VerifyError::Kernel)
+            Ok(())
         );
-        // The degree is prime at e', so verify reaches the same chain
-        // refusal rather than Composite.
+        // The degree is prime at e', so verify reaches the chain.
         assert_eq!(
             verify::<L>(&sample.key, b"shekyl-prism-s5", &sample.response.encode()),
-            Err(VerifyError::Kernel)
+            Ok(())
         );
 
         let mut wrong_sign = sample.response;
@@ -483,21 +568,26 @@ mod s5_vectors {
         // refusal, once the exponent is e', is Composite, before the chain.
         assert!(!degree_is_prime(L::E - 2, next_scalar.as_bytes()));
 
-        // (P, −Q) keeps the normalized y(P) and the same order. The
-        // x-only chain refuses it with the same `Kernel` as the honest
-        // vector. The stop inside the chain is not the same at every level.
-        let mut negated_q = sample.response;
-        negated_q.q.y = negated_q.q.y.negate();
-        assert!(canonical_sign::<L>(negated_q.p.y));
+        // (P, −Q) keeps the normalized y(P). The chain still reaches both
+        // readings. The pairing check refuses it before that chain runs.
+        let mut negated = sample.response;
+        negated.q.y = negated.q.y.negate();
+        assert!(canonical_sign::<L>(negated.p.y));
+        assert_eq!(
+            surface_stop::<L>(&sample, negated.q.y),
+            negated_q,
+            "{}",
+            L::NAME
+        );
         assert_eq!(
             relate_points::<L>(
                 coefficient,
-                negated_q.curve,
-                negated_q.p,
-                negated_q.q,
+                negated.curve,
+                negated.p,
+                negated.q,
                 &sample.scalar,
             ),
-            Err(VerifyError::Kernel)
+            Err(VerifyError::Pairing)
         );
 
         let swapped = Response {
@@ -506,6 +596,7 @@ mod s5_vectors {
             ..sample.response
         };
         if canonical_sign::<L>(swapped.p.y) {
+            // A swap is determinant −1. The pairing refuses it before the chain.
             assert_eq!(
                 relate_points::<L>(
                     coefficient,
@@ -514,7 +605,7 @@ mod s5_vectors {
                     swapped.q,
                     &sample.scalar,
                 ),
-                Err(VerifyError::Kernel)
+                Err(VerifyError::Pairing)
             );
         } else {
             assert_eq!(
@@ -524,12 +615,164 @@ mod s5_vectors {
         }
     }
 
+    fn assert_weil_values<L: Level>(text: &str, vk_hex: &str, sig_hex: &str) {
+        let sample = sample::<L>(text);
+        let one = L::Ext::one();
+        let coefficient = KeyIdentity::<L>::decode(&sample.key)
+            .expect("key")
+            .coefficient();
+        let vk = Montgomery::normalized(coefficient);
+        let sig = Montgomery::normalized(sample.response.curve);
+        let at = |x: &str, y: &str| Jac {
+            x: L::ext_decode(&hex_bytes(line(text, x))).unwrap(),
+            y: L::ext_decode(&hex_bytes(line(text, y))).unwrap(),
+            z: one,
+        };
+        let public =
+            weil(vk, at("VkPx ", "VkPy "), at("VkQx ", "VkQy "), L::E).expect("e(P_vk, Q_vk)");
+        let signed = weil(
+            sig,
+            mul(sig, at("Px ", "Py "), &sample.scalar),
+            mul(sig, at("Qx ", "Qy "), &sample.scalar),
+            L::E,
+        )
+        .expect("e([s]P_sig, [s]Q_sig)");
+        let encoded = |value: L::Ext| {
+            L::ext_encode(value)
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect::<String>()
+        };
+        assert_eq!(encoded(public), vk_hex, "{} public", L::NAME);
+        assert_eq!(encoded(signed), sig_hex, "{} signature", L::NAME);
+    }
+
     #[test]
-    fn the_s5_vectors_stop_at_a_named_stage() {
-        // Levels I and III enter the chain and stop at an isogeny step.
-        // Level V's first on-curve basis point is not order `p + 1`.
-        honest::<Level1>(include_str!("../testdata/s5_lvl1.txt"), Some(2));
-        honest::<Level3>(include_str!("../testdata/s5_lvl3.txt"), Some(1));
-        honest::<Level5>(include_str!("../testdata/s5_lvl5.txt"), None);
+    fn the_weil_values_match_sage() {
+        let table = include_str!("../testdata/weil_pairing.tsv");
+        let mut rows = table.lines().filter(|line| !line.is_empty());
+        assert_eq!(rows.next(), Some("file\tvk\tsig"));
+        let files: [(&str, &str); 6] = [
+            ("s5_lvl1.txt", include_str!("../testdata/s5_lvl1.txt")),
+            ("s5_lvl3.txt", include_str!("../testdata/s5_lvl3.txt")),
+            ("s5_lvl5.txt", include_str!("../testdata/s5_lvl5.txt")),
+            ("s5_lvl1b.txt", include_str!("../testdata/s5_lvl1b.txt")),
+            ("s5_lvl3b.txt", include_str!("../testdata/s5_lvl3b.txt")),
+            ("s5_lvl5b.txt", include_str!("../testdata/s5_lvl5b.txt")),
+        ];
+        for (name, text) in files {
+            let row = rows.next().expect(name);
+            let mut parts = row.split('\t');
+            assert_eq!(parts.next(), Some(name));
+            let vk = parts.next().expect("vk");
+            let sig = parts.next().expect("sig");
+            match name {
+                "s5_lvl1.txt" | "s5_lvl1b.txt" => assert_weil_values::<Level1>(text, vk, sig),
+                "s5_lvl3.txt" | "s5_lvl3b.txt" => assert_weil_values::<Level3>(text, vk, sig),
+                "s5_lvl5.txt" | "s5_lvl5b.txt" => assert_weil_values::<Level5>(text, vk, sig),
+                _ => panic!("unexpected row {name}"),
+            }
+        }
+        assert!(rows.next().is_none());
+    }
+
+    fn assert_vk_basis<L: Level>(text: &str) {
+        // The exporter writes the C canonical pair (P, Q) of E[2^e] whose
+        // t·σ image is the signature: P is the cleared index point and Q is
+        // the C's difference_point(P, R), which in Rust terms is
+        // difference(even.p, even.q). The exported VkDx is x(P − Q) = x(R),
+        // the cleared −x−A point, which is even_basis.q.
+        let sample = sample::<L>(text);
+        let coefficient = KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient();
+        let hint = basis_hint::<L>(coefficient).unwrap();
+        let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
+            .expect("canonical basis");
+        let vk_px = L::ext_decode(&hex_bytes(line(text, "VkPx "))).unwrap();
+        let vk_qx = L::ext_decode(&hex_bytes(line(text, "VkQx "))).unwrap();
+        let vk_dx = L::ext_decode(&hex_bytes(line(text, "VkDx "))).unwrap();
+        let p = even.p.x_affine().expect("P");
+        let r = even.q.x_affine().expect("R");
+        let q = even
+            .difference
+            .x_affine()
+            .expect("difference of the cleared points");
+        assert!(
+            p.same(vk_px),
+            "{} VkPx disagrees with even_basis.p",
+            L::NAME
+        );
+        assert!(
+            q.same(vk_qx),
+            "{} VkQx disagrees with difference(P, R)",
+            L::NAME
+        );
+        assert!(
+            r.same(vk_dx),
+            "{} VkDx disagrees with even_basis.q (R)",
+            L::NAME
+        );
+        // Cleared generators need not satisfy x(Q) = −x(P) − A as affine
+        // values; the preimage pair does.
+        assert!(
+            even.full_q
+                .x_affine()
+                .unwrap()
+                .same(even.full_p.x_affine().unwrap().add(coefficient).negate()),
+            "{} full_q is not -full_p-A",
+            L::NAME
+        );
+        let _ = sample;
+    }
+
+    #[test]
+    fn honest_signatures_accept_and_the_old_chain_still_stops_at_step_one() {
+        // The kernel difference is `difference` of the cleared points.
+        // With that point, every committed honest vector stops at step 1
+        // and `(P, −Q)` reaches both readings. The earlier field, the
+        // cofactor of the uncleared difference, let levels I and III reach
+        // both readings. The accept path replaces this chain.
+        honest::<Level1>(
+            include_str!("../testdata/s5_lvl1.txt"),
+            Stop::Step(1),
+            Stop::Readings,
+            true,
+        );
+        honest::<Level3>(
+            include_str!("../testdata/s5_lvl3.txt"),
+            Stop::Step(1),
+            Stop::Readings,
+            true,
+        );
+        honest::<Level5>(
+            include_str!("../testdata/s5_lvl5.txt"),
+            Stop::Step(1),
+            Stop::Readings,
+            false,
+        );
+        assert_vk_basis::<Level1>(include_str!("../testdata/s5_lvl1.txt"));
+        assert_vk_basis::<Level3>(include_str!("../testdata/s5_lvl3.txt"));
+        assert_vk_basis::<Level5>(include_str!("../testdata/s5_lvl5.txt"));
+        assert_vk_basis::<Level1>(include_str!("../testdata/s5_lvl1b.txt"));
+        assert_vk_basis::<Level3>(include_str!("../testdata/s5_lvl3b.txt"));
+        assert_vk_basis::<Level5>(include_str!("../testdata/s5_lvl5b.txt"));
+        second_key::<Level1>(include_str!("../testdata/s5_lvl1b.txt"));
+        second_key::<Level3>(include_str!("../testdata/s5_lvl3b.txt"));
+        second_key::<Level5>(include_str!("../testdata/s5_lvl5b.txt"));
+    }
+
+    fn second_key<L: Level>(text: &str) {
+        let sample = sample::<L>(text);
+        assert_eq!(
+            surface_stop::<L>(&sample, sample.response.q.y),
+            Stop::Step(1),
+            "{}",
+            L::NAME
+        );
+        assert_eq!(
+            surface_stop::<L>(&sample, sample.response.q.y.negate()),
+            Stop::Readings,
+            "{}",
+            L::NAME
+        );
     }
 }

@@ -102,11 +102,10 @@ pub trait Level: Copy + Clone + Eq + Send + Sync + 'static {
     const E: u32;
     /// The odd cofactor `f` in `p + 1 = f·2^e`.
     const ODD: u64;
-    /// §5 chain length. Algorithm 3 walks a `(2^e, 2^e)` chain, so this is
-    /// `e`. salt-PRISM's `a` is a different count and is not this constant.
+    /// Instantiated long-chain length `e′ = e − 2`. The short chain
+    /// has length `CHAIN_STEPS − 1`; the rational torsion exponent is `E`.
     const CHAIN_STEPS: u32;
-    /// Bit width of the challenge scalar `s`: Algorithm 3 takes an odd `s`
-    /// with `0 < s < 2^{e−1}`, so this is `e − 1`.
+    /// Actual challenge width `e′ − 1 = E − 3`, including the forced odd bit.
     const CHALLENGE_BITS: u32;
     const FP_LEN: usize;
     const FP2_LEN: usize;
@@ -279,8 +278,8 @@ macro_rules! nist_level {
                     500 => 27,
                     _ => panic!("Table 2 has no cofactor for this valuation"),
                 };
-                const CHAIN_STEPS: u32 = $e;
-                const CHALLENGE_BITS: u32 = $e - 1;
+                const CHAIN_STEPS: u32 = $e - 2;
+                const CHALLENGE_BITS: u32 = $e - 3;
                 const FP_LEN: usize = <$fp>::ENCODED_LENGTH;
                 const FP2_LEN: usize = <$fp2>::ENCODED_LENGTH;
                 const PUBLIC_KEY_LEN: usize = <$fp2>::ENCODED_LENGTH;
@@ -401,8 +400,8 @@ mod tests {
         assert_eq!(L::FP_LEN * 2, L::FP2_LEN);
         assert_eq!(L::PUBLIC_KEY_LEN, L::FP2_LEN);
         assert_eq!(L::INDEX_LEN, ChallengeIndex::WIDTH);
-        assert_eq!(L::CHAIN_STEPS, L::E);
-        assert_eq!(L::CHALLENGE_BITS, L::E - 1);
+        assert_eq!(L::CHAIN_STEPS, L::E - 2);
+        assert_eq!(L::CHALLENGE_BITS, L::E - 3);
         assert_eq!(L::S_LEN, (L::CHALLENGE_BITS as usize).div_ceil(8));
         assert_eq!(
             L::SIGNATURE_LEN,
@@ -427,7 +426,7 @@ mod tests {
         );
         assert_eq!(Level1::PUBLIC_KEY_LEN, 64);
         assert_eq!(Level1::SIGNATURE_LEN, 322);
-        assert_eq!(Level1::CHAIN_STEPS, 248);
+        assert_eq!(Level1::CHAIN_STEPS, 246);
     }
 
     #[test]
@@ -440,7 +439,7 @@ mod tests {
         );
         assert_eq!(Level3::PUBLIC_KEY_LEN, 96);
         assert_eq!(Level3::SIGNATURE_LEN, 482);
-        assert_eq!(Level3::CHAIN_STEPS, 376);
+        assert_eq!(Level3::CHAIN_STEPS, 374);
     }
 
     #[test]
@@ -453,7 +452,7 @@ mod tests {
         );
         assert_eq!(Level5::PUBLIC_KEY_LEN, 128);
         assert_eq!(Level5::SIGNATURE_LEN, 642);
-        assert_eq!(Level5::CHAIN_STEPS, 500);
+        assert_eq!(Level5::CHAIN_STEPS, 498);
     }
 
     #[test]

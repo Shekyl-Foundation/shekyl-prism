@@ -5,25 +5,22 @@
 
 //! Time a verification at NIST I, III, and V.
 //!
-//! The sample signature's points are not on a curve, so the run stops at
-//! `Kernel` before the chain. It is not the floor-device gate. That gate
-//! is a level III run of the Algorithm 3 chain, on a Raspberry Pi 4
-//! Model B, after a positive vector has passed. The counter is the userspace
-//! timer, named below: `cntvct_el0` on aarch64 and `rdtsc` on x86_64.
+//! Times the complete successful two-chain verification path. Only a run
+//! on an identified Raspberry Pi 4 Model B is the floor-device measurement.
+//! Userspace counters are cntvct_el0 on aarch64 and rdtsc on x86_64.
 
 use std::process::ExitCode;
 use std::time::Instant;
 
 use prism_field::FIELD_BACKEND;
-use prism_verify::{prepared, verify_level, Nist, PreparedError, VerifyError};
+use prism_verify::{reference::honest, verify_level, Nist, VectorError, VerifyError};
 
 /// Runs before the clock starts, to settle the frequency and the caches.
 const WARMUP: usize = 5;
 /// Odd, so the median is a sample rather than a mean of two.
 const SAMPLES: usize = 31;
 
-/// The sample has no point on its curve, so every run stops at the kernel check.
-const EXPECTED: Result<(), VerifyError> = Err(VerifyError::Kernel);
+// Every timed invocation must accept the honest signature.
 
 fn main() -> ExitCode {
     println!("field-backend={FIELD_BACKEND}");
@@ -32,7 +29,7 @@ fn main() -> ExitCode {
     for level in Nist::ALL {
         match measure(level) {
             Ok(timing) => println!(
-                "level={level} outcome=kernel samples={SAMPLES} median_ns={} spread_ns={} median_counter={} counter_spread={}",
+                "level={level} outcome=accepted samples={SAMPLES} median_ns={} spread_ns={} median_counter={} counter_spread={}",
                 timing.median_ns, timing.spread_ns, timing.median_counter, timing.counter_spread
             ),
             Err(err) => {
@@ -58,11 +55,9 @@ struct Timing {
 /// Why a level produced no timing.
 enum BenchError {
     /// The sample could not be built, so there is nothing to time.
-    Prepare(PreparedError),
-    /// A run reported something other than [`EXPECTED`].
+    Prepare(VectorError),
+    /// A timed invocation refused the honest signature.
     Refused(VerifyError),
-    /// The run reported something other than the kernel refusal.
-    Accepted,
 }
 
 impl std::fmt::Display for BenchError {
@@ -70,13 +65,12 @@ impl std::fmt::Display for BenchError {
         match self {
             Self::Prepare(err) => write!(f, "{err}"),
             Self::Refused(err) => write!(f, "{err}"),
-            Self::Accepted => f.write_str("a signature was accepted, which cannot happen"),
         }
     }
 }
 
 fn measure(level: Nist) -> Result<Timing, BenchError> {
-    let sample = prepared(level).map_err(BenchError::Prepare)?;
+    let sample = honest(level).map_err(BenchError::Prepare)?;
     let run = || verify_level(level, &sample.public_key, sample.message, &sample.signature);
     for _ in 0..WARMUP {
         expected(run())?;
@@ -104,11 +98,7 @@ fn measure(level: Nist) -> Result<Timing, BenchError> {
 }
 
 fn expected(outcome: Result<(), VerifyError>) -> Result<(), BenchError> {
-    match outcome {
-        _ if outcome == EXPECTED => Ok(()),
-        Ok(()) => Err(BenchError::Accepted),
-        Err(err) => Err(BenchError::Refused(err)),
-    }
+    outcome.map_err(BenchError::Refused)
 }
 
 /// Median and peak-to-peak spread of a non-empty sample.

@@ -1,0 +1,17 @@
+[package]
+name = "prism-signer"
+description = "Experimental deterministic PRISM signing through an isolated C backend"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+prism-field.workspace = true
+prism-verify.workspace = true
+sha3.workspace = true
+zeroize = "=1.8.2"
+
+[lints]
+workspace = true

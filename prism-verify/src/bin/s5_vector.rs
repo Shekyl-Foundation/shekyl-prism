@@ -125,6 +125,26 @@ fn commit<L: Level>(text: &str, path: &str) -> ExitCode {
         eprintln!("Qy does not decode");
         return ExitCode::FAILURE;
     };
+    let Ok(vk_px) = field_line(text, "VkPx") else {
+        eprintln!("missing VkPx");
+        return ExitCode::FAILURE;
+    };
+    let Ok(vk_py) = field_line(text, "VkPy") else {
+        eprintln!("missing VkPy");
+        return ExitCode::FAILURE;
+    };
+    let Ok(vk_qx) = field_line(text, "VkQx") else {
+        eprintln!("missing VkQx");
+        return ExitCode::FAILURE;
+    };
+    let Ok(vk_qy) = field_line(text, "VkQy") else {
+        eprintln!("missing VkQy");
+        return ExitCode::FAILURE;
+    };
+    let Ok(vk_dx) = field_line(text, "VkDx") else {
+        eprintln!("missing VkDx");
+        return ExitCode::FAILURE;
+    };
     let mut point_p = AffinePoint::<L> { x: px, y: py };
     let mut point_q = AffinePoint::<L> { x: qx, y: qy };
     if !canonical_sign::<L>(point_p.y) {
@@ -132,7 +152,7 @@ fn commit<L: Level>(text: &str, path: &str) -> ExitCode {
         point_q.y = point_q.y.negate();
     }
     let body = format!(
-        "level {}\nmessage shekyl-prism-s5\nj {}\ns {}\nq {}\nA {}\nE {}\nPx {}\nPy {}\nQx {}\nQy {}\n",
+        "level {}\nmessage shekyl-prism-s5\nj {}\ns {}\nq {}\nA {}\nE {}\nPx {}\nPy {}\nQx {}\nQy {}\nVkPx {}\nVkPy {}\nVkQx {}\nVkQy {}\nVkDx {}\n",
         L::NAME,
         index,
         decimal(scalar.as_bytes()),
@@ -143,6 +163,11 @@ fn commit<L: Level>(text: &str, path: &str) -> ExitCode {
         hex_bytes_encode(&L::ext_encode(point_p.y)),
         hex_bytes_encode(&L::ext_encode(point_q.x)),
         hex_bytes_encode(&L::ext_encode(point_q.y)),
+        hex_bytes_encode(&vk_px),
+        hex_bytes_encode(&vk_py),
+        hex_bytes_encode(&vk_qx),
+        hex_bytes_encode(&vk_qy),
+        hex_bytes_encode(&vk_dx),
     );
     if fs::write(path, body).is_err() {
         eprintln!("could not write {path}");
@@ -214,7 +239,7 @@ fn field_line(text: &str, label: &str) -> Result<Vec<u8>, ()> {
 }
 
 fn hex_bytes(text: &str) -> Result<Vec<u8>, ()> {
-    if !text.len().is_multiple_of(2) {
+    if !text.is_ascii() || !text.len().is_multiple_of(2) {
         return Err(());
     }
     (0..text.len())
@@ -249,4 +274,15 @@ fn decimal(bytes: &[u8]) -> String {
         .rev()
         .map(|digit| char::from(b'0' + digit))
         .collect()
+}
+
+#[cfg(test)]
+mod hex_input_tests {
+    #[test]
+    fn malformed_hex_is_refused_without_slicing_a_character() {
+        for input in ["0é0", "a€", "é", "f", "gg"] {
+            assert!(super::hex_bytes(input).is_err(), "{input:?}");
+        }
+        assert_eq!(super::hex_bytes("00aAfF"), Ok(vec![0, 170, 255]));
+    }
 }

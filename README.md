@@ -1,74 +1,91 @@
 # shekyl-prism
 
-Research workspace for an isogeny engine and a spec-faithful PRISM verifier.
-It is not a consensus crate, it does not sign, and it is not wired to a
-transaction.
-
-The gap it exists for is in the wallet derivation: each output's ML-DSA seed
-is expanded from the combined shared secret, which the sender computed. A
-later design round can consider PRISM as a third mandatory authorization leg
-only after the level III cost of Algorithm 3, at `e` steps, has been
-measured on the floor device (Raspberry Pi 4 Model B). Until that chain
-exists and that number is measured, this repository does not propose that
-leg.
-
-## What is here
+Research implementation of the prime-degree §5 PRISM signature relation,
+with a Rust verifier and an experimental deterministic native signer.
+It is not a consensus crate or an adopted wallet authorization scheme.
+The exact protocol still needs cryptographic review; see
+[open security items](docs/SECURITY_REVIEW.md).
 
 | Crate | Role |
 | --- | --- |
-| `prism-field` | The three Table 2 primes, on `fp2` 0.6.0 with default features off |
-| `prism-isogeny` | Montgomery curves, Vélu 2-isogenies, and split (2,2) chains |
-| `prism-verify` | Pure decoder and verifier. Bad input is a typed refusal |
-| `prism-bench` | Times NIST I, III, and V on one machine |
+| `prism-field` | Three field rows, scalar `fp2` 0.6.0 backend |
+| `prism-isogeny` | Montgomery and theta arithmetic, adapted chains and duals |
+| `prism-verify` | Canonical decoding, pairing, both chains and complete images |
+| `prism-signer` | Unix research API for an isolated deterministic C backend |
+| `prism-bench` | Successful complete verification at I, III and V |
 
-The verifier spec is [`docs/VERIFIER_SPEC.md`](docs/VERIFIER_SPEC.md). It is a
-draft to take to the authors, not a standard. Working copies of the papers
-are in the private `shekyl-dev` repository under `docs/papers/`.
+The [verifier specification](docs/VERIFIER_SPEC.md) defines the current
+research encoding, including the `e′=e−2` parameter choice. Signatures are
+322 / 482 / 642 bytes. I/III/V name the source field rows, not certified
+security levels for this modified unsalted construction.
 
-The C reference [PRISM_v2](https://github.com/mariascrs/PRISM_v2) is the
-submodule `external/PRISM_v2`, pinned, and used only by
-`scripts/check_c_reference.py`. The Rust crates do not link it. That tree
-implements salt-PRISM. Its verifier resamples a salt and uses a
-probabilistic prime test. This workspace does neither; each divergence is a
-ruling in the spec. Its third quirk, restarting the basis search at 128 when
-the key's hint byte cannot name the index, is not a divergence here: this
-verifier carries no hint byte and derives the same index in one search.
+The verifier accepts all 113 committed honest signatures. Tests compare
+both chains against every intermediate null point from six primary Sage
+traces and reject sign, basis, torsion, model and message mutations. The
+least signature-curve model is enforced. Response curves with exceptional
+automorphisms are excluded. An all-zero projective vector is never equal
+to a valid point.
 
-## Field backend
+## Rust checks
 
-`fp2`'s packed arithmetic is off. The level III prime `65·2^376 − 1` is 383
-bits, so it sits in six 64-bit limbs and is not strictly below `2^382`. The
-feature's own modulus rule therefore does not hold for every prime, and one
-crate feature cannot enable it for level I and level V while leaving level
-III on the scalar path. The bench reports `field-backend=scalar`.
-
-## Build
-
-```bash
+```
 cargo fmt --all --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
-cargo run -p prism-bench --release
-python3 scripts/check_c_reference.py
+cargo clippy --workspace --all-targets --locked -- -D warnings
+cargo test --workspace --locked
+cargo test --workspace --release --locked
+cargo run --release --locked -p prism-bench
 ```
 
-The first three are the gates; a change that compiles but fails fmt or
-clippy is not done. `.github/workflows/ci.yml` runs them on x86_64 and on
-aarch64, plus the bench, `cargo deny`, the hygiene checks, the C-reference
-pin, and — when `scripts/`, `external/`, or a `testdata/` directory changed
-— a rebuild of the pinned C tree that must reproduce `testdata/`. The one
-required check is `ci-pass`. `.github/workflows/nightly.yml` is the
-scheduled half: fuzzing, the primality differential, a big-endian test run,
-mutation and coverage as reports. The fuzz jobs count only once a run
-records executions; a green job that built nothing is the failure the
-nightly fix removes. The level III floor-device measurement is not either
-workflow.
+Workspace tests execute the actual verifier on the entire honest corpus;
+the accept-list script checks only provenance. The nightly fuzz corpora
+include honest signatures so that deep verification paths are reachable.
 
-`cargo run -p prism-bench` prints the userspace counter
-(`cntvct_el0` on aarch64, `rdtsc` on x86_64) and, after a warm-up, the
-median and the spread of repeated runs. The prepared sample's signature
-points are not on a curve, so `outcome=kernel` is the public checks plus
-that refusal, not the Algorithm 3 chain. The consensus gate is the level III
-line of that chain on the floor device, read after a positive vector has
-passed. Levels I and V are the same run, so the cost
-curve is measured. A number from any other machine is not that gate.
+## Native signing
+
+The backend is currently built for Linux x86_64. Initialize the pinned
+submodules before these commands:
+
+```
+python3 scripts/check_c_reference.py
+cmake -S external/PRISM_v2 -B target/native -DCMAKE_BUILD_TYPE=Release -DPRISM_BUILD_TYPE=ref -DGMP_LIBRARY=MINI
+cmake --build target/native --parallel 4 --target prism_lvl1 prism_lvl3 prism_lvl5
+PRISM_REF_BUILD="$PWD/target/native" sh scripts/export_s5_vectors.sh backend
+PRISM_SIGNER_BACKEND_DIR="$PWD/target/native" cargo test -p prism-signer --release --locked --test native -- --ignored
+cargo run --release --locked -p prism-signer --example roundtrip -- target/native
+```
+
+`prism_signer::Signer` owns a zeroized 48-byte master seed and derives
+separate cSHAKE256 keygen and per-degree signing seeds. The backend consumes
+those seeds over stdin and uses SHAKE256, not the fixture generator's
+historical xorshift stream. It applies the positive-cofactor Cornacchia
+patch to a copy of the pinned quaternion archive. The original source and
+fixture RNG are retained for reproducibility. The libraries are not linked
+into the Rust verifier.
+
+The API regenerates the native secret key in private scratch, uses a
+bounded deterministic challenge search, normalizes the response, and
+verifies every result before returning it. Native failure returns an error.
+Normal exits remove the scratch directory. No constant-time or complete
+secret-erasure claim is made; native side-channel review remains required.
+No wallet keystore, output-key derivation or rerandomization is included.
+
+## Independent model and measurements
+
+With Sage installed and pinned submodules initialized:
+
+```
+cargo build --release --locked -p prism-verify --bin s5_challenge --bin verify_bytes
+sage scripts/sage/differential.sage
+```
+
+This fresh comparison does not rewrite committed known answers. Set
+`PRISM_DIFFERENTIAL_LEVEL=NIST-III` to restrict it to a parameter row.
+The original model report is in
+[REPORT.md](prism-isogeny/testdata/s5_model/REPORT.md).
+
+The benchmark now times accepted signatures. Development-machine results
+and the Raspberry Pi 4 command are in [BENCHMARKING.md](docs/BENCHMARKING.md).
+The Pi measurement is recorded: level III takes about 449 ms in the
+captured conditions. Independent cryptographic review and a deployment
+verification budget remain adoption gates. Paper sources and the pinned C-reference provenance are described
+in [C_REFERENCE.md](docs/C_REFERENCE.md).

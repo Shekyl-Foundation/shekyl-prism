@@ -1,6 +1,6 @@
 [package]
 name = "prism-bench"
-description = "Time decode, the challenge hash, and one Baillie–PSW test"
+description = "Time complete successful prime-degree PRISM verification"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

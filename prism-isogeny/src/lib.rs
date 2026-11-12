@@ -11,17 +11,22 @@
 //! (`theta_chain_compute_and_eval_verify`) is the differential target.
 //! [`theta_step`] is one step of that chain. [`chain`] runs the steps and,
 //! on the salt-PRISM path, splits the codomain. [`chain::chain_surface`]
-//! stops before that split. `verify` calls the surface reading.
+//! stops before that split. [`dual_chain`] supplies the full-point adapted
+//! chains and their duals used by prime-degree signature verification.
 
 #![forbid(unsafe_code)]
 
 pub mod chain;
+pub mod dual_chain;
 pub mod endomorphism;
 pub mod gluing;
 pub mod jac;
+pub mod modular;
 pub mod montgomery;
+pub mod pairing;
 pub mod splitting;
 pub mod theta;
+pub mod theta_base;
 pub mod theta_step;
 pub mod torsion;
 

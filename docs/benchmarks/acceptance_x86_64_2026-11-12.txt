@@ -1,0 +1,8 @@
+   Compiling prism-bench v0.1.0
+    Finished `release` profile [optimized] target(s) in 0.27s
+     Running `target/release/prism-verify-bench`
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=24806759 spread_ns=27080132 median_counter=64776056 counter_spread=70712512
+level=NIST-III outcome=accepted samples=31 median_ns=119593817 spread_ns=81024037 median_counter=312286250 counter_spread=211574014
+level=NIST-V outcome=accepted samples=31 median_ns=219746094 spread_ns=167551843 median_counter=573805842 counter_spread=437514616

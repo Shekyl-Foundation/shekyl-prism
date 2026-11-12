@@ -163,10 +163,12 @@ fn sample<L: Level>(level: Nist) -> Result<Prepared, PreparedError> {
     let index = smallest_challenge_index::<L>(&key.public_key, SAMPLE_MESSAGE)
         .map_err(PreparedError::Index)?;
     // The public checks read `y(P)` and the index. The sample carries
-    // canonical zeros for the curve and the points, which are not a point of
-    // any curve, so verification stops at `Kernel`.
+    // an admissible curve but invalid point coordinates, so verification
+    // stops at `Kernel`. The honest benchmark uses `honest` instead.
     let response = Response::<L> {
-        curve: L::Ext::zero(),
+        curve: Response::<L>::decode(&honest(level).map_err(PreparedError::Vector)?.signature)
+            .map_err(|_| PreparedError::Vector(VectorError::Malformed))?
+            .curve,
         p: AffinePoint {
             x: L::Ext::zero(),
             y: L::Ext::one(),
@@ -182,5 +184,33 @@ fn sample<L: Level>(level: Nist) -> Result<Prepared, PreparedError> {
         public_key: key.public_key.clone(),
         message: SAMPLE_MESSAGE,
         signature: response.encode(),
+    })
+}
+
+/// An honest, committed §5 response for benchmarking the complete verifier.
+/// It is test material; the keys and signing seeds are public.
+pub fn honest(level: Nist) -> Result<Prepared, VectorError> {
+    let text = match level {
+        Nist::I => include_str!("../testdata/s5_lvl1.txt"),
+        Nist::III => include_str!("../testdata/s5_lvl3.txt"),
+        Nist::V => include_str!("../testdata/s5_lvl5.txt"),
+    };
+    let field = |name: &str| {
+        text.lines()
+            .find_map(|row| row.strip_prefix(name))
+            .ok_or(VectorError::Malformed)
+    };
+    let public_key = decode_hex(field("A ")?)?;
+    let mut signature = Vec::new();
+    for name in ["E ", "Px ", "Py ", "Qx ", "Qy "] {
+        signature.extend(decode_hex(field(name)?)?);
+    }
+    let index: u16 = field("j ")?.parse().map_err(|_| VectorError::Malformed)?;
+    signature.extend(index.to_le_bytes());
+    Ok(Prepared {
+        level,
+        public_key,
+        message: field("message ")?.as_bytes(),
+        signature,
     })
 }

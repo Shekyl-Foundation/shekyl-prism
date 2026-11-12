@@ -3,26 +3,27 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! A pure verifier. It takes bytes and returns a typed refusal.
+//! Experimental prime-degree PRISM verifier at `e′ = e − 2`.
 //!
-//! Algorithm 3 of ePrint 2026/443 is specified in `docs/VERIFIER_SPEC.md`.
-//! The public checks run first. A signature that passes them is run through
-//! one chain with no splitting step. Both theta readings existing is
-//! [`VerifyError::Unidentified`]: the transformation between the two
-//! structures on the codomain is not fixed, so nothing here returns success.
+//! Canonical decoding and public checks precede two adapted theta chains,
+//! dual-codomain identification and both components of the image check.
+//! `Ok(())` means this research relation holds; it is not a claim of a
+//! reviewed SUF-CMA security proof. See `docs/SECURITY_REVIEW.md`.
 //!
 //! Each public check owns a module: [`identity`] decodes the key,
 //! [`signature`] decodes the response and normalizes its sign, [`basis`]
 //! re-derives the C reference's basis index, [`challenge`] derives the
 //! challenge scalar, and [`prime`] decides its degree. [`checked`] runs them
-//! in the order [`VerifyError`] declares.
+//! before the relation checks.
 
 #![forbid(unsafe_code)]
 
+mod accept;
 pub mod basis;
 pub mod challenge;
 pub mod identity;
 pub mod level;
+mod model;
 mod prime;
 pub mod reference;
 mod relation;
@@ -43,10 +44,10 @@ pub use signature::{AffinePoint, Response};
 
 /// Why a signature was refused.
 ///
-/// Variants are declared in the order [`checked`] runs the checks, cheapest
-/// first, and the derived order is that order. An input that fails more than
-/// one check is refused with the least of them, so an attacker sending junk
-/// pays for the cheapest refusal rather than the most expensive one.
+/// Public decoding checks precede curve/basis checks, pairing, chains,
+/// codomain identification and images. `Singular` can arise on either
+/// curve and `Kernel` can arise before or after pairing, so the enum's
+/// derived order is not a global precedence rule for malformed inputs.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum VerifyError {
     /// The byte string is not this level's length.
@@ -59,6 +60,8 @@ pub enum VerifyError {
     Singular,
     /// `y(P)` is zero or not strictly below `y(−P)` in `<_{F_{p^2}}`.
     Sign,
+    /// A response curve is not its least model, or has extra automorphisms.
+    Model,
     /// No basis index within [`search_bound`] meets the C search.
     ///
     /// The search is the reference's, including the indices its `start = 128`
@@ -66,14 +69,18 @@ pub enum VerifyError {
     /// exceeds `2λ` — about `2^-λ` of keys, the level's own security target.
     /// `docs/VERIFIER_SPEC.md` records the bound and what it costs.
     Basis,
-    /// `2^{2e−1} − s_j^2` is not a Baillie–PSW prime.
+    /// `2^{2e′−1} − s_j^2` is not a Baillie–PSW prime, `e′ = e − 2`.
     Composite,
-    /// The `(2,2)` chain stopped before both readings, or a signature point
-    /// is not on its curve.
+    /// Curve, torsion, or adapted-chain construction failed.
     Kernel,
-    /// Both theta readings exist, and the transformation between their
-    /// structures is not fixed. This is not acceptance.
-    Unidentified,
+    /// `e(R₁, R₂) ≠ e(P₁, P₂)^q`, with `R_i = [s]` of the signature points.
+    /// This pins the determinant of the basis change. It runs after the
+    /// order and span checks and before either chain.
+    Pairing,
+    /// The adapted chains do not meet in dual theta structures.
+    Codomain,
+    /// The composed chain does not have the challenge-bound images.
+    Image,
 }
 
 impl core::fmt::Display for VerifyError {
@@ -83,11 +90,14 @@ impl core::fmt::Display for VerifyError {
             Self::Canonical => "a field element is not canonical",
             Self::Origin => "the starting curve",
             Self::Singular => "a singular Montgomery curve",
+            Self::Model => "the response curve is not the unique permitted model",
             Self::Sign => "y(P) is not the normalized representative",
             Self::Basis => "no basis index within the search bound",
             Self::Composite => "the challenge degree is composite",
-            Self::Kernel => "the isogeny chain stopped before both readings",
-            Self::Unidentified => "the two readings on the codomain are not identified",
+            Self::Kernel => "the curve, torsion, or adapted chain is invalid",
+            Self::Pairing => "the Weil pairing does not match the challenge degree",
+            Self::Codomain => "the adapted codomains do not match",
+            Self::Image => "the composed images do not match the challenge",
         };
         f.write_str(reason)
     }
@@ -112,8 +122,7 @@ pub fn verify<L: Level>(
 /// wrong. The sign test is a byte comparison on an element already decoded,
 /// so it comes before the basis search, whose length an attacker chooses
 /// with `A` — up to [`search_bound`] Legendre symbols. The challenge hash
-/// and the one Baillie–PSW test are last: they cost more than everything
-/// above them together.
+/// and the one Baillie–PSW test follow the bounded model and basis checks.
 fn checked<'a, L: Level>(
     public_key: &'a [u8],
     message: &[u8],
@@ -127,6 +136,7 @@ fn checked<'a, L: Level>(
     if !signature::canonical_sign::<L>(response.p.y) {
         return Err(VerifyError::Sign);
     }
+    model::check::<L>(response.curve)?;
     basis_hint::<L>(identity.coefficient())?;
     let scalar = ChallengeScalar::derive(&identity, message, response.index);
     if !scalar.degree_is_prime::<L>() {
@@ -148,7 +158,7 @@ mod tests {
     }
 
     #[test]
-    fn the_refusal_order_is_cheapest_first() {
+    fn public_refusals_precede_the_expensive_checks() {
         // The declared order is the documented one, and `Sign` precedes the
         // basis search an attacker can lengthen.
         let order = [
@@ -157,10 +167,13 @@ mod tests {
             VerifyError::Origin,
             VerifyError::Singular,
             VerifyError::Sign,
+            VerifyError::Model,
             VerifyError::Basis,
             VerifyError::Composite,
             VerifyError::Kernel,
-            VerifyError::Unidentified,
+            VerifyError::Pairing,
+            VerifyError::Codomain,
+            VerifyError::Image,
         ];
         let mut sorted = order;
         sorted.sort_unstable();
@@ -189,7 +202,7 @@ mod tests {
         assert_eq!(Level1::SIGNATURE_LEN, 322);
         assert_eq!(Level3::SIGNATURE_LEN, 482);
         assert_eq!(Level5::SIGNATURE_LEN, 642);
-        assert_eq!(Level3::CHAIN_STEPS, Level3::E);
+        assert_eq!(Level3::CHAIN_STEPS, Level3::E - 2);
     }
 
     #[test]

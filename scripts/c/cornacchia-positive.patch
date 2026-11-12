@@ -1,0 +1,15 @@
+--- a/external/PRISM_v2/src/quaternion/ref/generic/integers.c
++++ b/external/PRISM_v2/src/quaternion/ref/generic/integers.c
+@@ -46,6 +46,12 @@
+ int
+ ibz_cornacchia_prime(ibz_t *x, ibz_t *y, const ibz_t *n, const ibz_t *p)
+ {
++    /* p is the cofactor. The loop below assumes it is a positive prime:
++     * a non-positive value keeps `remainder^2 >= p` true for a zero
++     * remainder, and the next iteration divides by that remainder.
++     * Reject it before the loop. Callers treat 0 as "no solution". */
++    if (ibz_cmp_int32(p, 0) <= 0)
++        return 0;
+     ibz_t r0, r1, r2, a, prod;
+     ibz_init(&r0);
+     ibz_init(&r1);
