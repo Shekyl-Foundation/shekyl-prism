@@ -239,7 +239,7 @@ fn field_line(text: &str, label: &str) -> Result<Vec<u8>, ()> {
 }
 
 fn hex_bytes(text: &str) -> Result<Vec<u8>, ()> {
-    if !text.len().is_multiple_of(2) {
+    if !text.is_ascii() || !text.len().is_multiple_of(2) {
         return Err(());
     }
     (0..text.len())
@@ -274,4 +274,15 @@ fn decimal(bytes: &[u8]) -> String {
         .rev()
         .map(|digit| char::from(b'0' + digit))
         .collect()
+}
+
+#[cfg(test)]
+mod hex_input_tests {
+    #[test]
+    fn malformed_hex_is_refused_without_slicing_a_character() {
+        for input in ["0é0", "a€", "é", "f", "gg"] {
+            assert!(super::hex_bytes(input).is_err(), "{input:?}");
+        }
+        assert_eq!(super::hex_bytes("00aAfF"), Ok(vec![0, 170, 255]));
+    }
 }

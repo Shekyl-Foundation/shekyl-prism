@@ -36,7 +36,7 @@ The benchmark smoke test now requires successful complete verification.
 | `deny` | `cargo deny check` (licences, advisories, sources, bans) under rule 17 | a new crate, licence or advisory |
 | `hygiene` | 1. no AI-attribution trailer in any commit in the PR range (rule 90); 2. copyright header on every `.rs`/`.py`/`.c` (rule 92); 3. every crate inherits `unsafe_code = "forbid"` from `[workspace.lints]` | rule violation |
 | `c-reference-pin` | checks out the submodule and runs `scripts/check_c_reference.py` (pin plus the recorded quirks) | the pin or the spec's recorded quirks moved |
-| `c-vectors` (path-scoped: `scripts/**`, `external/**`, `**/testdata/**`) | builds `PRISM_v2` at the pin with mini-gmp, reruns every export script, then `git diff --exit-code` on `testdata/` | committed vectors don't reproduce from the pinned tree |
+| `c-vectors` (path-scoped: export/reference/testdata, field/isogeny/verifier crates, dependency/compiler/CI inputs) | builds `PRISM_v2` at the pin with mini-gmp, reruns every export script, then `git diff --exit-code` on `testdata/` | committed vectors don't reproduce from the pinned tree |
 | `codeql` | CodeQL Rust | per core ruling |
 | `ci-pass` | the aggregator: needs every job, and treats `c-vectors` "skipped" as passing only when the path filter said not needed (core's pattern) | anything above |
 

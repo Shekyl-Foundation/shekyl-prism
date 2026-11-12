@@ -82,11 +82,22 @@ fn emit<L: Level>(coefficient: &str, message: &str, index: u16) -> ExitCode {
 }
 
 fn decode_hex(text: &str) -> Result<Vec<u8>, ()> {
-    if !text.len().is_multiple_of(2) {
+    if !text.is_ascii() || !text.len().is_multiple_of(2) {
         return Err(());
     }
     (0..text.len())
         .step_by(2)
         .map(|i| u8::from_str_radix(&text[i..i + 2], 16).map_err(|_| ()))
         .collect()
+}
+
+#[cfg(test)]
+mod hex_input_tests {
+    #[test]
+    fn malformed_hex_is_refused_without_slicing_a_character() {
+        for input in ["0é0", "a€", "é", "f", "gg"] {
+            assert!(super::decode_hex(input).is_err(), "{input:?}");
+        }
+        assert_eq!(super::decode_hex("00aAfF"), Ok(vec![0, 170, 255]));
+    }
 }
