@@ -13,6 +13,8 @@ NIST-I, NIST-III or NIST-V; absence runs all levels.
 import os
 import runpy
 import subprocess
+import sys
+import faulthandler
 from pathlib import Path
 from sage.all import GF, ZZ
 
@@ -21,6 +23,34 @@ os.environ["S5_COMPARE"] = "1"
 m = runpy.run_path(str(Path.cwd() / "scripts/sage/s5_model.sage"))
 root = m["ROOT"]
 count = 0
+
+# Each vector gets a fresh oracle interpreter and its own result denominator.
+# Every child still executes the same algebra and all applicable mutations.
+# No partial child run is counted as a complete comparison.
+one = os.environ.get("PRISM_DIFFERENTIAL_ONE")
+if one is None:
+    total = 0
+    paths = [p for p in m["honest_vectors"]()
+             if os.environ.get("PRISM_DIFFERENTIAL_LEVEL", m["load_vector"](p)["level"]) == m["load_vector"](p)["level"]]
+    if not paths:
+        raise SystemExit("no vectors selected")
+    for path in paths:
+        env = dict(os.environ, PRISM_DIFFERENTIAL_ONE=path.name)
+        result = subprocess.run([sys.executable, __file__], env=env, text=True, capture_output=True)
+        print(result.stdout, end="", flush=True)
+        if result.stderr:
+            print(result.stderr, end="", file=sys.stderr, flush=True)
+        if result.returncode:
+            raise SystemExit(f"Sage child failed: {path.name}, code {result.returncode}")
+        marks = [line for line in result.stdout.splitlines() if line.startswith("VECTOR_RESULT ")]
+        if len(marks) != 1:
+            raise SystemExit(f"missing child comparison denominator: {path.name}")
+        total += int(marks[0].split()[2])
+    print(f"Sage/Rust identical on {total} signatures and mutations across {len(paths)} isolated vectors", flush=True)
+    raise SystemExit(0)
+if one not in {p.name for p in m["honest_vectors"]()}:
+    raise SystemExit("unknown isolated vector")
+faulthandler.dump_traceback_later(120, repeat=True)
 
 
 def encoded(z, width):
@@ -72,6 +102,8 @@ def compare(path, label, P=None, Q=None, curve=None, salt=None, message=None, si
 
 
 for path in m["honest_vectors"]():
+    if path.name != one:
+        continue
     rows = m["load_vector"](path)
     if os.environ.get("PRISM_DIFFERENTIAL_LEVEL", rows["level"]) != rows["level"]:
         continue
@@ -81,6 +113,8 @@ for path in m["honest_vectors"]():
     compare(path,"honest")
 
 for path in m["VECTORS"]:
+    if path.name != one:
+        continue
     rows = m["load_vector"](path)
     level = rows["level"]
     if os.environ.get("PRISM_DIFFERENTIAL_LEVEL", level) != level:
@@ -114,4 +148,4 @@ for path in m["VECTORS"]:
         raise SystemExit("other-key prime salt search exhausted")
     compare(path,"other key",salt=salt,sibling=sibling)
 
-print(f"Sage/Rust identical on {count} signatures and mutations",flush=True)
+print(f"VECTOR_RESULT {one} {count}", flush=True)
