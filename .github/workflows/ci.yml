@@ -184,6 +184,7 @@ jobs:
           python3 scripts/ci/c_vectors_scope.py --selftest
           python3 scripts/ci/install_pinned_tool.py --selftest
           python3 scripts/differential_prime.py --selftest
+          python3 scripts/ci/check_accept_verdicts.py --selftest
 
   c-reference-pin:
     name: c-reference-pin
@@ -219,6 +220,18 @@ jobs:
         run: bash scripts/ci/diff_testdata.sh
       - name: C Q is the cleared difference
         run: python3 scripts/check_even_basis.py 100
+
+  accept:
+    name: accept
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - name: Every accept vector is listed Ok
+        run: python3 scripts/ci/check_accept_verdicts.py
 
   codeql:
     name: codeql
@@ -258,6 +271,7 @@ jobs:
       - hygiene
       - c-reference-pin
       - c-vectors
+      - accept
       - codeql
     if: always() && !cancelled()
     runs-on: ubuntu-latest
@@ -280,5 +294,6 @@ jobs:
             hygiene=${{ needs.hygiene.result }}
             c-reference-pin=${{ needs['c-reference-pin'].result }}
             c-vectors=${{ needs['c-vectors'].result }}
+            accept=${{ needs.accept.result }}
             codeql=${{ needs.codeql.result }}
         run: python3 scripts/ci/aggregate.py

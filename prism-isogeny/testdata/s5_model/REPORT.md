@@ -92,7 +92,7 @@ either chain. No row differs from the expected set.
 | 4 | Pairing |
 | 5 | Pairing |
 | 6 | Kernel |
-| 7 | 30 Pairing, 6 Codomain; never Ok |
+| 7 | order 2: 6 Pairing and 3 Codomain; order 4: 30 Pairing and 6 Codomain; never Ok |
 | 8 | Kernel |
 | 9 | `[3]` Pairing, `[2^{e-1}+1]` Image |
 | 10 | Model, five times |
@@ -116,3 +116,18 @@ cleared one.
 returned Ok on: 20 at NIST-I, 27 at NIST-III, and 20 at NIST-V. A name
 containing `_r` is a repeated-byte seed. The others are SHA-256 seeds.
 The original six files in the parent testdata directory stay as they are.
+`accept_verdicts.tsv` lists every file in that directory with the verdict
+from a fresh run of the model: 20 NIST-I, 27 NIST-III, 20 NIST-V, each Ok.
+
+## Exporter aborts
+
+A sample of 24 SHA-256 seeds at each level, classified by the exporter's
+stderr. Every abort is `mpz_div_qr: Divide by zero` inside Cornacchia
+during ideal evaluation. No attempt printed the exporter's own retry
+lines (no response, image not a `2^e` basis, basis application failed).
+
+| Level | Attempts | Signatures | Keygen abort | Sign abort |
+| --- | --- | --- | --- | --- |
+| I | 24 | 17 | 2 | 5 |
+| III | 24 | 0 | 24 | 0 |
+| V | 24 | 2 | 14 | 8 |

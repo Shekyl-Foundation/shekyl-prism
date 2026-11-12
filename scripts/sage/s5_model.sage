@@ -710,11 +710,38 @@ def normalize_joint(left, right):
     return -left, -right
 
 
-def order4_translates(curve):
-    """Nonzero points of `E[4]` that are not in `E[2]`."""
+def item7(path, curve, left_point, right_point):
+    """Translates of the signature pair by every nonzero point of `E[4]`."""
+    seven = []
+    for torsion in row7_translates(curve):
+        order = 2 if (2 * torsion).is_zero() else 4
+        for label, raw_left, raw_right in (
+            ("P", left_point + torsion, right_point),
+            ("Q", left_point, right_point + torsion),
+            ("both", left_point + torsion, right_point + torsion),
+        ):
+            left, right = normalize_joint(raw_left, raw_right)
+            tag = f"ord{order}:{label}"
+            if left[1] == 0:
+                seven.append(f"{tag}:Sign")
+                continue
+            verdict = chain_verdict(path, Psig=left, Qsig=right)
+            seven.append(f"{tag}:{verdict}")
+            if verdict == "Ok":
+                fail(f"{path.name} item 7", f"{tag} accepted")
+    return seven
+
+
+def row7_translates(curve):
+    """Nonzero points of `E[4]`, including the three points of `E[2]`.
+
+    An order-2 translate is a different input from an order-4 translate:
+    `[2](P+T) = [2]P` when `T` has order 2, and `[2](P+T) = [2]P + [2]T`
+    when `T` has order 4. Row 7 records both.
+    """
     found = []
     for point in curve(0).division_points(4):
-        if point.is_zero() or (2 * point).is_zero():
+        if point.is_zero():
             continue
         found.append(point)
     return found
@@ -852,23 +879,8 @@ def run_negatives():
                 )
         print(f"  6 -> {row['6']}", flush=True)
 
-        # 7. translates by E_sig[4]
-        translates = order4_translates(Esig)
-        seven = []
-        for torsion in translates:
-            for label, raw_left, raw_right in (
-                ("P", P + torsion, Q),
-                ("Q", P, Q + torsion),
-                ("both", P + torsion, Q + torsion),
-            ):
-                left, right = normalize_joint(raw_left, raw_right)
-                if left[1] == 0:
-                    seven.append(f"{label}:Sign")
-                    continue
-                verdict = chain_verdict(path, Psig=left, Qsig=right)
-                seven.append(f"{label}:{verdict}")
-                if verdict == "Ok":
-                    fail(f"{name} item 7", f"{label} accepted")
+        # 7. translates by the nonzero points of E_sig[4], order 2 and order 4
+        seven = item7(path, Esig, P, Q)
         row["7"] = seven
         print(f"  7 -> {len(seven)} cases, ok={seven.count('Ok') if False else sum(1 for item in seven if item.endswith(':Ok'))}", flush=True)
 
