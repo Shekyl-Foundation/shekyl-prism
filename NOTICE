@@ -15,6 +15,11 @@ randomisation off.
 `prism-isogeny/src/jac.rs` ports Jacobian doubling and addition, and the
 basis lift, from `src/ec/ref/lvlx/ec_jac.c` and `basis.c`.
 
+`prism-isogeny/src/modular.rs` ports `complete_symplectic_matrix_dim2`
+from `external/Theta_dim4` `pkg/basis_change/base_change_dim2.py`
+(Apache-2.0, Pierrick Dartois). The Θ base-change and the isogeny chain
+in that tree are not ported here.
+
 `prism-isogeny/src/gluing.rs` and `prism-isogeny/src/chain.rs` port the
 gluing isogeny and `_theta_chain_compute_impl` from `theta_isogenies.c`.
 The signing-only randomisation of the final model is not included.

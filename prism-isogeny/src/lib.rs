@@ -19,6 +19,7 @@ pub mod chain;
 pub mod endomorphism;
 pub mod gluing;
 pub mod jac;
+pub mod modular;
 pub mod montgomery;
 pub mod pairing;
 pub mod splitting;
