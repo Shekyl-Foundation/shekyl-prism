@@ -85,6 +85,10 @@ jobs:
         run: python3 scripts/ci/check_research_boundary.py
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      # The workspace run leaves the research feature off, so the real-backend
+      # adapter and the experiment drivers need their own pass.
+      - name: Clippy, comparison drivers
+        run: cargo clippy -p prism-compare --features experiments --all-targets --locked -- -D warnings
 
   test-x86_64:
     name: test-x86_64
@@ -257,6 +261,16 @@ jobs:
         env:
           PRISM_SIGNER_BACKEND_DIR: ${{ github.workspace }}/target/native
         run: cargo test -p prism-signer --release --locked --test native -- --ignored
+      - name: Research signing is production signing at full width
+        env:
+          PRISM_SIGNER_BACKEND_DIR: ${{ github.workspace }}/target/native
+        run: cargo test -p prism-compare --features experiments --release --locked --test native -- --ignored
+      # E3 of docs/SALT_PROTOCOL.md at projection widths 16 and 20.
+      - name: Collision replay succeeds unsalted and fails salted
+        run: |
+          set -euo pipefail
+          cargo build --release --locked -p prism-compare --features experiments --bin replay
+          python3 scripts/ci/check_replay_regression.py target/release/replay target/native
 
   accept-list:
     name: accept-list
