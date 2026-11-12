@@ -1,7 +1,8 @@
 # shekyl-prism
 
 Research implementation of the prime-degree §5 PRISM signature relation,
-with a Rust verifier and an experimental deterministic native signer.
+with a salted Rust verifier and an experimental native signer with a
+32-byte caller randomness input (zeros in reproducible research runs).
 It is not a consensus crate or an adopted wallet authorization scheme.
 The exact protocol still needs cryptographic review; see
 [open security items](docs/SECURITY_REVIEW.md).
@@ -16,11 +17,14 @@ collision-replay attack, and conditional SUF-CMA decomposition.
 | `prism-verify` | Canonical decoding, pairing, both chains and complete images |
 | `prism-signer` | Unix research API for an isolated deterministic C backend |
 | `prism-bench` | Successful complete verification at I, III and V |
+| `prism-compare` | Archived derivation and explicit research experiments; no production dependency |
 
 The [verifier specification](docs/VERIFIER_SPEC.md) defines the current
 research encoding, including the `e′=e−2` parameter choice. Signatures are
-322 / 482 / 642 bytes. I/III/V name the source field rows, not certified
-security levels for this modified unsalted construction.
+352 / 528 / 704 bytes, including salts of 32 / 48 / 64 bytes. I/III/V name the source field rows, not certified
+security levels for this modified salted construction. The approved wire
+and signer contract is [SALT_PROTOCOL.md](docs/SALT_PROTOCOL.md); the
+unsalted implementation is preserved at `archive/unsalted-index-2026-11-12`.
 
 The verifier accepts all 113 committed honest signatures. Tests compare
 both chains against every intermediate null point from six primary Sage

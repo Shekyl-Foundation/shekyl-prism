@@ -1,6 +1,6 @@
 #!/bin/sh
 # Copyright is not required for a shell script. This driver is the
-# reproduction of prism-verify/testdata/s5_lvl{1,3,5}.txt.
+# reproduction of the salted verifier corpus, under the approved brief.
 #
 # Usage: PRISM_REF_BUILD=/path/to/cmake-build scripts/export_s5_vectors.sh
 # The build is the pinned tree configured with -DPRISM_BUILD_TYPE=ref
@@ -76,74 +76,24 @@ compile() {
         -Wl,--end-group -lm
 }
 
-one() {
-    n=$1
-    name=$2
-    key_seed=$3
-    sign_seed=$4
-    out=${5:-s5_lvl$n.txt}
-    variant=lvl$n
+# Regeneration is authorized by the dated salt brief, never an implicit
+# overwrite invoked just to silence a changed vector.
+case "${1:-}" in
+    backend) rngflag=-DPRISM_SECURE_RNG ;;
+    fixture-backend) rngflag= ;;
+    regenerate)
+        [ "${2:-}" = "salt-brief-2026-11-12" ] || { echo "name the approved regeneration decision" >&2; exit 2; }
+        rngflag=
+        ;;
+    *) echo "usage: $0 backend | fixture-backend | regenerate salt-brief-2026-11-12" >&2; exit 2 ;;
+esac
+for variant in lvl1 lvl3 lvl5; do
     compile "$variant"
-    scratch=$work/$variant-$out-key
-    python3 -c "import sys; sys.stdout.buffer.write(bytes([$key_seed]) * 48)" | "$build/export_s5_$variant" keygen "$scratch" > "$scratch.pub"
-    coefficient=$(awk '{print $2}' "$scratch.pub")
-    pair=$(cargo run --quiet --manifest-path "$root/Cargo.toml" --bin s5_vector -- index "$name" "$coefficient")
-    scalar=$(printf '%s\n' "$pair" | sed -n '2p')
-    python3 -c "import sys; sys.stdout.buffer.write(bytes([$sign_seed]) * 48)" | "$build/export_s5_$variant" sign "$scratch" "$scalar" > "$scratch.sig"
-    cat "$scratch.pub" "$scratch.sig" | cargo run --quiet --manifest-path "$root/Cargo.toml" --bin s5_vector -- commit "$name" "$root/prism-verify/testdata/$out"
-    printf 'keygen_seed %s\nsign_seed %s\n' "$key_seed" "$sign_seed" >> "$root/prism-verify/testdata/$out"
-}
-
-positive() {
-    n=$1
-    name=$2
-    count=$3
-    variant=lvl$n
-    case "$name" in
-        III) stem=iii ;;
-        V) stem=v ;;
-        *) stem=$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]') ;;
-    esac
-    compile "$variant"
-    i=0
-    while [ "$i" -lt "$count" ]; do
-        # SHA-256 of a consecutive counter, then the digest and its first
-        # 16 bytes, so the exporter's 48-byte seed is determined by i.
-        seed=$(printf 'shekyl-prism-accept-positive|%s|%s' "$name" "$i" | sha256sum | awk '{print $1}')
-        scratch=$work/$variant-p$i
-        python3 -c "import sys; raw=bytes.fromhex(sys.argv[1]); sys.stdout.buffer.write(raw+raw[:16])" "$seed" \
-            | "$build/export_s5_$variant" keygen "$scratch" > "$scratch.pub"
-        coefficient=$(awk '{print $2}' "$scratch.pub")
-        pair=$(env -u CARGO_TARGET_DIR cargo run --quiet --manifest-path "$root/Cargo.toml" --bin s5_vector -- index "$name" "$coefficient")
-        scalar=$(printf '%s\n' "$pair" | sed -n '2p')
-        python3 -c "import sys; raw=bytes.fromhex(sys.argv[1]); sys.stdout.buffer.write(raw+raw[:16])" "$seed" \
-            | "$build/export_s5_$variant" sign "$scratch" "$scalar" > "$scratch.sig"
-        out=$root/prism-verify/testdata/accept/s5_${stem}_p$i.txt
-        cat "$scratch.pub" "$scratch.sig" | env -u CARGO_TARGET_DIR cargo run --quiet --manifest-path "$root/Cargo.toml" --bin s5_vector -- commit "$name" "$out"
-        printf 'wrote %s seed %s\n' "$(basename "$out")" "$i"
-        i=$((i + 1))
-    done
-}
-
-# Build only. The caller must point at the pinned source and reference build.
-# These binaries use SHAKE256, not the fixture generator's xorshift stream.
-if [ "${1:-}" = "backend" ]; then
-    rngflag=-DPRISM_SECURE_RNG
-    for variant in lvl1 lvl3 lvl5; do
-        compile "$variant"
+    if [ "$1" = backend ]; then
         mv "$build/export_s5_$variant" "$build/prism_signer_$variant"
-    done
-    exit
+    fi
+done
+if [ "$1" = regenerate ]; then
+    env -u CARGO_TARGET_DIR cargo build --release --locked -p prism-compare --bin fixture_challenges -p prism-verify --bin verify_bytes --bin s5_challenge
+    python3 "$root/scripts/regenerate_salted_vectors.py" --decision "$2" --backend-dir "$build"
 fi
-
-if [ "${1:-}" = "positive" ]; then
-    positive "$2" "$3" "$4"
-    exit
-fi
-
-one 1 I 17 17
-one 1 I 1 1 s5_lvl1b.txt
-one 3 III 48 18
-one 3 III 8 20 s5_lvl3b.txt
-one 5 V 17 22
-one 5 V 3 18 s5_lvl5b.txt

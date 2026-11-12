@@ -5,27 +5,27 @@
 
 //! The challenge scalar the verifier derives, for the Sage accept model.
 //!
-//! `s5_challenge <I|III|V> <A-hex> <message> <index>` prints the
+//! `s5_challenge <I|III|V> <A-hex> <message> <salt-hex>` prints the
 //! little-endian scalar and `prime` or `composite`. The scalar is
-//! [`ChallengeScalar::derive_width`] at `e′ − 1` bits, and the degree is
+//! [`ChallengeScalar::derive`] at `e′ − 1` bits, and the degree is
 //! the verifier's own Baillie–PSW test. The model shells out to this so a
 //! negative's `s` is the verifier's `s`, not a second hash.
 
 use std::env;
 use std::process::ExitCode;
 
-use prism_field::{ChallengeIndex, Level, Level1, Level3, Level5};
+use prism_field::{Level, Level1, Level3, Level5, Salt};
 use prism_verify::{ChallengeScalar, KeyIdentity};
 
 fn main() -> ExitCode {
     let mut args = env::args().skip(1);
-    let (level, coefficient, message, index) =
+    let (level, coefficient, message, salt_hex) =
         match (args.next(), args.next(), args.next(), args.next()) {
-            (Some(level), Some(coefficient), Some(message), Some(index)) => {
-                (level, coefficient, message, index)
+            (Some(level), Some(coefficient), Some(message), Some(salt_hex)) => {
+                (level, coefficient, message, salt_hex)
             }
             _ => {
-                eprintln!("usage: s5_challenge <I|III|V> <A-hex> <message> <index>");
+                eprintln!("usage: s5_challenge <I|III|V> <A-hex> <message> <salt-hex>");
                 return ExitCode::from(2);
             }
         };
@@ -33,14 +33,10 @@ fn main() -> ExitCode {
         eprintln!("s5_challenge: trailing arguments");
         return ExitCode::from(2);
     }
-    let Ok(index) = index.parse::<u16>() else {
-        eprintln!("s5_challenge: index is a u16");
-        return ExitCode::from(2);
-    };
     match level.as_str() {
-        "I" | "NIST-I" => emit::<Level1>(&coefficient, &message, index),
-        "III" | "NIST-III" => emit::<Level3>(&coefficient, &message, index),
-        "V" | "NIST-V" => emit::<Level5>(&coefficient, &message, index),
+        "I" | "NIST-I" => emit::<Level1>(&coefficient, &message, &salt_hex),
+        "III" | "NIST-III" => emit::<Level3>(&coefficient, &message, &salt_hex),
+        "V" | "NIST-V" => emit::<Level5>(&coefficient, &message, &salt_hex),
         _ => {
             eprintln!("level is I, III, or V");
             ExitCode::from(2)
@@ -48,7 +44,7 @@ fn main() -> ExitCode {
     }
 }
 
-fn emit<L: Level>(coefficient: &str, message: &str, index: u16) -> ExitCode {
+fn emit<L: Level>(coefficient: &str, message: &str, salt_hex: &str) -> ExitCode {
     let Ok(key) = decode_hex(coefficient) else {
         eprintln!("s5_challenge: A is hex");
         return ExitCode::from(2);
@@ -61,12 +57,13 @@ fn emit<L: Level>(coefficient: &str, message: &str, index: u16) -> ExitCode {
         eprintln!("s5_challenge: A is not a key this level accepts");
         return ExitCode::from(1);
     };
-    let scalar = ChallengeScalar::derive_width::<L>(
-        &identity,
-        message.as_bytes(),
-        ChallengeIndex::from_canonical_bytes(index.to_le_bytes()),
-        L::E - 3,
-    );
+    let Ok(salt_bytes) = decode_hex(salt_hex) else {
+        return ExitCode::from(2);
+    };
+    let Some(salt) = Salt::<L>::from_bytes(&salt_bytes) else {
+        return ExitCode::from(2);
+    };
+    let scalar = ChallengeScalar::derive(&identity, message.as_bytes(), salt);
     let verdict = if scalar.degree_is_prime::<L>() {
         "prime"
     } else {

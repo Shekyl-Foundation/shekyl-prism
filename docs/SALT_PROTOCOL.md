@@ -72,6 +72,10 @@ target second-preimage budget, not unrestricted multi-target attacks.
 Record raw, commit-pinned measurements E1–E6 from the brief, including
 failed trials, actual query counts, seeds, commands, fitted slopes,
 backend retry counts and the E6 search budget if no failure is found.
+The user authorized documented replacement seeds for the 36 older numbered
+vectors whose SHA-256 seed recipe was absent from Git. The other 77 retain
+the recovered original fixture streams. The seed manifest identifies every
+replacement and hashes the original vector preserved in the unsalted copy.
 Never turn a Derived prediction into a Ran claim without executing it.
 If an experiment refutes a Derived prediction, stop and report it.
 

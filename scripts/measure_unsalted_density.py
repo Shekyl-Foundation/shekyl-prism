@@ -6,7 +6,7 @@
 
 """Summarize real first-prime searches from sample_e_prime (unsalted v1).
 
-Generate with: cargo run --release --locked -p prism-verify --bin
+Generate with: cargo run --release --locked -p prism-compare --bin
 sample_e_prime -- 1500 > samples.txt
 Then: python3 scripts/measure_unsalted_density.py samples.txt
 

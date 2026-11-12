@@ -14,7 +14,7 @@ assert len(paths) == 113, "review the corpus when fixtures change"
 for path in paths:
     rows = dict(line.split(" ", 1) for line in path.read_text().splitlines() if " " in line)
     key = bytes.fromhex(rows["A"])
-    signature = b"".join(bytes.fromhex(rows[name]) for name in ("E", "Px", "Py", "Qx", "Qy")) + int(rows["j"]).to_bytes(2, "little")
+    signature = b"".join(bytes.fromhex(rows[name]) for name in ("E", "Px", "Py", "Qx", "Qy")) + bytes.fromhex(rows["salt"])
     message = rows["message"].encode()
     level = {"NIST-I": 1, "NIST-III": 3, "NIST-V": 5}[rows["level"]]
     wire = len(key).to_bytes(2, "little") + len(signature).to_bytes(2, "little") + key + signature + message

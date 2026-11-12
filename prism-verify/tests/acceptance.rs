@@ -3,7 +3,7 @@
 // All rights reserved.
 // BSD-3-Clause
 
-use prism_field::{ChallengeIndex, Field, Level, Level1, Level3, Level5};
+use prism_field::{Field, Level, Level1, Level3, Level5, Salt};
 use prism_isogeny::{
     jac::{add, dbl_iter, to_xz, Jac},
     montgomery::Montgomery,
@@ -35,7 +35,7 @@ fn vector<L: Level>(text: &str) -> (Vec<u8>, Vec<u8>, Response<L>) {
     for name in ["E ", "Px ", "Py ", "Qx ", "Qy "] {
         sig.extend(hex(field(text, name)));
     }
-    sig.extend(field(text, "j ").parse::<u16>().unwrap().to_le_bytes());
+    sig.extend(hex(field(text, "salt ")));
     (
         pk,
         field(text, "message ").as_bytes().to_vec(),
@@ -157,27 +157,30 @@ fn negative<L: Level>(text: &str) {
             }
         }
     }
-    // Alternate prime degree, and a different message at a prime index.
-    let j = u16::from_le_bytes(r.index.to_canonical_bytes());
-    let next = (j + 1..=u16::MAX)
-        .map(|j| ChallengeIndex::from_canonical_bytes(j.to_le_bytes()))
-        .find(|j| ChallengeScalar::derive(&id, &msg, *j).degree_is_prime::<L>())
-        .unwrap();
+    // Alternate salt at a prime degree, and a different message/key.
+    let find = |key: &[u8], message: &[u8]| {
+        let identity = KeyIdentity::<L>::decode(key).unwrap();
+        (0u64..65536)
+            .find_map(|n| {
+                let mut bytes = vec![0; L::SALT_LEN];
+                bytes[..8].copy_from_slice(&n.to_le_bytes());
+                let salt = Salt::<L>::from_bytes(&bytes).unwrap();
+                let scalar = ChallengeScalar::derive(&identity, message, salt);
+                (salt != r.salt && scalar.degree_is_prime::<L>()).then_some(salt)
+            })
+            .unwrap()
+    };
     other = r;
-    other.index = next;
+    other.salt = find(&pk, &msg);
     assert_eq!(check(other), Err(VerifyError::Image));
     let mut message = msg.clone();
     message.extend(b"-other");
-    let next = ChallengeIndex::search_order()
-        .find(|j| ChallengeScalar::derive(&id, &message, *j).degree_is_prime::<L>())
-        .unwrap();
     other = r;
-    other.index = next;
+    other.salt = find(&pk, &message);
     assert_eq!(
         verify::<L>(&pk, &message, &other.encode()),
         Err(VerifyError::Image)
     );
-    // A different public key, with a prime challenge for that actual key.
     let level = match L::E {
         248 => Nist::I,
         376 => Nist::III,
@@ -185,13 +188,28 @@ fn negative<L: Level>(text: &str) {
         _ => unreachable!(),
     };
     let other_key = &prism_verify::reference_key(level).unwrap().public_key;
-    let index = prism_verify::smallest_challenge_index::<L>(other_key, &msg).unwrap();
     other = r;
-    other.index = index;
+    other.salt = find(other_key, &msg);
     assert_eq!(
         verify::<L>(other_key, &msg, &other.encode()),
         Err(VerifyError::Pairing)
     );
+    // A one-bit salt mutation either fails primality or the image relation.
+    for bit in 0..L::SALT_LEN * 8 {
+        other = r;
+        let mut bytes = r.salt.as_bytes().to_vec();
+        bytes[bit / 8] ^= 1 << (bit % 8);
+        other.salt = Salt::from_bytes(&bytes).unwrap();
+        let prime = ChallengeScalar::derive(&id, &msg, other.salt).degree_is_prime::<L>();
+        assert_eq!(
+            check(other),
+            Err(if prime {
+                VerifyError::Image
+            } else {
+                VerifyError::Composite
+            })
+        );
+    }
     // A -> -A is an isomorphism, with (x,y) -> (-x, i*y).
     other = r;
     other.curve = other.curve.negate();

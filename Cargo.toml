@@ -6,6 +6,7 @@ members = [
     "prism-verify",
     "prism-bench",
     "prism-signer",
+    "prism-compare",
 ]
 
 [workspace.package]

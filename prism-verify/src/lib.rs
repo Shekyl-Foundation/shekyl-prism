@@ -27,18 +27,18 @@ mod model;
 mod prime;
 pub mod reference;
 mod relation;
+#[cfg(feature = "research-reduced-width")]
+pub mod research;
 pub mod signature;
 
 use prism_field::Level;
 
 pub use basis::{basis_hint, search_bound, BasisHint, C_HINT_MAX_INDEX};
-pub use challenge::{
-    smallest_at_exponent, smallest_challenge_index, ChallengeScalar, IndexError, CHALLENGE_DOMAIN,
-};
+pub use challenge::{ChallengeScalar, CHALLENGE_DOMAIN};
 pub use identity::KeyIdentity;
 pub use level::{verify_level, Nist, UnknownLevel};
 pub use prime::{challenge_degree, degree_is_prime, is_baillie_psw};
-pub use prism_field::ChallengeIndex;
+pub use prism_field::Salt;
 pub use reference::{prepared, reference_key, Prepared, PreparedError, ReferenceKey, VectorError};
 pub use signature::{AffinePoint, Response};
 
@@ -138,7 +138,7 @@ fn checked<'a, L: Level>(
     }
     model::check::<L>(response.curve)?;
     basis_hint::<L>(identity.coefficient())?;
-    let scalar = ChallengeScalar::derive(&identity, message, response.index);
+    let scalar = ChallengeScalar::derive(&identity, message, response.salt);
     if !scalar.degree_is_prime::<L>() {
         return Err(VerifyError::Composite);
     }
@@ -199,9 +199,9 @@ mod tests {
             assert_ne!(n, Level3::SIGNATURE_LEN);
             assert_ne!(n, Level5::SIGNATURE_LEN);
         }
-        assert_eq!(Level1::SIGNATURE_LEN, 322);
-        assert_eq!(Level3::SIGNATURE_LEN, 482);
-        assert_eq!(Level5::SIGNATURE_LEN, 642);
+        assert_eq!(Level1::SIGNATURE_LEN, 352);
+        assert_eq!(Level3::SIGNATURE_LEN, 528);
+        assert_eq!(Level5::SIGNATURE_LEN, 704);
         assert_eq!(Level3::CHAIN_STEPS, Level3::E - 2);
     }
 
@@ -276,7 +276,7 @@ mod tests {
 
     #[test]
     fn a_bad_sign_is_refused_before_the_challenge_is_hashed() {
-        // The key's basis index exists and the index names a prime degree,
+        // The key's basis exists and the salt names a prime degree,
         // so the only failing check below `Composite` is the sign test.
         let sample = prepared(Nist::I).expect("level I sample");
         let mut response =
@@ -286,23 +286,20 @@ mod tests {
             verify::<Level1>(&sample.public_key, sample.message, &response.encode()),
             Err(VerifyError::Sign)
         );
-        // And with the sign restored, a later index whose degree is composite
+        // And with the sign restored, another salt whose degree is composite
         // is what the same signature is refused for.
         response.p.y = response.p.y.negate();
-        let mut composite = None;
-        let mut index = response.index;
-        while let Some(next) = index.next() {
-            index = next;
-            let mut probe = response;
-            probe.index = next;
-            if verify::<Level1>(&sample.public_key, sample.message, &probe.encode())
-                == Err(VerifyError::Composite)
-            {
-                composite = Some(probe);
-                break;
-            }
-        }
-        let composite = composite.expect("a composite degree above the smallest index");
+        let composite = (0u64..65536)
+            .find_map(|n| {
+                let mut bytes = vec![0; Level1::SALT_LEN];
+                bytes[..8].copy_from_slice(&n.to_le_bytes());
+                let mut probe = response;
+                probe.salt = Salt::from_bytes(&bytes).unwrap();
+                (verify::<Level1>(&sample.public_key, sample.message, &probe.encode())
+                    == Err(VerifyError::Composite))
+                .then_some(probe)
+            })
+            .expect("a composite salt");
         let mut both = composite;
         both.p.y = both.p.y.negate();
         assert_eq!(
@@ -358,8 +355,8 @@ mod tests {
     }
 
     #[test]
-    fn a_prime_index_reaches_relation_without_being_checked_for_smallest() {
-        let sample = prepared(Nist::I).expect("level I sample");
+    fn a_carried_salt_reaches_the_real_relation_without_a_search() {
+        let sample = prepared(Nist::I).expect("sample");
         assert_eq!(
             verify_level(
                 Nist::I,
@@ -369,21 +366,21 @@ mod tests {
             ),
             Err(VerifyError::Kernel)
         );
-        let response = Response::<Level1>::decode(&sample.signature).expect("the sample decodes");
-        if let Some(later) = response.index.next() {
-            let mut probe = response;
-            probe.index = later;
-            let err = verify::<Level1>(&sample.public_key, sample.message, &probe.encode());
-            // A different index is a different degree. It is refused when
-            // that degree is composite, and never for being larger.
-            let identity = KeyIdentity::<Level1>::decode(&sample.public_key).expect("the key");
-            let scalar = ChallengeScalar::derive(&identity, sample.message, later);
-            if scalar.degree_is_prime::<Level1>() {
-                assert_eq!(err, Err(VerifyError::Kernel));
+        let mut response = Response::<Level1>::decode(&sample.signature).unwrap();
+        let mut salt = response.salt.as_bytes().to_vec();
+        salt[0] ^= 1;
+        response.salt = Salt::from_bytes(&salt).unwrap();
+        let id = KeyIdentity::<Level1>::decode(&sample.public_key).unwrap();
+        let prime =
+            ChallengeScalar::derive(&id, sample.message, response.salt).degree_is_prime::<Level1>();
+        assert_eq!(
+            verify::<Level1>(&sample.public_key, sample.message, &response.encode()),
+            Err(if prime {
+                VerifyError::Kernel
             } else {
-                assert_eq!(err, Err(VerifyError::Composite));
-            }
-        }
+                VerifyError::Composite
+            })
+        );
     }
 
     #[test]

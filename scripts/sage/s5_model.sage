@@ -715,10 +715,14 @@ def is_least_model(A):
     return best == A
 
 
-def challenge_scalar(level, coefficient_hex, message, index):
-    binary = ROOT / "target" / "release" / "s5_challenge"
+def rust_binary(name):
+    return Path(os.environ.get("PRISM_RUST_BIN_DIR", ROOT / "target" / "release")) / name
+
+
+def challenge_scalar(level, coefficient_hex, message, salt):
+    binary = rust_binary("s5_challenge")
     proc = subprocess.run(
-        [str(binary), SHORT[level], coefficient_hex, message, str(index)],
+        [str(binary), SHORT[level], coefficient_hex, message, salt],
         check=True,
         capture_output=True,
         text=True,
@@ -837,11 +841,17 @@ def chain_verdict(path, completion="library", **soft):
         fail.soft = False
 
 
-def first_prime_index(level, key_hex, message, start=0, limit=800):
-    for candidate in range(start, start + limit):
-        scalar, prime = challenge_scalar(level, key_hex, message, candidate)
+def candidate_salt(level, counter):
+    width = LEVELS[level]["fp_len"]
+    return (int(counter).to_bytes(8, "little") + bytes(width - 8)).hex()
+
+
+def first_prime_salt(level, key_hex, message, start=0, limit=65536):
+    for counter in range(start, min(start + limit, 65536)):
+        salt = candidate_salt(level, counter)
+        scalar, prime = challenge_scalar(level, key_hex, message, salt)
         if prime == "prime":
-            return candidate, scalar
+            return salt, scalar
     return None, None
 
 
@@ -863,7 +873,7 @@ def run_negatives(completion="library"):
         P = point(Esig, fp2_from_hex(rows["Px"], Fp2, fp_len), fp2_from_hex(rows["Py"], Fp2, fp_len))
         Q = point(Esig, fp2_from_hex(rows["Qx"], Fp2, fp_len), fp2_from_hex(rows["Qy"], Fp2, fp_len))
         message = rows["message"]
-        index = int(rows["j"])
+        salt = rows["salt"]
         key = rows["A"]
         name = path.name
         row = {}
@@ -874,38 +884,25 @@ def run_negatives(completion="library"):
         if not canonical_sign(P[1]):
             fail(f"{name} Sign self-check", "honest P fails the sign check")
 
-        # 1. an index whose degree is composite
+        # 1. a salt whose degree is composite; no carried search index.
         composite_at = None
-        for candidate in range(index):
+        for counter in range(65536):
+            candidate = candidate_salt(level, counter)
             _scalar, verdict = challenge_scalar(level, key, message, candidate)
             if verdict == "composite":
                 composite_at = candidate
                 break
-        if composite_at is None:
-            _scalar, verdict = challenge_scalar(level, key, message, index + 1)
-            # The committed index is prime; a later composite still names the check.
-            for candidate in range(index + 1, index + 30):
-                _scalar, verdict = challenge_scalar(level, key, message, candidate)
-                if verdict == "composite":
-                    composite_at = candidate
-                    break
         row["1"] = "Composite" if composite_at is not None else "MISSING"
-        print(f"  1 -> {row['1']} at {composite_at}", flush=True)
+        print(f"  1 -> {row['1']}", flush=True)
 
-        # 2. the next index whose degree is prime
-        next_prime = None
-        next_s = None
-        next_q = None
-        for candidate in range(index + 1, index + 400):
-            scalar, verdict = challenge_scalar(level, key, message, candidate)
-            if verdict == "prime":
-                next_prime = candidate
-                next_s = scalar
-                next_q = (1 << (2 * e_prime - 1)) - scalar**2
-                break
+        # 2. a searched salt whose degree is prime, with unchanged response.
+        next_prime, next_s = first_prime_salt(level, key, message)
+        if next_prime == salt:
+            next_prime, next_s = first_prime_salt(level, key, message, start=1)
         if next_prime is None:
             row["2"] = "MISSING"
         else:
+            next_q = (1 << (2 * e_prime - 1)) - next_s**2
             row["2"] = chain_verdict(path, completion, s=next_s, q=next_q)
         print(f"  2 -> {row['2']}", flush=True)
 
@@ -995,20 +992,20 @@ def run_negatives(completion="library"):
         row["10"] = ten
         print(f"  10 -> {ten}", flush=True)
 
-        # 11. different message, at an index whose degree is prime
+        # 11. different message, at a salt whose degree is prime
         other_message = message + "-other"
-        prime_index, scalar = first_prime_index(level, key, other_message)
-        if prime_index is None:
+        prime_salt, scalar = first_prime_salt(level, key, other_message)
+        if prime_salt is None:
             row["11"] = "MISSING"
         else:
             degree = (1 << (2 * e_prime - 1)) - scalar**2
             row["11"] = chain_verdict(path, completion, s=scalar, q=degree)
-        print(f"  11 -> {row['11']} index {prime_index}", flush=True)
+        print(f"  11 -> {row['11']} salt {prime_salt}", flush=True)
 
-        # 12. the other key, at an index whose degree is prime for that key
+        # 12. the other key, at a salt whose degree is prime for that key
         sibling = load_vector(ROOT / "prism-verify" / "testdata" / SIBLING[name])
-        prime_index, scalar = first_prime_index(level, sibling["A"], message)
-        if prime_index is None:
+        prime_salt, scalar = first_prime_salt(level, sibling["A"], message)
+        if prime_salt is None:
             row["12"] = "MISSING"
         else:
             A_other = fp2_from_hex(sibling["A"], Fp2, fp_len)
@@ -1027,7 +1024,7 @@ def run_negatives(completion="library"):
             row["12"] = chain_verdict(
                 path, completion, s=scalar, q=degree, P1=other_p, P2=other_q
             )
-        print(f"  12 -> {row['12']} index {prime_index}", flush=True)
+        print(f"  12 -> {row['12']} salt {prime_salt}", flush=True)
 
         # 13. row 10 with Model off. Joint normalization. All five must accept.
         thirteen_models = []

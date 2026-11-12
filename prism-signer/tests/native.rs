@@ -31,5 +31,16 @@ fn deterministic_signing_and_message_binding_at_every_level() {
             Ok(())
         );
         assert_ne!(first, changed);
+        let hedge = signer
+            .sign_with_randomness(message, &[0x37; 32])
+            .expect("hedged sign");
+        assert_ne!(first, hedge, "caller randomness changes the salt");
+        assert_eq!(verify_level(level, &key, message, &hedge), Ok(()));
+        assert_eq!(
+            hedge,
+            signer
+                .sign_with_randomness(message, &[0x37; 32])
+                .expect("same entropy repeats")
+        );
     }
 }

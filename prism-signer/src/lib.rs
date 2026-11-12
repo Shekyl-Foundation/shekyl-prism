@@ -8,7 +8,7 @@
 //! has not been audited for secret-dependent timing or memory access.
 #![forbid(unsafe_code)]
 
-use prism_field::{ChallengeIndex, Level, Level1, Level3, Level5};
+use prism_field::{Level, Level1, Level3, Level5, Salt};
 use prism_verify::{
     signature::canonical_sign, verify, ChallengeScalar, KeyIdentity, Nist, Response,
 };
@@ -91,6 +91,17 @@ impl Drop for Scratch {
     }
 }
 
+/// Local research counters. These are never serialized with a signature.
+#[derive(Default)]
+pub struct SigningReport {
+    pub signature: Vec<u8>,
+    pub hash_candidates: u32,
+    pub prime_candidates: u32,
+    pub backend_errors: u32,
+    pub malformed_responses: u32,
+    pub verification_rejections: u32,
+}
+
 /// The level-specific `prism_signer_lvl{1,3,5}` executable built with
 /// `scripts/export_s5_vectors.sh backend`. Never use the fixture exporter.
 pub struct Signer {
@@ -113,11 +124,29 @@ impl Signer {
             Nist::V => self.public::<Level5>(),
         }
     }
+    /// Reproducible research signing: caller randomness is all zeros.
     pub fn sign(&self, message: &[u8]) -> Result<Vec<u8>, Error> {
+        self.sign_with_randomness(message, &[0; 32])
+    }
+    /// The caller owns the entropy policy. All-zero randomness is supported.
+    pub fn sign_with_randomness(
+        &self,
+        message: &[u8],
+        randomness: &[u8; 32],
+    ) -> Result<Vec<u8>, Error> {
+        Ok(self.sign_report(message, randomness)?.signature)
+    }
+    /// Research diagnostics are local metadata, not part of the signature.
+    /// Counts can reflect secret-dependent failures; do not publish wallet logs.
+    pub fn sign_report(
+        &self,
+        message: &[u8],
+        randomness: &[u8; 32],
+    ) -> Result<SigningReport, Error> {
         match self.level {
-            Nist::I => self.sign_level::<Level1>(message),
-            Nist::III => self.sign_level::<Level3>(message),
-            Nist::V => self.sign_level::<Level5>(message),
+            Nist::I => self.sign_level::<Level1>(message, randomness),
+            Nist::III => self.sign_level::<Level3>(message, randomness),
+            Nist::V => self.sign_level::<Level5>(message, randomness),
         }
     }
     fn stream_seed(&self, label: &[u8], context: &[u8]) -> Zeroizing<[u8; 48]> {
@@ -172,47 +201,78 @@ impl Signer {
         let scratch = Scratch::new()?;
         Ok(self.key::<L>(&scratch)?.0)
     }
-    fn sign_level<L: Level>(&self, message: &[u8]) -> Result<Vec<u8>, Error> {
+    fn sign_level<L: Level>(
+        &self,
+        message: &[u8],
+        randomness: &[u8; 32],
+    ) -> Result<SigningReport, Error> {
         let scratch = Scratch::new()?;
         let (pk, path) = self.key::<L>(&scratch)?;
         let id = KeyIdentity::<L>::decode(&pk).map_err(|_| Error::Malformed)?;
-        let mut primes = 0;
-        for index in ChallengeIndex::search_order() {
-            let scalar = ChallengeScalar::derive(&id, message, index);
+        let salt_key = self.stream_seed(b"salt", b"");
+        let mut report = SigningReport::default();
+        for counter in 0u64..65536 {
+            if report.prime_candidates == 16 {
+                return Err(Error::Exhausted);
+            }
+            report.hash_candidates += 1;
+            let mut hash: CShake256 =
+                CoreWrapper::from_core(CShake256Core::new(b"shekyl-prism-salt-v1"));
+            hash.update(&salt_key[..]);
+            hash.update(&pk);
+            hash.update(randomness);
+            hash.update(&counter.to_le_bytes());
+            hash.update(message);
+            let mut bytes = vec![0; L::SALT_LEN];
+            XofReader::read(&mut hash.finalize_xof(), &mut bytes);
+            let salt = Salt::<L>::from_bytes(&bytes).ok_or(Error::Malformed)?;
+            let scalar = ChallengeScalar::derive(&id, message, salt);
             if !scalar.degree_is_prime::<L>() {
                 continue;
             }
-            primes += 1;
-            // A bounded research API: never hide a failed stream behind an
-            // unbounded retry. Repeated calls use exactly the same streams.
-            if primes > 16 {
-                return Err(Error::Exhausted);
-            }
-            // The signature is deterministic for a degree, even if two
-            // messages or indices happen to derive that same degree.
+            report.prime_candidates += 1;
             let seed = self.stream_seed(b"sign", scalar.as_bytes());
             let degree_scalar = decimal(scalar.as_bytes());
-            let text = self.run(
+            let text = match self.run(
                 &["sign".as_ref(), path.as_os_str(), degree_scalar.as_ref()],
                 &seed,
-            )?;
-            let mut signature = Vec::new();
-            for name in ["E ", "Px ", "Py ", "Qx ", "Qy "] {
-                signature.extend(decode_hex(line(&text, name)?)?);
-            }
-            signature.extend(index.to_canonical_bytes());
-            let mut response = Response::<L>::decode(&signature).map_err(|_| Error::Malformed)?;
+            ) {
+                Ok(text) => text,
+                Err(Error::Malformed) => {
+                    report.malformed_responses += 1;
+                    continue;
+                }
+                Err(_) => {
+                    report.backend_errors += 1;
+                    continue;
+                }
+            };
+            let candidate = (|| {
+                let mut signature = Vec::new();
+                for name in ["E ", "Px ", "Py ", "Qx ", "Qy "] {
+                    signature.extend(decode_hex(line(&text, name)?)?);
+                }
+                signature.extend(salt.as_bytes());
+                Response::<L>::decode(&signature).map_err(|_| Error::Malformed)
+            })();
+            let mut response = match candidate {
+                Ok(response) => response,
+                Err(_) => {
+                    report.malformed_responses += 1;
+                    continue;
+                }
+            };
             if !canonical_sign::<L>(response.p.y) {
                 use prism_field::Field;
                 response.p.y = response.p.y.negate();
                 response.q.y = response.q.y.negate();
             }
             let signature = response.encode();
-            // Never release a response unless the complete Rust verifier
-            // accepts its exact bytes for this public key and message.
             if verify::<L>(&pk, message, &signature).is_ok() {
-                return Ok(signature);
+                report.signature = signature;
+                return Ok(report);
             }
+            report.verification_rejections += 1;
         }
         Err(Error::Exhausted)
     }
