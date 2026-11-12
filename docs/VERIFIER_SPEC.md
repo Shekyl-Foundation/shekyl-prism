@@ -3,6 +3,8 @@
 Status: executable prototype, 2026-11-12. This is a local instantiation of
 PRISM's prime-degree §5 construction, not an adopted standard or a reviewed
 SUF-CMA security claim. See [security review](SECURITY_REVIEW.md).
+The [code-matched security argument draft](SECURITY_ARGUMENT.md) defines
+the exact attacker game, parameter audit and conditional proof obligations.
 The [earlier design notes](archive/VERIFIER_SPEC_before_acceptance_2026-11-12.md)
 preserve the derivations, investigations and questions that led here.
 

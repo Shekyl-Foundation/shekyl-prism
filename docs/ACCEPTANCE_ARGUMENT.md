@@ -5,6 +5,9 @@ not an independently checked proof or a SUF-CMA theorem. In particular,
 matching theta-null coordinates must identify the correctly polarized
 codomain with the intended level structure. Establishing that the adapted
 construction supplies this identification is a review obligation.
+The [code-matched security argument](SECURITY_ARGUMENT.md) names this
+premise A1, separates prime-degree and encoding obligations A2/A3, and
+states the additional assumptions required for a SUF-CMA argument.
 
 Let `r=e′=e−2`, `N=2^e=2^(r+2)`, `D=2^(2r−1)`, and
 `0<s<2^(r−1)` odd. Assume `q=D−s²` is actually prime; a BPSW verdict alone

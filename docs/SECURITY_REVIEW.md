@@ -4,6 +4,12 @@ Status on 2026-11-12: executable research signer/verifier, not approved for
 wallet authorization or consensus. Correct execution and security proofs
 are separate requirements. No external reviewer has approved these changes.
 
+The separate [code-matched security argument](SECURITY_ARGUMENT.md) pins
+the merged PR #13 implementation, defines its SUF-CMA game and conditional
+reduction, and records the collision-replay constraint at the actual
+parameters. Its review status is DRAFT; the obligations below remain open.
+Reproduce its integer bounds with `python3 scripts/security_parameters.py`.
+
 ## Implemented and checked
 
 The Rust verifier executes two adapted theta chains, compares dual codomains
@@ -37,13 +43,16 @@ premise and the protocol reduction still require independent review.
 3. **Challenge entropy and collision attacks.** Odd `s` has `e−4` free
    bits: 244, 372, 496. Raw scalar birthday scales are `2^122`, `2^186`,
    `2^248`. A usable replay attack also requires a prime-degree collision
-   at indices the signer will use. For fixed first index and prime fraction
-   `ρ`, the random-function estimate is `sqrt(2^(e−4)/ρ)` hash queries;
+   at indices the signer will use. For fixed first index and fraction `ρ`
+   of scalars with a BPSW-passing degree and successful accepted signing,
+   the random-function estimate is `sqrt(2^(e−4)/ρ)` hash queries;
    the cost of filtering, memory and quantum attacks needs explicit
    accounting. A 491/747/995-bit degree is not itself a challenge-entropy
    argument. Do not claim the paper's security levels without resolving
    this. Salt binding or larger parameters would change the protocol and
-   need new vectors and analysis.
+   need new vectors and analysis. The density thresholds and exact
+   collision-pair expectation are in the security argument §5; a generic
+   odd-integer prime density is not a proved estimate for this family.
 4. **Carried index.** The verifier accepts any prime index, not a certified
    hash-to-prime output. Give a SUF-CMA argument for that interface and
    the deterministic failure/retry policy. The signer is deterministic

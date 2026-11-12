@@ -135,9 +135,11 @@ impl std::error::Error for IndexError {
 ///
 /// Signing is deterministic for a given key and message because this takes
 /// the smallest such index. The verifier does not call this, and it does not
-/// check that a carried index is the smallest: a different index is a
-/// different degree, which a third party still cannot satisfy without
-/// forging.
+/// check that a carried index is the smallest. Distinct indices can hash
+/// to the same scalar and degree; the security argument must account for
+/// such collisions and for any new isogeny at a different degree. See
+/// `docs/SECURITY_ARGUMENT.md`, sections 5 and 6. The native research signer
+/// may continue past this helper's result when final verification fails.
 ///
 /// The key goes through the same [`KeyIdentity::decode`] the verifier uses,
 /// so the signer cannot search against a key the verifier would refuse, and
