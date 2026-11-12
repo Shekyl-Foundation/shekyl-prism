@@ -119,12 +119,27 @@ The original six files in the parent testdata directory stay as they are.
 `accept_verdicts.tsv` lists every file in that directory with the verdict
 from a fresh run of the model: 20 NIST-I, 27 NIST-III, 20 NIST-V, each Ok.
 
+The NIST-III rows are the seeds on which keygen returned. In a sample of
+24 SHA-256 seeds, keygen aborted on all 24, so this set is the survivors
+of that fault and not a uniform sample of seeds.
+
 ## Exporter aborts
 
 A sample of 24 SHA-256 seeds at each level, classified by the exporter's
-stderr. Every abort is `mpz_div_qr: Divide by zero` inside Cornacchia
-during ideal evaluation. No attempt printed the exporter's own retry
-lines (no response, image not a `2^e` basis, basis application failed).
+stderr. Every abort is `mpz_div_qr: Divide by zero`. The zero operand is
+the remainder `r1` in the Euclidean loop of `ibz_cornacchia_prime`
+(`integers.c` in the pinned tree). The coefficient `n` is `1`. The other
+argument `p`, the cofactor `ibz_cornacchia_extended` passes through, is
+negative (185 bits at III, 249 bits at V). The loop test is
+`remainder² >= p`, which stays true for a zero remainder when `p` is
+negative, and the next iteration divides by that remainder.
+`mpz_probab_prime_p` uses the absolute value, so the negative cofactor is
+treated as prime and handed to Cornacchia. `quat_qlapoti` reaches that
+call from `dim2id2iso_ideal_to_isogeny_clapotis` during
+`protocols_keygen`. The exporter only calls `protocols_keygen`; it does
+not pass the zero. The fault is in the pinned tree. No attempt printed
+the exporter's own retry lines (no response, image not a `2^e` basis,
+basis application failed).
 
 | Level | Attempts | Signatures | Keygen abort | Sign abort |
 | --- | --- | --- | --- | --- |

@@ -400,10 +400,15 @@ the port replaces it.
   generator is now `Q`. On the committed honest vectors that chain stops
   at step 1. With the earlier difference, the cofactor of the uncleared
   points, levels I and III reached both readings.
+- `Pairing` and `Codomain` do not bind the message. Row 2 of the model
+  negatives, the next prime index, is `Image`: the same signature points
+  with a different odd `s` still pass `Pairing` and `Codomain`. `Image`
+  is the check that binds the message. The challenge scalar is an odd
+  integer below `2^{e−3}`, so it has `e − 4` free bits. A generic search
+  collides two such scalars after about `2^{(e−4)/2}` messages: `2^{122}`
+  at NIST I, `2^{186}` at NIST III, `2^{248}` at NIST V.
 - `Codomain` does not depend on `s`. The kernel is the graph of
-  `P ↦ P_sig` for any odd `s`. Row 2 of the model negatives, the next
-  prime index, is `Image`, not `Codomain`. `Image` is the check that
-  binds the message.
+  `P ↦ P_sig` for any odd `s`.
 - Some order-4 translates pass `Codomain` and are refused only by the
   second component of step 8. That component is required for strong
   unforgeability.

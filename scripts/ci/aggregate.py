@@ -31,7 +31,7 @@ REQUIRED = (
     "deny",
     "hygiene",
     "c-reference-pin",
-    "accept",
+    "accept-list",
     "codeql",
 )
 SKIPPABLE = "c-vectors"

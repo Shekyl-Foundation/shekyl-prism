@@ -78,8 +78,10 @@ pub fn relate_points<L: Level>(
     if !span_e::<L>(sig, p_sig_x, q_sig_x) {
         return Err(VerifyError::Kernel);
     }
-    // Before either chain. The starting-curve witness is not this identity.
-    if !vk.is_zero() && !pairing_holds::<L>(vk, &even, sig, p_sig, q_sig, scalar) {
+    // Before either chain. A mismatch is `Pairing` on a public key and on
+    // the starting curve alike; the degree-`q` witness calls the chain
+    // helper itself and does not come through here.
+    if !pairing_holds::<L>(vk, &even, sig, p_sig, q_sig, scalar) {
         return Err(VerifyError::Pairing);
     }
     let readings = match e_prime_surface::<L>(vk, &even, push, sig, p_sig, q_sig, scalar) {
@@ -256,11 +258,12 @@ fn scale<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>, scalar: &[u8]) -> Xz<
 
 #[cfg(test)]
 mod e0_vectors {
-    use super::relate_points;
+    use super::e_prime_surface;
     use crate::signature::{canonical_sign, AffinePoint};
     use crate::verify;
     use crate::VerifyError;
     use prism_field::{Field, Level, Level1};
+    use prism_isogeny::chain::SurfaceStop;
     use prism_isogeny::endomorphism::{apply, multiply};
     use prism_isogeny::jac::{lift_basis, Jac};
     use prism_isogeny::montgomery::Montgomery;
@@ -326,16 +329,27 @@ mod e0_vectors {
     fn exercise<L: Level>(block: &str) {
         let (p, q, s) = signature::<L>(block);
         let zero = L::Ext::zero();
+        let basis = starting_basis::<L>().expect("E0 basis");
         // The chain is the one-chain shape. This witness is the graph of one
         // endomorphism of E0. In the C tree that kernel is
         // `endomorphism_application_even_basis` on `BASIS_EVEN` of
         // `CURVE_E0`, and `theta_chain_compute_and_eval` stops the same way.
         // A theta coordinate of the step's kernel vanishes at step 3, which
-        // the (2,2) step refuses, so both readings are not produced.
-        assert_eq!(
-            relate_points::<L>(zero, zero, p, q, &s),
-            Err(VerifyError::Kernel)
-        );
+        // the (2,2) step refuses, so both readings are not produced. The
+        // witness calls the chain helper directly: `relate_points` now runs
+        // the pairing check, which this graph is not.
+        assert!(matches!(
+            e_prime_surface::<L>(
+                zero,
+                &basis.even,
+                [basis.r, basis.t, basis.difference],
+                zero,
+                p,
+                q,
+                &s,
+            ),
+            Err(SurfaceStop::Step(3))
+        ));
     }
 
     #[test]
@@ -362,7 +376,9 @@ mod s5_vectors {
     use crate::VerifyError;
     use prism_field::{ChallengeIndex, Field, Level, Level1, Level3, Level5};
     use prism_isogeny::chain::SurfaceStop;
-    use prism_isogeny::montgomery::Xz;
+    use prism_isogeny::jac::Jac;
+    use prism_isogeny::montgomery::{Montgomery, Xz};
+    use prism_isogeny::pairing::{mul, weil};
     use prism_isogeny::torsion::{even_basis, has_order_p_plus_one, rational_basis};
 
     fn line<'a>(text: &'a str, label: &str) -> &'a str {
@@ -605,6 +621,67 @@ mod s5_vectors {
                 Err(VerifyError::Sign)
             );
         }
+    }
+
+    fn assert_weil_values<L: Level>(text: &str, vk_hex: &str, sig_hex: &str) {
+        let sample = sample::<L>(text);
+        let one = L::Ext::one();
+        let coefficient = KeyIdentity::<L>::decode(&sample.key)
+            .expect("key")
+            .coefficient();
+        let vk = Montgomery::normalized(coefficient);
+        let sig = Montgomery::normalized(sample.response.curve);
+        let at = |x: &str, y: &str| Jac {
+            x: L::ext_decode(&hex_bytes(line(text, x))).unwrap(),
+            y: L::ext_decode(&hex_bytes(line(text, y))).unwrap(),
+            z: one,
+        };
+        let public =
+            weil(vk, at("VkPx ", "VkPy "), at("VkQx ", "VkQy "), L::E).expect("e(P_vk, Q_vk)");
+        let signed = weil(
+            sig,
+            mul(sig, at("Px ", "Py "), &sample.scalar),
+            mul(sig, at("Qx ", "Qy "), &sample.scalar),
+            L::E,
+        )
+        .expect("e([s]P_sig, [s]Q_sig)");
+        let encoded = |value: L::Ext| {
+            L::ext_encode(value)
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect::<String>()
+        };
+        assert_eq!(encoded(public), vk_hex, "{} public", L::NAME);
+        assert_eq!(encoded(signed), sig_hex, "{} signature", L::NAME);
+    }
+
+    #[test]
+    fn the_weil_values_match_sage() {
+        let table = include_str!("../testdata/weil_pairing.tsv");
+        let mut rows = table.lines().filter(|line| !line.is_empty());
+        assert_eq!(rows.next(), Some("file\tvk\tsig"));
+        let files: [(&str, &str); 6] = [
+            ("s5_lvl1.txt", include_str!("../testdata/s5_lvl1.txt")),
+            ("s5_lvl3.txt", include_str!("../testdata/s5_lvl3.txt")),
+            ("s5_lvl5.txt", include_str!("../testdata/s5_lvl5.txt")),
+            ("s5_lvl1b.txt", include_str!("../testdata/s5_lvl1b.txt")),
+            ("s5_lvl3b.txt", include_str!("../testdata/s5_lvl3b.txt")),
+            ("s5_lvl5b.txt", include_str!("../testdata/s5_lvl5b.txt")),
+        ];
+        for (name, text) in files {
+            let row = rows.next().expect(name);
+            let mut parts = row.split('\t');
+            assert_eq!(parts.next(), Some(name));
+            let vk = parts.next().expect("vk");
+            let sig = parts.next().expect("sig");
+            match name {
+                "s5_lvl1.txt" | "s5_lvl1b.txt" => assert_weil_values::<Level1>(text, vk, sig),
+                "s5_lvl3.txt" | "s5_lvl3b.txt" => assert_weil_values::<Level3>(text, vk, sig),
+                "s5_lvl5.txt" | "s5_lvl5b.txt" => assert_weil_values::<Level5>(text, vk, sig),
+                _ => panic!("unexpected row {name}"),
+            }
+        }
+        assert!(rows.next().is_none());
     }
 
     fn assert_vk_basis<L: Level>(text: &str) {
