@@ -84,30 +84,38 @@ struct Collision {
     second: u64,
     queries: u64,
 }
+/// What the search knows about a projected value it has already hashed to.
+enum Seen {
+    /// The counter that first produced it.
+    Once(u64),
+    /// It was produced twice and its degree is composite, so no pair of
+    /// messages on it is of use.
+    Composite,
+}
 /// The first two counters whose projected scalars are equal and whose
 /// degree is prime. `queries` is every hash evaluated, composite or not.
-fn birthday(t: &Template) -> Result<Collision, &'static str> {
+fn prime_collision(t: &Template) -> Result<Collision, &'static str> {
     let mut seen = HashMap::new();
     for counter in 0..u64::MAX {
         let value = t.value(counter);
-        if let Some(&first) = seen.get(&value) {
-            if first == u64::MAX {
-                continue;
+        match seen.get(&value) {
+            None => {
+                seen.insert(value, Seen::Once(counter));
             }
-            let scalar = t.scalar(value);
-            if !prism_verify::degree_is_prime(L::E - 2, &scalar) {
-                seen.insert(value, u64::MAX);
-                continue;
+            Some(Seen::Composite) => {}
+            Some(&Seen::Once(first)) => {
+                if prism_verify::degree_is_prime(L::E - 2, &t.scalar(value)) {
+                    return Ok(Collision {
+                        first,
+                        second: counter,
+                        queries: counter + 1,
+                    });
+                }
+                seen.insert(value, Seen::Composite);
             }
-            return Ok(Collision {
-                first,
-                second: counter,
-                queries: counter + 1,
-            });
         }
-        seen.insert(value, counter);
     }
-    Err("birthday counter exhausted")
+    Err("collision search exhausted its counter")
 }
 fn run(dir: &std::path::Path, trial: u64, bits: u32) -> Result<(), Box<dyn std::error::Error>> {
     if !(16..=32).contains(&bits) {
@@ -130,7 +138,7 @@ fn run(dir: &std::path::Path, trial: u64, bits: u32) -> Result<(), Box<dyn std::
             1 + 16 * unsalted_unsignable as u8,
             bits,
         );
-        let collision = birthday(&old)?;
+        let collision = prime_collision(&old)?;
         unsalted_queries += collision.queries;
         let m1 = old.message(collision.first);
         match native.sign_unsalted(&m1, bits).ok_or("research width")? {
@@ -157,7 +165,7 @@ fn run(dir: &std::path::Path, trial: u64, bits: u32) -> Result<(), Box<dyn std::
     // Keep the salted v2 domain/framing in the precomputation too. This
     // isolates unknown signer salt from merely changing the hash version.
     let guessed = Template::new(&native.key, Some(zero.as_bytes()), trial, 2, bits);
-    let guess = birthday(&guessed)?;
+    let guess = prime_collision(&guessed)?;
     let guessed_first = guessed.message(guess.first);
     let guessed_second = guessed.message(guess.second);
     let signed = native.sign(&guessed_first, &[0; 32], bits)?;
