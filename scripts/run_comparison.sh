@@ -34,7 +34,9 @@ if [ -e "$out" ] || [ -e "$note" ]; then
     exit 2
 fi
 mkdir -p "$(dirname "$out")"
-cargo build --release --locked -p prism-compare --features experiments --bin "$driver" >&2
+# The digest and the run below name target/release, so the build is put
+# there whatever CARGO_TARGET_DIR or a cargo config says.
+cargo build --release --locked --target-dir target -p prism-compare --features experiments --bin "$driver" >&2
 {
     printf 'commit %s\n' "$(git rev-parse HEAD)"
     printf 'toolchain %s\n' "$(rustc --version)"
