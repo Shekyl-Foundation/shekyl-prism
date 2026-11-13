@@ -1,0 +1,12 @@
+commit e5635d094f17e8d845368e2ae5d7a41d851cf347
+toolchain rustc 1.94.0 (4a4ef493e 2026-03-02)
+machine x86_64
+command target/release/unsignable target/native 1 0 2000 2
+11164b033fab56e0a5b942078df2dd58bfb2a223f9503951952f2fd1344a4b0a  target/release/unsignable
+6366d153cc685804905fa29548ce53f5d3fba61a82b7269a7debf8217b29c2a3  target/native/prism_signer_lvl1
+354b1a410349d2b119b63f156f3c64763e21011c5aeb098d8ef40817fc79a569  target/native/prism_signer_lvl3
+a87706c8c3835b35fc1ecb0f516e65b1afd301100930880ebd30719511d7b635  target/native/prism_signer_lvl5
+started 2026-11-13T14:33:25Z load 8.25 8.51 10.76
+finished 2026-11-13T14:52:34Z load 40.52 40.83 31.38
+exit 0
+5c8a05cf5353502a359985007c3d804110df8487f66a186229d52749187d116e  docs/comparison/e6/key-02.txt

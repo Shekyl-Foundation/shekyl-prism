@@ -179,7 +179,39 @@ never skipped a prime index, and the salted loop never advanced its
 counter on a backend error, malformed result or refused response. A
 backend failure rate above about 1 in 6,700 at row I, 1 in 1,300 at III
 or 1 in 670 at V would have shown at least once with 95% probability.
-Rarer failures are not excluded, and one key was used.
+Rarer failures are not excluded, and those runs used one key.
+
+### E6 over distinct keys
+
+**Ran**, at commit `e5635d0`. Row I, twelve keys, the first 2,000 messages
+of the same sequence under each; the budget was fixed before the run.
+Key `j`'s 48-byte seed is the first 48 bytes of
+`SHAKE256("shekyl-prism-comparison-e6-key-v1" || LE64(j))`. Each record
+opens with a `KEY` line giving the seed and the full public key. Records:
+`comparison/e6/key-00.txt` to `key-11.txt`.
+
+| Key | Seed | Public key (first 8 bytes) | Messages | Unsalted: signed at the first prime index | Unsalted: backend error, exhausted or malformed | Salted: signed at the first prime candidate | Salted: backend errors | Salted: refused responses |
+| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 0 | `fd82dfbc6f1317bccf7e911781e14c63fa499d426a7d271fb6baf46567c3c44b889fc9db7e2f4e594f892d0dc67392ea` | `17c3b2260b54aa3b` | 2000 | 2000 | 0 | 2000 | 0 | 0 |
+| 1 | `ec7f2970918a97d8ba3e97b2c9668a75ecc2a4bf98777136875e7585a29c47777d5f739874cd3eafb05addef3dbfe604` | `5653804ef9b63340` | 2000 | 2000 | 0 | 2000 | 0 | 0 |
+| 2 | `f7bf7d18dc90e692ea590722633dc1834ff24745ba548e93bbdbea023b6b27535656cc6e295c1ebe2ebab38435663f8e` | `407b4589986e55a9` | 2000 | 2000 | 0 | 2000 | 0 | 0 |
+| 3 | `66af937b2f4c20f96383ae88fa1ed58f1fb4b6877e4998949c1b60bd981f17a5d6364551b9279d70729d132fb5e96fe4` | `b7f9a0da70e0c273` | 2000 | 2000 | 0 | 2000 | 0 | 0 |
+| 4 | `25170dd2f8407f399d3afc8c7baf367066bdf6dbdfb90d4a0e28dfe6685c06730a3c2842298205f03af540fe70224a09` | `61848b1baf8e8f0d` | 2000 | 2000 | 0 | 2000 | 0 | 0 |
+| 5 | `132604d618d98df7f1fa7c024878aa60f29746eaa36809b754e8ee014e32c26d26a83534d8e74f8dd04e3a7ff59af282` | `12996aeca6c10fef` | 2000 | 2000 | 0 | 2000 | 0 | 0 |
+| 6 | `293fd4536a9a6a6979be5ec153897ecc5817f7e194492ed28b6a521991454c623cd876cc74d9966fadc0116004af7f29` | `02693b18ad714f4a` | 2000 | 2000 | 0 | 2000 | 0 | 0 |
+| 7 | `ffa1d3adb08e5e572edb76ad762f9cd90eeec14eafe2c23b944e537597f10598affd2ceaeb814e65e85f09569ae6cca8` | `0ce6109c0a0d514b` | 2000 | 2000 | 0 | 2000 | 0 | 0 |
+| 8 | `e97c15a631b75c1865b03fd91275e22e2b78fadda3c0a3c25116cc5167b67717ea9c04c7ca63a4bc147fb14a5015b626` | `86833c20a5badbe4` | 2000 | 2000 | 0 | 2000 | 0 | 0 |
+| 9 | `2531552d6b6c4256fcaab47d7d1fcf9609d5564a9e0d305b58de2f43321467791981fa0210645931fb62d26f11401fe1` | `46ffc61b65e2fb25` | 2000 | 2000 | 0 | 2000 | 0 | 0 |
+| 10 | `c5eef038012d3b5e8c69318d0d9b14b7a51d979c498c15c93e7077802b205a42e571dd4f371d05f02882d701019652c9` | `dfa3e6158c552338` | 2000 | 2000 | 0 | 2000 | 0 | 0 |
+| 11 | `876365499e96b8fa75dc9af9b7b087f95061fd893f560ea15cab39b6ed7d562449a882021977a5b5613c1a05d9e45e95` | `b4b196f1488a405a` | 2000 | 2000 | 0 | 2000 | 0 | 0 |
+
+The twelve public keys are distinct. No message was unsignable under any
+of them: all 24,000 were signed by both loops at the first prime
+candidate, with no backend error, malformed result or refused response.
+Together with the single-key run that is 44,000 messages at row I
+without a failure, which would have shown a failure rate above about 1
+in 14,700 at least once with 95% probability. Twelve keys do not bound
+how rare a key with a different failure rate is.
 
 ## E4. Sizes and time
 
@@ -262,6 +294,7 @@ sh scripts/run_comparison.sh e1/density density 100000
 sh scripts/run_comparison.sh e5/index_leak index_leak
 sh scripts/run_comparison.sh e3/trial-00 replay target/native 0 all     # trials 0 to 19
 sh scripts/run_comparison.sh e6/level1-0 unsignable target/native 1 0 5000
+sh scripts/run_comparison.sh e6/key-00 unsignable target/native 1 0 2000 0   # keys 0 to 11
 python3 scripts/analyze_comparison.py
 ```
 
