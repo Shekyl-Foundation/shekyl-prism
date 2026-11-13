@@ -127,3 +127,12 @@ Not checkable from the repository, left as written: the rulings and their dates,
 Open: `SECURITY_REVIEW.md` still says no notification to the paper's authors has been sent, against the 2026-11-09 entry above.
 Conclusion: from this entry on, every pull request adds its own entry here and updates the ledger rows it touches, in the same pull request.
 Who: Rick asked for the check / coding agent (Claude Code) ran it and made the corrections / not yet reviewed.
+
+### 2026-11-13 — Verifier performance (PR `perf/verifier-ops`): the instrument first
+Question: Where does a verification spend its field operations, and how much of that can be removed without changing what is accepted or refused?
+Expected (reviewer, Derived, in the brief): removing the per-step inversions and the duplicate scalar multiplications cuts level I by 30 to 45% in instructions, and squaring adds to that. The reviewer's callgrind run at `6b93ecb` (its Ran, on another toolchain, not reproduced here) puts 25% of level I in extension-field inversion and 29% in Jacobian scalar multiplication, and estimates about 1,960 inversions in the chains and 1,980 in the pairings.
+Expected (coding agent, before counting): inversions near 4,000 at level I if that estimate is right; the challenge stage near zero, since neither the hash nor Baillie–PSW uses the field; no refusal dearer than acceptance, since every refusal stops early.
+Done: an operation counter in `prism-field` (feature `op-count`, enabled by no manifest), ten stage marks in the verifier, one generator for the negatives shared by the acceptance tests and the reporter, and `scripts/op_counts.sh`, which writes `docs/benchmarks/op-counts.txt` and `negative-verdicts.tsv`. No optimization in this commit. The stage marks moved no computation: the two chain kernels are still built directly before their chains.
+Result: Ran. Level I primary vector: 345,200 extension-field multiplications and 4,019 inversions, of which 1,988 are in the pairing stage and 2,012 in the two chains. Levels III and V: 530,434 and 6,072; 722,924 and 8,056. The challenge stage counts zero. The dearest refusal of every primary vector is `Image`, at about 90% of the accepted cost. 2,712 negatives over the six primary vectors give eleven of the twelve refusals; `Basis` has no vector.
+Who: reviewer wrote the brief / coding agent (Claude Code) implemented and ran / not yet reviewed.
+

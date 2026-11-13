@@ -83,8 +83,14 @@ jobs:
         run: cargo fetch --locked
       - name: Reduced-width API is absent from default production builds
         run: python3 scripts/ci/check_research_boundary.py
+      - name: The operation counter is in no default build
+        run: python3 scripts/ci/check_op_count_isolation.py
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      # The counter is compiled only when asked for, so its code and the
+      # reporter's counting path are linted in a pass of their own.
+      - name: Clippy, operation counter
+        run: cargo clippy -p prism-field -p prism-verify --features prism-field/op-count --all-targets --locked -- -D warnings
       # The workspace run leaves the research feature off, so the real-backend
       # adapter and the experiment drivers need their own pass.
       - name: Clippy, comparison drivers
@@ -135,6 +141,41 @@ jobs:
         run: cargo test --workspace --locked --release
       - name: Research width keeps length ahead of origin
         run: cargo test -p prism-verify --features research-reduced-width --locked --lib short_signature_is_length_before_origin
+
+  # The field operations of a verification are deterministic, so the two
+  # committed records are an exact match on both architectures. A change in
+  # cost or in any negative's verdict fails here until the records are
+  # regenerated and committed with the change that caused it.
+  op-counts:
+    name: op-counts
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            machine: x86_64
+          - runner: ubuntu-24.04-arm
+            machine: aarch64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+      - name: The runner is ${{ matrix.machine }}
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "${{ matrix.machine }}"
+      - name: The counter's own test
+        run: cargo test -p prism-field --features op-count --locked ops
+      - name: Counts and verdicts equal the committed records
+        run: sh scripts/op_counts.sh --check
+      - name: A second run gives the same records
+        run: sh scripts/op_counts.sh --check
 
   bench-smoke:
     name: bench-smoke
@@ -323,6 +364,7 @@ jobs:
       - test-x86_64
       - test-aarch64
       - bench-smoke
+      - op-counts
       - deny
       - hygiene
       - c-reference-pin
@@ -347,6 +389,7 @@ jobs:
             test-x86_64=${{ needs['test-x86_64'].result }}
             test-aarch64=${{ needs['test-aarch64'].result }}
             bench-smoke=${{ needs['bench-smoke'].result }}
+            op-counts=${{ needs['op-counts'].result }}
             deny=${{ needs.deny.result }}
             hygiene=${{ needs.hygiene.result }}
             c-reference-pin=${{ needs['c-reference-pin'].result }}

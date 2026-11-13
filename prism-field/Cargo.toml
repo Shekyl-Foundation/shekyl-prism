@@ -7,6 +7,13 @@ rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
 
+[features]
+default = []
+# Counts field operations per thread (`ops`). Off by default and enabled by
+# no manifest: pass `--features prism-field/op-count` on the command line.
+# `scripts/ci/check_op_count_isolation.py` holds that.
+op-count = []
+
 [dependencies]
 fp2 = { workspace = true }
 

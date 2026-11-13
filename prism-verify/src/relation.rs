@@ -25,6 +25,7 @@ use crate::basis::basis_hint;
 use crate::challenge::ChallengeScalar;
 use crate::identity::KeyIdentity;
 use crate::signature::{AffinePoint, Response};
+use crate::stage::Stage;
 use crate::VerifyError;
 
 /// The isogeny relation for a key the public checks have already accepted.
@@ -55,6 +56,7 @@ pub fn relate_points<L: Level>(
     // The starting curve keeps its `E[p+1]` basis: the degree-`q` witness
     // was built from that basis. A public key uses the canonical basis of
     // `E[2^e]`: `Q` is `difference(P, R)` after the cofactor.
+    Stage::Torsion.enter();
     let (even, push) = if vk.is_zero() {
         let basis = starting_basis::<L>().ok_or(VerifyError::Kernel)?;
         (basis.even, [basis.r, basis.t, basis.difference])
@@ -106,6 +108,7 @@ fn pairing_holds<L: Level>(
     q_sig: AffinePoint<L>,
     scalar: &[u8],
 ) -> bool {
+    Stage::Pairing.enter();
     let Some((vk_curve, p_vk, q_vk)) =
         lift_basis(Montgomery::normalized(vk), even.p, even.difference, even.q)
     else {
@@ -123,13 +126,11 @@ fn pairing_holds<L: Level>(
         y: q_sig.y,
         z: one,
     };
+    Stage::Scale.enter();
+    let (r1, r2) = (mul(sig_curve, p, scalar), mul(sig_curve, q, scalar));
+    Stage::Pairing.enter();
     let (Some(left), Some(right)) = (
-        weil(
-            sig_curve,
-            mul(sig_curve, p, scalar),
-            mul(sig_curve, q, scalar),
-            L::E,
-        ),
+        weil(sig_curve, r1, r2, L::E),
         weil(vk_curve, p_vk, q_vk, L::E),
     ) else {
         return false;

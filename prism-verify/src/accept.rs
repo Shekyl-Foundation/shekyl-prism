@@ -4,6 +4,7 @@
 // BSD-3-Clause
 
 //! Two adapted chains and the complete image check of the Sage model.
+use crate::stage::Stage;
 use crate::{AffinePoint, VerifyError};
 use prism_field::{Field, Level};
 use prism_isogeny::dual_chain::{canonical_four, product_null, Couple, DualChain};
@@ -81,13 +82,16 @@ fn build<L: Level>(
     q: AffinePoint<L>,
     scalar: &[u8],
 ) -> Result<Built<L::Ext>, VerifyError> {
+    Stage::Kernel.enter();
     let (_, p1, p2) = lift_basis(Montgomery::normalized(vk), even.p, even.difference, even.q)
         .ok_or(VerifyError::Kernel)?;
     let curves = [Montgomery::normalized(vk), Montgomery::normalized(sig)];
     let ps = affine(p);
     let qs = affine(q);
+    Stage::Scale.enter();
     let r1 = mul(curves[1], ps, scalar);
     let r2 = mul(curves[1], qs, scalar);
+    Stage::Kernel.enter();
     let s = Residue::from_le_bytes(L::E, scalar);
     let q_inverse = s.multiply(s).negate().inv().ok_or(VerifyError::Kernel)?;
     let r2_scaled = mul(curves[1], r2, &q_inverse.to_le_bytes());
@@ -119,22 +123,19 @@ fn build<L: Level>(
     ];
     let (_, m1, m2) = challenge_matrices(s).ok_or(VerifyError::Kernel)?;
     let product = product_null(t1, u1);
-    let chain1 = DualChain::new(
-        L::E - 2,
-        curves,
-        kernel(curves, basis, m1, 0),
-        product,
-        change(m1, m0, zeta),
-    )
-    .ok_or(VerifyError::Kernel)?;
-    let chain2 = DualChain::new(
-        L::E - 3,
-        curves,
-        kernel(curves, basis, m2, 1),
-        product,
-        change(m2, m0, zeta),
-    )
-    .ok_or(VerifyError::Kernel)?;
+    // Each chain's kernel and base change are built directly before it, in
+    // this order, so a refusal in the long chain costs nothing of the short.
+    let (kernel1, change1) = (kernel(curves, basis, m1, 0), change(m1, m0, zeta));
+    Stage::Chain1.enter();
+    let chain1 =
+        DualChain::new(L::E - 2, curves, kernel1, product, change1).ok_or(VerifyError::Kernel)?;
+    Stage::Kernel.enter();
+    let (kernel2, change2) = (kernel(curves, basis, m2, 1), change(m2, m0, zeta));
+    Stage::Chain2.enter();
+    let chain2 =
+        DualChain::new(L::E - 3, curves, kernel2, product, change2).ok_or(VerifyError::Kernel)?;
+    // The differences below are the third pair the image check compares.
+    Stage::Image.enter();
     Ok(Built {
         chains: [chain1, chain2],
         curves,
@@ -162,9 +163,11 @@ pub(crate) fn check<L: Level>(
         curves,
         pairs,
     } = build::<L>(vk, even, sig, p, q, scalar)?;
+    Stage::Codomain.enter();
     if !chain1.matches_dual(&chain2) {
         return Err(VerifyError::Codomain);
     }
+    Stage::Image.enter();
     for (x, y) in pairs {
         let middle = chain1
             .eval([x, Jac::infinity()])

@@ -21,6 +21,8 @@
 use fp2::define_fp2_from_type;
 use fp2::define_fp_core;
 
+pub mod ops;
+
 /// The bytes of one row's public salt.
 ///
 /// Each level owns a distinct type, [`Level::Salt`], whose array is exactly
@@ -114,6 +116,7 @@ macro_rules! nist_level {
         [$($limb:expr),+ $(,)?]
     ) => {
         pub mod $modname {
+            use super::ops::{tally, Kind, Op};
             use super::{define_fp2_from_type, define_fp_core, Field, Level, Salt};
 
             /// `2λ` bits, stored as an array of that many bytes.
@@ -194,12 +197,14 @@ macro_rules! nist_level {
                     self - rhs
                 }
                 fn mul(self, rhs: Self) -> Self {
+                    tally(Kind::Base, Op::Mul);
                     self * rhs
                 }
                 fn negate(self) -> Self {
                     -self
                 }
                 fn inv(self) -> Option<Self> {
+                    tally(Kind::Base, Op::Inv);
                     if mask_ok(self.is_zero()) {
                         None
                     } else {
@@ -207,11 +212,13 @@ macro_rules! nist_level {
                     }
                 }
                 fn sqrt(self) -> Option<Self> {
+                    tally(Kind::Base, Op::Sqrt);
                     let mut value = self;
                     let mask = value.set_sqrt();
                     if mask_ok(mask) { Some(value) } else { None }
                 }
                 fn is_square(self) -> bool {
+                    tally(Kind::Base, Op::IsSquare);
                     self.legendre() >= 0
                 }
                 fn is_zero(self) -> bool {
@@ -239,12 +246,14 @@ macro_rules! nist_level {
                     self - rhs
                 }
                 fn mul(self, rhs: Self) -> Self {
+                    tally(Kind::Ext, Op::Mul);
                     self * rhs
                 }
                 fn negate(self) -> Self {
                     -self
                 }
                 fn inv(self) -> Option<Self> {
+                    tally(Kind::Ext, Op::Inv);
                     if mask_ok(self.is_zero()) {
                         None
                     } else {
@@ -252,11 +261,13 @@ macro_rules! nist_level {
                     }
                 }
                 fn sqrt(self) -> Option<Self> {
+                    tally(Kind::Ext, Op::Sqrt);
                     let mut value = self;
                     let mask = value.set_sqrt();
                     if mask_ok(mask) { Some(value) } else { None }
                 }
                 fn is_square(self) -> bool {
+                    tally(Kind::Ext, Op::IsSquare);
                     self.legendre() >= 0
                 }
                 fn is_zero(self) -> bool {

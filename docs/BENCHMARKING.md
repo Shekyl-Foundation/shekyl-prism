@@ -73,3 +73,59 @@ The raw output is [acceptance_x86_64_2026-11-12.txt](benchmarks/acceptance_x86_6
 This shared development-machine observation is noisy and not a release
 performance claim or the Pi gate. Public-key preparation/caching and native
 field/chain optimization remain future performance work.
+
+## Operation counts
+
+The machine-independent cost of a verification is its count of field
+operations. `prism-field` counts calls through its `Field` trait when
+built with the `op-count` feature, and the verifier marks ten stages:
+
+| Stage | What is counted there |
+| --- | --- |
+| `public` | decoding, sign, model and the basis search |
+| `challenge` | nothing in this metric: the hash and Baillie–PSW do not use the field |
+| `torsion` | the key's basis, the on-curve test, and the order and span checks |
+| `scale` | `[s]` of the two signature points |
+| `pairing` | the two Weil pairings and the power they are compared through |
+| `kernel` | lifts, the canonical four-torsion, the matrices, both chain kernels and both theta base changes |
+| `chain1`, `chain2` | the long and the short chain |
+| `codomain` | the comparison of the two codomains |
+| `image` | the three image comparisons |
+
+A stage is a purpose. Work that a later change moves keeps its stage, so
+two versions of the table compare row by row.
+
+```sh
+sh scripts/op_counts.sh           # rewrite the two records
+sh scripts/op_counts.sh --check   # what CI runs, on x86_64 and aarch64
+```
+
+- [benchmarks/op-counts.txt](benchmarks/op-counts.txt): per-stage counts
+  for the six primary vectors, the total for each of the other 107, the
+  per-stage counts of the first negative of each refusal, and for each
+  primary vector its dearest refusal against its accepted cost.
+- [benchmarks/negative-verdicts.tsv](benchmarks/negative-verdicts.tsv):
+  the verdict and total cost of each of the 2,712 negatives derived from
+  the six primary vectors. `Basis` has no vector: no key whose basis index
+  exceeds the search bound is known.
+
+Each record states a digest of the sources it was counted from. The
+commit is the one that last changed the record. Counts are taken in the
+release profile; they vary slightly between vectors with the basis index
+and the bits of the challenge.
+
+The extension-field counts of one accepted signature before any
+optimization (commit of this section's introduction, primary vector of
+each level):
+
+| | I | III | V |
+| --- | ---: | ---: | ---: |
+| Multiplications | 345,200 | 530,434 | 722,924 |
+| Inversions | 4,019 | 6,072 | 8,056 |
+| Square roots | 7 | 7 | 7 |
+| Residuosity tests | 4 | 6 | 4 |
+
+No base-field call is made directly at any stage. At this commit no
+refusal costs more than acceptance: the dearest negative of every primary
+vector is `Image` at about 90% of the accepted cost.
+
