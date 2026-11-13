@@ -115,8 +115,9 @@ release profile; they vary slightly between vectors with the basis index
 and the bits of the challenge.
 
 The extension-field counts of one accepted signature, primary vector of
-each level, after each change of the performance work. Square roots (7)
-and residuosity tests (4, 6, 4) did not move.
+each level, after each change of the performance work. Square roots
+were 7 and are 6 since the key's basis is lifted once; residuosity tests
+(4, 6, 4) did not move.
 
 | After | Operation | I | III | V |
 | --- | --- | ---: | ---: | ---: |
@@ -131,6 +132,9 @@ and residuosity tests (4, 6, 4) did not move.
 | one inversion per chain for the dual's coordinates | multiplications | 196,920 | 301,198 | 409,974 |
 | | squarings | 139,788 | 216,638 | 295,516 |
 | | inversions | 73 | 78 | 78 |
+| scalar multiplications shared | multiplications | 137,836 | 212,082 | 289,168 |
+| | squarings | 93,951 | 147,281 | 202,147 |
+| | inversions | 71 | 76 | 76 |
 
 Squaring turned 39% of the multiplications into squarings and removed 7%
 outright (products that the doubling and addition formulas computed two
@@ -139,9 +143,15 @@ more multiplications and squarings at level I to remove 1,986 inversions,
 each worth about 40 multiplications. Sharing one inversion among all the
 null-point coordinates of a chain removes 1,960 more for 5,892
 multiplications. The 73 that remain do not grow with the chain: 26 in
-each gluing, 8 in the pairings, and 13 elsewhere. No base-field call is made directly at any stage, and no
+each gluing, 8 in the pairings, and 13 elsewhere (11 once the key's
+basis is lifted once). Sharing the doublings of the four kernel basis
+points among every ladder on them, scaling the signature points once,
+and taking `−1` coefficients as a negation removes 104,921 products at
+level I, 31% of what was left. No base-field call is made directly at any stage, and no
 refusal costs more than acceptance: the dearest negative of every primary
-vector is `Image` at about 90% of the accepted cost.
+vector is `Image`, at about 90% of the accepted cost before the scalar
+multiplications were shared and 97% after, since that change made the
+last stage cheaper than the stages before it.
 
 `prism-bench` prints the time of one extension-field multiplication,
 squaring and inversion per level after its verification timings. On the

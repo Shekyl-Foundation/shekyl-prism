@@ -6,125 +6,125 @@
 # counted. Hashing and Baillie-PSW do not use the field, so the challenge
 # stage reads zero and this metric does not see their cost.
 # Profile: release. The counts do not depend on the machine.
-# Sources: sha256 963da47bdf5e13dafd39c5435c9759ccd269b5ca6699a45b1c52057416ac1bf9
-accept level=NIST-I vector=s5_i_r40.txt stage=total ext_mul=197466 ext_square=139978 ext_inv=74 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=16
-accept level=NIST-I vector=s5_i_r41.txt stage=total ext_mul=201096 ext_square=141249 ext_inv=73 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_i_r43.txt stage=total ext_mul=198255 ext_square=140256 ext_inv=74 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
-accept level=NIST-I vector=s5_i_r47.txt stage=total ext_mul=196646 ext_square=139687 ext_inv=73 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_i_r49.txt stage=total ext_mul=197263 ext_square=139909 ext_inv=73 ext_sqrt=7 ext_is_square=16 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_i_r52.txt stage=total ext_mul=196777 ext_square=139721 ext_inv=73 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_i_r54.txt stage=total ext_mul=197128 ext_square=139859 ext_inv=73 ext_sqrt=7 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_i_r58.txt stage=total ext_mul=197752 ext_square=140076 ext_inv=73 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_i_r59.txt stage=total ext_mul=199118 ext_square=140564 ext_inv=74 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
-accept level=NIST-I vector=s5_i_r60.txt stage=total ext_mul=196138 ext_square=139503 ext_inv=74 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=16
-accept level=NIST-I vector=s5_i_r61.txt stage=total ext_mul=197473 ext_square=139983 ext_inv=73 ext_sqrt=7 ext_is_square=12 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_i_r62.txt stage=total ext_mul=197956 ext_square=140150 ext_inv=74 ext_sqrt=7 ext_is_square=10 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=24
-accept level=NIST-I vector=s5_i_r63.txt stage=total ext_mul=197738 ext_square=140065 ext_inv=74 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
-accept level=NIST-I vector=s5_i_r65.txt stage=total ext_mul=197079 ext_square=139852 ext_inv=74 ext_sqrt=7 ext_is_square=10 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=24
-accept level=NIST-I vector=s5_i_r66.txt stage=total ext_mul=198948 ext_square=140508 ext_inv=74 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
-accept level=NIST-I vector=s5_i_r68.txt stage=total ext_mul=195343 ext_square=139217 ext_inv=73 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_i_r69.txt stage=total ext_mul=197365 ext_square=139940 ext_inv=74 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
-accept level=NIST-I vector=s5_i_r70.txt stage=total ext_mul=198334 ext_square=140269 ext_inv=74 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
-accept level=NIST-I vector=s5_i_r71.txt stage=total ext_mul=198437 ext_square=140322 ext_inv=74 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
-accept level=NIST-I vector=s5_i_r72.txt stage=total ext_mul=200219 ext_square=140954 ext_inv=73 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_1007.txt stage=total ext_mul=304821 ext_square=217920 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
-accept level=NIST-III vector=s5_iii_1025.txt stage=total ext_mul=303641 ext_square=217504 ext_inv=77 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_1102.txt stage=total ext_mul=306708 ext_square=218588 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_111.txt stage=total ext_mul=302829 ext_square=217210 ext_inv=77 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_1170.txt stage=total ext_mul=303556 ext_square=217476 ext_inv=78 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=20
-accept level=NIST-III vector=s5_iii_1297.txt stage=total ext_mul=302730 ext_square=217177 ext_inv=77 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_152.txt stage=total ext_mul=305983 ext_square=218326 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_1530.txt stage=total ext_mul=306521 ext_square=218524 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_1540.txt stage=total ext_mul=306814 ext_square=218626 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
-accept level=NIST-III vector=s5_iii_156.txt stage=total ext_mul=303898 ext_square=217594 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_1591.txt stage=total ext_mul=303084 ext_square=217297 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
-accept level=NIST-III vector=s5_iii_1728.txt stage=total ext_mul=304797 ext_square=217905 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
-accept level=NIST-III vector=s5_iii_1783.txt stage=total ext_mul=304277 ext_square=217723 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
-accept level=NIST-III vector=s5_iii_180.txt stage=total ext_mul=309754 ext_square=219658 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_1807.txt stage=total ext_mul=305524 ext_square=218166 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
-accept level=NIST-III vector=s5_iii_1812.txt stage=total ext_mul=305154 ext_square=218042 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_1935.txt stage=total ext_mul=301357 ext_square=216696 ext_inv=77 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_1942.txt stage=total ext_mul=304549 ext_square=217824 ext_inv=77 ext_sqrt=7 ext_is_square=10 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_1994.txt stage=total ext_mul=304120 ext_square=217676 ext_inv=78 ext_sqrt=7 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=22
-accept level=NIST-III vector=s5_iii_2118.txt stage=total ext_mul=305763 ext_square=218252 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_214.txt stage=total ext_mul=302912 ext_square=217231 ext_inv=78 ext_sqrt=7 ext_is_square=12 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=28
-accept level=NIST-III vector=s5_iii_215.txt stage=total ext_mul=302673 ext_square=217170 ext_inv=78 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=20
-accept level=NIST-III vector=s5_iii_218.txt stage=total ext_mul=303340 ext_square=217398 ext_inv=78 ext_sqrt=7 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=22
-accept level=NIST-III vector=s5_iii_294.txt stage=total ext_mul=305326 ext_square=218089 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_368.txt stage=total ext_mul=306836 ext_square=218615 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
-accept level=NIST-III vector=s5_iii_p0.txt stage=total ext_mul=303162 ext_square=217333 ext_inv=77 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_p1.txt stage=total ext_mul=303894 ext_square=217592 ext_inv=77 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_p10.txt stage=total ext_mul=303368 ext_square=217405 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
-accept level=NIST-III vector=s5_iii_p11.txt stage=total ext_mul=303215 ext_square=217349 ext_inv=77 ext_sqrt=7 ext_is_square=16 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_p12.txt stage=total ext_mul=302958 ext_square=217264 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_p13.txt stage=total ext_mul=306195 ext_square=218404 ext_inv=78 ext_sqrt=7 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=22
-accept level=NIST-III vector=s5_iii_p14.txt stage=total ext_mul=305218 ext_square=218050 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_p15.txt stage=total ext_mul=300759 ext_square=216490 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_p16.txt stage=total ext_mul=307727 ext_square=218941 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
-accept level=NIST-III vector=s5_iii_p17.txt stage=total ext_mul=303722 ext_square=217524 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
-accept level=NIST-III vector=s5_iii_p18.txt stage=total ext_mul=300968 ext_square=216562 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_p19.txt stage=total ext_mul=303870 ext_square=217579 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
-accept level=NIST-III vector=s5_iii_p2.txt stage=total ext_mul=303027 ext_square=217283 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_p3.txt stage=total ext_mul=304069 ext_square=217651 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
-accept level=NIST-III vector=s5_iii_p4.txt stage=total ext_mul=299166 ext_square=215913 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
-accept level=NIST-III vector=s5_iii_p5.txt stage=total ext_mul=304862 ext_square=217934 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_p6.txt stage=total ext_mul=303662 ext_square=217514 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_p7.txt stage=total ext_mul=300811 ext_square=216485 ext_inv=77 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_p8.txt stage=total ext_mul=305708 ext_square=218230 ext_inv=78 ext_sqrt=7 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=22
-accept level=NIST-III vector=s5_iii_p9.txt stage=total ext_mul=303168 ext_square=217338 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_iii_r166.txt stage=total ext_mul=305292 ext_square=218079 ext_inv=78 ext_sqrt=7 ext_is_square=14 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=32
-accept level=NIST-III vector=s5_iii_r64.txt stage=total ext_mul=303803 ext_square=217559 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_v_131.txt stage=total ext_mul=411609 ext_square=296082 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_139.txt stage=total ext_mul=415289 ext_square=297392 ext_inv=77 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_v_145.txt stage=total ext_mul=407263 ext_square=294558 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_156.txt stage=total ext_mul=408092 ext_square=294850 ext_inv=78 ext_sqrt=7 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=16
-accept level=NIST-V vector=s5_v_186.txt stage=total ext_mul=410647 ext_square=295748 ext_inv=78 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
-accept level=NIST-V vector=s5_v_2.txt stage=total ext_mul=410606 ext_square=295721 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_24.txt stage=total ext_mul=409708 ext_square=295414 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_v_47.txt stage=total ext_mul=408449 ext_square=294972 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_50.txt stage=total ext_mul=408049 ext_square=294829 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_77.txt stage=total ext_mul=412450 ext_square=296380 ext_inv=77 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_v_88.txt stage=total ext_mul=403250 ext_square=293136 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_p0.txt stage=total ext_mul=413997 ext_square=296934 ext_inv=78 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
-accept level=NIST-V vector=s5_v_p1.txt stage=total ext_mul=408273 ext_square=294906 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_p10.txt stage=total ext_mul=413949 ext_square=296911 ext_inv=77 ext_sqrt=7 ext_is_square=12 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_v_p11.txt stage=total ext_mul=408978 ext_square=295155 ext_inv=78 ext_sqrt=7 ext_is_square=10 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=18
-accept level=NIST-V vector=s5_v_p12.txt stage=total ext_mul=411676 ext_square=296120 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_v_p13.txt stage=total ext_mul=414384 ext_square=297062 ext_inv=78 ext_sqrt=7 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=16
-accept level=NIST-V vector=s5_v_p14.txt stage=total ext_mul=404057 ext_square=293419 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_p15.txt stage=total ext_mul=408946 ext_square=295156 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_p16.txt stage=total ext_mul=409021 ext_square=295176 ext_inv=77 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_v_p17.txt stage=total ext_mul=409023 ext_square=295180 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_p18.txt stage=total ext_mul=407315 ext_square=294572 ext_inv=77 ext_sqrt=7 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_v_p19.txt stage=total ext_mul=408790 ext_square=295096 ext_inv=78 ext_sqrt=7 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=16
-accept level=NIST-V vector=s5_v_p2.txt stage=total ext_mul=405268 ext_square=293845 ext_inv=78 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
-accept level=NIST-V vector=s5_v_p3.txt stage=total ext_mul=411711 ext_square=296130 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_p4.txt stage=total ext_mul=406702 ext_square=294355 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_p5.txt stage=total ext_mul=408196 ext_square=294886 ext_inv=77 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_v_p6.txt stage=total ext_mul=413789 ext_square=296849 ext_inv=77 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_v_p7.txt stage=total ext_mul=414200 ext_square=296998 ext_inv=77 ext_sqrt=7 ext_is_square=10 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_v_p8.txt stage=total ext_mul=409075 ext_square=295179 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_v_p9.txt stage=total ext_mul=409418 ext_square=295324 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_r149.txt stage=total ext_mul=411555 ext_square=296075 ext_inv=78 ext_sqrt=7 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=16
-accept level=NIST-V vector=s5_v_r156.txt stage=total ext_mul=410120 ext_square=295553 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_r160.txt stage=total ext_mul=408808 ext_square=295106 ext_inv=78 ext_sqrt=7 ext_is_square=14 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=24
-accept level=NIST-V vector=s5_v_r170.txt stage=total ext_mul=407965 ext_square=294797 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_v_r179.txt stage=total ext_mul=410730 ext_square=295784 ext_inv=78 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
-accept level=NIST-V vector=s5_v_r52.txt stage=total ext_mul=408980 ext_square=295155 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_r70.txt stage=total ext_mul=413888 ext_square=296884 ext_inv=77 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_v_r75.txt stage=total ext_mul=408526 ext_square=294998 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
-accept level=NIST-V vector=s5_v_r85.txt stage=total ext_mul=408013 ext_square=294807 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+# Sources: sha256 ba4ebbaeb1f190760adb7bac2d2e63ebcc0abf65609d40576bd91c7a1992f446
+accept level=NIST-I vector=s5_i_r40.txt stage=total ext_mul=137974 ext_square=93997 ext_inv=72 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=16
+accept level=NIST-I vector=s5_i_r41.txt stage=total ext_mul=139972 ext_square=94692 ext_inv=71 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_i_r43.txt stage=total ext_mul=138253 ext_square=94095 ext_inv=72 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
+accept level=NIST-I vector=s5_i_r47.txt stage=total ext_mul=137460 ext_square=93814 ext_inv=71 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_i_r49.txt stage=total ext_mul=137975 ext_square=94000 ext_inv=71 ext_sqrt=6 ext_is_square=16 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_i_r52.txt stage=total ext_mul=137591 ext_square=93848 ext_inv=71 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_i_r54.txt stage=total ext_mul=137840 ext_square=93950 ext_inv=71 ext_sqrt=6 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_i_r58.txt stage=total ext_mul=137954 ext_square=93987 ext_inv=71 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_i_r59.txt stage=total ext_mul=138912 ext_square=94331 ext_inv=72 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
+accept level=NIST-I vector=s5_i_r60.txt stage=total ext_mul=137258 ext_square=93738 ext_inv=72 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=16
+accept level=NIST-I vector=s5_i_r61.txt stage=total ext_mul=138083 ext_square=94038 ext_inv=71 ext_sqrt=6 ext_is_square=12 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_i_r62.txt stage=total ext_mul=138260 ext_square=94097 ext_inv=72 ext_sqrt=6 ext_is_square=10 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=24
+accept level=NIST-I vector=s5_i_r63.txt stage=total ext_mul=138246 ext_square=94084 ext_inv=72 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
+accept level=NIST-I vector=s5_i_r65.txt stage=total ext_mul=137893 ext_square=93979 ext_inv=72 ext_sqrt=6 ext_is_square=10 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=24
+accept level=NIST-I vector=s5_i_r66.txt stage=total ext_mul=138742 ext_square=94275 ext_inv=72 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
+accept level=NIST-I vector=s5_i_r68.txt stage=total ext_mul=136973 ext_square=93632 ext_inv=71 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_i_r69.txt stage=total ext_mul=137975 ext_square=93995 ext_inv=72 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
+accept level=NIST-I vector=s5_i_r70.txt stage=total ext_mul=138434 ext_square=94144 ext_inv=72 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
+accept level=NIST-I vector=s5_i_r71.txt stage=total ext_mul=138435 ext_square=94161 ext_inv=72 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
+accept level=NIST-I vector=s5_i_r72.txt stage=total ext_mul=139605 ext_square=94577 ext_inv=71 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_1007.txt stage=total ext_mul=214073 ext_square=147987 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
+accept level=NIST-III vector=s5_iii_1025.txt stage=total ext_mul=213607 ext_square=147823 ext_inv=75 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_1102.txt stage=total ext_mul=215042 ext_square=148331 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_111.txt stage=total ext_mul=212693 ext_square=147493 ext_inv=75 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_1170.txt stage=total ext_mul=213420 ext_square=147759 ext_inv=76 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=20
+accept level=NIST-III vector=s5_iii_1297.txt stage=total ext_mul=213002 ext_square=147604 ext_inv=75 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_152.txt stage=total ext_mul=214827 ext_square=148249 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_1530.txt stage=total ext_mul=215161 ext_square=148375 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_1540.txt stage=total ext_mul=215148 ext_square=148369 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
+accept level=NIST-III vector=s5_iii_156.txt stage=total ext_mul=213558 ext_square=147805 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_1591.txt stage=total ext_mul=213050 ext_square=147616 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
+accept level=NIST-III vector=s5_iii_1728.txt stage=total ext_mul=214049 ext_square=147972 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
+accept level=NIST-III vector=s5_iii_1783.txt stage=total ext_mul=213835 ext_square=147898 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
+accept level=NIST-III vector=s5_iii_180.txt stage=total ext_mul=216660 ext_square=148897 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_1807.txt stage=total ext_mul=214470 ext_square=148125 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
+accept level=NIST-III vector=s5_iii_1812.txt stage=total ext_mul=214304 ext_square=148073 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_1935.txt stage=total ext_mul=212241 ext_square=147339 ext_inv=75 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_1942.txt stage=total ext_mul=214005 ext_square=147963 ext_inv=75 ext_sqrt=6 ext_is_square=10 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_1994.txt stage=total ext_mul=213576 ext_square=147815 ext_inv=76 ext_sqrt=6 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=22
+accept level=NIST-III vector=s5_iii_2118.txt stage=total ext_mul=214505 ext_square=148139 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_214.txt stage=total ext_mul=212980 ext_square=147586 ext_inv=76 ext_sqrt=6 ext_is_square=12 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=28
+accept level=NIST-III vector=s5_iii_215.txt stage=total ext_mul=212843 ext_square=147561 ext_inv=76 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=20
+accept level=NIST-III vector=s5_iii_218.txt stage=total ext_mul=213204 ext_square=147681 ext_inv=76 ext_sqrt=6 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=22
+accept level=NIST-III vector=s5_iii_294.txt stage=total ext_mul=214374 ext_square=148084 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_368.txt stage=total ext_mul=215170 ext_square=148358 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
+accept level=NIST-III vector=s5_iii_p0.txt stage=total ext_mul=213332 ext_square=147724 ext_inv=75 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_p1.txt stage=total ext_mul=213656 ext_square=147839 ext_inv=75 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_p10.txt stage=total ext_mul=213538 ext_square=147796 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
+accept level=NIST-III vector=s5_iii_p11.txt stage=total ext_mul=213181 ext_square=147668 ext_inv=75 ext_sqrt=6 ext_is_square=16 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_p12.txt stage=total ext_mul=213230 ext_square=147691 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_p13.txt stage=total ext_mul=214835 ext_square=148255 ext_inv=76 ext_sqrt=6 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=22
+accept level=NIST-III vector=s5_iii_p14.txt stage=total ext_mul=214470 ext_square=148117 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_p15.txt stage=total ext_mul=211949 ext_square=147241 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_p16.txt stage=total ext_mul=215755 ext_square=148576 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
+accept level=NIST-III vector=s5_iii_p17.txt stage=total ext_mul=213484 ext_square=147771 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
+accept level=NIST-III vector=s5_iii_p18.txt stage=total ext_mul=212158 ext_square=147313 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_p19.txt stage=total ext_mul=213530 ext_square=147790 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
+accept level=NIST-III vector=s5_iii_p2.txt stage=total ext_mul=213197 ext_square=147674 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_p3.txt stage=total ext_mul=213729 ext_square=147862 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
+accept level=NIST-III vector=s5_iii_p4.txt stage=total ext_mul=210968 ext_square=146880 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=12
+accept level=NIST-III vector=s5_iii_p5.txt stage=total ext_mul=213910 ext_square=147929 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_p6.txt stage=total ext_mul=213628 ext_square=147833 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_p7.txt stage=total ext_mul=211899 ext_square=147200 ext_inv=75 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_p8.txt stage=total ext_mul=214756 ext_square=148225 ext_inv=76 ext_sqrt=6 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=22
+accept level=NIST-III vector=s5_iii_p9.txt stage=total ext_mul=213032 ext_square=147621 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_iii_r166.txt stage=total ext_mul=214442 ext_square=148110 ext_inv=76 ext_sqrt=6 ext_is_square=14 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=32
+accept level=NIST-III vector=s5_iii_r64.txt stage=total ext_mul=213769 ext_square=147878 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_v_131.txt stage=total ext_mul=289783 ext_square=202353 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_139.txt stage=total ext_mul=291729 ext_square=203051 ext_inv=75 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_v_145.txt stage=total ext_mul=287579 ext_square=201585 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_156.txt stage=total ext_mul=287898 ext_square=201697 ext_inv=76 ext_sqrt=6 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=16
+accept level=NIST-V vector=s5_v_186.txt stage=total ext_mul=289127 ext_square=202127 ext_inv=76 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
+accept level=NIST-V vector=s5_v_2.txt stage=total ext_mul=289392 ext_square=202208 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_24.txt stage=total ext_mul=288800 ext_square=202009 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_v_47.txt stage=total ext_mul=288051 ext_square=201747 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_50.txt stage=total ext_mul=287957 ext_square=201712 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_77.txt stage=total ext_mul=290318 ext_square=202543 ext_inv=75 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_v_88.txt stage=total ext_mul=285504 ext_square=200847 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_p0.txt stage=total ext_mul=291151 ext_square=202845 ext_inv=76 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
+accept level=NIST-V vector=s5_v_p1.txt stage=total ext_mul=288181 ext_square=201789 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_p10.txt stage=total ext_mul=291103 ext_square=202822 ext_inv=75 ext_sqrt=6 ext_is_square=12 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_v_p11.txt stage=total ext_mul=288478 ext_square=201894 ext_inv=76 ext_sqrt=6 ext_is_square=10 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=18
+accept level=NIST-V vector=s5_v_p12.txt stage=total ext_mul=290054 ext_square=202463 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_v_p13.txt stage=total ext_mul=291130 ext_square=202829 ext_inv=76 ext_sqrt=6 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=16
+accept level=NIST-V vector=s5_v_p14.txt stage=total ext_mul=285699 ext_square=200914 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_p15.txt stage=total ext_mul=288650 ext_square=201967 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_p16.txt stage=total ext_mul=288521 ext_square=201915 ext_inv=75 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_v_p17.txt stage=total ext_mul=288625 ext_square=201955 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_p18.txt stage=total ext_mul=287529 ext_square=201563 ext_inv=75 ext_sqrt=6 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_v_p19.txt stage=total ext_mul=288290 ext_square=201835 ext_inv=76 ext_sqrt=6 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=16
+accept level=NIST-V vector=s5_v_p2.txt stage=total ext_mul=286604 ext_square=201232 ext_inv=76 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
+accept level=NIST-V vector=s5_v_p3.txt stage=total ext_mul=289885 ext_square=202401 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_p4.txt stage=total ext_mul=287222 ext_square=201454 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_p5.txt stage=total ext_mul=287900 ext_square=201697 ext_inv=75 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_v_p6.txt stage=total ext_mul=291045 ext_square=202796 ext_inv=75 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_v_p7.txt stage=total ext_mul=291456 ext_square=202945 ext_inv=75 ext_sqrt=6 ext_is_square=10 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_v_p8.txt stage=total ext_mul=288473 ext_square=201882 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_v_p9.txt stage=total ext_mul=288816 ext_square=202027 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_r149.txt stage=total ext_mul=290035 ext_square=202454 ext_inv=76 ext_sqrt=6 ext_is_square=8 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=16
+accept level=NIST-V vector=s5_v_r156.txt stage=total ext_mul=289518 ext_square=202256 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_r160.txt stage=total ext_mul=288206 ext_square=201809 ext_inv=76 ext_sqrt=6 ext_is_square=14 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=24
+accept level=NIST-V vector=s5_v_r170.txt stage=total ext_mul=287873 ext_square=201680 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_v_r179.txt stage=total ext_mul=289618 ext_square=202307 ext_inv=76 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
+accept level=NIST-V vector=s5_v_r52.txt stage=total ext_mul=288582 ext_square=201930 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_r70.txt stage=total ext_mul=290736 ext_square=202687 ext_inv=75 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_v_r75.txt stage=total ext_mul=288026 ext_square=201737 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_v_r85.txt stage=total ext_mul=288023 ext_square=201726 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
 accept level=NIST-I vector=s5_lvl1.txt stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-I vector=s5_lvl1.txt stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-I vector=s5_lvl1.txt stage=torsion ext_mul=11979 ext_square=5977 ext_inv=2 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_lvl1.txt stage=scale ext_mul=13976 ext_square=8784 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_lvl1.txt stage=scale ext_mul=6988 ext_square=4392 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-I vector=s5_lvl1.txt stage=pairing ext_mul=15007 ext_square=7195 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_lvl1.txt stage=kernel ext_mul=55560 ext_square=41725 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_lvl1.txt stage=kernel ext_mul=20399 ext_square=12034 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-I vector=s5_lvl1.txt stage=chain1 ext_mul=36673 ext_square=28548 ext_inv=26 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-I vector=s5_lvl1.txt stage=chain2 ext_mul=36504 ext_square=28408 ext_inv=26 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-I vector=s5_lvl1.txt stage=codomain ext_mul=32 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_lvl1.txt stage=image ext_mul=27181 ext_square=19146 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_lvl1.txt stage=total ext_mul=196920 ext_square=139788 ext_inv=73 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_lvl1.txt stage=image ext_mul=10246 ext_square=7392 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_lvl1.txt stage=total ext_mul=137836 ext_square=93951 ext_inv=71 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=both-y-negated error=Sign stage=public ext_mul=0 ext_square=1 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=both-y-negated error=Sign stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=both-y-negated error=Sign stage=torsion ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
@@ -150,25 +150,25 @@ refuse level=NIST-I vector=s5_lvl1.txt case=q-negated error=Pairing stage=total 
 refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=torsion ext_mul=11979 ext_square=5977 ext_inv=2 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=scale ext_mul=13976 ext_square=8784 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=scale ext_mul=6988 ext_square=4392 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=pairing ext_mul=15007 ext_square=7195 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=kernel ext_mul=55579 ext_square=41718 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=kernel ext_mul=20418 ext_square=12027 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=chain1 ext_mul=36673 ext_square=28548 ext_inv=26 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=chain2 ext_mul=36504 ext_square=28408 ext_inv=26 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=codomain ext_mul=4 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=image ext_mul=34 ext_square=12 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=total ext_mul=169764 ext_square=120647 ext_inv=70 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=image ext_mul=4063 ext_square=1434 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1.txt case=shear-q-plus-p error=Codomain stage=total ext_mul=131644 ext_square=87986 ext_inv=68 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=torsion ext_mul=11979 ext_square=5977 ext_inv=2 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=scale ext_mul=13976 ext_square=8784 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=scale ext_mul=6988 ext_square=4392 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=pairing ext_mul=15007 ext_square=7195 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=kernel ext_mul=55560 ext_square=41725 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=kernel ext_mul=20399 ext_square=12034 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=chain1 ext_mul=36673 ext_square=28548 ext_inv=26 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=chain2 ext_mul=36504 ext_square=28408 ext_inv=26 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=codomain ext_mul=32 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=image ext_mul=9083 ext_square=6390 ext_inv=1 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=total ext_mul=178822 ext_square=127032 ext_inv=71 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=image ext_mul=6124 ext_square=3420 ext_inv=1 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image stage=total ext_mul=133714 ext_square=89979 ext_inv=69 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=salt-bit-0 error=Composite stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=salt-bit-0 error=Composite stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=salt-bit-0 error=Composite stage=torsion ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
@@ -246,19 +246,19 @@ refuse level=NIST-I vector=s5_lvl1.txt case=key-zero error=Origin stage=chain2 e
 refuse level=NIST-I vector=s5_lvl1.txt case=key-zero error=Origin stage=codomain ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=key-zero error=Origin stage=image ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1.txt case=key-zero error=Origin stage=total ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-dearest-refusal level=NIST-I vector=s5_lvl1.txt case=both-top-bit-scaled error=Image ext_mul_and_square=305854 accept_ext_mul_and_square=336708 most_ext_inv_of_any_refusal=71 accept_ext_inv=73 above_accept=false
+dearest-refusal level=NIST-I vector=s5_lvl1.txt case=salt-bit-82 error=Image ext_mul_and_square=224980 accept_ext_mul_and_square=231787 most_ext_inv_of_any_refusal=69 accept_ext_inv=71 above_accept=false
 refusals-without-a-vector level=NIST-I vector=s5_lvl1.txt Basis
 accept level=NIST-I vector=s5_lvl1b.txt stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-I vector=s5_lvl1b.txt stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-I vector=s5_lvl1b.txt stage=torsion ext_mul=11979 ext_square=5977 ext_inv=2 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_lvl1b.txt stage=scale ext_mul=14588 ext_square=9000 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_lvl1b.txt stage=scale ext_mul=7294 ext_square=4500 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-I vector=s5_lvl1b.txt stage=pairing ext_mul=15017 ext_square=7195 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_lvl1b.txt stage=kernel ext_mul=55849 ext_square=41829 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_lvl1b.txt stage=kernel ext_mul=20688 ext_square=12138 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-I vector=s5_lvl1b.txt stage=chain1 ext_mul=36673 ext_square=28548 ext_inv=26 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-I vector=s5_lvl1b.txt stage=chain2 ext_mul=36504 ext_square=28408 ext_inv=26 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-I vector=s5_lvl1b.txt stage=codomain ext_mul=32 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_lvl1b.txt stage=image ext_mul=28099 ext_square=19470 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-I vector=s5_lvl1b.txt stage=total ext_mul=198749 ext_square=140432 ext_inv=73 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_lvl1b.txt stage=image ext_mul=10552 ext_square=7500 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-I vector=s5_lvl1b.txt stage=total ext_mul=138747 ext_square=94271 ext_inv=71 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=both-y-negated error=Sign stage=public ext_mul=0 ext_square=1 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=both-y-negated error=Sign stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=both-y-negated error=Sign stage=torsion ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
@@ -284,25 +284,25 @@ refuse level=NIST-I vector=s5_lvl1b.txt case=q-negated error=Pairing stage=total
 refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=torsion ext_mul=11979 ext_square=5977 ext_inv=2 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=scale ext_mul=14588 ext_square=9000 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=scale ext_mul=7294 ext_square=4500 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=pairing ext_mul=15017 ext_square=7195 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=kernel ext_mul=55849 ext_square=41829 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=kernel ext_mul=20688 ext_square=12138 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=chain1 ext_mul=36673 ext_square=28548 ext_inv=26 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=chain2 ext_mul=36504 ext_square=28408 ext_inv=26 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=codomain ext_mul=4 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=image ext_mul=34 ext_square=12 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=total ext_mul=170656 ext_square=120974 ext_inv=70 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=image ext_mul=4369 ext_square=1542 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1b.txt case=shear-q-plus-p error=Codomain stage=total ext_mul=132536 ext_square=88313 ext_inv=68 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=torsion ext_mul=11979 ext_square=5977 ext_inv=2 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=scale ext_mul=14588 ext_square=9000 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=scale ext_mul=7294 ext_square=4500 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=pairing ext_mul=15017 ext_square=7195 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=kernel ext_mul=55849 ext_square=41829 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=kernel ext_mul=20688 ext_square=12138 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=chain1 ext_mul=36673 ext_square=28548 ext_inv=26 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=chain2 ext_mul=36504 ext_square=28408 ext_inv=26 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=codomain ext_mul=32 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=image ext_mul=9389 ext_square=6498 ext_inv=1 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=total ext_mul=180039 ext_square=127460 ext_inv=71 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=image ext_mul=6430 ext_square=3528 ext_inv=1 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image stage=total ext_mul=134625 ext_square=90299 ext_inv=69 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=salt-bit-0 error=Composite stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=salt-bit-0 error=Composite stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=salt-bit-0 error=Composite stage=torsion ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
@@ -380,19 +380,19 @@ refuse level=NIST-I vector=s5_lvl1b.txt case=key-zero error=Origin stage=chain2 
 refuse level=NIST-I vector=s5_lvl1b.txt case=key-zero error=Origin stage=codomain ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=key-zero error=Origin stage=image ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-I vector=s5_lvl1b.txt case=key-zero error=Origin stage=total ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-dearest-refusal level=NIST-I vector=s5_lvl1b.txt case=both-top-bit-scaled error=Image ext_mul_and_square=307499 accept_ext_mul_and_square=339181 most_ext_inv_of_any_refusal=71 accept_ext_inv=73 above_accept=false
+dearest-refusal level=NIST-I vector=s5_lvl1b.txt case=salt-bit-99 error=Image ext_mul_and_square=226185 accept_ext_mul_and_square=233018 most_ext_inv_of_any_refusal=69 accept_ext_inv=71 above_accept=false
 refusals-without-a-vector level=NIST-I vector=s5_lvl1b.txt Basis
 accept level=NIST-III vector=s5_lvl3.txt stage=public ext_mul=10 ext_square=7 ext_inv=3 ext_sqrt=3 ext_is_square=3 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
 accept level=NIST-III vector=s5_lvl3.txt stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-III vector=s5_lvl3.txt stage=torsion ext_mul=18198 ext_square=9083 ext_inv=3 ext_sqrt=2 ext_is_square=3 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
-accept level=NIST-III vector=s5_lvl3.txt stage=scale ext_mul=20856 ext_square=13200 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_lvl3.txt stage=scale ext_mul=10428 ext_square=6600 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-III vector=s5_lvl3.txt stage=pairing ext_mul=22767 ext_square=10907 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_lvl3.txt stage=kernel ext_mul=83237 ext_square=62923 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_lvl3.txt stage=kernel ext_mul=29900 ext_square=17872 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-III vector=s5_lvl3.txt stage=chain1 ext_mul=57851 ext_square=45912 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-III vector=s5_lvl3.txt stage=chain2 ext_mul=57674 ext_square=45764 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-III vector=s5_lvl3.txt stage=codomain ext_mul=32 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_lvl3.txt stage=image ext_mul=40573 ext_square=28842 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_lvl3.txt stage=total ext_mul=301198 ext_square=216638 ext_inv=78 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=20
+accept level=NIST-III vector=s5_lvl3.txt stage=image ext_mul=15222 ext_square=11136 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_lvl3.txt stage=total ext_mul=212082 ext_square=147281 ext_inv=76 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=20
 refuse level=NIST-III vector=s5_lvl3.txt case=both-y-negated error=Sign stage=public ext_mul=0 ext_square=1 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=both-y-negated error=Sign stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=both-y-negated error=Sign stage=torsion ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
@@ -418,25 +418,25 @@ refuse level=NIST-III vector=s5_lvl3.txt case=q-negated error=Pairing stage=tota
 refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=public ext_mul=10 ext_square=7 ext_inv=3 ext_sqrt=3 ext_is_square=3 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
 refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=torsion ext_mul=18198 ext_square=9083 ext_inv=3 ext_sqrt=2 ext_is_square=3 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
-refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=scale ext_mul=20856 ext_square=13200 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=scale ext_mul=10428 ext_square=6600 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=pairing ext_mul=22767 ext_square=10907 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=kernel ext_mul=83256 ext_square=62916 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=kernel ext_mul=29919 ext_square=17865 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=chain1 ext_mul=57851 ext_square=45912 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=chain2 ext_mul=57674 ext_square=45764 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=codomain ext_mul=4 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=image ext_mul=34 ext_square=12 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=total ext_mul=260650 ext_square=187801 ext_inv=75 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=20
+refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=image ext_mul=5967 ext_square=2106 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-III vector=s5_lvl3.txt case=shear-q-plus-p error=Codomain stage=total ext_mul=202818 ext_square=138244 ext_inv=73 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=20
 refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=public ext_mul=10 ext_square=7 ext_inv=3 ext_sqrt=3 ext_is_square=3 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
 refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=torsion ext_mul=18198 ext_square=9083 ext_inv=3 ext_sqrt=2 ext_is_square=3 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
-refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=scale ext_mul=20856 ext_square=13200 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=scale ext_mul=10428 ext_square=6600 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=pairing ext_mul=22767 ext_square=10907 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=kernel ext_mul=83237 ext_square=62923 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=kernel ext_mul=29900 ext_square=17872 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=chain1 ext_mul=57851 ext_square=45912 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=chain2 ext_mul=57674 ext_square=45764 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=codomain ext_mul=32 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=image ext_mul=13547 ext_square=9622 ext_inv=1 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=total ext_mul=274172 ext_square=197418 ext_inv=76 ext_sqrt=7 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=20
+refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=image ext_mul=9052 ext_square=5116 ext_inv=1 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image stage=total ext_mul=205912 ext_square=141261 ext_inv=74 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=20
 refuse level=NIST-III vector=s5_lvl3.txt case=salt-bit-0 error=Composite stage=public ext_mul=10 ext_square=7 ext_inv=3 ext_sqrt=3 ext_is_square=3 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
 refuse level=NIST-III vector=s5_lvl3.txt case=salt-bit-0 error=Composite stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=salt-bit-0 error=Composite stage=torsion ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
@@ -514,19 +514,19 @@ refuse level=NIST-III vector=s5_lvl3.txt case=key-zero error=Origin stage=chain2
 refuse level=NIST-III vector=s5_lvl3.txt case=key-zero error=Origin stage=codomain ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=key-zero error=Origin stage=image ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3.txt case=key-zero error=Origin stage=total ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-dearest-refusal level=NIST-III vector=s5_lvl3.txt case=both-top-bit-scaled error=Image ext_mul_and_square=471590 accept_ext_mul_and_square=517836 most_ext_inv_of_any_refusal=76 accept_ext_inv=78 above_accept=false
+dearest-refusal level=NIST-III vector=s5_lvl3.txt case=other-prime-salt error=Image ext_mul_and_square=350599 accept_ext_mul_and_square=359363 most_ext_inv_of_any_refusal=74 accept_ext_inv=76 above_accept=false
 refusals-without-a-vector level=NIST-III vector=s5_lvl3.txt Basis
 accept level=NIST-III vector=s5_lvl3b.txt stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-III vector=s5_lvl3b.txt stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-III vector=s5_lvl3b.txt stage=torsion ext_mul=18195 ext_square=9081 ext_inv=2 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_lvl3b.txt stage=scale ext_mul=20244 ext_square=12984 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_lvl3b.txt stage=scale ext_mul=10122 ext_square=6492 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-III vector=s5_lvl3b.txt stage=pairing ext_mul=22769 ext_square=10907 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_lvl3b.txt stage=kernel ext_mul=83147 ext_square=62888 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_lvl3b.txt stage=kernel ext_mul=29810 ext_square=17837 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-III vector=s5_lvl3b.txt stage=chain1 ext_mul=57851 ext_square=45912 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-III vector=s5_lvl3b.txt stage=chain2 ext_mul=57674 ext_square=45764 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-III vector=s5_lvl3b.txt stage=codomain ext_mul=32 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_lvl3b.txt stage=image ext_mul=39655 ext_square=28518 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-III vector=s5_lvl3b.txt stage=total ext_mul=299575 ext_square=216059 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_lvl3b.txt stage=image ext_mul=14916 ext_square=11028 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-III vector=s5_lvl3b.txt stage=total ext_mul=211377 ext_square=147026 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=both-y-negated error=Sign stage=public ext_mul=0 ext_square=1 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=both-y-negated error=Sign stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=both-y-negated error=Sign stage=torsion ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
@@ -552,25 +552,25 @@ refuse level=NIST-III vector=s5_lvl3b.txt case=q-negated error=Pairing stage=tot
 refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=torsion ext_mul=18195 ext_square=9081 ext_inv=2 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=scale ext_mul=20244 ext_square=12984 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=scale ext_mul=10122 ext_square=6492 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=pairing ext_mul=22769 ext_square=10907 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=kernel ext_mul=83118 ext_square=62881 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=kernel ext_mul=29781 ext_square=17830 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=chain1 ext_mul=57851 ext_square=45912 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=chain2 ext_mul=57674 ext_square=45764 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=codomain ext_mul=4 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=image ext_mul=34 ext_square=12 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=total ext_mul=259897 ext_square=187546 ext_inv=74 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=image ext_mul=5661 ext_square=1998 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-III vector=s5_lvl3b.txt case=shear-q-plus-p error=Codomain stage=total ext_mul=202065 ext_square=137989 ext_inv=72 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=torsion ext_mul=18195 ext_square=9081 ext_inv=2 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=scale ext_mul=20244 ext_square=12984 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=scale ext_mul=10122 ext_square=6492 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=pairing ext_mul=22769 ext_square=10907 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=kernel ext_mul=83147 ext_square=62888 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=kernel ext_mul=29810 ext_square=17837 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=chain1 ext_mul=57851 ext_square=45912 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=chain2 ext_mul=57674 ext_square=45764 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=codomain ext_mul=32 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=image ext_mul=13241 ext_square=9514 ext_inv=1 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=total ext_mul=273161 ext_square=197055 ext_inv=75 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=image ext_mul=8746 ext_square=5008 ext_inv=1 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image stage=total ext_mul=205207 ext_square=141006 ext_inv=73 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=salt-bit-0 error=Composite stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=salt-bit-0 error=Composite stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=salt-bit-0 error=Composite stage=torsion ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
@@ -648,19 +648,19 @@ refuse level=NIST-III vector=s5_lvl3b.txt case=key-zero error=Origin stage=chain
 refuse level=NIST-III vector=s5_lvl3b.txt case=key-zero error=Origin stage=codomain ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=key-zero error=Origin stage=image ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-III vector=s5_lvl3b.txt case=key-zero error=Origin stage=total ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-dearest-refusal level=NIST-III vector=s5_lvl3b.txt case=both-top-bit-scaled error=Image ext_mul_and_square=470216 accept_ext_mul_and_square=515634 most_ext_inv_of_any_refusal=75 accept_ext_inv=77 above_accept=false
+dearest-refusal level=NIST-III vector=s5_lvl3b.txt case=salt-bit-282 error=Image ext_mul_and_square=349120 accept_ext_mul_and_square=358403 most_ext_inv_of_any_refusal=73 accept_ext_inv=75 above_accept=false
 refusals-without-a-vector level=NIST-III vector=s5_lvl3b.txt Basis
 accept level=NIST-V vector=s5_lvl5.txt stage=public ext_mul=8 ext_square=6 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=4
 accept level=NIST-V vector=s5_lvl5.txt stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-V vector=s5_lvl5.txt stage=torsion ext_mul=24112 ext_square=12042 ext_inv=3 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=4
-accept level=NIST-V vector=s5_lvl5.txt stage=scale ext_mul=29028 ext_square=18072 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_lvl5.txt stage=scale ext_mul=14514 ext_square=9036 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-V vector=s5_lvl5.txt stage=pairing ext_mul=30261 ext_square=14507 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_lvl5.txt stage=kernel ext_mul=112521 ext_square=84599 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_lvl5.txt stage=kernel ext_mul=41288 ext_square=24380 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-V vector=s5_lvl5.txt stage=chain1 ext_mul=79191 ext_square=63656 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-V vector=s5_lvl5.txt stage=chain2 ext_mul=79014 ext_square=63508 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-V vector=s5_lvl5.txt stage=codomain ext_mul=32 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_lvl5.txt stage=image ext_mul=55807 ext_square=39126 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_lvl5.txt stage=total ext_mul=409974 ext_square=295516 ext_inv=78 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+accept level=NIST-V vector=s5_lvl5.txt stage=image ext_mul=20748 ext_square=15012 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_lvl5.txt stage=total ext_mul=289168 ext_square=202147 ext_inv=76 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
 refuse level=NIST-V vector=s5_lvl5.txt case=both-y-negated error=Sign stage=public ext_mul=0 ext_square=1 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=both-y-negated error=Sign stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=both-y-negated error=Sign stage=torsion ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
@@ -686,25 +686,25 @@ refuse level=NIST-V vector=s5_lvl5.txt case=q-negated error=Pairing stage=total 
 refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=public ext_mul=8 ext_square=6 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=4
 refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=torsion ext_mul=24112 ext_square=12042 ext_inv=3 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=4
-refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=scale ext_mul=29028 ext_square=18072 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=scale ext_mul=14514 ext_square=9036 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=pairing ext_mul=30261 ext_square=14507 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=kernel ext_mul=112521 ext_square=84599 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=kernel ext_mul=41288 ext_square=24380 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=chain1 ext_mul=79191 ext_square=63656 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=chain2 ext_mul=79014 ext_square=63508 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=codomain ext_mul=4 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=image ext_mul=34 ext_square=12 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=total ext_mul=354173 ext_square=256402 ext_inv=75 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=image ext_mul=8517 ext_square=3006 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-V vector=s5_lvl5.txt case=shear-q-plus-p error=Codomain stage=total ext_mul=276909 ext_square=190141 ext_inv=73 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
 refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=public ext_mul=8 ext_square=6 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=4
 refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=torsion ext_mul=24112 ext_square=12042 ext_inv=3 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=4
-refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=scale ext_mul=29028 ext_square=18072 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=scale ext_mul=14514 ext_square=9036 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=pairing ext_mul=30261 ext_square=14507 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=kernel ext_mul=112521 ext_square=84599 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=kernel ext_mul=41288 ext_square=24380 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=chain1 ext_mul=79191 ext_square=63656 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=chain2 ext_mul=79014 ext_square=63508 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=codomain ext_mul=32 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=image ext_mul=18625 ext_square=13050 ext_inv=1 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=total ext_mul=372792 ext_square=269440 ext_inv=76 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
+refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=image ext_mul=12594 ext_square=7008 ext_inv=1 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image stage=total ext_mul=281014 ext_square=194143 ext_inv=74 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
 refuse level=NIST-V vector=s5_lvl5.txt case=salt-bit-0 error=Composite stage=public ext_mul=8 ext_square=6 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=4
 refuse level=NIST-V vector=s5_lvl5.txt case=salt-bit-0 error=Composite stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=salt-bit-0 error=Composite stage=torsion ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
@@ -782,19 +782,19 @@ refuse level=NIST-V vector=s5_lvl5.txt case=key-zero error=Origin stage=chain2 e
 refuse level=NIST-V vector=s5_lvl5.txt case=key-zero error=Origin stage=codomain ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=key-zero error=Origin stage=image ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5.txt case=key-zero error=Origin stage=total ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-dearest-refusal level=NIST-V vector=s5_lvl5.txt case=both-top-bit-scaled error=Image ext_mul_and_square=642232 accept_ext_mul_and_square=705490 most_ext_inv_of_any_refusal=76 accept_ext_inv=78 above_accept=false
+dearest-refusal level=NIST-V vector=s5_lvl5.txt case=other-prime-salt error=Image ext_mul_and_square=476147 accept_ext_mul_and_square=491315 most_ext_inv_of_any_refusal=74 accept_ext_inv=76 above_accept=false
 refusals-without-a-vector level=NIST-V vector=s5_lvl5.txt Basis
 accept level=NIST-V vector=s5_lvl5b.txt stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-V vector=s5_lvl5b.txt stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-V vector=s5_lvl5b.txt stage=torsion ext_mul=24111 ext_square=12041 ext_inv=2 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_lvl5b.txt stage=scale ext_mul=29300 ext_square=18168 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_lvl5b.txt stage=scale ext_mul=14650 ext_square=9084 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-V vector=s5_lvl5b.txt stage=pairing ext_mul=30264 ext_square=14507 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_lvl5b.txt stage=kernel ext_mul=112196 ext_square=84475 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_lvl5b.txt stage=kernel ext_mul=40963 ext_square=24256 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-V vector=s5_lvl5b.txt stage=chain1 ext_mul=79191 ext_square=63656 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-V vector=s5_lvl5b.txt stage=chain2 ext_mul=79014 ext_square=63508 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept level=NIST-V vector=s5_lvl5b.txt stage=codomain ext_mul=32 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_lvl5b.txt stage=image ext_mul=56215 ext_square=39270 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-accept level=NIST-V vector=s5_lvl5b.txt stage=total ext_mul=410331 ext_square=295630 ext_inv=77 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_lvl5b.txt stage=image ext_mul=20884 ext_square=15060 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+accept level=NIST-V vector=s5_lvl5b.txt stage=total ext_mul=289117 ext_square=202117 ext_inv=75 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=both-y-negated error=Sign stage=public ext_mul=0 ext_square=1 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=both-y-negated error=Sign stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=both-y-negated error=Sign stage=torsion ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
@@ -820,25 +820,25 @@ refuse level=NIST-V vector=s5_lvl5b.txt case=q-negated error=Pairing stage=total
 refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=torsion ext_mul=24111 ext_square=12041 ext_inv=2 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=scale ext_mul=29300 ext_square=18168 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=scale ext_mul=14650 ext_square=9084 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=pairing ext_mul=30264 ext_square=14507 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=kernel ext_mul=112196 ext_square=84475 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=kernel ext_mul=40963 ext_square=24256 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=chain1 ext_mul=79191 ext_square=63656 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=chain2 ext_mul=79014 ext_square=63508 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=codomain ext_mul=4 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=image ext_mul=34 ext_square=12 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=total ext_mul=354122 ext_square=256372 ext_inv=74 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=image ext_mul=8653 ext_square=3054 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-V vector=s5_lvl5b.txt case=shear-q-plus-p error=Codomain stage=total ext_mul=276858 ext_square=190111 ext_inv=72 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=torsion ext_mul=24111 ext_square=12041 ext_inv=2 ext_sqrt=2 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=scale ext_mul=29300 ext_square=18168 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=scale ext_mul=14650 ext_square=9084 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=pairing ext_mul=30264 ext_square=14507 ext_inv=8 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=kernel ext_mul=112196 ext_square=84475 ext_inv=5 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=kernel ext_mul=40963 ext_square=24256 ext_inv=3 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=chain1 ext_mul=79191 ext_square=63656 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=chain2 ext_mul=79014 ext_square=63508 ext_inv=28 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=codomain ext_mul=32 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=image ext_mul=18761 ext_square=13098 ext_inv=1 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=total ext_mul=372877 ext_square=269458 ext_inv=75 ext_sqrt=7 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=image ext_mul=12730 ext_square=7056 ext_inv=1 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
+refuse level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image stage=total ext_mul=280963 ext_square=194113 ext_inv=73 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=salt-bit-0 error=Composite stage=public ext_mul=8 ext_square=5 ext_inv=3 ext_sqrt=3 ext_is_square=2 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=salt-bit-0 error=Composite stage=challenge ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=salt-bit-0 error=Composite stage=torsion ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
@@ -916,5 +916,5 @@ refuse level=NIST-V vector=s5_lvl5b.txt case=key-zero error=Origin stage=chain2 
 refuse level=NIST-V vector=s5_lvl5b.txt case=key-zero error=Origin stage=codomain ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=key-zero error=Origin stage=image ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 refuse level=NIST-V vector=s5_lvl5b.txt case=key-zero error=Origin stage=total ext_mul=0 ext_square=0 ext_inv=0 ext_sqrt=0 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
-dearest-refusal level=NIST-V vector=s5_lvl5b.txt case=both-top-bit-scaled error=Image ext_mul_and_square=642335 accept_ext_mul_and_square=705961 most_ext_inv_of_any_refusal=75 accept_ext_inv=77 above_accept=false
+dearest-refusal level=NIST-V vector=s5_lvl5b.txt case=salt-bit-164 error=Image ext_mul_and_square=476164 accept_ext_mul_and_square=491234 most_ext_inv_of_any_refusal=73 accept_ext_inv=75 above_accept=false
 refusals-without-a-vector level=NIST-V vector=s5_lvl5b.txt Basis

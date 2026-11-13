@@ -13,14 +13,20 @@ use prism_isogeny::chain::{chain_surface, SurfaceStop};
 #[cfg(test)]
 use prism_isogeny::gluing::{Couple, Kernel};
 #[cfg(test)]
+use prism_isogeny::jac::Jac;
+#[cfg(test)]
 use prism_isogeny::jac::{add, to_xz};
-use prism_isogeny::jac::{lift_basis, Jac};
+#[cfg(test)]
+use prism_isogeny::montgomery::Montgomery;
+use prism_isogeny::montgomery::Xz;
 #[cfg(test)]
 use prism_isogeny::montgomery::{a24, ladder};
-use prism_isogeny::montgomery::{Montgomery, Xz};
-use prism_isogeny::pairing::{mul, neg_square_mod_pow2, pow, weil};
-use prism_isogeny::torsion::{double_times, even_basis, starting_basis, EvenBasis};
+use prism_isogeny::pairing::{neg_square_mod_pow2, pow, weil};
+#[cfg(test)]
+use prism_isogeny::torsion::EvenBasis;
+use prism_isogeny::torsion::{double_times, even_basis, starting_basis};
 
+use crate::accept::Lifted;
 use crate::basis::basis_hint;
 use crate::challenge::ChallengeScalar;
 use crate::identity::KeyIdentity;
@@ -88,11 +94,15 @@ pub fn relate_points<L: Level>(
     // Before either chain. A mismatch is `Pairing` on a public key and on
     // the starting curve alike; the degree-`q` witness calls the chain
     // helper itself and does not come through here.
-    if !pairing_holds::<L>(vk, &even, sig, p_sig, q_sig, scalar) {
+    Stage::Pairing.enter();
+    let Some(lifted) = crate::accept::lift::<L>(vk, &even, sig, p_sig, q_sig, scalar) else {
+        return Err(VerifyError::Pairing);
+    };
+    if !pairing_holds::<L>(&lifted, scalar) {
         return Err(VerifyError::Pairing);
     }
     let _ = push;
-    crate::accept::check::<L>(vk, &even, sig, p_sig, q_sig, scalar)
+    crate::accept::check::<L>(&lifted, scalar)
 }
 
 /// `e_{2^e}([s]P_sig, [s]Q_sig) = e_{2^e}(P, Q)^q`.
@@ -100,38 +110,13 @@ pub fn relate_points<L: Level>(
 /// `Q` is the cleared difference. `P − Q` for the lift is `R`, the cleared
 /// point whose full-point abscissa is `−x(P) − A`. A global sign on the
 /// lifted pair cancels in the pairing.
-fn pairing_holds<L: Level>(
-    vk: L::Ext,
-    even: &EvenBasis<L::Ext>,
-    sig: L::Ext,
-    p_sig: AffinePoint<L>,
-    q_sig: AffinePoint<L>,
-    scalar: &[u8],
-) -> bool {
+fn pairing_holds<L: Level>(lifted: &Lifted<L::Ext>, scalar: &[u8]) -> bool {
     Stage::Pairing.enter();
-    let Some((vk_curve, p_vk, q_vk)) =
-        lift_basis(Montgomery::normalized(vk), even.p, even.difference, even.q)
-    else {
-        return false;
-    };
-    let sig_curve = Montgomery::normalized(sig);
-    let one = L::Ext::one();
-    let p = Jac {
-        x: p_sig.x,
-        y: p_sig.y,
-        z: one,
-    };
-    let q = Jac {
-        x: q_sig.x,
-        y: q_sig.y,
-        z: one,
-    };
-    Stage::Scale.enter();
-    let (r1, r2) = (mul(sig_curve, p, scalar), mul(sig_curve, q, scalar));
-    Stage::Pairing.enter();
+    let [r1, r2] = lifted.scaled;
+    let [p_vk, q_vk] = lifted.vk;
     let (Some(left), Some(right)) = (
-        weil(sig_curve, r1, r2, L::E),
-        weil(vk_curve, p_vk, q_vk, L::E),
+        weil(lifted.curves[1], r1, r2, L::E),
+        weil(lifted.vk_curve, p_vk, q_vk, L::E),
     ) else {
         return false;
     };
