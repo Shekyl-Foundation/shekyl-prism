@@ -61,6 +61,7 @@ Diagnosis (agent): three layers. (1) The model re-completed `M1`; in the referen
 Result, after `177eae5` and `8351588`: Ran, confirmed at level I on two keys; `91a03a6` confirms levels III and V.
 Conclusion: the dual-structure construction works on real §5 signatures at all three levels. Pairing-level validation of vectors is insufficient.
 Who: agent diagnosed and fixed / reviewer read the diffs.
+Corrections: 2026-11-13, raised in review of PR #17. The identity `e(R₁, R₂) = e(P₁, P₂)^q` holds for determinant +1 images of the preimage pair only; a determinant −1 image inverts the pairing, and the verifier's tests refuse a swap of the two points at the pairing check. The limit of a pairing check stands on the determinant +1 cases of model negative row 14. Open: this entry, the model `REPORT.md` and `177eae5` describe the faulty export as a determinant −1 shear that the pairing checks accepted. Both cannot hold for the identity as now checked; which of the two descriptions is wrong (the determinant, given the free lift sign, or what the model's checks of that date compared) is not established.
 
 ### 2026-11-11 — Negatives, basis rule, pairing check
 Done and Ran:
@@ -121,6 +122,7 @@ Result: Ran. All 25 cited hashes exist on `dev`. Six statements were wrong or un
 - The 6,000-sample check of the closed-form matrices was marked Ran. No output of it is committed. The claim is Derived, with the committed evidence named.
 - The coding agent was described as Claude Code throughout. The machine's records show three tools (`CONTRIBUTIONS.md`).
 - "Prime density near 1%" for the PR #14 measurement is replaced by the measured figures.
+Two more were raised by the automated review of this pull request and are corrected the same way: ledger C6 said the pairing identity holds for determinant ±1 images (it holds for +1; see the correction under the 2026-11-10 entry), and ledger C11 said signatures came "at the first candidate" where the records show the first candidate of prime degree.
 Not checkable from the repository, left as written: the rulings and their dates, the reviewer's own errors, the email to the authors, and the paper's level I figure of about `2^127` (the PDF's parameter table shows 127 at level I; the sentence was not traced further).
 Open: `SECURITY_REVIEW.md` still says no notification to the paper's authors has been sent, against the 2026-11-09 entry above.
 Conclusion: from this entry on, every pull request adds its own entry here and updates the ledger rows it touches, in the same pull request.
