@@ -10,6 +10,11 @@ the changes.
 
 ## Rules
 
+- **Lab notes, every pull request:** each pull request adds its own dated
+  entry to `docs/lab/NOTEBOOK.md` and updates the rows of
+  `docs/lab/LEDGER.md` whose evidence it changes, in the same pull request.
+  The entry format and the rules for it are in `docs/lab/README.md`.
+
 - **Final task always:** When creating or executing a Plan, the final task
   must be: read and update relevant documentation.
 - **Before closing a Plan:** read the docs that cover the changed area
