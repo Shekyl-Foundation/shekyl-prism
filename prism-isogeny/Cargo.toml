@@ -7,6 +7,13 @@ rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
 
+[features]
+default = []
+# The routines an optimized routine replaced, kept as its reference. The
+# crate's own tests see them without this; the fuzz crate turns it on to
+# compare the two. Nothing shipped enables it.
+oracle = []
+
 [dependencies]
 prism-field = { workspace = true }
 

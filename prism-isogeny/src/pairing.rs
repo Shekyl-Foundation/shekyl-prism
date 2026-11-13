@@ -32,56 +32,74 @@ fn to_affine<F: Field>(point: Jac<F>) -> Option<Aff<F>> {
     })
 }
 
-/// One Miller doubling. `None` in the point means `[2]T = O`.
-fn double_step<F: Field>(
-    curve: Montgomery<F>,
-    t: Aff<F>,
-    q: Aff<F>,
-) -> Option<(F, Option<Aff<F>>)> {
-    let two_y = t.y.add(t.y);
-    if two_y.is_zero() {
-        let vertical = q.x.sub(t.x);
+/// `f_{2^k, P}(Q)` as a fraction, numerator then denominator.
+///
+/// The running point `T` stays in Jacobian coordinates and no step inverts.
+/// With `T = (X, Y, Z)`, `M = 3X² + Z²(2aX + Z²)` and `Z₃ = 2YZ`, the
+/// tangent at `T` evaluated at the affine `Q = (x, y)` is
+/// `(2Y(yZ³ − Y) − M(xZ² − X)) / (Z₃Z²)`, and the vertical through `[2]T`
+/// is `(xZ₃² − X₃) / Z₃²`. Their quotient is the step's factor
+/// `line · Z₃ / (Z² · vertical)`, which is the same field element the
+/// affine loop multiplies in.
+///
+/// Every factor is tested for zero at the step it arises, as the affine
+/// loop does: a product carried to the end would hide which step failed
+/// and could turn a refusal into a value. `None` in exactly these cases:
+/// a zero tangent value, a zero vertical value, `T` of order two before
+/// the last step, and `T` not of order two at the last step.
+fn miller<F: Field>(curve: Montgomery<F>, p: Jac<F>, q: Aff<F>, log_order: u32) -> Option<(F, F)> {
+    if p.z.is_zero() {
+        return None;
+    }
+    let mut t = p;
+    let mut z2 = t.z.square();
+    // `x(Q)·Z² − X`: the vertical through `T` at `Q`, up to `Z²`.
+    let mut dx = q.x.mul(z2).sub(t.x);
+    let mut numerator = F::one();
+    let mut denominator = F::one();
+    for step in 0..log_order {
+        if t.y.is_zero() {
+            // `[2]T = O`. The step's factor is the vertical through `T`.
+            if dx.is_zero() || step + 1 != log_order {
+                return None;
+            }
+            return Some((numerator.square().mul(dx), denominator.square().mul(z2)));
+        }
+        let a_x = curve.a.mul(t.x);
+        let x2 = t.x.square();
+        let m = x2.add(x2).add(x2).add(z2.mul(a_x.add(a_x).add(z2)));
+        let dy = q.y.mul(z2).mul(t.z).sub(t.y);
+        let line = dy.mul(t.y.add(t.y)).sub(m.mul(dx));
+        if line.is_zero() {
+            return None;
+        }
+        // `[2]T`, by the formulas of `jac::dbl`.
+        let mut z3 = t.y.mul(t.z);
+        z3 = z3.add(z3);
+        let z3_2 = z3.square();
+        let y2 = t.y.square();
+        let two_y2 = y2.add(y2);
+        let four_x_y2 = two_y2.mul(t.x.add(t.x));
+        let x3 = m
+            .square()
+            .sub(z3_2.mul(curve.a))
+            .sub(four_x_y2)
+            .sub(four_x_y2);
+        let four_y4 = two_y2.square();
+        let y3 = four_x_y2.sub(x3).mul(m).sub(four_y4).sub(four_y4);
+        let vertical = q.x.mul(z3_2).sub(x3);
         if vertical.is_zero() {
             return None;
         }
-        return Some((vertical, None));
-    }
-    let slope_num =
-        t.x.square()
-            .mul(F::from_u64(3))
-            .add(curve.a.mul(t.x).mul(F::from_u64(2)))
-            .add(F::one());
-    let slope = slope_num.mul(two_y.inv()?);
-    let line = q.y.sub(t.y).sub(slope.mul(q.x.sub(t.x)));
-    if line.is_zero() {
-        return None;
-    }
-    let x3 = slope.square().sub(curve.a).sub(t.x).sub(t.x);
-    let y3 = slope.mul(t.x.sub(x3)).sub(t.y);
-    let denom = q.x.sub(x3);
-    if denom.is_zero() {
-        return None;
-    }
-    Some((line.mul(denom.inv()?), Some(Aff { x: x3, y: y3 })))
-}
-
-/// `f_{2^k, P}(Q)`, the Miller function.
-fn miller<F: Field>(curve: Montgomery<F>, p: Jac<F>, q: Jac<F>, log_order: u32) -> Option<F> {
-    let mut t = to_affine(p)?;
-    let target = to_affine(q)?;
-    let mut value = F::one();
-    for step in 0..log_order {
-        let (contribution, next) = double_step(curve, t, target)?;
-        value = value.square().mul(contribution);
-        match next {
-            Some(point) => t = point,
-            None => {
-                if step + 1 != log_order {
-                    return None;
-                }
-                return Some(value);
-            }
-        }
+        numerator = numerator.square().mul(line).mul(z3);
+        denominator = denominator.square().mul(z2).mul(vertical);
+        t = Jac {
+            x: x3,
+            y: y3,
+            z: z3,
+        };
+        z2 = z3_2;
+        dx = vertical;
     }
     // If the final doubling never reached infinity, P is not of the
     // claimed order. A truncated Miller function is not a Weil pairing.
@@ -104,13 +122,94 @@ fn on_curve<F: Field>(curve: Montgomery<F>, p: Jac<F>) -> bool {
 /// `e_{2^k}(P, Q)`. `log_order` is `k`. This verification routine requires
 /// both points on the normalized curve with exact order `2^k`; it refuses
 /// lower-order inputs, rather than implementing all degenerate pairings.
+///
+/// Three inversions whatever `k` is: one for each point's affine form and
+/// one for the quotient of the two Miller values.
 pub fn weil<F: Field>(curve: Montgomery<F>, p: Jac<F>, q: Jac<F>, log_order: u32) -> Option<F> {
     if !curve.c.same(F::one()) || !on_curve(curve, p) || !on_curve(curve, q) {
         return None;
     }
-    let numerator = miller(curve, p, q, log_order)?;
-    let denominator = miller(curve, q, p, log_order)?;
-    Some(numerator.mul(denominator.inv()?))
+    let (p_affine, q_affine) = (to_affine(p)?, to_affine(q)?);
+    let (n1, d1) = miller(curve, p, q_affine, log_order)?;
+    let (n2, d2) = miller(curve, q, p_affine, log_order)?;
+    Some(n1.mul(d2).mul(d1.mul(n2).inv()?))
+}
+
+/// The affine Miller loop this module used before its loop stopped
+/// inverting: two inversions a step. It is the reference the loop above is
+/// compared with, on values and on refusals, and nothing else calls it.
+#[cfg(any(test, feature = "oracle"))]
+pub mod oracle {
+    use super::{on_curve, to_affine, Aff};
+    use crate::jac::Jac;
+    use crate::montgomery::Montgomery;
+    use prism_field::Field;
+
+    /// One Miller doubling. `None` in the point means `[2]T = O`.
+    pub(super) fn double_step<F: Field>(
+        curve: Montgomery<F>,
+        t: Aff<F>,
+        q: Aff<F>,
+    ) -> Option<(F, Option<Aff<F>>)> {
+        let two_y = t.y.add(t.y);
+        if two_y.is_zero() {
+            let vertical = q.x.sub(t.x);
+            if vertical.is_zero() {
+                return None;
+            }
+            return Some((vertical, None));
+        }
+        let slope_num =
+            t.x.square()
+                .mul(F::from_u64(3))
+                .add(curve.a.mul(t.x).mul(F::from_u64(2)))
+                .add(F::one());
+        let slope = slope_num.mul(two_y.inv()?);
+        let line = q.y.sub(t.y).sub(slope.mul(q.x.sub(t.x)));
+        if line.is_zero() {
+            return None;
+        }
+        let x3 = slope.square().sub(curve.a).sub(t.x).sub(t.x);
+        let y3 = slope.mul(t.x.sub(x3)).sub(t.y);
+        let denom = q.x.sub(x3);
+        if denom.is_zero() {
+            return None;
+        }
+        Some((line.mul(denom.inv()?), Some(Aff { x: x3, y: y3 })))
+    }
+
+    /// `f_{2^k, P}(Q)`, the Miller function.
+    fn miller<F: Field>(curve: Montgomery<F>, p: Jac<F>, q: Jac<F>, log_order: u32) -> Option<F> {
+        let mut t = to_affine(p)?;
+        let target = to_affine(q)?;
+        let mut value = F::one();
+        for step in 0..log_order {
+            let (contribution, next) = double_step(curve, t, target)?;
+            value = value.square().mul(contribution);
+            match next {
+                Some(point) => t = point,
+                None => {
+                    if step + 1 != log_order {
+                        return None;
+                    }
+                    return Some(value);
+                }
+            }
+        }
+        // If the final doubling never reached infinity, P is not of the
+        // claimed order. A truncated Miller function is not a Weil pairing.
+        None
+    }
+
+    /// `e_{2^k}(P, Q)` by the affine loop.
+    pub fn weil<F: Field>(curve: Montgomery<F>, p: Jac<F>, q: Jac<F>, log_order: u32) -> Option<F> {
+        if !curve.c.same(F::one()) || !on_curve(curve, p) || !on_curve(curve, q) {
+            return None;
+        }
+        let numerator = miller(curve, p, q, log_order)?;
+        let denominator = miller(curve, q, p, log_order)?;
+        Some(numerator.mul(denominator.inv()?))
+    }
 }
 
 /// `[scalar] point`, `scalar` little-endian.
@@ -334,11 +433,297 @@ mod tests {
             x: Fp2::new(0, 2640),
             y: Fp2::new(2640, 2640),
         };
-        let (_line, doubled) = super::double_step(curve, p, q).expect("double");
+        let (_line, doubled) = super::oracle::double_step(curve, p, q).expect("double");
         let doubled = doubled.expect("order above 2");
         let y2 = doubled.y.square();
         let x2 = doubled.x.square();
         let rhs = doubled.x.mul(x2).add(doubled.x);
         assert!(y2.same(rhs));
+    }
+
+    /// The loop that does not invert against the affine loop it replaced,
+    /// on the committed signatures' own curves and points.
+    mod differential {
+        use super::super::{mul, oracle, weil};
+        use crate::jac::{add, dbl_iter, Jac};
+        use crate::montgomery::Montgomery;
+        use prism_field::{Field, Level, Level1, Level3, Level5};
+
+        const VECTORS: [&str; 6] = [
+            include_str!("../../prism-verify/testdata/s5_lvl1.txt"),
+            include_str!("../../prism-verify/testdata/s5_lvl1b.txt"),
+            include_str!("../../prism-verify/testdata/s5_lvl3.txt"),
+            include_str!("../../prism-verify/testdata/s5_lvl3b.txt"),
+            include_str!("../../prism-verify/testdata/s5_lvl5.txt"),
+            include_str!("../../prism-verify/testdata/s5_lvl5b.txt"),
+        ];
+
+        fn element<L: Level>(text: &str, name: &str) -> L::Ext {
+            let hex = text
+                .lines()
+                .find_map(|line| line.strip_prefix(name))
+                .expect("the vector has this row");
+            let bytes: Vec<u8> = hex
+                .as_bytes()
+                .chunks_exact(2)
+                .map(|pair| u8::from_str_radix(core::str::from_utf8(pair).unwrap(), 16).unwrap())
+                .collect();
+            L::ext_decode(&bytes).expect("a committed element is canonical")
+        }
+
+        type Point<L> = Jac<<L as Level>::Ext>;
+        type Curve<L> = Montgomery<<L as Level>::Ext>;
+
+        /// The response curve and its two points, a basis of the `2^e`-torsion.
+        fn basis<L: Level>(text: &str) -> (Curve<L>, Point<L>, Point<L>) {
+            let at = |x, y| Jac {
+                x: element::<L>(text, x),
+                y: element::<L>(text, y),
+                z: L::Ext::one(),
+            };
+            (
+                Montgomery::normalized(element::<L>(text, "E ")),
+                at("Px ", "Py "),
+                at("Qx ", "Qy "),
+            )
+        }
+
+        /// xorshift64*: a fixed stream, so a failure names its case.
+        struct Stream(u64);
+
+        impl Stream {
+            fn next(&mut self) -> u64 {
+                self.0 ^= self.0 >> 12;
+                self.0 ^= self.0 << 25;
+                self.0 ^= self.0 >> 27;
+                self.0.wrapping_mul(0x2545_f491_4f6c_dd1d)
+            }
+
+            /// A scalar below `2^e`, with its low bit as asked.
+            fn scalar<L: Level>(&mut self, odd: Option<bool>) -> Vec<u8> {
+                let mut bytes = vec![0u8; (L::E as usize).div_ceil(8)];
+                for chunk in bytes.chunks_mut(8) {
+                    let word = self.next().to_le_bytes();
+                    chunk.copy_from_slice(&word[..chunk.len()]);
+                }
+                match odd {
+                    Some(true) => bytes[0] |= 1,
+                    Some(false) => bytes[0] &= !1,
+                    None => {}
+                }
+                bytes
+            }
+        }
+
+        /// Both loops on one input: the same refusal, or the same element.
+        fn agree<F: Field>(curve: Montgomery<F>, p: Jac<F>, q: Jac<F>, k: u32, case: &str) -> bool {
+            let new = weil(curve, p, q, k);
+            let old = oracle::weil(curve, p, q, k);
+            match (new, old) {
+                (None, None) => false,
+                (Some(a), Some(b)) => {
+                    assert!(a.same(b), "{case}: the two loops give different values");
+                    true
+                }
+                (new, _) => panic!(
+                    "{case}: the loop without inversions {} where the affine loop did not",
+                    if new.is_some() {
+                        "gave a value"
+                    } else {
+                        "refused"
+                    }
+                ),
+            }
+        }
+
+        fn combine<F: Field>(
+            curve: Montgomery<F>,
+            p: Jac<F>,
+            q: Jac<F>,
+            a: &[u8],
+            b: &[u8],
+        ) -> Jac<F> {
+            add(curve, mul(curve, p, a), mul(curve, q, b))
+        }
+
+        /// `pairs` full-order independent pairs, which must have a value,
+        /// then `pairs / 4` unconstrained pairs, which may be refused.
+        fn random<L: Level>(text: &str, seed: u64, pairs: u32) {
+            let (curve, p, q) = basis::<L>(text);
+            let mut stream = Stream(seed);
+            for n in 0..pairs {
+                // Odd on the diagonal and even off it: determinant odd, so
+                // the images are again a basis of the full torsion.
+                let (a, b) = (
+                    stream.scalar::<L>(Some(true)),
+                    stream.scalar::<L>(Some(false)),
+                );
+                let (c, d) = (
+                    stream.scalar::<L>(Some(false)),
+                    stream.scalar::<L>(Some(true)),
+                );
+                let (r, t) = (combine(curve, p, q, &a, &b), combine(curve, p, q, &c, &d));
+                let case = format!("{} basis pair {n}", L::NAME);
+                assert!(
+                    agree(curve, r, t, L::E, &case),
+                    "{case}: a basis has a pairing"
+                );
+            }
+            for n in 0..pairs / 4 {
+                let (a, b) = (stream.scalar::<L>(None), stream.scalar::<L>(None));
+                let (c, d) = (stream.scalar::<L>(None), stream.scalar::<L>(None));
+                let (r, t) = (combine(curve, p, q, &a, &b), combine(curve, p, q, &c, &d));
+                agree(curve, r, t, L::E, &format!("{} free pair {n}", L::NAME));
+            }
+        }
+
+        /// Inputs a forger would choose. Each must be treated alike by both
+        /// loops; `values` counts those that have a pairing value at all.
+        fn adversarial<L: Level>(text: &str, seed: u64) -> u32 {
+            let (curve, p, q) = basis::<L>(text);
+            let e = L::E;
+            let negate = |point: Jac<L::Ext>| Jac {
+                y: point.y.negate(),
+                ..point
+            };
+            let mut stream = Stream(seed);
+            let mut cases: Vec<(String, Point<L>, Point<L>)> = vec![
+                ("the basis".into(), p, q),
+                ("Q = P".into(), p, p),
+                ("Q = -P".into(), p, negate(p)),
+                ("P = infinity".into(), Jac::infinity(), q),
+                ("Q = infinity".into(), p, Jac::infinity()),
+                (
+                    "P off the curve".into(),
+                    Jac {
+                        y: p.y.add(L::Ext::one()),
+                        ..p
+                    },
+                    q,
+                ),
+                (
+                    "Q off the curve".into(),
+                    p,
+                    Jac {
+                        x: q.x.add(L::Ext::one()),
+                        ..q
+                    },
+                ),
+            ];
+            for k in [2u8, 3, 4, 5, 255] {
+                cases.push((format!("Q = [{k}]P"), p, mul(curve, p, &[k])));
+            }
+            for n in 0..4 {
+                let k = stream.scalar::<L>(None);
+                cases.push((format!("Q = [random {n}]P"), p, mul(curve, p, &k)));
+            }
+            // Either point of lower order, down to order two and one.
+            for down in [1, 2, e - 2, e - 1, e] {
+                cases.push((
+                    format!("P doubled {down} times"),
+                    dbl_iter(curve, p, down),
+                    q,
+                ));
+                cases.push((
+                    format!("Q doubled {down} times"),
+                    p,
+                    dbl_iter(curve, q, down),
+                ));
+            }
+            // `Q = [2^j]P + T` for each point `T` of order two.
+            let two_torsion = [
+                dbl_iter(curve, p, e - 1),
+                dbl_iter(curve, q, e - 1),
+                add(curve, dbl_iter(curve, p, e - 1), dbl_iter(curve, q, e - 1)),
+            ];
+            for (name, torsion) in ["P", "Q", "P+Q"].iter().zip(two_torsion) {
+                for j in [0, 1, e - 2, e - 1] {
+                    cases.push((
+                        format!("Q = [2^{j}]P + [2^(e-1)]({name})"),
+                        p,
+                        add(curve, dbl_iter(curve, p, j), torsion),
+                    ));
+                    cases.push((
+                        format!("P = [2^{j}]Q + [2^(e-1)]({name})"),
+                        add(curve, dbl_iter(curve, q, j), torsion),
+                        q,
+                    ));
+                }
+            }
+            let mut values = 0;
+            for (name, r, t) in cases {
+                let case = format!("{} {name}", L::NAME);
+                values += u32::from(agree(curve, r, t, e, &case));
+                // The same pair at one doubling too few and one too many.
+                agree(
+                    curve,
+                    r,
+                    t,
+                    e - 1,
+                    &format!("{case}, order 2^(e-1) claimed"),
+                );
+                agree(
+                    curve,
+                    r,
+                    t,
+                    e + 1,
+                    &format!("{case}, order 2^(e+1) claimed"),
+                );
+            }
+            // A curve constant other than one is refused before any loop.
+            // The comparison tells values apart: `e(Q, P)` is the inverse of
+            // `e(P, Q)`, and a pairing of full order is not its own inverse.
+            let forward = weil(curve, p, q, e).expect("the basis has a pairing");
+            let backward = oracle::weil(curve, q, p, e).expect("and so does its swap");
+            assert!(!forward.same(backward) && forward.mul(backward).same(L::Ext::one()));
+            let scaled = Montgomery {
+                c: L::Ext::from_u64(2),
+                ..curve
+            };
+            assert!(!agree(scaled, p, q, e, "c = 2"));
+            values
+        }
+
+        fn every_level(run: impl Fn(usize, &str)) {
+            for (n, text) in VECTORS.iter().enumerate() {
+                run(n, text);
+            }
+        }
+
+        #[test]
+        fn adversarial_inputs_are_refused_or_valued_alike() {
+            every_level(|n, text| {
+                let seed = 0x5052_4953_4d00_0000 + n as u64;
+                let values = match n / 2 {
+                    0 => adversarial::<Level1>(text, seed),
+                    1 => adversarial::<Level3>(text, seed),
+                    _ => adversarial::<Level5>(text, seed),
+                };
+                // The honest basis has a value, so the set is not all
+                // refusals; most of the rest must be refused.
+                assert!(values >= 1, "vector {n}: the basis itself was refused");
+            });
+        }
+
+        #[test]
+        fn a_sample_of_random_pairs_agrees() {
+            every_level(|n, text| match n / 2 {
+                0 => random::<Level1>(text, 11 + n as u64, 8),
+                1 => random::<Level3>(text, 11 + n as u64, 8),
+                _ => random::<Level5>(text, 11 + n as u64, 8),
+            });
+        }
+
+        /// 1,000 full-order pairs and 250 unconstrained ones per level.
+        /// Minutes in a debug build, so CI runs it in release by name.
+        #[test]
+        #[ignore = "long: run in release with --ignored"]
+        fn a_thousand_random_pairs_per_level_agree() {
+            every_level(|n, text| match n / 2 {
+                0 => random::<Level1>(text, 1000 + n as u64, 500),
+                1 => random::<Level3>(text, 1000 + n as u64, 500),
+                _ => random::<Level5>(text, 1000 + n as u64, 500),
+            });
+        }
     }
 }

@@ -125,10 +125,15 @@ and residuosity tests (4, 6, 4) did not move.
 | squaring | multiplications | 184,098 | 281,720 | 384,048 |
 | | squarings | 135,822 | 210,624 | 287,518 |
 | | inversions | 4,019 | 6,072 | 8,056 |
+| the pairing without inversions | multiplications | 191,028 | 292,234 | 398,034 |
+| | squarings | 139,788 | 216,638 | 295,516 |
+| | inversions | 2,033 | 3,062 | 4,054 |
 
 Squaring turned 39% of the multiplications into squarings and removed 7%
 outright (products that the doubling and addition formulas computed two
-or three times). No base-field call is made directly at any stage, and no
+or three times). The Miller loop without inversions spends about 11,000
+more multiplications and squarings at level I to remove 1,986 inversions,
+each worth about 40 multiplications. No base-field call is made directly at any stage, and no
 refusal costs more than acceptance: the dearest negative of every primary
 vector is `Image` at about 90% of the accepted cost.
 

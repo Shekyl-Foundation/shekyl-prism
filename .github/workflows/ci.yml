@@ -116,6 +116,15 @@ jobs:
         run: cargo test --workspace --locked
       - name: Release
         run: cargo test --workspace --locked --release
+      # Minutes in a debug build, so it is ignored by default and run here
+      # in release by its full name. The log must show it ran: a renamed
+      # test would otherwise match nothing and pass.
+      - name: The pairing equals its affine reference on 1,000 pairs a level
+        run: |
+          set -euo pipefail
+          cargo test -p prism-isogeny --release --locked -- --ignored --exact \
+            pairing::tests::differential::a_thousand_random_pairs_per_level_agree > pairs.log 2>&1 || { cat pairs.log; exit 1; }
+          grep -q 'test result: ok. 1 passed' pairs.log
       - name: Research width keeps length ahead of origin
         run: cargo test -p prism-verify --features research-reduced-width --locked --lib short_signature_is_length_before_origin
 
@@ -139,6 +148,15 @@ jobs:
         run: cargo test --workspace --locked
       - name: Release
         run: cargo test --workspace --locked --release
+      # Minutes in a debug build, so it is ignored by default and run here
+      # in release by its full name. The log must show it ran: a renamed
+      # test would otherwise match nothing and pass.
+      - name: The pairing equals its affine reference on 1,000 pairs a level
+        run: |
+          set -euo pipefail
+          cargo test -p prism-isogeny --release --locked -- --ignored --exact \
+            pairing::tests::differential::a_thousand_random_pairs_per_level_agree > pairs.log 2>&1 || { cat pairs.log; exit 1; }
+          grep -q 'test result: ok. 1 passed' pairs.log
       - name: Research width keeps length ahead of origin
         run: cargo test -p prism-verify --features research-reduced-width --locked --lib short_signature_is_length_before_origin
 

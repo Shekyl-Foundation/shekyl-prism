@@ -12,6 +12,9 @@ cargo-fuzz = true
 libfuzzer-sys = "=0.4.13"
 prism-field = { version = "0.1.0", path = "../prism-field" }
 prism-verify = { version = "0.1.0", path = "../prism-verify" }
+# `oracle` exposes the routines an optimized routine replaced, so a target
+# can compare the two.
+prism-isogeny = { version = "0.1.0", path = "../prism-isogeny", features = ["oracle"] }
 
 # Own workspace, so the parent workspace does not try to build libFuzzer.
 [workspace]
@@ -54,6 +57,13 @@ bench = false
 [[bin]]
 name = "field_square"
 path = "fuzz_targets/field_square.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "weil_matches_affine"
+path = "fuzz_targets/weil_matches_affine.rs"
 test = false
 doc = false
 bench = false

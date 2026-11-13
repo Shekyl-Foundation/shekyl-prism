@@ -23,4 +23,16 @@ for path in paths:
         directory = ROOT / "fuzz/corpus" / target
         directory.mkdir(parents=True, exist_ok=True)
         (directory / path.stem).write_bytes(data)
+# weil_matches_affine reads a level byte, an order byte and four scalars.
+# The seeds are the identity pair at each level and claimed order, and one
+# generic pair per level; the fuzzer finds the degenerate pairs from there.
+directory = ROOT / "fuzz/corpus/weil_matches_affine"
+directory.mkdir(parents=True, exist_ok=True)
+for which, width in enumerate((31, 47, 63)):
+    for order in range(3):
+        one = (1).to_bytes(width, "little")
+        zero = bytes(width)
+        (directory / f"basis-{which}-{order}").write_bytes(bytes([which, order]) + one + zero + zero + one)
+    generic = bytes((7 * n + 3) % 251 for n in range(4 * width))
+    (directory / f"generic-{which}").write_bytes(bytes([which, 1]) + generic)
 print(f"seeded {len(paths)} honest signatures")
