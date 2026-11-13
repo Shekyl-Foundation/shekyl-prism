@@ -7,14 +7,14 @@
 
 use core::cmp::Ordering;
 
-use prism_field::{ChallengeIndex, Field, Level};
+use prism_field::{Field, Level, Salt};
 
 use crate::VerifyError;
 
 /// Position of each field element in the signature's prefix.
 ///
 /// The layout is the table in `docs/VERIFIER_SPEC.md`:
-/// `A_sig ‖ x(P) ‖ y(P) ‖ x(Q) ‖ y(Q) ‖ j`.
+/// `A_sig ‖ x(P) ‖ y(P) ‖ x(Q) ‖ y(Q) ‖ salt`.
 mod at {
     pub(super) const CURVE: usize = 0;
     pub(super) const P_X: usize = 1;
@@ -44,8 +44,8 @@ pub struct Response<L: Level> {
     pub curve: L::Ext,
     pub p: AffinePoint<L>,
     pub q: AffinePoint<L>,
-    /// The challenge index the signer searched for.
-    pub index: ChallengeIndex,
+    /// Public salt. Every byte pattern of the row's salt length is valid.
+    pub salt: L::Salt,
 }
 
 impl<L: Level> Response<L> {
@@ -70,7 +70,7 @@ impl<L: Level> Response<L> {
                 x: element::<L>(signature, at::Q_X)?,
                 y: element::<L>(signature, at::Q_Y)?,
             },
-            index: index::<L>(signature)?,
+            salt: salt::<L>(signature)?,
         })
     }
 
@@ -81,7 +81,7 @@ impl<L: Level> Response<L> {
         for element in [self.curve, self.p.x, self.p.y, self.q.x, self.q.y] {
             out.extend_from_slice(&L::ext_encode(element));
         }
-        out.extend_from_slice(&self.index.to_canonical_bytes());
+        out.extend_from_slice(self.salt.as_bytes());
         out
     }
 }
@@ -94,13 +94,9 @@ fn element<L: Level>(signature: &[u8], position: usize) -> Result<L::Ext, Verify
         .ok_or(VerifyError::Canonical)
 }
 
-fn index<L: Level>(signature: &[u8]) -> Result<ChallengeIndex, VerifyError> {
+fn salt<L: Level>(signature: &[u8]) -> Result<L::Salt, VerifyError> {
     let at = L::SIGNATURE_ELEMENTS * L::FP2_LEN;
-    let bytes: [u8; ChallengeIndex::WIDTH] = signature
-        .get(at..)
-        .and_then(|tail| tail.try_into().ok())
-        .ok_or(VerifyError::Length)?;
-    Ok(ChallengeIndex::from_canonical_bytes(bytes))
+    L::Salt::from_bytes(signature.get(at..).ok_or(VerifyError::Length)?).ok_or(VerifyError::Length)
 }
 
 /// `true` when `y` is the representative Algorithm 2 line 8 normalizes to.

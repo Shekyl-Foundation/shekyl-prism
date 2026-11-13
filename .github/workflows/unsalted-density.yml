@@ -10,7 +10,8 @@ on:
     paths:
       - .github/workflows/unsalted-density.yml
       - scripts/measure_unsalted_density.py
-      - prism-verify/src/bin/sample_e_prime.rs
+      - prism-compare/src/bin/sample_e_prime.rs
+      - prism-compare/src/lib.rs
 
 permissions:
   contents: read
@@ -31,7 +32,7 @@ jobs:
         run: |
           set -euo pipefail
           git rev-parse HEAD
-          cargo run --release --locked -p prism-verify --bin sample_e_prime -- 1500 > samples.txt 2> sampler.log
+          cargo run --release --locked -p prism-compare --bin sample_e_prime -- 1500 > samples.txt 2> sampler.log
           python3 scripts/measure_unsalted_density.py samples.txt --count 1500 --emit-samples
           if [ -f docs/comparison/unsalted-density/samples.txt ]; then
             cmp samples.txt docs/comparison/unsalted-density/samples.txt

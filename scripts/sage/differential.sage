@@ -13,6 +13,8 @@ NIST-I, NIST-III or NIST-V; absence runs all levels.
 import os
 import runpy
 import subprocess
+import sys
+import faulthandler
 from pathlib import Path
 from sage.all import GF, ZZ
 
@@ -22,13 +24,41 @@ m = runpy.run_path(str(Path.cwd() / "scripts/sage/s5_model.sage"))
 root = m["ROOT"]
 count = 0
 
+# Each vector gets a fresh oracle interpreter and its own result denominator.
+# Every child still executes the same algebra and all applicable mutations.
+# No partial child run is counted as a complete comparison.
+one = os.environ.get("PRISM_DIFFERENTIAL_ONE")
+if one is None:
+    total = 0
+    paths = [p for p in m["honest_vectors"]()
+             if os.environ.get("PRISM_DIFFERENTIAL_LEVEL", m["load_vector"](p)["level"]) == m["load_vector"](p)["level"]]
+    if not paths:
+        raise SystemExit("no vectors selected")
+    for path in paths:
+        env = dict(os.environ, PRISM_DIFFERENTIAL_ONE=path.name)
+        result = subprocess.run([sys.executable, __file__], env=env, text=True, capture_output=True)
+        print(result.stdout, end="", flush=True)
+        if result.stderr:
+            print(result.stderr, end="", file=sys.stderr, flush=True)
+        if result.returncode:
+            raise SystemExit(f"Sage child failed: {path.name}, code {result.returncode}")
+        marks = [line for line in result.stdout.splitlines() if line.startswith("VECTOR_RESULT ")]
+        if len(marks) != 1:
+            raise SystemExit(f"missing child comparison denominator: {path.name}")
+        total += int(marks[0].split()[2])
+    print(f"Sage/Rust identical on {total} signatures and mutations across {len(paths)} isolated vectors", flush=True)
+    raise SystemExit(0)
+if one not in {p.name for p in m["honest_vectors"]()}:
+    raise SystemExit("unknown isolated vector")
+faulthandler.dump_traceback_later(120, repeat=True)
+
 
 def encoded(z, width):
     re, im = m["parts"](z)
     return int(re).to_bytes(width, "little") + int(im).to_bytes(width, "little")
 
 
-def compare(path, label, P=None, Q=None, curve=None, index=None, message=None, sibling=None):
+def compare(path, label, P=None, Q=None, curve=None, salt=None, message=None, sibling=None):
     global count
     rows = m["load_vector"](path)
     level = rows["level"]
@@ -41,10 +71,10 @@ def compare(path, label, P=None, Q=None, curve=None, index=None, message=None, s
     curve = original_curve if curve is None else curve
     P = m["point"](original_curve, ext("Px"), ext("Py")) if P is None else P
     Q = m["point"](original_curve, ext("Qx"), ext("Qy")) if Q is None else Q
-    index = int(rows["j"]) if index is None else index
+    salt = rows["salt"] if salt is None else salt
     message = rows["message"] if message is None else message
     key = rows["A"] if sibling is None else sibling["A"]
-    s, prime = m["challenge_scalar"](level, key, message, index)
+    s, prime = m["challenge_scalar"](level, key, message, salt)
     q = (1 << (2*(e-2)-1)) - s**2
     soft = {"Psig": P, "Qsig": Q, "Esig": curve, "s": s, "q": q}
     if sibling is not None:
@@ -62,9 +92,9 @@ def compare(path, label, P=None, Q=None, curve=None, index=None, message=None, s
         expected = "Composite"
     else:
         expected = m["run_vector"](path, run_chains=True, soft=soft, completion="closed")
-    signature = b"".join(encoded(z, width) for z in [a,P[0],P[1],Q[0],Q[1]]) + index.to_bytes(2,"little")
+    signature = b"".join(encoded(z, width) for z in [a,P[0],P[1],Q[0],Q[1]]) + bytes.fromhex(salt)
     record = f"{level} {key} {message.encode().hex() or '-'} {signature.hex()}\n"
-    result = subprocess.run([str(root/"target/release/verify_bytes")],input=record,text=True,capture_output=True,check=True).stdout.strip()
+    result = subprocess.run([str(m["rust_binary"]("verify_bytes"))],input=record,text=True,capture_output=True,check=True).stdout.strip()
     if result != expected:
         raise SystemExit(f"DIFFER {path.name} {label}: Sage={expected}, Rust={result}")
     count += 1
@@ -72,6 +102,8 @@ def compare(path, label, P=None, Q=None, curve=None, index=None, message=None, s
 
 
 for path in m["honest_vectors"]():
+    if path.name != one:
+        continue
     rows = m["load_vector"](path)
     if os.environ.get("PRISM_DIFFERENTIAL_LEVEL", rows["level"]) != rows["level"]:
         continue
@@ -81,6 +113,8 @@ for path in m["honest_vectors"]():
     compare(path,"honest")
 
 for path in m["VECTORS"]:
+    if path.name != one:
+        continue
     rows = m["load_vector"](path)
     level = rows["level"]
     if os.environ.get("PRISM_DIFFERENTIAL_LEVEL", level) != level:
@@ -103,15 +137,15 @@ for path in m["VECTORS"]:
     for curve2,a,left,right in m["other_models"](ext("E"),P,Q):
         left,right=m["normalize_joint"](left,right)
         compare(path,"other model",P=left,Q=right,curve=curve2)
-    for label,message,start in [("next prime",rows["message"],int(rows["j"])+1),("new message",rows["message"]+"-other",0)]:
-        index,_=m["first_prime_index"](level,rows["A"],message,start=start)
-        if index is None:
-            raise SystemExit("prime search exhausted")
-        compare(path,label,index=index,message=message)
+    for label,message in [("searched prime salt",rows["message"]),("new message",rows["message"]+"-other")]:
+        salt,_=m["first_prime_salt"](level,rows["A"],message)
+        if salt is None:
+            raise SystemExit("prime salt search exhausted")
+        compare(path,label,salt=salt,message=message)
     sibling=m["load_vector"](path.parent/m["SIBLING"][path.name])
-    index,_=m["first_prime_index"](level,sibling["A"],rows["message"])
-    if index is None:
-        raise SystemExit("other-key prime search exhausted")
-    compare(path,"other key",index=index,sibling=sibling)
+    salt,_=m["first_prime_salt"](level,sibling["A"],rows["message"])
+    if salt is None:
+        raise SystemExit("other-key prime salt search exhausted")
+    compare(path,"other key",salt=salt,sibling=sibling)
 
-print(f"Sage/Rust identical on {count} signatures and mutations",flush=True)
+print(f"VECTOR_RESULT {one} {count}", flush=True)

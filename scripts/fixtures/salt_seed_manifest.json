@@ -1,0 +1,978 @@
+[
+  {
+    "file": "accept/s5_i_r40.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828",
+    "sign_stream_seed": "282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828282828",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "1ae34fed2429805b41c0c768af7e969d5f3d671427b60089e440c8dc62692a82"
+  },
+  {
+    "file": "accept/s5_i_r41.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "292929292929292929292929292929292929292929292929292929292929292929292929292929292929292929292929",
+    "sign_stream_seed": "292929292929292929292929292929292929292929292929292929292929292929292929292929292929292929292929",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "5ac78671d8f0a5104634b0e75e1b6b3e07320cdbe24d7dec2298c10179fccc03"
+  },
+  {
+    "file": "accept/s5_i_r43.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b",
+    "sign_stream_seed": "2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "a197b359e52741a39dc69fb027b98f3230fc332634042a3dbb3177b013ad5b20"
+  },
+  {
+    "file": "accept/s5_i_r47.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f",
+    "sign_stream_seed": "2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "3ac9b67acc14fc3091e179d751d00d51b6b9914ad5abf2760d76d5be946b6cfb"
+  },
+  {
+    "file": "accept/s5_i_r49.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131",
+    "sign_stream_seed": "313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "4721266238cb7641d4cc5b227278e079a3350e3fcbae2d8126b787c171b07f3f"
+  },
+  {
+    "file": "accept/s5_i_r52.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434",
+    "sign_stream_seed": "343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "8d02918b2fe2ce88e8db38e203f221332cb84de6d4f71492b73d93ee70a26587"
+  },
+  {
+    "file": "accept/s5_i_r54.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636",
+    "sign_stream_seed": "363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "92f8dab6d15ba4b1d2235b58846724b8322a3c98ecd05d7fd8011c9c252339f2"
+  },
+  {
+    "file": "accept/s5_i_r58.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a",
+    "sign_stream_seed": "3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "9b89a74558f8e31d920d9acfc4f136c48ce013741429e9b11b85d087d0047b94"
+  },
+  {
+    "file": "accept/s5_i_r59.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b",
+    "sign_stream_seed": "3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "2c86c29e05b34f346c819b8fa76ad6bdbdbb71491b299daa5977ba02cb4e3ab8"
+  },
+  {
+    "file": "accept/s5_i_r60.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c",
+    "sign_stream_seed": "3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "ad0b04073c5f0c7e985fae11bb8af9a3612e89c0b87bf59415ae532f5891f05c"
+  },
+  {
+    "file": "accept/s5_i_r61.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d",
+    "sign_stream_seed": "3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "2dd3d726e5b4fe55fbd6d6f6f6cc33661049059b00c881be3e666edbeedeb805"
+  },
+  {
+    "file": "accept/s5_i_r62.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e",
+    "sign_stream_seed": "3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "1d3fc4f80201fbf4c293f3543f28bbcd39eaaba98ba05035355eeb173d3d7ecf"
+  },
+  {
+    "file": "accept/s5_i_r63.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+    "sign_stream_seed": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "ae9aa30eccf67da683e6cc5638673afcb43f51baec567329c0468ee500c3ad5a"
+  },
+  {
+    "file": "accept/s5_i_r65.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141",
+    "sign_stream_seed": "414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "ae64e00429e39a7e95411af4bf99f4e4d65a6c5d602fa050e259463ea2be3949"
+  },
+  {
+    "file": "accept/s5_i_r66.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242",
+    "sign_stream_seed": "424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242424242",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "87bf7e29220c952da83101bda66557b2880053becff8dfe4fed25f807e7b8493"
+  },
+  {
+    "file": "accept/s5_i_r68.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444",
+    "sign_stream_seed": "444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "aee4643eda69ff395f187b0bf6ffb1f61889ef5fc91b29f2ff3ad6bc34a65de4"
+  },
+  {
+    "file": "accept/s5_i_r69.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545",
+    "sign_stream_seed": "454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "24007d026476660bdbd5a13d12569708fd2d7f1b7890198658f079bc34351324"
+  },
+  {
+    "file": "accept/s5_i_r70.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "464646464646464646464646464646464646464646464646464646464646464646464646464646464646464646464646",
+    "sign_stream_seed": "464646464646464646464646464646464646464646464646464646464646464646464646464646464646464646464646",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "ad5ff720e8c17db84f99a305e29d52579515acd56bc4c8f04e3598d7aec82128"
+  },
+  {
+    "file": "accept/s5_i_r71.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "474747474747474747474747474747474747474747474747474747474747474747474747474747474747474747474747",
+    "sign_stream_seed": "474747474747474747474747474747474747474747474747474747474747474747474747474747474747474747474747",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "b514cb9debf6d391003f6536c7782eca45c29e49e6c544ea4cb397272b0f5655"
+  },
+  {
+    "file": "accept/s5_i_r72.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "484848484848484848484848484848484848484848484848484848484848484848484848484848484848484848484848",
+    "sign_stream_seed": "484848484848484848484848484848484848484848484848484848484848484848484848484848484848484848484848",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "5c229bf4ba337fff446b840facf5db608c12e1af0b3ac7d6ec2e960f5969eb4c"
+  },
+  {
+    "file": "accept/s5_iii_1007.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "c2186f40caff43d355701ac8f0bd68b089ec1488f8b161110f6631e45b9b5c47c2186f40caff43d355701ac8f0bd68b0",
+    "sign_stream_seed": "c2186f40caff43d355701ac8f0bd68b089ec1488f8b161110f6631e45b9b5c47c2186f40caff43d355701ac8f0bd68b0",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1007.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "d6a1ecebb36c0c9d3650a530aa08e7cbc528d85df7718405e7cb47694ee144df",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_1025.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "e70070b1e63583c9d873fbfc42ee85d767f0697ceba8fa6c55c1f2075cfabd9ae70070b1e63583c9d873fbfc42ee85d7",
+    "sign_stream_seed": "e70070b1e63583c9d873fbfc42ee85d767f0697ceba8fa6c55c1f2075cfabd9ae70070b1e63583c9d873fbfc42ee85d7",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1025.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "de8ffd2276383fba98783cea75adaef779c6eeda7c05d9f6389bd70100a92709",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_1102.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "ecd52da9c391442d8e447d3925eb1af9724be73510edcbec89a6db29a64b57e7ecd52da9c391442d8e447d3925eb1af9",
+    "sign_stream_seed": "ecd52da9c391442d8e447d3925eb1af9724be73510edcbec89a6db29a64b57e7ecd52da9c391442d8e447d3925eb1af9",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1102.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "313e222053e189d1d5bb53a08c820614ee97244d856aaa6815b727eec71de5cc",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_111.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "315fd10b1e347450915a7c77c162dcf82e12bcc3d62448708647e42b98e43538315fd10b1e347450915a7c77c162dcf8",
+    "sign_stream_seed": "315fd10b1e347450915a7c77c162dcf82e12bcc3d62448708647e42b98e43538315fd10b1e347450915a7c77c162dcf8",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_111.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "861bb5260417750c2f26e678ec847f1eece75647cc68cfcfc8ff48149fbc013e",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_1170.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "4303842cfe44f6454b8b47aeb2db857df64c011aac2ee5f0a236e1f14c4b45bf4303842cfe44f6454b8b47aeb2db857d",
+    "sign_stream_seed": "4303842cfe44f6454b8b47aeb2db857df64c011aac2ee5f0a236e1f14c4b45bf4303842cfe44f6454b8b47aeb2db857d",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1170.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "0a360d90601376da13916590fb24c794eca0f2ef4ba6433c95041feffdbe0c79",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_1297.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "4bbb7c867f6f9ec785b1f0f05c713fe25b0ff47abe38e55c963820058da3bd8c4bbb7c867f6f9ec785b1f0f05c713fe2",
+    "sign_stream_seed": "4bbb7c867f6f9ec785b1f0f05c713fe25b0ff47abe38e55c963820058da3bd8c4bbb7c867f6f9ec785b1f0f05c713fe2",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1297.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "7e12d4b57c9798e4c9ba93516da03d419d55d059e4ae015034501bd5a4b6110c",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_152.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "883e3d413f46b27cc5c4ec4010d5a549f6fefd7f8d57ad8fb127be42e979f9c5883e3d413f46b27cc5c4ec4010d5a549",
+    "sign_stream_seed": "883e3d413f46b27cc5c4ec4010d5a549f6fefd7f8d57ad8fb127be42e979f9c5883e3d413f46b27cc5c4ec4010d5a549",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_152.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "18e599dd51260f85456c0b3b51c6443efd225ab3e27331aa0f62119354606581",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_1530.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "6d8246e7786a8533e4ea022b2cca7d81fb28ce4477e9c0ca700d18b961d1dbf46d8246e7786a8533e4ea022b2cca7d81",
+    "sign_stream_seed": "6d8246e7786a8533e4ea022b2cca7d81fb28ce4477e9c0ca700d18b961d1dbf46d8246e7786a8533e4ea022b2cca7d81",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1530.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "a7a970e5d86a42bb407a9fe09de1cac10f7925275d75a9d374703ee14998dfe3",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_1540.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "a3c7c6e76b9f550d7542ba1c688bdfaa8f2acef3ceaa6d455ab9b1f3940d3dd9a3c7c6e76b9f550d7542ba1c688bdfaa",
+    "sign_stream_seed": "a3c7c6e76b9f550d7542ba1c688bdfaa8f2acef3ceaa6d455ab9b1f3940d3dd9a3c7c6e76b9f550d7542ba1c688bdfaa",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1540.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "6921e45169114cc2e6adf6ba5868db1ac6e84ed7a9cb42b5e19baef8a562aa90",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_156.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "c100323f4d19aa4ae6b54de1f4121284accf847a3e379e8707949e6a01009aadc100323f4d19aa4ae6b54de1f4121284",
+    "sign_stream_seed": "c100323f4d19aa4ae6b54de1f4121284accf847a3e379e8707949e6a01009aadc100323f4d19aa4ae6b54de1f4121284",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_156.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "c03488a4d751a787c2b2d8438f5c28ca3b1be8fa30955b65a5f0701ed5d5f6d7",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_1591.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "4894fb797a9837449be7e70759395680e455ed87f3dcfde8918557a55db6efe14894fb797a9837449be7e70759395680",
+    "sign_stream_seed": "4894fb797a9837449be7e70759395680e455ed87f3dcfde8918557a55db6efe14894fb797a9837449be7e70759395680",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1591.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "cda0dd8e2975fe95c1ca7604183fc5d0c923c0b3e0db7900a6697bd4df27c20c",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_1728.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "f5e07711b3a2f003173e02bcb094c7cd715d57a2a6b435888e7ce3cf0b2d2e36f5e07711b3a2f003173e02bcb094c7cd",
+    "sign_stream_seed": "f5e07711b3a2f003173e02bcb094c7cd715d57a2a6b435888e7ce3cf0b2d2e36f5e07711b3a2f003173e02bcb094c7cd",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1728.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "6ab917c2b57529e958452ed2bbc12aadc062644576d7e6556ec8b04b1a5ada27",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_1783.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "f68dc2e68dc9efde90f773edc6d73af2c13ff8eaf3d79bb8c1134fdae29532b2f68dc2e68dc9efde90f773edc6d73af2",
+    "sign_stream_seed": "f68dc2e68dc9efde90f773edc6d73af2c13ff8eaf3d79bb8c1134fdae29532b2f68dc2e68dc9efde90f773edc6d73af2",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1783.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "92f9031bfcd0040429a1f48b5587e2cd9ada3156ec2b4c2a488750ad8ed4d02d",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_180.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "920b62e0980c3ff5ac20e10238e6a0e70b5ca52841415baca37df39885931a7d920b62e0980c3ff5ac20e10238e6a0e7",
+    "sign_stream_seed": "920b62e0980c3ff5ac20e10238e6a0e70b5ca52841415baca37df39885931a7d920b62e0980c3ff5ac20e10238e6a0e7",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_180.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "f222bf46b413d77138328b824ceae742f12d1b7513201e6774dbc9264b8d4eb0",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_1807.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "ba9c39c326a96946ecad73674f82dcf097775c3ebcda2670499e06ad16234553ba9c39c326a96946ecad73674f82dcf0",
+    "sign_stream_seed": "ba9c39c326a96946ecad73674f82dcf097775c3ebcda2670499e06ad16234553ba9c39c326a96946ecad73674f82dcf0",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1807.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "15d2eee882e600dca3f53b7e981b5040d622a593ee9c3013e5f87ff3eb592188",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_1812.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "1066e677dfc89cce6d5a26d01a11bad359d1d18dcd462844b096d393b7cf225a1066e677dfc89cce6d5a26d01a11bad3",
+    "sign_stream_seed": "1066e677dfc89cce6d5a26d01a11bad359d1d18dcd462844b096d393b7cf225a1066e677dfc89cce6d5a26d01a11bad3",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1812.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "4493124a2034a89dc346672c5c99eca48064469f6af20658a9f39580588652ad",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_1935.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "417cd2dbb8873fb754d0347aa4b379b442afbc11f32870fa6d98338b55d71d22417cd2dbb8873fb754d0347aa4b379b4",
+    "sign_stream_seed": "417cd2dbb8873fb754d0347aa4b379b442afbc11f32870fa6d98338b55d71d22417cd2dbb8873fb754d0347aa4b379b4",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1935.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "3d8c84f47ef3835aea36436d7c134133635941309eb7f39556f37ccad183bbb9",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_1942.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "1e457c717f2193d582841ab2d6143ce4b5539248108d2ee60a2bbce09db9c6911e457c717f2193d582841ab2d6143ce4",
+    "sign_stream_seed": "1e457c717f2193d582841ab2d6143ce4b5539248108d2ee60a2bbce09db9c6911e457c717f2193d582841ab2d6143ce4",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1942.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "601b8ded0af2530c7df5587eb51ae76d3b5cbd3ffc5184898e4ac17ef9d38755",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_1994.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "798028d8435fb0df6ed38b1f800ad9c55743fd2e8a105cf03751c09eac2d88af798028d8435fb0df6ed38b1f800ad9c5",
+    "sign_stream_seed": "798028d8435fb0df6ed38b1f800ad9c55743fd2e8a105cf03751c09eac2d88af798028d8435fb0df6ed38b1f800ad9c5",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_1994.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "2a55df40187a176e99a03670dc6c28d01756726a04834e18ad603ed63fd192a6",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_2118.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "803a75122ed9dddc4e56a63ff7135de4d0d802d19387ba6924277c7b6c33f993803a75122ed9dddc4e56a63ff7135de4",
+    "sign_stream_seed": "803a75122ed9dddc4e56a63ff7135de4d0d802d19387ba6924277c7b6c33f993803a75122ed9dddc4e56a63ff7135de4",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_2118.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "7e463faf0d531b6f1416c359523127accdaa921adc2721c912b98b35d3bdaea6",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_214.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "fddd1ef6892ef8ecd2d10b915e9a5b223c2757eb4c2ba10894ec57f90112145dfddd1ef6892ef8ecd2d10b915e9a5b22",
+    "sign_stream_seed": "fddd1ef6892ef8ecd2d10b915e9a5b223c2757eb4c2ba10894ec57f90112145dfddd1ef6892ef8ecd2d10b915e9a5b22",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_214.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "6bdfa19e0a77937ebe96c3c786da2b2ae451c35f3572c2bb93e7e3d6e16bc569",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_215.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "69cf5ee677a66e476c9c309dd419f574fcbe76e9c8f8efc8c248d7628d2a865f69cf5ee677a66e476c9c309dd419f574",
+    "sign_stream_seed": "69cf5ee677a66e476c9c309dd419f574fcbe76e9c8f8efc8c248d7628d2a865f69cf5ee677a66e476c9c309dd419f574",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_215.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "cd6190ae9ce193fcc1a5752e3b208d79ae7a8791fcac99b7092b3e9aa5c6afc9",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_218.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "f4af262f061442e46e7a6de965931d5238dfae35a9921b91c21b26c1e545785cf4af262f061442e46e7a6de965931d52",
+    "sign_stream_seed": "f4af262f061442e46e7a6de965931d5238dfae35a9921b91c21b26c1e545785cf4af262f061442e46e7a6de965931d52",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_218.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "62be108ef1380162d93e12c59ab0bd6ac8f0b5ec4505e96d6348975e7734956b",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_294.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "46841a117e90460eb369ba3db8d38cb2c6e4106b586f299d34c44ac386c602fe46841a117e90460eb369ba3db8d38cb2",
+    "sign_stream_seed": "46841a117e90460eb369ba3db8d38cb2c6e4106b586f299d34c44ac386c602fe46841a117e90460eb369ba3db8d38cb2",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_294.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "bc5de1700c4070b0484bf7132c91ca63af47e2c6b69172346a77a4a6938738f4",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_368.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "d21a080bf4e29135c121a97227582d9b54eb281e7d0f74b25d4988b7d59bb72bd21a080bf4e29135c121a97227582d9b",
+    "sign_stream_seed": "d21a080bf4e29135c121a97227582d9b54eb281e7d0f74b25d4988b7d59bb72bd21a080bf4e29135c121a97227582d9b",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-III|accept/s5_iii_368.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "de5e6a2fb081d3d730a33eb6c8137495f4f4fab22c373c96389d689d700599e6",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_iii_p0.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "61c7892a399f823e5a311fbfbeb42838a93e0c1bb6950ff908f6f8dc98f4a06b61c7892a399f823e5a311fbfbeb42838",
+    "sign_stream_seed": "61c7892a399f823e5a311fbfbeb42838a93e0c1bb6950ff908f6f8dc98f4a06b61c7892a399f823e5a311fbfbeb42838",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "6cce5d37f49b3a39ced7c708c69ae3db4141677ce2cceec718fe7addccb94f01"
+  },
+  {
+    "file": "accept/s5_iii_p1.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "0eebfe6c2cef58344dbb45a2bfdf9fccee3cdbc9693f5aa813da0cc8d9657a390eebfe6c2cef58344dbb45a2bfdf9fcc",
+    "sign_stream_seed": "0eebfe6c2cef58344dbb45a2bfdf9fccee3cdbc9693f5aa813da0cc8d9657a390eebfe6c2cef58344dbb45a2bfdf9fcc",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "bd41c46a53529cdc52ba96d71a623d9b9d1d43cb55cec2645930e2dc0756425f"
+  },
+  {
+    "file": "accept/s5_iii_p10.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "9c2fc563a74066dc705fcbf3a066e08212d36ad8aeea7a1d7b1f9d30bfffc38c9c2fc563a74066dc705fcbf3a066e082",
+    "sign_stream_seed": "9c2fc563a74066dc705fcbf3a066e08212d36ad8aeea7a1d7b1f9d30bfffc38c9c2fc563a74066dc705fcbf3a066e082",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "44ae3e190bda2da64e4ddcbeb0d33da43bc615b6b6f19a5e15d2678998f2a1fd"
+  },
+  {
+    "file": "accept/s5_iii_p11.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "af77aea6b51d2aadab48e33addaa06a57a360d171fb1d09fd8e1a84d0e407e73af77aea6b51d2aadab48e33addaa06a5",
+    "sign_stream_seed": "af77aea6b51d2aadab48e33addaa06a57a360d171fb1d09fd8e1a84d0e407e73af77aea6b51d2aadab48e33addaa06a5",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "65e704eee3eb507baf940be8a4c6d5676db51552dd18ed86d7679fc9ecbd2f9d"
+  },
+  {
+    "file": "accept/s5_iii_p12.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "a832f5b6e73e94b29fffbf60e5cf96b3fa52a5a58637040847f1c55897812ed7a832f5b6e73e94b29fffbf60e5cf96b3",
+    "sign_stream_seed": "a832f5b6e73e94b29fffbf60e5cf96b3fa52a5a58637040847f1c55897812ed7a832f5b6e73e94b29fffbf60e5cf96b3",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "1457bb440cfdea55299a4f65fb24fb0576815d81e5abdf228c2ca039c32b82fe"
+  },
+  {
+    "file": "accept/s5_iii_p13.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "b8fee4ed8ab7752ef47b2204b21a1165eb9f6da8a2e86253a4c1e14b87346153b8fee4ed8ab7752ef47b2204b21a1165",
+    "sign_stream_seed": "b8fee4ed8ab7752ef47b2204b21a1165eb9f6da8a2e86253a4c1e14b87346153b8fee4ed8ab7752ef47b2204b21a1165",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "d7df2a597253884e03bab8ceb60897f2dc53910de30da6f15228a58f7927a8f1"
+  },
+  {
+    "file": "accept/s5_iii_p14.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "9e30a8bb1da298641e436856db5dc59418eab7fe037c118b9ede2ad0777f3ea09e30a8bb1da298641e436856db5dc594",
+    "sign_stream_seed": "9e30a8bb1da298641e436856db5dc59418eab7fe037c118b9ede2ad0777f3ea09e30a8bb1da298641e436856db5dc594",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "8d94ff12379a766d0007414de9a38ec6171461957232ac9c5aeb12c9ad73abb3"
+  },
+  {
+    "file": "accept/s5_iii_p15.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "ee8dec0077e55b8c0144c5372af26b32a340648a9f773219f92baf903f79e418ee8dec0077e55b8c0144c5372af26b32",
+    "sign_stream_seed": "ee8dec0077e55b8c0144c5372af26b32a340648a9f773219f92baf903f79e418ee8dec0077e55b8c0144c5372af26b32",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "7f790673cdf9d56d5f964ab56855fa5397aadbfe95368e2d2956ddeb89cff28c"
+  },
+  {
+    "file": "accept/s5_iii_p16.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "cc90ad997fb8f362d707318ae2d41ce822d0a73b70384c216dcf6cf5cef319a9cc90ad997fb8f362d707318ae2d41ce8",
+    "sign_stream_seed": "cc90ad997fb8f362d707318ae2d41ce822d0a73b70384c216dcf6cf5cef319a9cc90ad997fb8f362d707318ae2d41ce8",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "1e61b088a2060a832a99ab6a2e4c1c5c8a55b6cac86f9ccea3abd2eb4d3c4b75"
+  },
+  {
+    "file": "accept/s5_iii_p17.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "4657daca1523ef935e4f1cad580ee86fa6416182890af9cdd28db13b8ef215024657daca1523ef935e4f1cad580ee86f",
+    "sign_stream_seed": "4657daca1523ef935e4f1cad580ee86fa6416182890af9cdd28db13b8ef215024657daca1523ef935e4f1cad580ee86f",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "18b12dc5f8b245c3af0eca4a769111e2858e6a38e62dd208cb9cc7fd754d1220"
+  },
+  {
+    "file": "accept/s5_iii_p18.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "6bb2d42d19312068261636c8475f6f5b8e18ceecc486951fba19121a2ead230f6bb2d42d19312068261636c8475f6f5b",
+    "sign_stream_seed": "6bb2d42d19312068261636c8475f6f5b8e18ceecc486951fba19121a2ead230f6bb2d42d19312068261636c8475f6f5b",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "f7a2c0b1aca7a212eec86e74cd008d456d81d036da09ec8d303a56228f3ecdeb"
+  },
+  {
+    "file": "accept/s5_iii_p19.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "6b22b76eef20ae08f466294c35dc6b12b85752718424ad4e5ce033b2830ebb5e6b22b76eef20ae08f466294c35dc6b12",
+    "sign_stream_seed": "6b22b76eef20ae08f466294c35dc6b12b85752718424ad4e5ce033b2830ebb5e6b22b76eef20ae08f466294c35dc6b12",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "2bb9b79e5cf583cf88f926f94e8e032267c80ee1c5be9f361979902d55b60f7b"
+  },
+  {
+    "file": "accept/s5_iii_p2.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "703347531c27bf116a412d317a20636bf0772c60d9a2046eb4d2727cb74cafd0703347531c27bf116a412d317a20636b",
+    "sign_stream_seed": "703347531c27bf116a412d317a20636bf0772c60d9a2046eb4d2727cb74cafd0703347531c27bf116a412d317a20636b",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "c771ad75bfced1d87fe6a435997690b90b3d10499ddecb8aee4fc87b572f4738"
+  },
+  {
+    "file": "accept/s5_iii_p3.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "4dc915398da355b6b25dd88d31f170f72f7e143abd7403a0070340ba0e8b48ff4dc915398da355b6b25dd88d31f170f7",
+    "sign_stream_seed": "4dc915398da355b6b25dd88d31f170f72f7e143abd7403a0070340ba0e8b48ff4dc915398da355b6b25dd88d31f170f7",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "ce23d9fb090d1cafae1c40dfdbece447e0365e52e00953ae5fc18adcdcf96a07"
+  },
+  {
+    "file": "accept/s5_iii_p4.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "73ef4042416acc991340b7e1068285af2dd0c87f5ed312aa4083394e1bb24ff473ef4042416acc991340b7e1068285af",
+    "sign_stream_seed": "73ef4042416acc991340b7e1068285af2dd0c87f5ed312aa4083394e1bb24ff473ef4042416acc991340b7e1068285af",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "b1f1fb52c96bf43e32c3bb9293db011714c0d34bf4b645e7a3495ab123507d07"
+  },
+  {
+    "file": "accept/s5_iii_p5.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "03f6f77f14ea6617f27c4953ccb540c30eb7afd3ea6c8c6fd3ef638c379ad80403f6f77f14ea6617f27c4953ccb540c3",
+    "sign_stream_seed": "03f6f77f14ea6617f27c4953ccb540c30eb7afd3ea6c8c6fd3ef638c379ad80403f6f77f14ea6617f27c4953ccb540c3",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "16c9962252cb3f4c644c33c5482aad50ebba8b17d0ac37bd624c721a77b1eb96"
+  },
+  {
+    "file": "accept/s5_iii_p6.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "6b0b6b0a97a8a6b27be5122f4cb44014d8e33cb74856cbb5505007f1e00ff7c36b0b6b0a97a8a6b27be5122f4cb44014",
+    "sign_stream_seed": "6b0b6b0a97a8a6b27be5122f4cb44014d8e33cb74856cbb5505007f1e00ff7c36b0b6b0a97a8a6b27be5122f4cb44014",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "bbb770d63d39837d036dce062ce12fa1e2ab54737e884cd2417f05dd8171a815"
+  },
+  {
+    "file": "accept/s5_iii_p7.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "7a5218ee392d7b93187c63d329af62390addb9608b5bdecc582fec68375c77327a5218ee392d7b93187c63d329af6239",
+    "sign_stream_seed": "7a5218ee392d7b93187c63d329af62390addb9608b5bdecc582fec68375c77327a5218ee392d7b93187c63d329af6239",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "2e28a72c652f276ef57edd62ba147b72b7365195af4ba91018b7a270f4dae8a8"
+  },
+  {
+    "file": "accept/s5_iii_p8.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "e448e62bdb08b9f7c0b18ac3adc44ee3a268cb8f1f5625adba01f375ebbcedb3e448e62bdb08b9f7c0b18ac3adc44ee3",
+    "sign_stream_seed": "e448e62bdb08b9f7c0b18ac3adc44ee3a268cb8f1f5625adba01f375ebbcedb3e448e62bdb08b9f7c0b18ac3adc44ee3",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "696b08473956f5a999e8964040ef06874dee4dd97bfa5dd4c34bc7e40acb9fa4"
+  },
+  {
+    "file": "accept/s5_iii_p9.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "ab472414a36d4a2b21a13cbcb16bad8b00076526c31a647e75d982d78e2fb6d7ab472414a36d4a2b21a13cbcb16bad8b",
+    "sign_stream_seed": "ab472414a36d4a2b21a13cbcb16bad8b00076526c31a647e75d982d78e2fb6d7ab472414a36d4a2b21a13cbcb16bad8b",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "bad5c01ac785d9384564ba2e6fb3ba229d513fb74d1ae5530dc10e1fa62c5c9c"
+  },
+  {
+    "file": "accept/s5_iii_r166.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6",
+    "sign_stream_seed": "a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "df6c2d221648b415bc30230ae24c602675309e9eb62441700a5ed0cbaae7d1ac"
+  },
+  {
+    "file": "accept/s5_iii_r64.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040",
+    "sign_stream_seed": "404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "eda5c33bb11c8b12dc5bef0432094ac95fec05b71929ed13d5f2a110df059065"
+  },
+  {
+    "file": "accept/s5_v_131.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "8ff8072fa2a57adf9b35b285a0b65555c2efe6a3128f9a1b58e0897783ccf9638ff8072fa2a57adf9b35b285a0b65555",
+    "sign_stream_seed": "8ff8072fa2a57adf9b35b285a0b65555c2efe6a3128f9a1b58e0897783ccf9638ff8072fa2a57adf9b35b285a0b65555",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-V|accept/s5_v_131.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "291c0279943e37949512b786216e11d55fa81be07ff29e1a6045fc5d523861bf",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_v_139.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "63ffe94f03395d4133a141023c5336cf50cdcc53aa5e52aa8d1f3996bee2262a63ffe94f03395d4133a141023c5336cf",
+    "sign_stream_seed": "63ffe94f03395d4133a141023c5336cf50cdcc53aa5e52aa8d1f3996bee2262a63ffe94f03395d4133a141023c5336cf",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-V|accept/s5_v_139.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "36383ae8660360647c6724d61eb7ed9ec161f571b9d0ce6a29d3cb297b79d444",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_v_145.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "9aaaaf2c3d2f17f710d5deaf235257565a041f7c9e0c96941338bf5a7b019bf89aaaaf2c3d2f17f710d5deaf23525756",
+    "sign_stream_seed": "9aaaaf2c3d2f17f710d5deaf235257565a041f7c9e0c96941338bf5a7b019bf89aaaaf2c3d2f17f710d5deaf23525756",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-V|accept/s5_v_145.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "503b4ed6e1b9d43b59d7e7d1b756814a49fe9abf66f84be7306e39b7f9832f08",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_v_156.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "2be3bfa405588f294d40bd34ec6743dba992aa06484df6b5c308ea5f188f1f972be3bfa405588f294d40bd34ec6743db",
+    "sign_stream_seed": "2be3bfa405588f294d40bd34ec6743dba992aa06484df6b5c308ea5f188f1f972be3bfa405588f294d40bd34ec6743db",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-V|accept/s5_v_156.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "0cd946b2599d8cfe46267a9d3ba355c570ef40ec0354da2f88a402b23aafaf5d",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_v_186.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "22a57e3256021c1aeed5965985b74043210de074a84198b773d6247e1c13dc3622a57e3256021c1aeed5965985b74043",
+    "sign_stream_seed": "22a57e3256021c1aeed5965985b74043210de074a84198b773d6247e1c13dc3622a57e3256021c1aeed5965985b74043",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-V|accept/s5_v_186.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "5ef56f7be06c1238344ed876d74e78f7b9c62810aa61b9b1a3d3be3f610eb93b",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_v_2.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "5594ff56b672c1252d1200ea7ffe7ca7728ac27e794b034e51f9b53f37e1b21b5594ff56b672c1252d1200ea7ffe7ca7",
+    "sign_stream_seed": "5594ff56b672c1252d1200ea7ffe7ca7728ac27e794b034e51f9b53f37e1b21b5594ff56b672c1252d1200ea7ffe7ca7",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-V|accept/s5_v_2.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "96e578a360b055886a188a3276bb09c007dde878b8ebe13079ee809b1cff704d",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_v_24.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "0c3cfc2ba56a013b1f4353e60fcac85f40892d0a5202679ad381ce489f0fa3ec0c3cfc2ba56a013b1f4353e60fcac85f",
+    "sign_stream_seed": "0c3cfc2ba56a013b1f4353e60fcac85f40892d0a5202679ad381ce489f0fa3ec0c3cfc2ba56a013b1f4353e60fcac85f",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-V|accept/s5_v_24.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "0af55f64ec779563130c6d6c29a53ca2c87e28f8225750d9c67b82dccdedd6dd",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_v_47.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "20c4754073c0b64308913b10ecfbfba634f360711252620588486dedd5efb1db20c4754073c0b64308913b10ecfbfba6",
+    "sign_stream_seed": "20c4754073c0b64308913b10ecfbfba634f360711252620588486dedd5efb1db20c4754073c0b64308913b10ecfbfba6",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-V|accept/s5_v_47.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "1b7149c4d6c1af32b63c7783c5ac9c0d65bf4a4ab1a9254611af95b11340b945",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_v_50.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "d952411d9d52300b3a49ead904f85cdeada40f77eaf5ffeb5d062d266d53a6b8d952411d9d52300b3a49ead904f85cde",
+    "sign_stream_seed": "d952411d9d52300b3a49ead904f85cdeada40f77eaf5ffeb5d062d266d53a6b8d952411d9d52300b3a49ead904f85cde",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-V|accept/s5_v_50.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "fc74cb00aeb4e41619c2da64f1870e66115231b66cd671dd1def68f7ffcfef38",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_v_77.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "4ae33cc829007ba8409a0a8fa1781666486c2fc7385dd05fb2a76c4556727b974ae33cc829007ba8409a0a8fa1781666",
+    "sign_stream_seed": "4ae33cc829007ba8409a0a8fa1781666486c2fc7385dd05fb2a76c4556727b974ae33cc829007ba8409a0a8fa1781666",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-V|accept/s5_v_77.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "0eb03ddb2dcc51ecb5a757b82ec14d9909189a39d9ce28508b5314b09977a4f3",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_v_88.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "2b13901b2673e9163501556e89190140cb1506edc7eeacc5fcb2041043eb6e302b13901b2673e9163501556e89190140",
+    "sign_stream_seed": "2b13901b2673e9163501556e89190140cb1506edc7eeacc5fcb2041043eb6e302b13901b2673e9163501556e89190140",
+    "recipe": "SHA256('shekyl-prism-salt-replacement|NIST-V|accept/s5_v_88.txt|0'), digest plus its first 16 bytes",
+    "archived_sha256": "19a28f2b71c72e16908ae018570010a5951da431d8a916cfc21176de01500d2b",
+    "replacement": true,
+    "authorization": "Rick 2026-11-12: use documented replacement seeds for the 36 without recorded seed recipes"
+  },
+  {
+    "file": "accept/s5_v_p0.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "5f56fc5063218151d3bfbccce641ec00fa58ea5ecec0040b2e018b7a0bd1e80a5f56fc5063218151d3bfbccce641ec00",
+    "sign_stream_seed": "5f56fc5063218151d3bfbccce641ec00fa58ea5ecec0040b2e018b7a0bd1e80a5f56fc5063218151d3bfbccce641ec00",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "67e952f614af808707c28edc9e5a8f06c04252791bc5fbefb74fcdd051a9549f"
+  },
+  {
+    "file": "accept/s5_v_p1.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "d16e2d82bcdf60105fce795b3063427f95001d92611b83cc20bac800209201e5d16e2d82bcdf60105fce795b3063427f",
+    "sign_stream_seed": "d16e2d82bcdf60105fce795b3063427f95001d92611b83cc20bac800209201e5d16e2d82bcdf60105fce795b3063427f",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "ce1c1efb6f6da60ef47528607924ef5b1c4111dc4c00de45eee25e5e27e9bbbe"
+  },
+  {
+    "file": "accept/s5_v_p10.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "14a18363f4ce22b477a88d2cc9f3b956089fac962b0989f999f1676f0a0f474b14a18363f4ce22b477a88d2cc9f3b956",
+    "sign_stream_seed": "14a18363f4ce22b477a88d2cc9f3b956089fac962b0989f999f1676f0a0f474b14a18363f4ce22b477a88d2cc9f3b956",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "7534f1f57aed5f690f9f393c4915d730f15562d3081747b05abf8766f3d50269"
+  },
+  {
+    "file": "accept/s5_v_p11.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "e10c4ddff4850334de198e6cf5919128f1daef95e91164a12f8ce4419ea8d3a0e10c4ddff4850334de198e6cf5919128",
+    "sign_stream_seed": "e10c4ddff4850334de198e6cf5919128f1daef95e91164a12f8ce4419ea8d3a0e10c4ddff4850334de198e6cf5919128",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "695fc154db5b80a6fbd32f99a84156d221cdd99a46bbe594b66e832aa2b369d2"
+  },
+  {
+    "file": "accept/s5_v_p12.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "f327fa4f1d56fabc22de7afcb13ab191ab02f57fac103f4ecc3806ff1dce61e4f327fa4f1d56fabc22de7afcb13ab191",
+    "sign_stream_seed": "f327fa4f1d56fabc22de7afcb13ab191ab02f57fac103f4ecc3806ff1dce61e4f327fa4f1d56fabc22de7afcb13ab191",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "5d6a3e363d9864b4a3ae014e8ed0cf2337c4d223c5813180ed26ce559591f448"
+  },
+  {
+    "file": "accept/s5_v_p13.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "66f18b2e777538df74fa7fc2a7a747bcce6fd9fcee5d0a4c4ff5969519d97da666f18b2e777538df74fa7fc2a7a747bc",
+    "sign_stream_seed": "66f18b2e777538df74fa7fc2a7a747bcce6fd9fcee5d0a4c4ff5969519d97da666f18b2e777538df74fa7fc2a7a747bc",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "f6a17408c82e6630361706bf90562017691de125de94167f704bc1ad4a36a219"
+  },
+  {
+    "file": "accept/s5_v_p14.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "a8896eadce7a06b45a5ead95ee3708452c0b0b36036c1d317e53f03643e2b5e3a8896eadce7a06b45a5ead95ee370845",
+    "sign_stream_seed": "a8896eadce7a06b45a5ead95ee3708452c0b0b36036c1d317e53f03643e2b5e3a8896eadce7a06b45a5ead95ee370845",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "0d87955cceae97f6712b3631cae075eaac3f23b3a1c7e90c6f7afd255094ecb9"
+  },
+  {
+    "file": "accept/s5_v_p15.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "4dcfb853c11ad4c670ad695719700164dab275379545d406d846ccf2af4373814dcfb853c11ad4c670ad695719700164",
+    "sign_stream_seed": "4dcfb853c11ad4c670ad695719700164dab275379545d406d846ccf2af4373814dcfb853c11ad4c670ad695719700164",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "9dc54fcb7c16dce97401349f86449f2240f49ceb5cc3a81b43be5e21704e24fb"
+  },
+  {
+    "file": "accept/s5_v_p16.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "dfe89aa9a228c5f311049c4ea2be2b4e84c20bbbc30621f33dfc7f12a591f162dfe89aa9a228c5f311049c4ea2be2b4e",
+    "sign_stream_seed": "dfe89aa9a228c5f311049c4ea2be2b4e84c20bbbc30621f33dfc7f12a591f162dfe89aa9a228c5f311049c4ea2be2b4e",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "44c9bd7dd01ee5b4c6927acd6d0b7295e64f0509b424eb95c481c0cc7b44991d"
+  },
+  {
+    "file": "accept/s5_v_p17.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "f486d11b31eb9c031c045f02044eb7b24847926aa1d61b64cd82e38693d368a8f486d11b31eb9c031c045f02044eb7b2",
+    "sign_stream_seed": "f486d11b31eb9c031c045f02044eb7b24847926aa1d61b64cd82e38693d368a8f486d11b31eb9c031c045f02044eb7b2",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "a49708e651ed638d20751fc9a0b599a8dcfd6cc9bdb726c91551d1fb46218e2b"
+  },
+  {
+    "file": "accept/s5_v_p18.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "d6cff0207799a6e49e137b0cdfe7ce36f59114fef340ee290d54519653455ff4d6cff0207799a6e49e137b0cdfe7ce36",
+    "sign_stream_seed": "d6cff0207799a6e49e137b0cdfe7ce36f59114fef340ee290d54519653455ff4d6cff0207799a6e49e137b0cdfe7ce36",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "51d7b09b1e44dd6444055d9fb98b5bc2eaa8b6e30e782d8a121a52d604dd3b4f"
+  },
+  {
+    "file": "accept/s5_v_p19.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "91c80bd4233e2ca9b1feff7778a8327b26471d51dcde85bc4d86ce5369a43d6591c80bd4233e2ca9b1feff7778a8327b",
+    "sign_stream_seed": "91c80bd4233e2ca9b1feff7778a8327b26471d51dcde85bc4d86ce5369a43d6591c80bd4233e2ca9b1feff7778a8327b",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "5e2697f991204b06db7616e5309a993478e63c29da028cc289a176b2800b2f77"
+  },
+  {
+    "file": "accept/s5_v_p2.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "ab3bae3d10de596c708cdc094869ec98785f3f23602b97ad666ba541ba3de3d2ab3bae3d10de596c708cdc094869ec98",
+    "sign_stream_seed": "ab3bae3d10de596c708cdc094869ec98785f3f23602b97ad666ba541ba3de3d2ab3bae3d10de596c708cdc094869ec98",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "a6693b32cdf0c41f0f58968a43934732f2cfa1b3a41455bbe648441e9ef3a083"
+  },
+  {
+    "file": "accept/s5_v_p3.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "ef3ad00efd289bc5e15a7ecf42e9aae3d23f7eb35e879a218946e13ed489ebccef3ad00efd289bc5e15a7ecf42e9aae3",
+    "sign_stream_seed": "ef3ad00efd289bc5e15a7ecf42e9aae3d23f7eb35e879a218946e13ed489ebccef3ad00efd289bc5e15a7ecf42e9aae3",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "42cf8b98180684ca6b26dd85c9033fe49133ff778743dfb056cb37ad70448a99"
+  },
+  {
+    "file": "accept/s5_v_p4.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "b2158a065cd38c1b50cd1ee37e1643cbf40404d6d299f95eceb8d4512beceb8fb2158a065cd38c1b50cd1ee37e1643cb",
+    "sign_stream_seed": "b2158a065cd38c1b50cd1ee37e1643cbf40404d6d299f95eceb8d4512beceb8fb2158a065cd38c1b50cd1ee37e1643cb",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "10477dd80b7276f397e757988aef64ec421b879b7c96e5fc3310057c51352deb"
+  },
+  {
+    "file": "accept/s5_v_p5.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "c3c351bb133c30bab0a3e594ec834245d82c664a5115d6b38721d105c7f6b993c3c351bb133c30bab0a3e594ec834245",
+    "sign_stream_seed": "c3c351bb133c30bab0a3e594ec834245d82c664a5115d6b38721d105c7f6b993c3c351bb133c30bab0a3e594ec834245",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "33f989b94581355e5e331006171abe196f5e1bc55cf45eaf7e8aa176e712c755"
+  },
+  {
+    "file": "accept/s5_v_p6.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "f3944c584b42457c4296c60edd504d8c4ffba4a2e80c3f026635bb2f923b10d7f3944c584b42457c4296c60edd504d8c",
+    "sign_stream_seed": "f3944c584b42457c4296c60edd504d8c4ffba4a2e80c3f026635bb2f923b10d7f3944c584b42457c4296c60edd504d8c",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "e456786e2dbd7b67d435b59f9f15990543bbfa6f122126250ffd855e63449924"
+  },
+  {
+    "file": "accept/s5_v_p7.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "88814513e25c9533738835be6effa4ac9c8361c6145d1b0d0f2b6bfb283f2a6d88814513e25c9533738835be6effa4ac",
+    "sign_stream_seed": "88814513e25c9533738835be6effa4ac9c8361c6145d1b0d0f2b6bfb283f2a6d88814513e25c9533738835be6effa4ac",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "2cc0ec8aa56f70343343692a15bf29af6f7261a0cb2cc69a242380a64477cb90"
+  },
+  {
+    "file": "accept/s5_v_p8.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "366fa848fab7c4795b1c676f696e192bea0071609a81546aba8f7815910ba66c366fa848fab7c4795b1c676f696e192b",
+    "sign_stream_seed": "366fa848fab7c4795b1c676f696e192bea0071609a81546aba8f7815910ba66c366fa848fab7c4795b1c676f696e192b",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "a8c6bc2379cf6fa9f8397d30de9b2c5a037daf6f5393d655108628ebfc2ecbd1"
+  },
+  {
+    "file": "accept/s5_v_p9.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "fdcc4e23e52b8fc7d8c745821d825ca61c201d5508507f3e5d80b34018d6ac4cfdcc4e23e52b8fc7d8c745821d825ca6",
+    "sign_stream_seed": "fdcc4e23e52b8fc7d8c745821d825ca61c201d5508507f3e5d80b34018d6ac4cfdcc4e23e52b8fc7d8c745821d825ca6",
+    "recipe": "SHA256 positive namespace, digest plus its first 16 bytes",
+    "archived_sha256": "13281f20663c144786c5906cd4109227fe4a119e73ba7d326ba1f2b3e6848950"
+  },
+  {
+    "file": "accept/s5_v_r149.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "959595959595959595959595959595959595959595959595959595959595959595959595959595959595959595959595",
+    "sign_stream_seed": "959595959595959595959595959595959595959595959595959595959595959595959595959595959595959595959595",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "ec09d2070a76890e8556f9c1327be4278b26762ae3c85dafdcbe386a087cb85b"
+  },
+  {
+    "file": "accept/s5_v_r156.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c",
+    "sign_stream_seed": "9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c9c",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "49052d4774ea6bc2efa884c3ca0026881414f4b593400125bf9279a73f94d78a"
+  },
+  {
+    "file": "accept/s5_v_r160.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+    "sign_stream_seed": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "bc7b569f98b72fa2442e3b699ffa09b1a00045e9ce533997cd651ada3d26c95e"
+  },
+  {
+    "file": "accept/s5_v_r170.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sign_stream_seed": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "04c7fedd44e73e7d7b25b32999f0d9343b89e7840c11cad7c380899fd480f836"
+  },
+  {
+    "file": "accept/s5_v_r179.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3",
+    "sign_stream_seed": "b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "a1fa0101cbfc291cd80bf456832da4d743b63f56ac6c12183cb4b19e612c5384"
+  },
+  {
+    "file": "accept/s5_v_r52.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434",
+    "sign_stream_seed": "343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434343434",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "8dc0f4a8d5bcd0c8cbfdd9ea7bd84db0791fbca8aa57948158dc24902387f3bd"
+  },
+  {
+    "file": "accept/s5_v_r70.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "464646464646464646464646464646464646464646464646464646464646464646464646464646464646464646464646",
+    "sign_stream_seed": "464646464646464646464646464646464646464646464646464646464646464646464646464646464646464646464646",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "7b5e8ef6538c2cd14efa925d96f2c63bd470dff172c411e2b26b02176dd026c2"
+  },
+  {
+    "file": "accept/s5_v_r75.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b",
+    "sign_stream_seed": "4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "44a1542178347b76fde71ae057495ba85303e7510007dd68770e9eb25f0b32b5"
+  },
+  {
+    "file": "accept/s5_v_r85.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555",
+    "sign_stream_seed": "555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555",
+    "recipe": "repeated-byte seed from filename",
+    "archived_sha256": "c34e43e561235ed1b9de4e2ab716d9ab586f926fbf5b08ea507084f53e3ef888"
+  },
+  {
+    "file": "s5_lvl1.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "sign_stream_seed": "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "recipe": "recorded repeated-byte RNG seeds",
+    "archived_sha256": "8e95f7623dd32ef61e7a03071186a0ffe82c00be67111100f3256829ba332808"
+  },
+  {
+    "file": "s5_lvl1b.txt",
+    "level": "NIST-I",
+    "keygen_stream_seed": "010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101",
+    "sign_stream_seed": "010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101",
+    "recipe": "recorded repeated-byte RNG seeds",
+    "archived_sha256": "2fab419899f26bb46bcea104f4aa571489b121c0dbf9732b535a6c7170c1cd2e"
+  },
+  {
+    "file": "s5_lvl3.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030",
+    "sign_stream_seed": "121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212",
+    "recipe": "recorded repeated-byte RNG seeds",
+    "archived_sha256": "7d66b3b990075f37baf0cac0c0a95acd3568f0b9bd90de842884d30e5073dfae"
+  },
+  {
+    "file": "s5_lvl3b.txt",
+    "level": "NIST-III",
+    "keygen_stream_seed": "080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808080808",
+    "sign_stream_seed": "141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414",
+    "recipe": "recorded repeated-byte RNG seeds",
+    "archived_sha256": "c4c2bcf72bcfa19c21925fce71a0b707adfe37b7943378fe94c983d250eeed44"
+  },
+  {
+    "file": "s5_lvl5.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "sign_stream_seed": "161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616",
+    "recipe": "recorded repeated-byte RNG seeds",
+    "archived_sha256": "68a421a4cf188302f985d472a7009bb0aca668472887e08947f2593b95e87b94"
+  },
+  {
+    "file": "s5_lvl5b.txt",
+    "level": "NIST-V",
+    "keygen_stream_seed": "030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303",
+    "sign_stream_seed": "121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212121212",
+    "recipe": "recorded repeated-byte RNG seeds",
+    "archived_sha256": "4dd51053843a73ddfa2c6eeab6770daf506ef5f3744739d9a88416e3a3eddc7b"
+  }
+]

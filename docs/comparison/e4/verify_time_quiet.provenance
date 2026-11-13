@@ -1,0 +1,6 @@
+unsalted commit d0187579d41d2de275f95fc6fecdf99c272ca324 (tag archive/unsalted-index-2026-11-12)
+salted commit faca3343fa29764d4b1c91ad2cef007e8f7b11d3
+toolchain rustc 1.94.0 (4a4ef493e 2026-03-02)
+machine x86_64
+command cargo run --release --locked -p prism-bench (binary target/release/prism-verify-bench), three alternating runs, date 2026-11-13
+42e4b6e79bc379ce29b4b7ff0f0d526001eea05db25aab594b8c0b43c04a8e2a  docs/comparison/e4/verify_time_quiet.txt

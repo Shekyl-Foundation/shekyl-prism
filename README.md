@@ -1,13 +1,18 @@
 # shekyl-prism
 
 Research implementation of the prime-degree §5 PRISM signature relation,
-with a Rust verifier and an experimental deterministic native signer.
+with a salted Rust verifier and an experimental native signer with a
+32-byte caller randomness input (zeros in reproducible research runs).
 It is not a consensus crate or an adopted wallet authorization scheme.
 The exact protocol still needs cryptographic review; see
 [open security items](docs/SECURITY_REVIEW.md).
-The [security argument draft](docs/SECURITY_ARGUMENT.md) maps the merged
+The [security argument draft](docs/SECURITY_ARGUMENT.md) maps the salted
 implementation to its algebraic premises, exact parameter bounds,
-collision-replay attack, and conditional SUF-CMA decomposition.
+second-preimage cost, and conditional SUF-CMA decomposition. The
+[salt comparison](docs/SALT_COMPARISON.md) records what the unsalted
+protocol cost an attacker, what the salted one costs, and what the salt
+does not change, with both attacks run against the real signer and
+verifier at reduced challenge widths.
 
 | Crate | Role |
 | --- | --- |
@@ -16,11 +21,14 @@ collision-replay attack, and conditional SUF-CMA decomposition.
 | `prism-verify` | Canonical decoding, pairing, both chains and complete images |
 | `prism-signer` | Unix research API for an isolated deterministic C backend |
 | `prism-bench` | Successful complete verification at I, III and V |
+| `prism-compare` | Archived derivation and explicit research experiments; no production dependency |
 
 The [verifier specification](docs/VERIFIER_SPEC.md) defines the current
 research encoding, including the `e′=e−2` parameter choice. Signatures are
-322 / 482 / 642 bytes. I/III/V name the source field rows, not certified
-security levels for this modified unsalted construction.
+352 / 528 / 704 bytes, including salts of 32 / 48 / 64 bytes. I/III/V name the source field rows, not certified
+security levels for this modified salted construction. The approved wire
+and signer contract is [SALT_PROTOCOL.md](docs/SALT_PROTOCOL.md); the
+unsalted implementation is preserved at `archive/unsalted-index-2026-11-12`.
 
 The verifier accepts all 113 committed honest signatures. Tests compare
 both chains against every intermediate null point from six primary Sage
@@ -66,8 +74,9 @@ fixture RNG are retained for reproducibility. The libraries are not linked
 into the Rust verifier.
 
 The API regenerates the native secret key in private scratch, uses a
-bounded deterministic challenge search, normalizes the response, and
-verifies every result before returning it. Native failure returns an error.
+bounded deterministic salt search, normalizes the response, and verifies
+every result before returning it. A native failure at one candidate moves
+to the next salt; setup failure or exhaustion of the bounds is an error.
 Normal exits remove the scratch directory. No constant-time or complete
 secret-erasure claim is made; native side-channel review remains required.
 No wallet keystore, output-key derivation or rerandomization is included.
@@ -85,6 +94,13 @@ This fresh comparison does not rewrite committed known answers. Set
 `PRISM_DIFFERENTIAL_LEVEL=NIST-III` to restrict it to a parameter row.
 The original model report is in
 [REPORT.md](prism-isogeny/testdata/s5_model/REPORT.md).
+
+The comparison experiments are `prism-compare` binaries behind the
+`experiments` feature. `sh scripts/run_comparison.sh <record> <driver>
+[arguments]` runs one from a committed tree and writes its raw output and
+provenance under `docs/comparison/`;
+`python3 scripts/analyze_comparison.py` recomputes every table of the
+comparison document from those records.
 
 The benchmark now times accepted signatures. Development-machine results
 and the Raspberry Pi 4 command are in [BENCHMARKING.md](docs/BENCHMARKING.md).

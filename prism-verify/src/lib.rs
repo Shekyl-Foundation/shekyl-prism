@@ -27,18 +27,18 @@ mod model;
 mod prime;
 pub mod reference;
 mod relation;
+#[cfg(feature = "research-reduced-width")]
+pub mod research;
 pub mod signature;
 
 use prism_field::Level;
 
 pub use basis::{basis_hint, search_bound, BasisHint, C_HINT_MAX_INDEX};
-pub use challenge::{
-    smallest_at_exponent, smallest_challenge_index, ChallengeScalar, IndexError, CHALLENGE_DOMAIN,
-};
+pub use challenge::{ChallengeScalar, CHALLENGE_DOMAIN};
 pub use identity::KeyIdentity;
 pub use level::{verify_level, Nist, UnknownLevel};
 pub use prime::{challenge_degree, degree_is_prime, is_baillie_psw};
-pub use prism_field::ChallengeIndex;
+pub use prism_field::Salt;
 pub use reference::{prepared, reference_key, Prepared, PreparedError, ReferenceKey, VectorError};
 pub use signature::{AffinePoint, Response};
 
@@ -111,23 +111,27 @@ pub fn verify<L: Level>(
     message: &[u8],
     signature: &[u8],
 ) -> Result<(), VerifyError> {
-    let (identity, response, scalar) = checked::<L>(public_key, message, signature)?;
-    relation::relate(&identity, &response, &scalar)
+    let opened = open::<L>(public_key, signature)?;
+    let scalar = ChallengeScalar::derive(&opened.identity, message, opened.response.salt);
+    accept(&opened, &scalar)
 }
 
-/// The public checks, cheapest refusal first.
-///
-/// Both lengths come before either decode, because a wrong length is the
-/// cheapest thing to refuse and `Length` must not depend on which field is
-/// wrong. The sign test is a byte comparison on an element already decoded,
-/// so it comes before the basis search, whose length an attacker chooses
-/// with `A` — up to [`search_bound`] Legendre symbols. The challenge hash
-/// and the one Baillie–PSW test follow the bounded model and basis checks.
-fn checked<'a, L: Level>(
+/// A key and response that passed the checks shared by every verifier entry.
+pub(crate) struct Opened<'a, L: Level> {
+    pub identity: KeyIdentity<'a, L>,
+    pub response: Response<L>,
+}
+
+/// Length, decode, sign, model, and basis. Both lengths come before either
+/// decode, so `Length` does not depend on which field is wrong and a short
+/// signature cannot surface as `Origin`. The sign test is a byte comparison
+/// on an element already decoded, so it comes before the basis search, whose
+/// length an attacker chooses with `A` — up to [`search_bound`] Legendre
+/// symbols.
+pub(crate) fn open<'a, L: Level>(
     public_key: &'a [u8],
-    message: &[u8],
     signature: &[u8],
-) -> Result<(KeyIdentity<'a, L>, Response<L>, ChallengeScalar), VerifyError> {
+) -> Result<Opened<'a, L>, VerifyError> {
     if public_key.len() != L::PUBLIC_KEY_LEN || signature.len() != L::SIGNATURE_LEN {
         return Err(VerifyError::Length);
     }
@@ -138,11 +142,18 @@ fn checked<'a, L: Level>(
     }
     model::check::<L>(response.curve)?;
     basis_hint::<L>(identity.coefficient())?;
-    let scalar = ChallengeScalar::derive(&identity, message, response.index);
+    Ok(Opened { identity, response })
+}
+
+/// Primality, then the relation. The challenge hash has already run.
+pub(crate) fn accept<L: Level>(
+    opened: &Opened<'_, L>,
+    scalar: &ChallengeScalar,
+) -> Result<(), VerifyError> {
     if !scalar.degree_is_prime::<L>() {
         return Err(VerifyError::Composite);
     }
-    Ok((identity, response, scalar))
+    relation::relate(&opened.identity, &opened.response, scalar)
 }
 
 #[cfg(test)]
@@ -199,9 +210,9 @@ mod tests {
             assert_ne!(n, Level3::SIGNATURE_LEN);
             assert_ne!(n, Level5::SIGNATURE_LEN);
         }
-        assert_eq!(Level1::SIGNATURE_LEN, 322);
-        assert_eq!(Level3::SIGNATURE_LEN, 482);
-        assert_eq!(Level5::SIGNATURE_LEN, 642);
+        assert_eq!(Level1::SIGNATURE_LEN, 352);
+        assert_eq!(Level3::SIGNATURE_LEN, 528);
+        assert_eq!(Level5::SIGNATURE_LEN, 704);
         assert_eq!(Level3::CHAIN_STEPS, Level3::E - 2);
     }
 
@@ -276,7 +287,7 @@ mod tests {
 
     #[test]
     fn a_bad_sign_is_refused_before_the_challenge_is_hashed() {
-        // The key's basis index exists and the index names a prime degree,
+        // The key's basis exists and the salt names a prime degree,
         // so the only failing check below `Composite` is the sign test.
         let sample = prepared(Nist::I).expect("level I sample");
         let mut response =
@@ -286,23 +297,18 @@ mod tests {
             verify::<Level1>(&sample.public_key, sample.message, &response.encode()),
             Err(VerifyError::Sign)
         );
-        // And with the sign restored, a later index whose degree is composite
+        // And with the sign restored, another salt whose degree is composite
         // is what the same signature is refused for.
         response.p.y = response.p.y.negate();
-        let mut composite = None;
-        let mut index = response.index;
-        while let Some(next) = index.next() {
-            index = next;
-            let mut probe = response;
-            probe.index = next;
-            if verify::<Level1>(&sample.public_key, sample.message, &probe.encode())
-                == Err(VerifyError::Composite)
-            {
-                composite = Some(probe);
-                break;
-            }
-        }
-        let composite = composite.expect("a composite degree above the smallest index");
+        let composite = (0u64..65_536)
+            .find_map(|n| {
+                let mut probe = response;
+                probe.salt = <Level1 as Level>::Salt::from_counter(n).unwrap();
+                (verify::<Level1>(&sample.public_key, sample.message, &probe.encode())
+                    == Err(VerifyError::Composite))
+                .then_some(probe)
+            })
+            .expect("a composite salt");
         let mut both = composite;
         both.p.y = both.p.y.negate();
         assert_eq!(
@@ -358,8 +364,8 @@ mod tests {
     }
 
     #[test]
-    fn a_prime_index_reaches_relation_without_being_checked_for_smallest() {
-        let sample = prepared(Nist::I).expect("level I sample");
+    fn a_carried_salt_reaches_the_real_relation_without_a_search() {
+        let sample = prepared(Nist::I).expect("sample");
         assert_eq!(
             verify_level(
                 Nist::I,
@@ -369,21 +375,21 @@ mod tests {
             ),
             Err(VerifyError::Kernel)
         );
-        let response = Response::<Level1>::decode(&sample.signature).expect("the sample decodes");
-        if let Some(later) = response.index.next() {
-            let mut probe = response;
-            probe.index = later;
-            let err = verify::<Level1>(&sample.public_key, sample.message, &probe.encode());
-            // A different index is a different degree. It is refused when
-            // that degree is composite, and never for being larger.
-            let identity = KeyIdentity::<Level1>::decode(&sample.public_key).expect("the key");
-            let scalar = ChallengeScalar::derive(&identity, sample.message, later);
-            if scalar.degree_is_prime::<Level1>() {
-                assert_eq!(err, Err(VerifyError::Kernel));
+        let mut response = Response::<Level1>::decode(&sample.signature).unwrap();
+        let mut salt = response.salt.as_bytes().to_vec();
+        salt[0] ^= 1;
+        response.salt = <Level1 as Level>::Salt::from_bytes(&salt).unwrap();
+        let id = KeyIdentity::<Level1>::decode(&sample.public_key).unwrap();
+        let prime =
+            ChallengeScalar::derive(&id, sample.message, response.salt).degree_is_prime::<Level1>();
+        assert_eq!(
+            verify::<Level1>(&sample.public_key, sample.message, &response.encode()),
+            Err(if prime {
+                VerifyError::Kernel
             } else {
-                assert_eq!(err, Err(VerifyError::Composite));
-            }
-        }
+                VerifyError::Composite
+            })
+        );
     }
 
     #[test]

@@ -1,0 +1,6 @@
+DENSITY level=NIST-I hash=challenge-v1-unsalted bits=245 free_bits=244 samples=100000 primes=1054 density=0.010540 tenths=124,101,99,95,124,92,104,105,107,103
+DENSITY level=NIST-I hash=challenge-v2-salted bits=245 free_bits=244 samples=100000 primes=1056 density=0.010560 tenths=97,107,123,115,105,76,119,100,107,107
+DENSITY level=NIST-III hash=challenge-v1-unsalted bits=373 free_bits=372 samples=100000 primes=682 density=0.006820 tenths=65,68,67,67,78,63,63,76,67,68
+DENSITY level=NIST-III hash=challenge-v2-salted bits=373 free_bits=372 samples=100000 primes=708 density=0.007080 tenths=79,59,75,68,88,61,79,73,73,53
+DENSITY level=NIST-V hash=challenge-v1-unsalted bits=497 free_bits=496 samples=100000 primes=579 density=0.005790 tenths=58,48,56,62,65,59,61,50,62,58
+DENSITY level=NIST-V hash=challenge-v2-salted bits=497 free_bits=496 samples=100000 primes=588 density=0.005880 tenths=56,57,68,49,60,48,51,76,66,57

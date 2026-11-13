@@ -16,9 +16,9 @@ use std::sync::OnceLock;
 use prism_field::{Field, Level, Level1, Level3, Level5};
 
 use crate::basis::BasisHint;
-use crate::challenge::{smallest_challenge_index, IndexError};
 use crate::level::Nist;
 use crate::signature::{AffinePoint, Response};
+use crate::{ChallengeScalar, KeyIdentity, Salt};
 
 /// `A` from the C tree's key generation, one row per NIST level.
 ///
@@ -112,7 +112,7 @@ fn decode_hex(text: &str) -> Result<Vec<u8>, VectorError> {
 
 /// A public key, message, and signature whose challenge degree is prime.
 ///
-/// The index search is the signer's. A timing run builds this before the
+/// The salt search is public test preparation. A timing run builds this before the
 /// clock starts, then times [`crate::verify_level`].
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Prepared {
@@ -127,15 +127,15 @@ pub struct Prepared {
 pub enum PreparedError {
     /// The pinned key for this level is unreadable.
     Vector(VectorError),
-    /// No index names a prime degree for this key and message.
-    Index(IndexError),
+    /// No test salt names a prime degree within the bounded search.
+    Exhausted,
 }
 
 impl core::fmt::Display for PreparedError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::Vector(err) => write!(f, "the pinned key is unreadable: {err}"),
-            Self::Index(err) => write!(f, "no sample index: {err}"),
+            Self::Exhausted => f.write_str("sample salt search exhausted"),
         }
     }
 }
@@ -144,7 +144,7 @@ impl std::error::Error for PreparedError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Vector(err) => Some(err),
-            Self::Index(err) => Some(err),
+            Self::Exhausted => None,
         }
     }
 }
@@ -160,9 +160,17 @@ pub fn prepared(level: Nist) -> Result<Prepared, PreparedError> {
 
 fn sample<L: Level>(level: Nist) -> Result<Prepared, PreparedError> {
     let key = reference_key(level).map_err(PreparedError::Vector)?;
-    let index = smallest_challenge_index::<L>(&key.public_key, SAMPLE_MESSAGE)
-        .map_err(PreparedError::Index)?;
-    // The public checks read `y(P)` and the index. The sample carries
+    let id = KeyIdentity::<L>::decode(&key.public_key)
+        .map_err(|_| PreparedError::Vector(VectorError::Malformed))?;
+    let salt = (0u64..65_536)
+        .find_map(|counter| {
+            let salt = L::Salt::from_counter(counter)?;
+            ChallengeScalar::derive(&id, SAMPLE_MESSAGE, salt)
+                .degree_is_prime::<L>()
+                .then_some(salt)
+        })
+        .ok_or(PreparedError::Exhausted)?;
+    // The public checks read `y(P)` and the salt. The sample carries
     // an admissible curve but invalid point coordinates, so verification
     // stops at `Kernel`. The honest benchmark uses `honest` instead.
     let response = Response::<L> {
@@ -177,7 +185,7 @@ fn sample<L: Level>(level: Nist) -> Result<Prepared, PreparedError> {
             x: L::Ext::zero(),
             y: L::Ext::zero(),
         },
-        index,
+        salt,
     };
     Ok(Prepared {
         level,
@@ -205,8 +213,11 @@ pub fn honest(level: Nist) -> Result<Prepared, VectorError> {
     for name in ["E ", "Px ", "Py ", "Qx ", "Qy "] {
         signature.extend(decode_hex(field(name)?)?);
     }
-    let index: u16 = field("j ")?.parse().map_err(|_| VectorError::Malformed)?;
-    signature.extend(index.to_le_bytes());
+    let salt = decode_hex(field("salt ")?)?;
+    if salt.len() != level.salt_len() {
+        return Err(VectorError::Malformed);
+    }
+    signature.extend(salt);
     Ok(Prepared {
         level,
         public_key,

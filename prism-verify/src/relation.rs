@@ -372,7 +372,7 @@ mod s5_vectors {
     use crate::signature::{canonical_sign, AffinePoint, Response};
     use crate::verify;
     use crate::VerifyError;
-    use prism_field::{ChallengeIndex, Field, Level, Level1, Level3, Level5};
+    use prism_field::{Field, Level, Level1, Level3, Level5, Salt};
     #[cfg(test)]
     use prism_isogeny::chain::SurfaceStop;
     use prism_isogeny::jac::Jac;
@@ -420,11 +420,8 @@ mod s5_vectors {
     fn sample<L: Level>(text: &str) -> Sample<L> {
         let key = hex_bytes(line(text, "A "));
         let identity = KeyIdentity::<L>::decode(&key).expect("key");
-        let index = ChallengeIndex::from_canonical_bytes(
-            line(text, "j ").parse::<u16>().unwrap().to_le_bytes(),
-        );
-        let scalar =
-            ChallengeScalar::derive_width::<L>(&identity, b"shekyl-prism-s5", index, L::E - 3);
+        let salt = L::Salt::from_bytes(&hex_bytes(line(text, "salt "))).unwrap();
+        let scalar = ChallengeScalar::derive::<L>(&identity, b"shekyl-prism-s5", salt);
         let mut from_file = decimal_le(line(text, "s "));
         from_file.resize(scalar.as_bytes().len(), 0);
         assert_eq!(from_file, scalar.as_bytes());
@@ -438,7 +435,7 @@ mod s5_vectors {
                 curve: L::ext_decode(&hex_bytes(line(text, "E "))).unwrap(),
                 p: point("Px ", "Py "),
                 q: point("Qx ", "Qy "),
-                index,
+                salt,
             },
             scalar: scalar.as_bytes().to_vec(),
         }
@@ -559,14 +556,23 @@ mod s5_vectors {
             Err(VerifyError::Kernel)
         );
 
-        let j = u16::from_le_bytes(sample.response.index.to_canonical_bytes());
-        let next = ChallengeIndex::from_canonical_bytes(j.wrapping_add(1).to_le_bytes());
         let identity = KeyIdentity::<L>::decode(&sample.key).unwrap();
-        let next_scalar =
-            ChallengeScalar::derive_width::<L>(&identity, b"shekyl-prism-s5", next, L::E - 3);
-        // j+1 is a different degree. When that degree is composite the
-        // refusal, once the exponent is e', is Composite, before the chain.
-        assert!(!degree_is_prime(L::E - 2, next_scalar.as_bytes()));
+        let mut composite_response = sample.response;
+        composite_response.salt = (0u64..65_536)
+            .find_map(|n| {
+                let salt = L::Salt::from_counter(n).unwrap();
+                let scalar = ChallengeScalar::derive(&identity, b"shekyl-prism-s5", salt);
+                (!degree_is_prime(L::E - 2, scalar.as_bytes())).then_some(salt)
+            })
+            .expect("a composite salt exists");
+        assert_eq!(
+            verify::<L>(
+                &sample.key,
+                b"shekyl-prism-s5",
+                &composite_response.encode()
+            ),
+            Err(VerifyError::Composite)
+        );
 
         // (P, −Q) keeps the normalized y(P). The chain still reaches both
         // readings. The pairing check refuses it before that chain runs.

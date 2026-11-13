@@ -5,9 +5,11 @@ wallet authorization or consensus. Correct execution and security proofs
 are separate requirements. No external reviewer has approved these changes.
 
 The separate [code-matched security argument](SECURITY_ARGUMENT.md) pins
-the merged PR #13 implementation, defines its SUF-CMA game and conditional
-reduction, and records the collision-replay constraint at the actual
-parameters. Its review status is DRAFT; the obligations below remain open.
+the salted implementation of PR #15, defines its SUF-CMA game and
+conditional reduction, and maps the published salt-PRISM bound to the
+actual parameters. The [salt comparison](SALT_COMPARISON.md) records the
+measurements with and without the salt. The argument's review status is
+DRAFT; the obligations below remain open.
 Reproduce its integer bounds with `python3 scripts/security_parameters.py`.
 
 ## Implemented and checked
@@ -24,6 +26,9 @@ signatures exercise the complete acceptance relation. The native signer
 uses a SHAKE256 stream instead of the fixture RNG and derives the signing
 stream from the secret master seed and challenge scalar. Thus the same
 key and degree produce the same response, including under hash collisions.
+The challenge hash binds a carried salt of 32/48/64 bytes; the salt comes
+from a secret-keyed schedule over the message, a 32-byte caller input and
+a counter that is never output.
 
 The [conditional acceptance argument](ACCEPTANCE_ARGUMENT.md) derives
 consistent signs and prime degree from the polarized-chain premise. That
@@ -40,33 +45,29 @@ premise and the protocol reduction still require independent review.
    This prototype changes §5's exponent to `e′=e−2`. Verify the torsion,
    norm and uniqueness hypotheses for the actual available evaluation
    subgroup, not an assumed extra two powers of rational torsion.
-3. **Challenge entropy and collision attacks.** Odd `s` has `e−4` free
-   bits: 244, 372, 496. Raw scalar birthday scales are `2^122`, `2^186`,
-   `2^248`. A usable replay attack also requires a prime-degree collision
-   at indices the signer will use. For fixed first index and fraction `ρ`
-   of scalars with a BPSW-passing degree and successful accepted signing,
-   the random-function estimate is `sqrt(2^(e−4)/ρ)` hash queries;
-   the cost of filtering, memory and quantum attacks needs explicit
-   accounting. A 491/747/995-bit degree is not itself a challenge-entropy
-   argument. Do not claim the paper's security levels without resolving
-   this. Salt binding or larger parameters would change the protocol and
-   need new vectors and analysis. The density thresholds and exact
-   collision-pair expectation are in the security argument §5; a generic
-   odd-integer prime density is not a proved estimate for this family.
-   A real 1,500-search-per-row capture now estimates BPSW-passing density
-   as 1.08909%, 0.71899%, 0.52554%, giving prime-eligible collision exponents
-   125.260, 189.560, 251.786: below nominal in equation (7)'s hash-query
-   model. Native signing success and concrete gate costs remain separate
-   from that estimate. Raw data and reproduction are in the argument §5.
-4. **Carried index.** The verifier accepts any prime index, not a certified
-   hash-to-prime output. Give a SUF-CMA argument for that interface and
-   the deterministic failure/retry policy. The signer is deterministic
-   for a degree, but that does not by itself repair a reduction. The index
-   publicly exposes the count of earlier BPSW-passing candidates skipped
-   after failed final verification. A reproducible deterministic native
-   failure or exhaustion can make a message permanently unsignable for
-   that key/backend; transient I/O failures are a separate case. See the
-   security argument §5 for the exact disclosure and availability scope.
+3. **Challenge entropy and second preimages.** Odd `s` has `e−4` free
+   bits: 244, 372, 496. With the salt, a third party's hash-side attack
+   is a second preimage onto a signed scalar, about `2^b/N_sign` hash
+   queries in the random-oracle estimate, against `sqrt(2^b/ρ)` for the
+   unsalted collision replay (`2^125.3`, `2^189.6`, `2^251.7` at the
+   measured densities 1.055%, 0.695%, 0.584%). Both attacks were run
+   against the real signer and verifier at projection widths 16 to 32
+   only; the full-width figures are extrapolations. The cost of memory,
+   one hash, and quantum attacks needs explicit accounting. A
+   491/747/995-bit degree is not itself a challenge-entropy argument. Do
+   not claim the paper's security levels: its Theorem 2 is mapped in the
+   security argument §6 together with what does not carry over.
+4. **Salt schedule and retry policy.** The salt must be unpredictable
+   before signing. That rests on a PRF assumption for cSHAKE256 keyed by
+   the secret `salt_key`, or by fresh caller randomness when the hedge is
+   relied on; neither is proved, and a leaked or attacker-chosen salt
+   returns the unsalted collision cost. The signer skips a prime candidate
+   on a backend error, malformed response or refused response. Give the
+   distribution of the released scalar under that policy, which the
+   published reduction needs uniform over prime degrees. The counter is
+   not in the signature, but signing time depends on it. A signer can
+   still issue one signature valid for two messages of its own choosing
+   at the unsalted collision cost.
 5. **Primality.** BPSW is a reproducible probable-prime predicate. No bypass
    was found, but this is not a certificate or a proof against adversarial
    grinding. Decide on a justified deterministic test policy or a bounded,
@@ -83,7 +84,7 @@ premise and the protocol reduction still require independent review.
    derivation and prove its relation to the public key and unknown
    endomorphism ring. Neither wallet integration nor key rerandomization
    is implemented. ECLIPSE's salted construction and its stated future
-   SUF-CMA work do not provide a proof for this unsalted interface.
+   SUF-CMA work do not provide a proof for this interface.
 8. **Deployment costs.** Successful verification has been measured on the
    Pi 4 Model B: the median of three level III run medians is 449.076 ms
    under the recorded conditions; see [BENCHMARKING.md](BENCHMARKING.md).
@@ -98,7 +99,22 @@ Theta_dim4 submodule, build `s5_challenge` and `verify_bytes`, and run
 `sage scripts/sage/differential.sage`. It compares both implementations on
 the current honest corpus and mutations without rewriting known answers.
 A matching result is evidence of implementation agreement, not a security
-proof. The fresh Sage comparison was not run in this environment.
+proof. `sh scripts/sage/run_container.sh <run-name>` runs it in the pinned
+Sage image and keeps the log, exit status and input digests under
+`target/sage/<run-name>/`.
+
+**Ran** on the salted corpus at commit `2c2534f`: Sage and Rust returned
+the same verdict on 485 signatures and mutations across all 113 vectors,
+each vector in its own interpreter, and every honest signature was `Ok`
+in both (exit status 0). The log, status and input digests are in
+[comparison/sage-differential/](comparison/sage-differential/). The two
+`Timeout` stack traces in the log are the script's periodic progress
+dump on slow steps, not failures. Every row of `accept_verdicts.tsv` was
+checked against that run and none changed.
+
+The comparison experiments are reproduced with
+`sh scripts/run_comparison.sh` and `python3 scripts/analyze_comparison.py`;
+[SALT_COMPARISON.md](SALT_COMPARISON.md) lists the command of each.
 
 Before adoption, require an independent review of the exact written
 protocol, its parameter accounting and native signer, plus a deployment

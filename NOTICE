@@ -37,3 +37,12 @@ Antonin Leroux and the SQIsign authors. The PRISM_v2 repository
 states that it is built on Qlapoti and the SQIsign reference.
 
 The rest of this repository is BSD-3-Clause, The Shekyl Foundation.
+
+Research comparison and protocol framing
+========================================
+
+The salted cSHAKE framing and caller-randomness schedule are the local
+research protocol in docs/SALT_PROTOCOL.md. They are not the upstream
+C wire format. prism-compare retains the Foundation's archived unsalted
+framing and original public fixture data for reproducible comparisons.
+The low-level isogeny implementations and their notices above are unchanged.

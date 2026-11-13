@@ -18,10 +18,9 @@ use std::env;
 use std::io::{self, Write};
 use std::process::ExitCode;
 
+use prism_compare::first_prime;
 use prism_field::{Level, Level1, Level3, Level5};
-use prism_verify::{
-    challenge_degree, smallest_at_exponent, ChallengeScalar, IndexError, KeyIdentity,
-};
+use prism_verify::{challenge_degree, KeyIdentity};
 
 const MESSAGE_PREFIX: &[u8] = b"shekyl-prism-small-extension";
 
@@ -68,21 +67,17 @@ fn sample_level<L: Level>(count: u64, out: &mut impl Write) -> Result<(), ()> {
             continue;
         };
         let message = message_for(produced);
-        match smallest_at_exponent::<L>(&key, &message, L::E - 2) {
-            Ok((index, scalar)) => {
+        match first_prime::<L>(&key, &message) {
+            Some((index, scalar)) => {
                 write_sample::<L>(produced, &index.to_string(), &scalar, out)?;
                 produced += 1;
                 draw = draw.checked_add(1).ok_or_else(exhausted)?;
                 eprintln!("{name} {produced}/{count}", name = L::NAME);
             }
-            Err(IndexError::Exhausted) => {
+            None => {
                 // This key and message have no prime degree in the index
                 // range. The next draw is a different key.
                 draw = draw.checked_add(1).ok_or_else(exhausted)?;
-            }
-            Err(IndexError::Identity(err)) => {
-                eprintln!("sample_e_prime: a key that decoded was refused: {err}");
-                return Err(());
             }
         }
     }
@@ -92,10 +87,10 @@ fn sample_level<L: Level>(count: u64, out: &mut impl Write) -> Result<(), ()> {
 fn write_sample<L: Level>(
     produced: u64,
     index: &str,
-    scalar: &ChallengeScalar,
+    scalar: &[u8],
     out: &mut impl Write,
 ) -> Result<(), ()> {
-    let degree = challenge_degree(L::E - 2, scalar.as_bytes()).ok_or_else(|| {
+    let degree = challenge_degree(L::E - 2, scalar).ok_or_else(|| {
         eprintln!("sample_e_prime: {produced} named a prime the degree constructor refuses");
     })?;
     writeln!(
@@ -103,7 +98,7 @@ fn write_sample<L: Level>(
         "{name} {exponent} {index} {scalar} {degree}",
         name = L::NAME,
         exponent = L::E - 2,
-        scalar = hex(scalar.as_bytes()),
+        scalar = hex(scalar),
         degree = hex(&degree),
     )
     .map_err(|_| eprintln!("sample_e_prime: could not write stdout"))

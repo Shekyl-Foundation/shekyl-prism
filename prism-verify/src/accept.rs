@@ -182,7 +182,7 @@ pub(crate) fn check<L: Level>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{basis_hint, ChallengeIndex, ChallengeScalar, KeyIdentity};
+    use crate::{basis_hint, ChallengeScalar, KeyIdentity, Salt};
     use prism_field::{Level1, Level3, Level5};
     use prism_isogeny::{
         theta::{projectively_same, ThetaPoint},
@@ -226,7 +226,7 @@ mod tests {
         let s = ChallengeScalar::derive(
             &id,
             field("message ").as_bytes(),
-            ChallengeIndex::from_canonical_bytes(field("j ").parse::<u16>().unwrap().to_le_bytes()),
+            L::Salt::from_bytes(&hex(field("salt "))).unwrap(),
         );
         let f = |name: &str| L::ext_decode(&hex(field(name))).unwrap();
         let hint = basis_hint::<L>(id.coefficient()).unwrap();

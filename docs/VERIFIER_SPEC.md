@@ -1,7 +1,7 @@
 # Research verifier specification
 
-Status: executable prototype, 2026-11-12. This is a local instantiation of
-PRISM's prime-degree §5 construction, not an adopted standard or a reviewed
+Status: salted executable prototype, 2026-11-12. This is a local instantiation of
+PRISM's prime-degree §5 relation with a salted challenge, not an adopted standard or a reviewed
 SUF-CMA security claim. See [security review](SECURITY_REVIEW.md).
 The [code-matched security argument draft](SECURITY_ARGUMENT.md) defines
 the exact attacker game, parameter audit and conditional proof obligations.
@@ -20,10 +20,11 @@ preserve the derivations, investigations and questions that led here.
 | Free bits in odd `s` | 244 | 372 | 496 |
 | Degree `q` bit length | 491 | 747 | 995 |
 | Public-key bytes | 64 | 96 | 128 |
-| Signature bytes | 322 | 482 | 642 |
+| Salt bytes (2λ bits) | 32 | 48 | 64 |
+| Signature bytes | 352 | 528 | 704 |
 
 I/III/V identify the paper's field rows. They do not certify the security
-level of this modified, unsalted protocol. `CHAIN_STEPS` is `e′`; `E` is
+level of this modified salted protocol. `CHAIN_STEPS` is `e′`; `E` is
 always the rational torsion exponent. `CHALLENGE_BITS` is the actual
 `e−3` width, including the forced odd bit. The historical `e−1` constant
 had the same byte width but overstated the number of challenge bits.
@@ -33,30 +34,36 @@ coefficient `A`, for `y²=x³+Ax²+x`. The first component is real, the second
 imaginary, each an integer in `[0,p)`. Singular keys and `A=0` are refused.
 The accepted key bytes are its identity for the challenge hash.
 
-The signature is `A_sig || Px || Py || Qx || Qy || LE16(j)`, five fp2
-encodings and one unsigned 16-bit index. No component is reduced during
-decoding. Truncation, extension and out-of-range field elements are refused.
-The index has no alternate encoding. Salt-PRISM encodings are not accepted.
+The signature is `A_sig || Px || Py || Qx || Qy || salt`, five fp2
+encodings and exactly the row's salt length. Field components are not reduced
+on decoding. Every salt byte string of that length is admissible: salt
+binding comes from the hash, not a unique numerical salt representation.
+Truncation, extension and out-of-range field elements are refused. The
+archived two-byte-index encoding and the paper's C wire encoding are not
+accepted by default verification.
 
-## Challenge
+## Challenge and signing
 
-`s_j = cSHAKE256(S="shekyl-prism-challenge-v1";
-A_bytes || message || LE16(j))`, truncated to `e−3` bits with bit zero set.
-There is no ambiguity between the message and the fixed-width key/index.
-`q_j = 2^(2e−5) − s_j²`.
+`s = cSHAKE256(S="shekyl-prism-challenge-v2";
+A_bytes || salt || message)`, truncated to `e−3` bits with bit zero set.
+The leading key and salt lengths are fixed for the row. `q=2^(2e−5)−s²`.
+Public verification tests that single degree and never searches salts.
 
-The degree test is deterministic Baillie–PSW: small-prime sieve, perfect
-square rejection, strong base-2 Miller–Rabin and strong Lucas–Selfridge.
-This is a probable-prime predicate, not a primality certificate. Its
-adversarial adequacy is an explicit unresolved assumption.
+The degree test remains deterministic Baillie–PSW: small-prime sieve,
+perfect square rejection, strong base-2 Miller–Rabin and strong
+Lucas–Selfridge. It is a probable-prime predicate, not a certificate;
+adversarial adequacy remains unresolved.
 
-The research signer examines indices in ascending order, testing only
-those for which the degree predicate passes. It returns the first exact
-signature accepted by Rust, with a bound of 16 prime candidates and the
-16-bit index range. A backend failure is a typed signing error, not a draw
-of fresh randomness. The verifier tests only the carried index. It does
-not rerun or certify the signer's search. The reduction for this interface
-is still an open review item.
+The [salt protocol contract](SALT_PROTOCOL.md) specifies the 32-byte caller
+randomness input and the secret-keyed cSHAKE salt schedule. Research signing
+uses zeros by default; a caller may provide fresh randomness without
+changing verification. The internal counter is never encoded. Signing
+visits at most 16 prime candidates and 65536 counters, skips candidate
+backend errors, malformed responses and failed final verification, and
+returns only exact bytes accepted by Rust. Initial setup/keygen errors
+remain typed errors. Exhaustion returns no signature. The response stream
+remains deterministic for each key and scalar. The PRF, rejection/failure
+distribution, and stronger isogeny assumptions are still review obligations.
 
 ## Normalization
 
@@ -156,10 +163,23 @@ time. The signer remains a separate crate and process backend.
   changes, every nonzero order-four translate in either or both points,
   alternate prime challenges, other messages, all five alternative models,
   reduced orders, off-curve points, singular and exceptional models.
+- Salt negatives. Every one-bit change of the salt is refused: `Composite`,
+  or `Image` when the new degree is prime. Over all 113 signatures the
+  split is 62 prime to 5,570 composite at I, 137 to 18,679 at III and 118
+  to 21,386 at V. A salt found by search whose degree is prime gives
+  `Image`. The salt of another valid signature under the same key gives
+  `Composite` or `Image` (native signer test). An archived unsalted
+  signature gives `Length` (`prism-compare`).
 - Test builds use optimization level 1 with debug assertions and overflow
   checks enabled, so the full crypto corpus remains practical in CI.
 - The native signer test generates fresh responses at all levels, checks
-  byte-for-byte determinism, binary messages and message binding.
+  byte-for-byte determinism, binary messages and message binding, with
+  zero and nonzero caller randomness.
+- The default build has no reduced-width entry point: CI compiles a
+  consumer that must fail on `prism_verify::research` and build only with
+  `research-reduced-width`. At the production width the comparison driver
+  calls the production signing session, so the bytes it releases are the
+  production signer's bytes.
 - `scripts/sage/differential.sage` compares a fresh Sage execution against
   Rust, including the other-key cases. It requires Sage and pinned source.
 - Fuzz corpora are seeded with all honest signatures, so deep paths are

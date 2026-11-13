@@ -23,7 +23,7 @@ import tempfile
 def wanted(path: str) -> bool:
     if path in ("Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".github/workflows/ci.yml"):
         return True
-    if path.startswith(("scripts/", "external/", "prism-field/", "prism-isogeny/", "prism-verify/")):
+    if path.startswith(("scripts/", "external/", "prism-field/", "prism-isogeny/", "prism-verify/", "prism-compare/")):
         return True
     return "testdata" in path.split("/")
 
@@ -125,6 +125,7 @@ def selftest() -> int:
         "prism-verify/testdata/c_basis_hints.txt": True,
         "prism-verify/src/lib.rs": True,
         "prism-isogeny/src/torsion.rs": True,
+        "prism-compare/src/lib.rs": True,
         "prism-isogeny/src/jac.rs": True,
         "prism-field/src/lib.rs": True,
         "prism-field/Cargo.toml": True,

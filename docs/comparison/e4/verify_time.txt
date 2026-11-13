@@ -1,0 +1,42 @@
+RUN 1 protocol=unsalted started 23:26:39Z load 12.69 8.03 7.53
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=23255435 spread_ns=2465682 median_counter=60725254 counter_spread=6438550
+level=NIST-III outcome=accepted samples=31 median_ns=67593736 spread_ns=1465129 median_counter=176502494 counter_spread=3826462
+level=NIST-V outcome=accepted samples=31 median_ns=152840336 spread_ns=9356656 median_counter=399100534 counter_spread=24432106
+exit 0
+RUN 1 protocol=salted started 23:26:48Z load 11.36 7.90 7.49
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=24014324 spread_ns=2328328 median_counter=62706876 counter_spread=6079814
+level=NIST-III outcome=accepted samples=31 median_ns=67856752 spread_ns=2712997 median_counter=177189286 counter_spread=7084288
+level=NIST-V outcome=accepted samples=31 median_ns=149965306 spread_ns=8565417 median_counter=391593184 counter_spread=22366228
+exit 0
+RUN 2 protocol=unsalted started 23:26:57Z load 9.99 7.72 7.44
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=23413950 spread_ns=2469294 median_counter=61139142 counter_spread=6447712
+level=NIST-III outcome=accepted samples=31 median_ns=67945308 spread_ns=1880381 median_counter=177420534 counter_spread=4910484
+level=NIST-V outcome=accepted samples=31 median_ns=160601326 spread_ns=139693022 median_counter=419366268 counter_spread=364770422
+exit 0
+RUN 2 protocol=salted started 23:27:06Z load 9.08 7.60 7.40
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=26619713 spread_ns=22901400 median_counter=69510176 counter_spread=59800132
+level=NIST-III outcome=accepted samples=31 median_ns=73422428 spread_ns=61742531 median_counter=191722828 counter_spread=161224266
+level=NIST-V outcome=accepted samples=31 median_ns=153346471 spread_ns=19777954 median_counter=400422430 counter_spread=51644856
+exit 0
+RUN 3 protocol=unsalted started 23:27:16Z load 8.07 7.43 7.35
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=23614377 spread_ns=409973 median_counter=61662548 counter_spread=1070044
+level=NIST-III outcome=accepted samples=31 median_ns=68827624 spread_ns=68973703 median_counter=179724644 counter_spread=180106156
+level=NIST-V outcome=accepted samples=31 median_ns=287978146 spread_ns=124052788 median_counter=751976228 counter_spread=323928700
+exit 0
+RUN 3 protocol=salted started 23:27:30Z load 10.22 7.91 7.51
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=45984977 spread_ns=22713423 median_counter=120077498 counter_spread=59310004
+level=NIST-III outcome=accepted samples=31 median_ns=135857174 spread_ns=84023124 median_counter=354754116 counter_spread=219403686
+level=NIST-V outcome=accepted samples=31 median_ns=280297900 spread_ns=55013984 median_counter=731921584 counter_spread=143653986
+exit 0
