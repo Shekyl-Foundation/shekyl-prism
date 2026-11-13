@@ -153,6 +153,21 @@ vector is `Image`, at about 90% of the accepted cost before the scalar
 multiplications were shared and 97% after, since that change made the
 last stage cheaper than the stages before it.
 
+Verification time before and after, on the x86_64 development machine in
+one session: five alternating runs of the bench built at the instrument's
+commit (`c9df786`) and at the commit of the last change above, at a
+1-minute load near 4. Median of the five run medians, in milliseconds;
+record in [benchmarks/verifier_ops_x86_64_2026-11-13.txt](benchmarks/verifier_ops_x86_64_2026-11-13.txt).
+
+| | I | III | V |
+| --- | ---: | ---: | ---: |
+| before | 24.1 | 68.4 | 156.4 |
+| after | 11.5 | 32.5 | 73.9 |
+
+These are not floor-device figures. The Pi 4 runs of the salted verifier
+at the same two commits, and the cycles per operation they give, are not
+yet taken.
+
 `prism-bench` prints the time of one extension-field multiplication,
 squaring and inversion per level after its verification timings. On the
 x86_64 development machine (shared, load 12 to 18; medians of three runs
