@@ -114,18 +114,39 @@ commit is the one that last changed the record. Counts are taken in the
 release profile; they vary slightly between vectors with the basis index
 and the bits of the challenge.
 
-The extension-field counts of one accepted signature before any
-optimization (commit of this section's introduction, primary vector of
-each level):
+The extension-field counts of one accepted signature, primary vector of
+each level, after each change of the performance work. Square roots (7)
+and residuosity tests (4, 6, 4) did not move.
 
-| | I | III | V |
-| --- | ---: | ---: | ---: |
-| Multiplications | 345,200 | 530,434 | 722,924 |
-| Inversions | 4,019 | 6,072 | 8,056 |
-| Square roots | 7 | 7 | 7 |
-| Residuosity tests | 4 | 6 | 4 |
+| After | Operation | I | III | V |
+| --- | --- | ---: | ---: | ---: |
+| the instrument, no optimization (`c9df786`) | multiplications | 345,200 | 530,434 | 722,924 |
+| | inversions | 4,019 | 6,072 | 8,056 |
+| squaring | multiplications | 184,098 | 281,720 | 384,048 |
+| | squarings | 135,822 | 210,624 | 287,518 |
+| | inversions | 4,019 | 6,072 | 8,056 |
 
-No base-field call is made directly at any stage. At this commit no
+Squaring turned 39% of the multiplications into squarings and removed 7%
+outright (products that the doubling and addition formulas computed two
+or three times). No base-field call is made directly at any stage, and no
 refusal costs more than acceptance: the dearest negative of every primary
 vector is `Image` at about 90% of the accepted cost.
 
+`prism-bench` prints the time of one extension-field multiplication,
+squaring and inversion per level after its verification timings. On the
+x86_64 development machine (shared, load 12 to 18; medians of three runs
+in [benchmarks/sum_of_products_x86_64_2026-11-13.txt](benchmarks/sum_of_products_x86_64_2026-11-13.txt)):
+
+| ns per operation | I | III | V |
+| --- | ---: | ---: | ---: |
+| multiplication | 43.2 | 86.1 | 152.7 |
+| squaring | 30.6 | 55.4 | 99.5 |
+| inversion | 1,711 | 3,082 | 4,770 |
+
+Squaring is faster than multiplication at every level there, so `square`
+is used at every level. An inversion costs about 40, 36 and 31
+multiplications.
+
+`fp2`'s `use_sum_of_products` multiplication was measured in the same
+record and is not adopted: against the default it takes 38.2 ns at level
+I but 97.2 at III and 164.4 at V. It stays off at every level.

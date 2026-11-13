@@ -25,7 +25,7 @@ struct Aff<F> {
 
 fn to_affine<F: Field>(point: Jac<F>) -> Option<Aff<F>> {
     let z_inv = point.z.inv()?;
-    let z_inv2 = z_inv.mul(z_inv);
+    let z_inv2 = z_inv.square();
     Some(Aff {
         x: point.x.mul(z_inv2),
         y: point.y.mul(z_inv2).mul(z_inv),
@@ -47,7 +47,7 @@ fn double_step<F: Field>(
         return Some((vertical, None));
     }
     let slope_num =
-        t.x.mul(t.x)
+        t.x.square()
             .mul(F::from_u64(3))
             .add(curve.a.mul(t.x).mul(F::from_u64(2)))
             .add(F::one());
@@ -56,7 +56,7 @@ fn double_step<F: Field>(
     if line.is_zero() {
         return None;
     }
-    let x3 = slope.mul(slope).sub(curve.a).sub(t.x).sub(t.x);
+    let x3 = slope.square().sub(curve.a).sub(t.x).sub(t.x);
     let y3 = slope.mul(t.x.sub(x3)).sub(t.y);
     let denom = q.x.sub(x3);
     if denom.is_zero() {
@@ -72,7 +72,7 @@ fn miller<F: Field>(curve: Montgomery<F>, p: Jac<F>, q: Jac<F>, log_order: u32) 
     let mut value = F::one();
     for step in 0..log_order {
         let (contribution, next) = double_step(curve, t, target)?;
-        value = value.mul(value).mul(contribution);
+        value = value.square().mul(contribution);
         match next {
             Some(point) => t = point,
             None => {
@@ -92,9 +92,9 @@ fn on_curve<F: Field>(curve: Montgomery<F>, p: Jac<F>) -> bool {
     if p.z.is_zero() {
         return false;
     }
-    let z2 = p.z.mul(p.z);
-    let x2 = p.x.mul(p.x);
-    p.y.mul(p.y).same(
+    let z2 = p.z.square();
+    let x2 = p.x.square();
+    p.y.square().same(
         x2.mul(p.x)
             .add(curve.a.mul(x2).mul(z2))
             .add(p.x.mul(z2).mul(z2)),
@@ -178,7 +178,7 @@ pub fn pow<F: Field>(mut value: F, exponent: &[u8]) -> F {
             if bits & 1 == 1 {
                 result = result.mul(value);
             }
-            value = value.mul(value);
+            value = value.square();
             bits >>= 1;
         }
     }
@@ -230,6 +230,9 @@ mod tests {
         }
         fn sub(self, rhs: Self) -> Self {
             Self::new(self.re + P - rhs.re, self.im + P - rhs.im)
+        }
+        fn square(self) -> Self {
+            self.mul(self)
         }
         fn mul(self, rhs: Self) -> Self {
             let re = self.re * rhs.re + (P - (self.im * rhs.im % P));
@@ -333,8 +336,8 @@ mod tests {
         };
         let (_line, doubled) = super::double_step(curve, p, q).expect("double");
         let doubled = doubled.expect("order above 2");
-        let y2 = doubled.y.mul(doubled.y);
-        let x2 = doubled.x.mul(doubled.x);
+        let y2 = doubled.y.square();
+        let x2 = doubled.x.square();
         let rhs = doubled.x.mul(x2).add(doubled.x);
         assert!(y2.same(rhs));
     }

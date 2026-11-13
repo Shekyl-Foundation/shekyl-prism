@@ -35,8 +35,8 @@ use support::{files, level, negatives, primary, vector};
 fn fields(counts: Slot) -> String {
     let one = |name: &str, c: Counts| {
         format!(
-            "{name}_mul={} {name}_inv={} {name}_sqrt={} {name}_is_square={}",
-            c.mul, c.inv, c.sqrt, c.is_square
+            "{name}_mul={} {name}_square={} {name}_inv={} {name}_sqrt={} {name}_is_square={}",
+            c.mul, c.square, c.inv, c.sqrt, c.is_square
         )
     };
     format!("{} {}", one("ext", counts.ext), one("base", counts.base))
@@ -81,7 +81,7 @@ fn accept<L: Level>(path: &Path, text: &str, per_stage: bool) -> Result<Slot, St
         return Err(format!("{}: honest vector gave {verdict:?}", name(path)));
     }
     let sum = total(&table);
-    if sum.ext.mul == 0 {
+    if sum.ext.mul + sum.ext.square == 0 {
         return Err(format!(
             "{}: an accepted signature counted nothing",
             name(path)
@@ -100,6 +100,7 @@ fn accept<L: Level>(path: &Path, text: &str, per_stage: bool) -> Result<Slot, St
 fn refuse<L: Level>(path: &Path, text: &str, accepted: Slot) -> Result<(), String> {
     let mut seen = BTreeSet::new();
     let mut dearest: Option<(u64, String, VerifyError)> = None;
+    let mut most_inversions = 0;
     for case in negatives::<L>(text) {
         let (verdict, table) = counted::<L>(&case.key, &case.message, &case.signature);
         let error = match verdict {
@@ -108,11 +109,12 @@ fn refuse<L: Level>(path: &Path, text: &str, accepted: Slot) -> Result<(), Strin
         };
         let sum = total(&table);
         println!(
-            "VERDICT\t{}\t{}\t{}\t{error:?}\t{}\t{}\t{}\t{}",
+            "VERDICT\t{}\t{}\t{}\t{error:?}\t{}\t{}\t{}\t{}\t{}",
             L::NAME,
             name(path),
             case.name,
             sum.ext.mul,
+            sum.ext.square,
             sum.ext.inv,
             sum.ext.sqrt,
             sum.ext.is_square
@@ -126,17 +128,23 @@ fn refuse<L: Level>(path: &Path, text: &str, accepted: Slot) -> Result<(), Strin
             );
             stages(&kind, &table);
         }
-        if dearest.as_ref().is_none_or(|d| sum.ext.mul > d.0) {
-            dearest = Some((sum.ext.mul, case.name, error));
+        let products = sum.ext.mul + sum.ext.square;
+        most_inversions = most_inversions.max(sum.ext.inv);
+        if dearest.as_ref().is_none_or(|d| products > d.0) {
+            dearest = Some((products, case.name, error));
         }
     }
-    let (mul, case, error) = dearest.ok_or("no negatives")?;
+    // Multiplications and squarings together are the comparable cost: a
+    // change that turns one into the other moves neither refusal nor
+    // acceptance. Inversions are compared on their own.
+    let (products, case, error) = dearest.ok_or("no negatives")?;
+    let accepted_products = accepted.ext.mul + accepted.ext.square;
     println!(
-        "COUNT dearest-refusal level={} vector={} case={case} error={error:?} ext_mul={mul} accept_ext_mul={} above_accept={}",
+        "COUNT dearest-refusal level={} vector={} case={case} error={error:?} ext_mul_and_square={products} accept_ext_mul_and_square={accepted_products} most_ext_inv_of_any_refusal={most_inversions} accept_ext_inv={} above_accept={}",
         L::NAME,
         name(path),
-        accepted.ext.mul,
-        mul > accepted.ext.mul
+        accepted.ext.inv,
+        products > accepted_products || most_inversions > accepted.ext.inv
     );
     let missing: Vec<_> = [
         VerifyError::Length,

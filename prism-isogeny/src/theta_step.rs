@@ -295,6 +295,9 @@ mod tests {
         fn sub(self, rhs: Self) -> Self {
             Self(self.norm() - rhs.norm())
         }
+        fn square(self) -> Self {
+            self.mul(self)
+        }
         fn mul(self, rhs: Self) -> Self {
             Self(self.norm() * rhs.norm())
         }

@@ -53,6 +53,8 @@ pub trait Field: Copy {
     fn add(self, rhs: Self) -> Self;
     fn sub(self, rhs: Self) -> Self;
     fn mul(self, rhs: Self) -> Self;
+    /// `self · self`, cheaper than [`Self::mul`] in the extension field.
+    fn square(self) -> Self;
     fn negate(self) -> Self;
     fn inv(self) -> Option<Self>;
     /// A square root, or `None` when this element is not a square.
@@ -200,6 +202,10 @@ macro_rules! nist_level {
                     tally(Kind::Base, Op::Mul);
                     self * rhs
                 }
+                fn square(self) -> Self {
+                    tally(Kind::Base, Op::Square);
+                    <$fp>::square(self)
+                }
                 fn negate(self) -> Self {
                     -self
                 }
@@ -248,6 +254,10 @@ macro_rules! nist_level {
                 fn mul(self, rhs: Self) -> Self {
                     tally(Kind::Ext, Op::Mul);
                     self * rhs
+                }
+                fn square(self) -> Self {
+                    tally(Kind::Ext, Op::Square);
+                    <Self as fp2::traits::Fq>::square(self)
                 }
                 fn negate(self) -> Self {
                     -self
@@ -410,9 +420,9 @@ mod tests {
         let inverse = two.inv().expect("2 is invertible");
         assert_eq!(hex(&L::base_encode(inverse)), inv);
         assert!(inverse.mul(two).same(L::Base::one()));
-        let four = two.mul(two);
+        let four = two.square();
         let root = L::base_decode(&hex_bytes(sqrt_sq)).expect("root decodes");
-        assert!(root.mul(root).same(four));
+        assert!(root.square().same(four));
         assert_eq!(L::FP_LEN * 2, L::FP2_LEN);
         assert_eq!(L::PUBLIC_KEY_LEN, L::FP2_LEN);
         assert_eq!(L::SALT_LEN, (2 * (L::LAMBDA as usize)) / 8);

@@ -74,8 +74,8 @@ impl<F: Field> Montgomery<F> {
 pub fn xdbl_ac<F: Field>(curve: Montgomery<F>, point: Xz<F>) -> Xz<F> {
     let sum = point.x.add(point.z);
     let diff = point.x.sub(point.z);
-    let sum2 = sum.mul(sum);
-    let diff2 = diff.mul(diff);
+    let sum2 = sum.square();
+    let diff2 = diff.square();
     let four_xz = sum2.sub(diff2);
     let two_c = curve.c.add(curve.c);
     let scaled = diff2.mul(two_c);
@@ -91,8 +91,8 @@ pub fn xdbl_ac<F: Field>(curve: Montgomery<F>, point: Xz<F>) -> Xz<F> {
 pub fn xdbl<F: Field>(a24: F, point: Xz<F>) -> Xz<F> {
     let sum = point.x.add(point.z);
     let diff = point.x.sub(point.z);
-    let sum2 = sum.mul(sum);
-    let diff2 = diff.mul(diff);
+    let sum2 = sum.square();
+    let diff2 = diff.square();
     let four_xz = sum2.sub(diff2);
     Xz {
         x: sum2.mul(diff2),
@@ -109,8 +109,8 @@ pub fn xadd<F: Field>(difference: Xz<F>, point: Xz<F>, other: Xz<F>) -> Xz<F> {
     let left = other_diff.mul(point_sum).add(other_sum.mul(point_diff));
     let right = other_diff.mul(point_sum).sub(other_sum.mul(point_diff));
     Xz {
-        x: difference.z.mul(left.mul(left)),
-        z: difference.x.mul(right.mul(right)),
+        x: difference.z.mul(left.square()),
+        z: difference.x.mul(right.square()),
     }
 }
 
@@ -169,6 +169,9 @@ mod tests {
         fn sub(self, rhs: Self) -> Self {
             Self((self.0 + P - rhs.0 % P) % P)
         }
+        fn square(self) -> Self {
+            self.mul(self)
+        }
         fn mul(self, rhs: Self) -> Self {
             Self(((self.0 as u128 * rhs.0 as u128) % P as u128) as u64)
         }
@@ -213,17 +216,17 @@ mod tests {
     }
 
     fn rhs(a: Toy, x: Toy) -> Toy {
-        x.mul(x.mul(x).add(a.mul(x)).add(Toy::one()))
+        x.mul(x.square().add(a.mul(x)).add(Toy::one()))
     }
 
     fn affine_double(a: Toy, x: Toy, y: Toy) -> Toy {
         let slope = x
-            .mul(x)
+            .square()
             .mul(Toy::from_u64(3))
             .add(a.mul(x).mul(Toy::from_u64(2)))
             .add(Toy::one())
             .mul(y.mul(Toy::from_u64(2)).inv().unwrap());
-        slope.mul(slope).sub(a).sub(x).sub(x)
+        slope.square().sub(a).sub(x).sub(x)
     }
 
     #[test]

@@ -52,7 +52,7 @@ impl<F: Field> Curve<F> {
         let three = F::from_u64(3);
         let three_inv = three.inv()?;
         let shift = coefficient.mul(three_inv);
-        let shift2 = shift.mul(shift);
+        let shift2 = shift.square();
         let shift3 = shift2.mul(shift);
         // a4 = 3 (A/3)^2 + A (-2) (A/3) + 1
         let a4 = three
@@ -65,8 +65,8 @@ impl<F: Field> Curve<F> {
     }
 
     pub fn contains(self, point: Point<F>) -> bool {
-        let y2 = point.y.mul(point.y);
-        let x2 = point.x.mul(point.x);
+        let y2 = point.y.square();
+        let x2 = point.x.square();
         let rhs = point.x.mul(x2).add(self.a4.mul(point.x)).add(self.a6);
         y2.same(rhs)
     }
@@ -100,7 +100,7 @@ pub fn two_isogeny<F: Field>(domain: Curve<F>, kernel: Point<F>) -> Option<Iso<F
         return None;
     }
     let x0 = kernel.x;
-    let t = F::from_u64(3).mul(x0.mul(x0)).add(domain.a4);
+    let t = F::from_u64(3).mul(x0.square()).add(domain.a4);
     let codomain = Curve {
         a4: domain.a4.sub(F::from_u64(5).mul(t)),
         a6: domain.a6.sub(F::from_u64(7).mul(x0).mul(t)),
@@ -135,7 +135,7 @@ impl<F: Field> Iso<F> {
         let gap = point.x.sub(self.x0);
         let gap_inv = gap.inv()?;
         let x = point.x.add(self.t.mul(gap_inv));
-        let gap2_inv = gap_inv.mul(gap_inv);
+        let gap2_inv = gap_inv.square();
         let scale = F::one().sub(self.t.mul(gap2_inv));
         Some(Point {
             x,
@@ -213,7 +213,7 @@ pub fn split_chain<F: Field>(start: F, siblings: [F; 2], steps: u32) -> Option<C
 /// curve whose cubic is `x^3 + a4 x + a6`.
 fn other_torsion<F: Field>(curve: Curve<F>, known: F) -> Option<(F, F)> {
     let delta = F::from_u64(3)
-        .mul(known.mul(known))
+        .mul(known.square())
         .negate()
         .sub(F::from_u64(4).mul(curve.a4));
     let root = delta.sqrt()?;
@@ -263,6 +263,9 @@ mod tests {
         }
         fn sub(self, rhs: Self) -> Self {
             Self((self.0 + P - rhs.0) % P)
+        }
+        fn square(self) -> Self {
+            self.mul(self)
         }
         fn mul(self, rhs: Self) -> Self {
             Self(((self.0 as u128 * rhs.0 as u128) % P as u128) as u64)
@@ -349,7 +352,7 @@ mod tests {
             }
             let y2 = {
                 let x = Toy::from_u64(x);
-                x.mul(x).mul(x).add(curve.a4.mul(x)).add(curve.a6)
+                x.square().mul(x).add(curve.a4.mul(x)).add(curve.a6)
             };
             let leg = mod_pow(y2.0, (P - 1) / 2);
             if leg == 1 {
@@ -374,7 +377,7 @@ mod tests {
     fn a_chain_walks_past_the_dual_kernel() {
         let alpha = Toy::from_u64(3);
         let coefficient = alpha.add(alpha.inv().unwrap()).negate();
-        let delta = coefficient.mul(coefficient).sub(Toy::from_u64(4));
+        let delta = coefficient.square().sub(Toy::from_u64(4));
         let root = delta.sqrt().expect("2-torsion discriminant");
         let half = Toy::from_u64(2).inv().unwrap();
         let siblings = [

@@ -41,10 +41,10 @@ pub fn hadamard<F: Field>(point: ThetaPoint<F>) -> ThetaPoint<F> {
 
 fn square_coords<F: Field>(point: ThetaPoint<F>) -> ThetaPoint<F> {
     ThetaPoint {
-        x: point.x.mul(point.x),
-        y: point.y.mul(point.y),
-        z: point.z.mul(point.z),
-        t: point.t.mul(point.t),
+        x: point.x.square(),
+        y: point.y.square(),
+        z: point.z.square(),
+        t: point.t.square(),
     }
 }
 
@@ -203,6 +203,9 @@ mod tests {
         }
         fn sub(self, rhs: Self) -> Self {
             Self(self.norm() - rhs.norm())
+        }
+        fn square(self) -> Self {
+            self.mul(self)
         }
         fn mul(self, rhs: Self) -> Self {
             Self(self.norm() * rhs.norm())

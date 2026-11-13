@@ -93,7 +93,7 @@ fn point<L: Level>(p: AffinePoint<L>) -> Jac<L::Ext> {
 }
 fn affine<L: Level>(p: Jac<L::Ext>) -> AffinePoint<L> {
     let inv = p.z.inv().unwrap();
-    let inv2 = inv.mul(inv);
+    let inv2 = inv.square();
     AffinePoint {
         x: p.x.mul(inv2),
         y: p.y.mul(inv2).mul(inv),
@@ -237,7 +237,7 @@ pub fn negatives<L: Level>(text: &str) -> Vec<Case> {
     let half = L::Ext::from_u64(2).inv().unwrap();
     for (n, root) in [root, root.negate()].into_iter().enumerate() {
         let alpha = r.curve.negate().add(root).mul(half);
-        let lambda = alpha.mul(alpha).sub(L::Ext::one()).sqrt().unwrap();
+        let lambda = alpha.square().sub(L::Ext::one()).sqrt().unwrap();
         let inv = lambda.inv().unwrap();
         let scale = lambda.mul(lambda.sqrt().unwrap()).inv().unwrap();
         let mut moved = r;

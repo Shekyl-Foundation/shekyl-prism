@@ -205,8 +205,8 @@ fn pushed<L: Level>(vk: L::Ext, bases: [Xz<L::Ext>; 3], scalar: &[u8]) -> [Coupl
 }
 
 fn on_curve<L: Level>(coefficient: L::Ext, x: L::Ext, y: L::Ext) -> bool {
-    let square = x.mul(x);
-    y.mul(y)
+    let square = x.square();
+    y.square()
         .same(square.mul(x).add(coefficient.mul(square)).add(x))
 }
 
@@ -294,7 +294,7 @@ mod e0_vectors {
 
     fn affine<L: Level>(point: Jac<L::Ext>) -> (L::Ext, L::Ext) {
         let z = point.z.inv().expect("finite");
-        let z2 = z.mul(z);
+        let z2 = z.square();
         (point.x.mul(z2), point.y.mul(z2.mul(z)))
     }
 

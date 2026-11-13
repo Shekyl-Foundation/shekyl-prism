@@ -58,7 +58,7 @@ target/release/examples/op_counts > "$work/raw"
 } > "$work/counts"
 {
     echo "# Sources: sha256 $digest"
-    printf 'level\tvector\tcase\tverdict\text_mul\text_inv\text_sqrt\text_is_square\n'
+    printf 'level\tvector\tcase\tverdict\text_mul\text_square\text_inv\text_sqrt\text_is_square\n'
     grep '^VERDICT' "$work/raw" | cut -f2-
 } > "$work/verdicts"
 # A run that printed neither kind of line is a broken reporter, not an

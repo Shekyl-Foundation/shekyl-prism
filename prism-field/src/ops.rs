@@ -35,6 +35,7 @@ pub enum Kind {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Op {
     Mul,
+    Square,
     Inv,
     Sqrt,
     IsSquare,
@@ -44,6 +45,7 @@ pub enum Op {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Counts {
     pub mul: u64,
+    pub square: u64,
     pub inv: u64,
     pub sqrt: u64,
     pub is_square: u64,
@@ -55,6 +57,7 @@ impl Counts {
     pub fn plus(self, other: Self) -> Self {
         Self {
             mul: self.mul + other.mul,
+            square: self.square + other.square,
             inv: self.inv + other.inv,
             sqrt: self.sqrt + other.sqrt,
             is_square: self.is_square + other.is_square,
@@ -78,8 +81,8 @@ mod table {
         static CURRENT: Cell<usize> = const { Cell::new(0) };
         static TABLE: Cell<[Slot; SLOTS]> = const {
             Cell::new([Slot {
-                base: super::Counts { mul: 0, inv: 0, sqrt: 0, is_square: 0 },
-                ext: super::Counts { mul: 0, inv: 0, sqrt: 0, is_square: 0 },
+                base: super::Counts { mul: 0, square: 0, inv: 0, sqrt: 0, is_square: 0 },
+                ext: super::Counts { mul: 0, square: 0, inv: 0, sqrt: 0, is_square: 0 },
             }; SLOTS])
         };
     }
@@ -94,6 +97,7 @@ mod table {
             };
             match op {
                 Op::Mul => counts.mul += 1,
+                Op::Square => counts.square += 1,
                 Op::Inv => counts.inv += 1,
                 Op::Sqrt => counts.sqrt += 1,
                 Op::IsSquare => counts.is_square += 1,
@@ -155,52 +159,31 @@ mod tests {
         let b = Base::from_u64(5);
         enter(2);
         let _ = x.mul(x).mul(x);
+        // By the trait: the base field also has an inherent `square`, which
+        // a call on the concrete type would reach without being counted.
+        let _ = Field::square(x);
         let _ = x.inv();
         let _ = b.mul(b);
+        let _ = Field::square(b);
         enter(5);
         let _ = x.sqrt();
         let _ = x.is_square();
         let _ = b.is_square();
-        // Not counted: additions, comparisons, an inversion of zero is.
+        // Not counted: additions and comparisons. An inversion of zero is.
         let _ = x.add(x).same(x);
         let _ = Ext::zero().inv();
         let table = take();
-        assert_eq!(
-            table[2].ext,
-            Counts {
-                mul: 2,
-                inv: 1,
-                sqrt: 0,
-                is_square: 0
-            }
-        );
-        assert_eq!(
-            table[2].base,
-            Counts {
-                mul: 1,
-                inv: 0,
-                sqrt: 0,
-                is_square: 0
-            }
-        );
-        assert_eq!(
-            table[5].ext,
-            Counts {
-                mul: 0,
-                inv: 1,
-                sqrt: 1,
-                is_square: 1
-            }
-        );
-        assert_eq!(
-            table[5].base,
-            Counts {
-                mul: 0,
-                inv: 0,
-                sqrt: 0,
-                is_square: 1
-            }
-        );
+        let counts = |mul, square, inv, sqrt, is_square| Counts {
+            mul,
+            square,
+            inv,
+            sqrt,
+            is_square,
+        };
+        assert_eq!(table[2].ext, counts(2, 1, 1, 0, 0));
+        assert_eq!(table[2].base, counts(1, 1, 0, 0, 0));
+        assert_eq!(table[5].ext, counts(0, 0, 1, 1, 1));
+        assert_eq!(table[5].base, counts(0, 0, 0, 0, 1));
         assert_eq!(take(), [Slot::default(); SLOTS]);
     }
 }

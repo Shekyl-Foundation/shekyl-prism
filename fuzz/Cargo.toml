@@ -50,3 +50,10 @@ path = "fuzz_targets/decode_signature.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "field_square"
+path = "fuzz_targets/field_square.rs"
+test = false
+doc = false
+bench = false
