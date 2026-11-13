@@ -1,0 +1,840 @@
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt VkDx = x(VkP-VkQ)
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt honest: Ok
+MATCH s5_lvl1.txt joint sign: Sign
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt relative sign: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt swap: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt shear Q+P: Codomain
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt shear P+Q: Codomain
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt rotation: Codomain
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt scalar 3: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt high scalar: Image
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt reduced order: Kernel
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt P translate: Codomain
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt Q translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt both translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt P translate: Codomain
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt Q translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt both translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt P translate: Codomain
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt Q translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt both translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt P translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt Q translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt both translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt P translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt Q translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt both translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt P translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt Q translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt both translate: Codomain
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt P translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt Q translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt both translate: Codomain
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt P translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt Q translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt both translate: Codomain
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt P translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt Q translate: Codomain
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt both translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt P translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt Q translate: Codomain
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt both translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt P translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt Q translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt both translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt P translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt Q translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt both translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt P translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt Q translate: Codomain
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt both translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt P translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt Q translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt both translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt P translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt Q translate: Pairing
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt both translate: Pairing
+MATCH s5_lvl1.txt other model: Model
+MATCH s5_lvl1.txt other model: Model
+MATCH s5_lvl1.txt other model: Model
+MATCH s5_lvl1.txt other model: Model
+MATCH s5_lvl1.txt other model: Model
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt searched prime salt: Image
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+[RAN] s5_lvl1.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl1.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl1.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl1.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl1.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl1.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl1.txt new message: Image
+[RAN] s5_lvl1.txt basis index: index=1 square=False
+[RAN] s5_lvl1.txt VkP matches cleared index abscissa
+MATCH s5_lvl1.txt other key: Pairing
+VECTOR_RESULT s5_lvl1.txt 63
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt VkDx = x(VkP-VkQ)
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt honest: Ok
+MATCH s5_lvl3.txt joint sign: Sign
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt relative sign: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt swap: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt shear Q+P: Codomain
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt shear P+Q: Codomain
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt rotation: Codomain
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt scalar 3: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt high scalar: Image
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt reduced order: Kernel
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt P translate: Codomain
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt Q translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt both translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt P translate: Codomain
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt Q translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt both translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt P translate: Codomain
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt Q translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt both translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt P translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt Q translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt both translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt P translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt Q translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt both translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt P translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt Q translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt both translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt P translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt Q translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt both translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt P translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt Q translate: Codomain
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt both translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt P translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt Q translate: Codomain
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt both translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt P translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt Q translate: Codomain
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt both translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt P translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt Q translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt both translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt P translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt Q translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt both translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt P translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt Q translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt both translate: Codomain
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt P translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt Q translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt both translate: Codomain
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt P translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt Q translate: Pairing
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt both translate: Codomain
+MATCH s5_lvl3.txt other model: Model
+MATCH s5_lvl3.txt other model: Model
+MATCH s5_lvl3.txt other model: Model
+MATCH s5_lvl3.txt other model: Model
+MATCH s5_lvl3.txt other model: Model
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt searched prime salt: Image
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+[RAN] s5_lvl3.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl3.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl3.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl3.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl3.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl3.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl3.txt new message: Image
+[RAN] s5_lvl3.txt basis index: index=10 square=True
+[RAN] s5_lvl3.txt VkP matches cleared index abscissa
+MATCH s5_lvl3.txt other key: Pairing
+VECTOR_RESULT s5_lvl3.txt 63
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt VkDx = x(VkP-VkQ)
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl5.txt honest: Ok
+MATCH s5_lvl5.txt joint sign: Sign
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt relative sign: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt swap: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl5.txt shear Q+P: Codomain
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl5.txt shear P+Q: Codomain
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl5.txt rotation: Codomain
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt scalar 3: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl5.txt high scalar: Image
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt reduced order: Kernel
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt P translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl5.txt Q translate: Codomain
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt both translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt P translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt Q translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt both translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt P translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt Q translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt both translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt P translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl5.txt Q translate: Codomain
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt both translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt P translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl5.txt Q translate: Codomain
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt both translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt P translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt Q translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt both translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt P translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt Q translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt both translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt P translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt Q translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt both translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt P translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt Q translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt both translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt P translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt Q translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl5.txt both translate: Codomain
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl5.txt P translate: Codomain
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt Q translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt both translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl5.txt P translate: Codomain
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt Q translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt both translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl5.txt P translate: Codomain
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt Q translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt both translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt P translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt Q translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl5.txt both translate: Codomain
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt P translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+MATCH s5_lvl5.txt Q translate: Pairing
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+MATCH s5_lvl5.txt both translate: Codomain
+MATCH s5_lvl5.txt other model: Model
+MATCH s5_lvl5.txt other model: Model
+MATCH s5_lvl5.txt other model: Model
+MATCH s5_lvl5.txt other model: Model
+MATCH s5_lvl5.txt other model: Model
+[RAN] s5_lvl5.txt basis index: index=4 square=True
+[RAN] s5_lvl5.txt VkP matches cleared index abscissa
+[RAN] s5_lvl5.txt Weil e(R1,R2)=e(P1,P2)^q
+[DERIVED] s5_lvl5.txt product basis symplectic after [s]: confirmed
+[DERIVED] s5_lvl5.txt Φ̂Φ = 2^{2e'-1} I: confirmed
+[DERIVED] s5_lvl5.txt K″1 isotropic: confirmed
+[DERIVED] s5_lvl5.txt K″2 isotropic: confirmed
+[DERIVED] s5_lvl5.txt closed-form symplectic matrices: confirmed
+Timeout (0:02:00)!
+Thread 0x00007f9112a1ee00 (most recent call first):
+  File "/workspace/external/Theta_dim4/Theta_dim4_sage/pkg/theta_structures/Theta_dim2.py", line 0 in to_squared_theta
+  File "/workspace/external/Theta_dim4/Theta_dim4_sage/pkg/theta_structures/Theta_dim2.py", line 116 in squared_theta
+  File Sage child failed: s5_lvl5.txt, code -11

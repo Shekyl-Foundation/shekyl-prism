@@ -112,6 +112,17 @@ in both (exit status 0). The log, status and input digests are in
 dump on slow steps, not failures. Every row of `accept_verdicts.tsv` was
 checked against that run and none changed.
 
+**Ran** again at commit `04f267e`, after the verifier's operation count was
+cut (squaring, a Miller loop without inversions, one inversion per chain,
+shared scalar multiplications): the same 485 across the same 113 vectors,
+exit status 0. The record is in
+[benchmarks/sage_differential_04f267e/](benchmarks/sage_differential_04f267e/).
+A first attempt at that commit did not complete: a Sage child process
+ended with a segmentation fault inside Sage's own theta code on the third
+vector, with the machine at a load of 26, after 186 matching comparisons
+and no mismatch. Its log is kept beside the complete run as
+`first-attempt-crashed.log`. The complete run passed the same vector.
+
 The comparison experiments are reproduced with
 `sh scripts/run_comparison.sh` and `python3 scripts/analyze_comparison.py`;
 [SALT_COMPARISON.md](SALT_COMPARISON.md) lists the command of each.
