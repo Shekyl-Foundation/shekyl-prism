@@ -10,7 +10,7 @@
     python3 scripts/analyze_comparison.py --write    # also rewrite e3/plot_data.tsv
 
 Reads only committed raw output: e1/density.txt, e3/trial-*.txt,
-e5/index_leak.txt and e6/level*.txt. Nothing here is measured; every
+e5/index_leak.txt, e6/level*.txt and e6/key-*.txt. Nothing here is measured; every
 figure printed is arithmetic on those records. A missing or short record
 is an error, never a silently smaller table.
 """
@@ -223,6 +223,66 @@ def unsignable():
     print()
 
 
+KEYS = 12
+KEY_MESSAGES = 2000
+
+
+def keys():
+    print("E6 over distinct keys, row I, full width")
+    print("| Key | Seed | Public key (first 8 bytes) | Messages | Unsalted: signed at the first prime index | Unsalted: backend error, exhausted or malformed | Salted: signed at the first prime candidate | Salted: backend errors | Salted: refused responses |")
+    print("| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |")
+    public = set()
+    totals = Counter()
+    for key in range(KEYS):
+        path = ROOT / f"e6/key-{key:02d}.txt"
+        text = path.read_text().splitlines()
+        head = [fields(line) for line in text if line.startswith("KEY ")]
+        done = [fields(line) for line in text if line.startswith("TRIED ")]
+        if len(head) != 1 or int(head[0]["key"]) != key or head[0]["level"] != "NIST-I":
+            raise SystemExit(f"{path.name}: not the record of key {key} at row I")
+        if len(done) != 1 or int(done[0]["count"]) != KEY_MESSAGES:
+            raise SystemExit(f"{path.name}: the run did not finish its {KEY_MESSAGES} messages")
+        public.add(head[0]["public"])
+        seen = set()
+        row = Counter()
+        for line in text:
+            if not line.startswith("SIGN "):
+                continue
+            first, salted = line.split(" salted=", 1)
+            old = fields(first)
+            seen.add(old["n"])
+            kind = old["unsalted"].split(";")[0]
+            outcome = dict(p.split("=", 1) for p in old["unsalted"].split(";")[1:])
+            if kind == "signed" and outcome["skipped_primes"] == "0":
+                row["old_first"] += 1
+            elif kind != "signed":
+                row["old_failed"] += 1
+            if salted.startswith("signed "):
+                new = dict(p.split("=", 1) for p in salted.split()[1:])
+                row["new_backend"] += int(new["backend_errors"]) + int(new["malformed"])
+                row["new_refused"] += int(new["rejections"])
+                if new["primes"] == "1":
+                    row["new_first"] += 1
+        if len(seen) != KEY_MESSAGES:
+            raise SystemExit(f"{path.name}: {len(seen)} records for {KEY_MESSAGES} messages")
+        row["unsignable"] = int(done[0]["unsignable"])
+        totals.update(row)
+        totals["messages"] += KEY_MESSAGES
+        print(
+            f"| {key} | `{head[0]['seed']}` | `{head[0]['public'][:16]}` | {KEY_MESSAGES} | {row['old_first']} "
+            f"| {row['old_failed']} | {row['new_first']} | {row['new_backend']} | {row['new_refused']} |"
+        )
+    if len(public) != KEYS:
+        raise SystemExit("e6: two key records share a public key")
+    print(
+        f"  {KEYS} distinct public keys, {totals['messages']} messages: unsalted signed at the first prime index "
+        f"{totals['old_first']}, unsalted failures {totals['old_failed']}, UNSIGNABLE {totals['unsignable']}; "
+        f"salted at the first prime candidate {totals['new_first']}, backend errors {totals['new_backend']}, "
+        f"refused {totals['new_refused']}"
+    )
+    print()
+
+
 def main():
     write = sys.argv[1:] == ["--write"]
     if sys.argv[1:] and not write:
@@ -231,6 +291,7 @@ def main():
     replay(write)
     index_leak()
     unsignable()
+    keys()
 
 
 if __name__ == "__main__":
