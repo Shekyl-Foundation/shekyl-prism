@@ -195,8 +195,8 @@ three times, on a development machine that other work was loading. Taken
 twice: [e4/verify_time.txt](comparison/e4/verify_time.txt) at 1-minute
 load 8 to 13, and
 [e4/verify_time_quiet.txt](comparison/e4/verify_time_quiet.txt) the next
-day at load 3 to 5, with the salted side at `ef2fba6` (the verifier is
-the same code).
+day at load 3 to 5, with the salted side at `faca334` (no verifier
+source differs between the two commits).
 
 Median of the three run medians, in milliseconds:
 
@@ -250,9 +250,11 @@ and call the backend once.
 
 ## Records and reproduction
 
-Every record under `docs/comparison/` has a `.provenance` file with the
-commit, toolchain, driver and backend digests, command, start and end
-time, load and exit status. Build the native backend as in the README,
+Every E1, E3, E5 and E6 record under `docs/comparison/` has a
+`.provenance` file with the commit, toolchain, driver and backend
+digests, command, start and end time, load and exit status. The E4 and
+Sage provenance files name the commits, toolchain and command; the E4
+records carry each run's start time, load and exit status themselves. Build the native backend as in the README,
 then:
 
 ```sh
