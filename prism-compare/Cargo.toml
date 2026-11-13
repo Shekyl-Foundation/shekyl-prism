@@ -14,7 +14,7 @@ experiments = ["prism-verify/research-reduced-width"]
 [dependencies]
 prism-field = { workspace = true }
 prism-verify = { workspace = true }
-prism-signer = { path = "../prism-signer" }
+prism-signer.workspace = true
 sha3 = { workspace = true }
 
 [lints]
