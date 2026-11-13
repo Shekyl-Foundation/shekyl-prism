@@ -28,6 +28,7 @@ REQUIRED = (
     "test-x86_64",
     "test-aarch64",
     "bench-smoke",
+    "op-counts",
     "deny",
     "hygiene",
     "c-reference-pin",
