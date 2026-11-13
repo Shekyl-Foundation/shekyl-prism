@@ -105,6 +105,8 @@ comparison document from those records.
 The benchmark now times accepted signatures. Development-machine results
 and the Raspberry Pi 4 command are in [BENCHMARKING.md](docs/BENCHMARKING.md).
 The Pi measurement is recorded: level III takes about 449 ms in the
-captured conditions. Independent cryptographic review and a deployment
+captured conditions, for the unsalted verifier before its operation count
+was cut. That count, per stage and pinned in CI, and the times before and
+after on a development machine are in the same document. Independent cryptographic review and a deployment
 verification budget remain adoption gates. Paper sources and the pinned C-reference provenance are described
 in [C_REFERENCE.md](docs/C_REFERENCE.md).

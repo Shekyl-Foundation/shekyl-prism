@@ -71,8 +71,10 @@ An x86_64 development run on 2026-11-12 accepted every invocation:
 
 The raw output is [acceptance_x86_64_2026-11-12.txt](benchmarks/acceptance_x86_64_2026-11-12.txt).
 This shared development-machine observation is noisy and not a release
-performance claim or the Pi gate. Public-key preparation/caching and native
-field/chain optimization remain future performance work.
+performance claim or the Pi gate. It predates the salt and the
+operation-count work; the current figures are under "Operation counts"
+below. Public-key preparation/caching and native field arithmetic remain
+future performance work.
 
 ## Operation counts
 
@@ -123,16 +125,16 @@ were 7 and are 6 since the key's basis is lifted once; residuosity tests
 | --- | --- | ---: | ---: | ---: |
 | the instrument, no optimization (`c9df786`) | multiplications | 345,200 | 530,434 | 722,924 |
 | | inversions | 4,019 | 6,072 | 8,056 |
-| squaring | multiplications | 184,098 | 281,720 | 384,048 |
+| squaring (`1334dc2`) | multiplications | 184,098 | 281,720 | 384,048 |
 | | squarings | 135,822 | 210,624 | 287,518 |
 | | inversions | 4,019 | 6,072 | 8,056 |
-| the pairing without inversions | multiplications | 191,028 | 292,234 | 398,034 |
+| the pairing without inversions (`c9ff6ba`) | multiplications | 191,028 | 292,234 | 398,034 |
 | | squarings | 139,788 | 216,638 | 295,516 |
 | | inversions | 2,033 | 3,062 | 4,054 |
-| one inversion per chain for the dual's coordinates | multiplications | 196,920 | 301,198 | 409,974 |
+| one inversion per chain for the dual's coordinates (`1705c98`) | multiplications | 196,920 | 301,198 | 409,974 |
 | | squarings | 139,788 | 216,638 | 295,516 |
 | | inversions | 73 | 78 | 78 |
-| scalar multiplications shared | multiplications | 137,836 | 212,082 | 289,168 |
+| scalar multiplications shared (`aa6048b`) | multiplications | 137,836 | 212,082 | 289,168 |
 | | squarings | 93,951 | 147,281 | 202,147 |
 | | inversions | 71 | 76 | 76 |
 
@@ -147,9 +149,19 @@ each gluing, 8 in the pairings, and 13 elsewhere (11 once the key's
 basis is lifted once). Sharing the doublings of the four kernel basis
 points among every ladder on them, scaling the signature points once,
 and taking `−1` coefficients as a negation removes 104,921 products at
-level I, 31% of what was left. No base-field call is made directly at any stage, and no
-refusal costs more than acceptance: the dearest negative of every primary
-vector is `Image`, at about 90% of the accepted cost before the scalar
+level I, 31% of what was left.
+
+The only direct base-field calls are the residuosity tests of the basis
+search, in the `public` and `torsion` stages: between 0 and 32 per
+verification over the committed vectors, depending on the key. No base-field multiplication,
+squaring, inversion or square root is called directly.
+
+No refusal costs more than acceptance, at any of these commits. Per
+level at the last one, the dearest of the 2,712 negatives against the
+cheapest of the honest vectors: 226,185 products against 230,605 at level
+I, 350,599 against 357,848 at III, 476,164 against 486,351 at V, and
+fewer inversions in every refusal than in any acceptance. Against its
+own vector's acceptance the dearest negative is `Image`, at about 90% of the accepted cost before the scalar
 multiplications were shared and 97% after, since that change made the
 last stage cheaper than the stages before it.
 
