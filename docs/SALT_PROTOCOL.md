@@ -1,7 +1,8 @@
 # Salted research protocol
 
 Status: LIVING CONTRACT, approved brief and caller-randomness amendment
-2026-11-12; implementation and experiments in progress. Base: PR #14 merge
+2026-11-12; implemented in PR #15, with the experiments recorded in
+[SALT_COMPARISON.md](SALT_COMPARISON.md). Base: PR #14 merge
 `e6f90bccd4630f81aa15b6120fc874d5312851a5`. This specifies a research
 protocol, not wallet or consensus adoption. The unsalted executable remains
 at `archive/unsalted-index-2026-11-12` (`d018757`).

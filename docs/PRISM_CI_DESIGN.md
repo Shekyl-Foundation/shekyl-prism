@@ -21,6 +21,13 @@ Inherited from shekyl-core's CI rulings:
 The acceptance implementation adds a required `native-signer` job: build the
 pinned C libraries, apply the cofactor patch, compile the SHAKE256 backend,
 and execute deterministic signing and message-binding tests at all levels.
+The salted protocol adds to that job the research/production signing
+agreement test and experiment E3 of `SALT_COMPARISON.md` at projection
+widths 16 and 20 (`scripts/ci/check_replay_regression.py`): the collision
+replay must succeed against the archived derivation and fail against the
+salted one. `lint` also proves, by compiling a consumer, that the default
+verifier has no reduced-width entry point (`check_research_boundary.py`),
+and lints `prism-compare` with its `experiments` feature on.
 Both workspace test jobs execute the full 113-signature acceptance corpus
 and malleability regressions. The accept-list job remains a provenance check.
 The benchmark smoke test now requires successful complete verification.
@@ -29,7 +36,7 @@ The benchmark smoke test now requires successful complete verification.
 
 | Job | What it runs | Fails when |
 | --- | --- | --- |
-| `lint` | `cargo fmt --check`; `cargo clippy --workspace --all-targets --locked -- -D warnings` on the pinned 1.94 toolchain | format or lint drift |
+| `lint` | `cargo fmt --check`; `scripts/ci/check_research_boundary.py`; `cargo clippy --workspace --all-targets --locked -- -D warnings` on the pinned 1.94 toolchain, and again for `prism-compare --features experiments` | format or lint drift; a reduced-width verifier entry point reachable by default |
 | `test-x86_64` | `cargo test --workspace --locked` in debug (overflow checks on) and `--release` | any test, either profile |
 | `test-aarch64` | the same on `ubuntu-24.04-arm` (free for public repos) | the portable `fp2` path disagrees |
 | `bench-smoke` | `cargo run --release -p prism-bench`; it already exits non-zero if any sample's outcome isn't the expected refusal. Timings are printed, not judged. | the bench stops timing the path it claims to |

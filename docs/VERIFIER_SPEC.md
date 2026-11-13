@@ -163,10 +163,22 @@ time. The signer remains a separate crate and process backend.
   changes, every nonzero order-four translate in either or both points,
   alternate prime challenges, other messages, all five alternative models,
   reduced orders, off-curve points, singular and exceptional models.
+- Salt negatives. Every one-bit change of the salt is refused: `Composite`,
+  or `Image` when the new degree is prime. Over all 113 signatures the
+  split is 62 prime to 5,570 composite at I, 137 to 18,679 at III and 118
+  to 21,386 at V. A salt found by search whose degree is prime gives
+  `Image`. The salt of another valid signature under the same key gives
+  `Composite` or `Image` (native signer test). An archived unsalted
+  signature gives `Length` (`prism-compare`).
 - Test builds use optimization level 1 with debug assertions and overflow
   checks enabled, so the full crypto corpus remains practical in CI.
 - The native signer test generates fresh responses at all levels, checks
-  byte-for-byte determinism, binary messages and message binding.
+  byte-for-byte determinism, binary messages and message binding, with
+  zero and nonzero caller randomness.
+- The default build has no reduced-width entry point: CI compiles a
+  consumer that must fail on `prism_verify::research` and build only with
+  `research-reduced-width`. `prism-compare`'s research signer releases
+  the production signer's bytes at the production width.
 - `scripts/sage/differential.sage` compares a fresh Sage execution against
   Rust, including the other-key cases. It requires Sage and pinned source.
 - Fuzz corpora are seeded with all honest signatures, so deep paths are
