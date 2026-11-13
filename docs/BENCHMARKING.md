@@ -128,12 +128,18 @@ and residuosity tests (4, 6, 4) did not move.
 | the pairing without inversions | multiplications | 191,028 | 292,234 | 398,034 |
 | | squarings | 139,788 | 216,638 | 295,516 |
 | | inversions | 2,033 | 3,062 | 4,054 |
+| one inversion per chain for the dual's coordinates | multiplications | 196,920 | 301,198 | 409,974 |
+| | squarings | 139,788 | 216,638 | 295,516 |
+| | inversions | 73 | 78 | 78 |
 
 Squaring turned 39% of the multiplications into squarings and removed 7%
 outright (products that the doubling and addition formulas computed two
 or three times). The Miller loop without inversions spends about 11,000
 more multiplications and squarings at level I to remove 1,986 inversions,
-each worth about 40 multiplications. No base-field call is made directly at any stage, and no
+each worth about 40 multiplications. Sharing one inversion among all the
+null-point coordinates of a chain removes 1,960 more for 5,892
+multiplications. The 73 that remain do not grow with the chain: 26 in
+each gluing, 8 in the pairings, and 13 elsewhere. No base-field call is made directly at any stage, and no
 refusal costs more than acceptance: the dearest negative of every primary
 vector is `Image` at about 90% of the accepted cost.
 
