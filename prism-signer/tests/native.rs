@@ -3,17 +3,8 @@
 // All rights reserved.
 // BSD-3-Clause
 
-use prism_signer::{SecretSeed, Signer};
+use prism_signer::{limits, SecretSeed, Signer};
 use prism_verify::{verify_level, Nist, VerifyError};
-
-fn level_salt_len(level: Nist) -> usize {
-    use prism_field::{Level, Level1, Level3, Level5};
-    match level {
-        Nist::I => Level1::SALT_LEN,
-        Nist::III => Level3::SALT_LEN,
-        Nist::V => Level5::SALT_LEN,
-    }
-}
 
 #[test]
 #[ignore = "requires the pinned native backend; set PRISM_SIGNER_BACKEND_DIR"]
@@ -44,7 +35,7 @@ fn deterministic_signing_and_message_binding_at_every_level() {
         // response is bound to its own salt and message. The transplanted
         // salt hashes to another scalar, so the verdict is Composite, or
         // Image when that degree happens to be prime.
-        let salt = first.len() - level_salt_len(level);
+        let salt = first.len() - level.salt_len();
         let mut transplanted = first.clone();
         transplanted[salt..].copy_from_slice(&changed[salt..]);
         assert_ne!(transplanted, first, "{level} salts differ");
@@ -56,14 +47,14 @@ fn deterministic_signing_and_message_binding_at_every_level() {
             "{level} transplanted salt"
         );
         let hedge = signer
-            .sign_with_randomness(message, &[0x37; 32])
+            .sign_with_randomness(message, &[0x37; limits::CALLER_RANDOMNESS_LEN])
             .expect("hedged sign");
         assert_ne!(first, hedge, "caller randomness changes the salt");
         assert_eq!(verify_level(level, &key, message, &hedge), Ok(()));
         assert_eq!(
             hedge,
             signer
-                .sign_with_randomness(message, &[0x37; 32])
+                .sign_with_randomness(message, &[0x37; limits::CALLER_RANDOMNESS_LEN])
                 .expect("same entropy repeats")
         );
     }

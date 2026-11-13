@@ -9,14 +9,13 @@ publish.workspace = true
 
 [features]
 default = []
-experiments = ["prism-verify/research-reduced-width", "dep:prism-signer"]
+experiments = ["prism-verify/research-reduced-width"]
 
 [dependencies]
 prism-field = { workspace = true }
 prism-verify = { workspace = true }
+prism-signer = { path = "../prism-signer" }
 sha3 = { workspace = true }
-zeroize = "=1.8.2"
-prism-signer = { path = "../prism-signer", optional = true }
 
 [lints]
 workspace = true

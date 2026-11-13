@@ -32,9 +32,7 @@ fn level<L: Level>(samples: u64, salted: bool) -> String {
     for n in 0..samples {
         let m = message(n);
         let prime = if salted {
-            let mut salt = vec![0; L::SALT_LEN];
-            salt[..8].copy_from_slice(&n.to_le_bytes());
-            let salt = Salt::<L>::from_bytes(&salt).expect("row salt length");
+            let salt = L::Salt::from_counter(n).expect("row salt holds a counter");
             ChallengeScalar::derive(&id, &m, salt).degree_is_prime::<L>()
         } else {
             let s = unsalted::<L>(&key, &m, 0, L::CHALLENGE_BITS).expect("full width");

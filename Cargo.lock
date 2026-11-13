@@ -90,7 +90,6 @@ dependencies = [
  "prism-signer",
  "prism-verify",
  "sha3",
- "zeroize",
 ]
 
 [[package]]

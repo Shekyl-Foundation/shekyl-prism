@@ -45,7 +45,7 @@ pub struct Response<L: Level> {
     pub p: AffinePoint<L>,
     pub q: AffinePoint<L>,
     /// Public salt. Every byte pattern of the row's salt length is valid.
-    pub salt: Salt<L>,
+    pub salt: L::Salt,
 }
 
 impl<L: Level> Response<L> {
@@ -94,9 +94,9 @@ fn element<L: Level>(signature: &[u8], position: usize) -> Result<L::Ext, Verify
         .ok_or(VerifyError::Canonical)
 }
 
-fn salt<L: Level>(signature: &[u8]) -> Result<Salt<L>, VerifyError> {
+fn salt<L: Level>(signature: &[u8]) -> Result<L::Salt, VerifyError> {
     let at = L::SIGNATURE_ELEMENTS * L::FP2_LEN;
-    Salt::from_bytes(signature.get(at..).ok_or(VerifyError::Length)?).ok_or(VerifyError::Length)
+    L::Salt::from_bytes(signature.get(at..).ok_or(VerifyError::Length)?).ok_or(VerifyError::Length)
 }
 
 /// `true` when `y` is the representative Algorithm 2 line 8 normalizes to.

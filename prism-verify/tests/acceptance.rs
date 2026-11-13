@@ -160,11 +160,9 @@ fn negative<L: Level>(text: &str) {
     // Alternate salt at a prime degree, and a different message/key.
     let find = |key: &[u8], message: &[u8]| {
         let identity = KeyIdentity::<L>::decode(key).unwrap();
-        (0u64..65536)
+        (0u64..65_536)
             .find_map(|n| {
-                let mut bytes = vec![0; L::SALT_LEN];
-                bytes[..8].copy_from_slice(&n.to_le_bytes());
-                let salt = Salt::<L>::from_bytes(&bytes).unwrap();
+                let salt = L::Salt::from_counter(n).unwrap();
                 let scalar = ChallengeScalar::derive(&identity, message, salt);
                 (salt != r.salt && scalar.degree_is_prime::<L>()).then_some(salt)
             })
@@ -199,7 +197,7 @@ fn negative<L: Level>(text: &str) {
         other = r;
         let mut bytes = r.salt.as_bytes().to_vec();
         bytes[bit / 8] ^= 1 << (bit % 8);
-        other.salt = Salt::from_bytes(&bytes).unwrap();
+        other.salt = L::Salt::from_bytes(&bytes).unwrap();
         let prime = ChallengeScalar::derive(&id, &msg, other.salt).degree_is_prime::<L>();
         assert_eq!(
             check(other),
@@ -281,7 +279,7 @@ fn salt_flips<L: Level>(text: &str) -> (usize, usize) {
     for bit in 0..L::SALT_LEN * 8 {
         let mut bytes = r.salt.as_bytes().to_vec();
         bytes[bit / 8] ^= 1 << (bit % 8);
-        let salt = Salt::<L>::from_bytes(&bytes).unwrap();
+        let salt = L::Salt::from_bytes(&bytes).unwrap();
         prime += usize::from(ChallengeScalar::derive(&id, &msg, salt).degree_is_prime::<L>());
     }
     (prime, L::SALT_LEN * 8 - prime)

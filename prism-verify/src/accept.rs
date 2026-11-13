@@ -226,7 +226,7 @@ mod tests {
         let s = ChallengeScalar::derive(
             &id,
             field("message ").as_bytes(),
-            Salt::<L>::from_bytes(&hex(field("salt "))).unwrap(),
+            L::Salt::from_bytes(&hex(field("salt "))).unwrap(),
         );
         let f = |name: &str| L::ext_decode(&hex(field(name))).unwrap();
         let hint = basis_hint::<L>(id.coefficient()).unwrap();

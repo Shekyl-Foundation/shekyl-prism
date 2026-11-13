@@ -111,23 +111,27 @@ pub fn verify<L: Level>(
     message: &[u8],
     signature: &[u8],
 ) -> Result<(), VerifyError> {
-    let (identity, response, scalar) = checked::<L>(public_key, message, signature)?;
-    relation::relate(&identity, &response, &scalar)
+    let opened = open::<L>(public_key, signature)?;
+    let scalar = ChallengeScalar::derive(&opened.identity, message, opened.response.salt);
+    accept(&opened, &scalar)
 }
 
-/// The public checks, cheapest refusal first.
-///
-/// Both lengths come before either decode, because a wrong length is the
-/// cheapest thing to refuse and `Length` must not depend on which field is
-/// wrong. The sign test is a byte comparison on an element already decoded,
-/// so it comes before the basis search, whose length an attacker chooses
-/// with `A` — up to [`search_bound`] Legendre symbols. The challenge hash
-/// and the one Baillie–PSW test follow the bounded model and basis checks.
-fn checked<'a, L: Level>(
+/// A key and response that passed the checks shared by every verifier entry.
+pub(crate) struct Opened<'a, L: Level> {
+    pub identity: KeyIdentity<'a, L>,
+    pub response: Response<L>,
+}
+
+/// Length, decode, sign, model, and basis. Both lengths come before either
+/// decode, so `Length` does not depend on which field is wrong and a short
+/// signature cannot surface as `Origin`. The sign test is a byte comparison
+/// on an element already decoded, so it comes before the basis search, whose
+/// length an attacker chooses with `A` — up to [`search_bound`] Legendre
+/// symbols.
+pub(crate) fn open<'a, L: Level>(
     public_key: &'a [u8],
-    message: &[u8],
     signature: &[u8],
-) -> Result<(KeyIdentity<'a, L>, Response<L>, ChallengeScalar), VerifyError> {
+) -> Result<Opened<'a, L>, VerifyError> {
     if public_key.len() != L::PUBLIC_KEY_LEN || signature.len() != L::SIGNATURE_LEN {
         return Err(VerifyError::Length);
     }
@@ -138,11 +142,18 @@ fn checked<'a, L: Level>(
     }
     model::check::<L>(response.curve)?;
     basis_hint::<L>(identity.coefficient())?;
-    let scalar = ChallengeScalar::derive(&identity, message, response.salt);
+    Ok(Opened { identity, response })
+}
+
+/// Primality, then the relation. The challenge hash has already run.
+pub(crate) fn accept<L: Level>(
+    opened: &Opened<'_, L>,
+    scalar: &ChallengeScalar,
+) -> Result<(), VerifyError> {
     if !scalar.degree_is_prime::<L>() {
         return Err(VerifyError::Composite);
     }
-    Ok((identity, response, scalar))
+    relation::relate(&opened.identity, &opened.response, scalar)
 }
 
 #[cfg(test)]
@@ -289,12 +300,10 @@ mod tests {
         // And with the sign restored, another salt whose degree is composite
         // is what the same signature is refused for.
         response.p.y = response.p.y.negate();
-        let composite = (0u64..65536)
+        let composite = (0u64..65_536)
             .find_map(|n| {
-                let mut bytes = vec![0; Level1::SALT_LEN];
-                bytes[..8].copy_from_slice(&n.to_le_bytes());
                 let mut probe = response;
-                probe.salt = Salt::from_bytes(&bytes).unwrap();
+                probe.salt = <Level1 as Level>::Salt::from_counter(n).unwrap();
                 (verify::<Level1>(&sample.public_key, sample.message, &probe.encode())
                     == Err(VerifyError::Composite))
                 .then_some(probe)
@@ -369,7 +378,7 @@ mod tests {
         let mut response = Response::<Level1>::decode(&sample.signature).unwrap();
         let mut salt = response.salt.as_bytes().to_vec();
         salt[0] ^= 1;
-        response.salt = Salt::from_bytes(&salt).unwrap();
+        response.salt = <Level1 as Level>::Salt::from_bytes(&salt).unwrap();
         let id = KeyIdentity::<Level1>::decode(&sample.public_key).unwrap();
         let prime =
             ChallengeScalar::derive(&id, sample.message, response.salt).degree_is_prime::<Level1>();

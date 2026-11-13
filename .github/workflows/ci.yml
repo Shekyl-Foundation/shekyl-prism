@@ -110,6 +110,8 @@ jobs:
         run: cargo test --workspace --locked
       - name: Release
         run: cargo test --workspace --locked --release
+      - name: Research width keeps length ahead of origin
+        run: cargo test -p prism-verify --features research-reduced-width --locked --lib short_signature_is_length_before_origin
 
   test-aarch64:
     name: test-aarch64
@@ -131,6 +133,8 @@ jobs:
         run: cargo test --workspace --locked
       - name: Release
         run: cargo test --workspace --locked --release
+      - name: Research width keeps length ahead of origin
+        run: cargo test -p prism-verify --features research-reduced-width --locked --lib short_signature_is_length_before_origin
 
   bench-smoke:
     name: bench-smoke

@@ -21,28 +21,26 @@
 use fp2::define_fp2_from_type;
 use fp2::define_fp_core;
 
-/// Public salt bytes. Every byte string of the row's salt length is valid.
-/// The unused tail is zero and never encoded; the level fixes the length.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Salt<L: Level> {
-    bytes: [u8; 64],
-    level: core::marker::PhantomData<L>,
-}
-impl<L: Level> Salt<L> {
-    pub fn from_bytes(bytes: &[u8]) -> Option<Self> {
-        if bytes.len() != L::SALT_LEN || L::SALT_LEN > 64 {
-            return None;
-        }
-        let mut salt = Self {
-            bytes: [0; 64],
-            level: core::marker::PhantomData,
-        };
-        salt.bytes[..L::SALT_LEN].copy_from_slice(bytes);
-        Some(salt)
-    }
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.bytes[..L::SALT_LEN]
-    }
+/// The bytes of one row's public salt.
+///
+/// Each level owns a distinct type, [`Level::Salt`], whose array is exactly
+/// [`Level::SALT_LEN`] long. Every byte string of that length is valid.
+pub trait Salt: Copy + Eq + core::fmt::Debug {
+    const LEN: usize;
+
+    /// `None` unless `bytes` has length [`Self::LEN`].
+    fn from_bytes(bytes: &[u8]) -> Option<Self>;
+
+    /// The bytes [`Self::from_bytes`] accepts.
+    fn as_bytes(&self) -> &[u8];
+
+    /// The all-zero salt. Signing does not prefer it; probes do.
+    fn zero() -> Self;
+
+    /// Little-endian `counter` in the low `u64`, zero above that.
+    /// `None` when the salt is shorter than a `u64`. Signing derives salts
+    /// from the KDF; this is the probe layout Sage uses.
+    fn from_counter(counter: u64) -> Option<Self>;
 }
 
 /// Field operations the isogeny step uses. `inv` of zero is `None`.
@@ -85,7 +83,9 @@ pub trait Level: Copy + Clone + Eq + Send + Sync + 'static {
     /// Byte length of `s`, which is [`Self::CHALLENGE_BITS`] rounded up. It
     /// is derived, not carried in the signature.
     const S_LEN: usize;
-    /// Public salt length: 2*lambda bits.
+    /// This row's salt. Its length is [`Self::SALT_LEN`].
+    type Salt: Salt;
+    /// Public salt length in bytes: `2λ` bits.
     const SALT_LEN: usize;
     /// Field elements a signature carries: `A_sig`, `x(P)`, `y(P)`, `x(Q)`,
     /// `y(Q)`.
@@ -114,7 +114,39 @@ macro_rules! nist_level {
         [$($limb:expr),+ $(,)?]
     ) => {
         pub mod $modname {
-            use super::{define_fp2_from_type, define_fp_core, Field, Level};
+            use super::{define_fp2_from_type, define_fp_core, Field, Level, Salt};
+
+            /// `2λ` bits, stored as an array of that many bytes.
+            const SALT_BYTES: usize = (2 * ($lambda as usize)) / 8;
+
+            #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+            pub struct SaltBytes([u8; SALT_BYTES]);
+
+            impl Salt for SaltBytes {
+                const LEN: usize = SALT_BYTES;
+
+                fn from_bytes(bytes: &[u8]) -> Option<Self> {
+                    Some(Self(bytes.try_into().ok()?))
+                }
+
+                fn as_bytes(&self) -> &[u8] {
+                    &self.0
+                }
+
+                fn zero() -> Self {
+                    Self([0; SALT_BYTES])
+                }
+
+                fn from_counter(counter: u64) -> Option<Self> {
+                    let width = core::mem::size_of::<u64>();
+                    if SALT_BYTES < width {
+                        return None;
+                    }
+                    let mut bytes = [0u8; SALT_BYTES];
+                    bytes[..width].copy_from_slice(&counter.to_le_bytes());
+                    Some(Self(bytes))
+                }
+            }
 
             // Two facts the rest of the workspace reads off a level without
             // re-testing: the challenge scalar occupies at least one byte, so
@@ -255,8 +287,9 @@ macro_rules! nist_level {
                 const FP_LEN: usize = <$fp>::ENCODED_LENGTH;
                 const FP2_LEN: usize = <$fp2>::ENCODED_LENGTH;
                 const PUBLIC_KEY_LEN: usize = <$fp2>::ENCODED_LENGTH;
+                type Salt = SaltBytes;
                 const S_LEN: usize = (Self::CHALLENGE_BITS as usize).div_ceil(8);
-                const SALT_LEN: usize = ($lambda as usize) / 4;
+                const SALT_LEN: usize = SALT_BYTES;
                 const SIGNATURE_ELEMENTS: usize = 5;
                 const SIGNATURE_LEN: usize =
                     Self::SIGNATURE_ELEMENTS * <$fp2>::ENCODED_LENGTH + Self::SALT_LEN;
@@ -371,7 +404,8 @@ mod tests {
         assert!(root.mul(root).same(four));
         assert_eq!(L::FP_LEN * 2, L::FP2_LEN);
         assert_eq!(L::PUBLIC_KEY_LEN, L::FP2_LEN);
-        assert_eq!(L::SALT_LEN, (L::LAMBDA as usize) / 4);
+        assert_eq!(L::SALT_LEN, (2 * (L::LAMBDA as usize)) / 8);
+        assert_eq!(L::SALT_LEN, <L::Salt as Salt>::LEN);
         assert_eq!(L::CHAIN_STEPS, L::E - 2);
         assert_eq!(L::CHALLENGE_BITS, L::E - 3);
         assert_eq!(L::S_LEN, (L::CHALLENGE_BITS as usize).div_ceil(8));
@@ -447,10 +481,13 @@ mod tests {
         fn check<L: Level>() {
             for byte in [0, 1, 127, 255] {
                 let bytes = vec![byte; L::SALT_LEN];
-                assert_eq!(Salt::<L>::from_bytes(&bytes).unwrap().as_bytes(), bytes);
+                assert_eq!(L::Salt::from_bytes(&bytes).unwrap().as_bytes(), bytes);
             }
-            assert!(Salt::<L>::from_bytes(&vec![0; L::SALT_LEN - 1]).is_none());
-            assert!(Salt::<L>::from_bytes(&vec![0; L::SALT_LEN + 1]).is_none());
+            assert!(L::Salt::from_bytes(&vec![0; L::SALT_LEN - 1]).is_none());
+            assert!(L::Salt::from_bytes(&vec![0; L::SALT_LEN + 1]).is_none());
+            let counter = L::Salt::from_counter(0x0102).unwrap();
+            assert_eq!(&counter.as_bytes()[..2], &[0x02, 0x01]);
+            assert!(counter.as_bytes()[8..].iter().all(|byte| *byte == 0));
         }
         check::<Level1>();
         check::<Level3>();

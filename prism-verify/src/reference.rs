@@ -162,11 +162,9 @@ fn sample<L: Level>(level: Nist) -> Result<Prepared, PreparedError> {
     let key = reference_key(level).map_err(PreparedError::Vector)?;
     let id = KeyIdentity::<L>::decode(&key.public_key)
         .map_err(|_| PreparedError::Vector(VectorError::Malformed))?;
-    let salt = (0u64..65536)
+    let salt = (0u64..65_536)
         .find_map(|counter| {
-            let mut bytes = vec![0; L::SALT_LEN];
-            bytes[..8].copy_from_slice(&counter.to_le_bytes());
-            let salt = Salt::<L>::from_bytes(&bytes)?;
+            let salt = L::Salt::from_counter(counter)?;
             ChallengeScalar::derive(&id, SAMPLE_MESSAGE, salt)
                 .degree_is_prime::<L>()
                 .then_some(salt)
@@ -216,13 +214,7 @@ pub fn honest(level: Nist) -> Result<Prepared, VectorError> {
         signature.extend(decode_hex(field(name)?)?);
     }
     let salt = decode_hex(field("salt ")?)?;
-    if salt.len()
-        != match level {
-            Nist::I => Level1::SALT_LEN,
-            Nist::III => Level3::SALT_LEN,
-            Nist::V => Level5::SALT_LEN,
-        }
-    {
+    if salt.len() != level.salt_len() {
         return Err(VectorError::Malformed);
     }
     signature.extend(salt);

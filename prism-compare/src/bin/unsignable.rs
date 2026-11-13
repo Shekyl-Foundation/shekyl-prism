@@ -17,25 +17,25 @@
 //! its `UNSIGNABLE` line carries the salted outcome for the same message.
 use prism_compare::{
     encode,
-    native::{Native, Unsalted},
+    native::{self, Unsalted},
 };
 use prism_field::{Level, Level1, Level3, Level5};
+use prism_signer::{limits, SecretSeed};
 use sha3::{
     digest::{ExtendableOutput, Update, XofReader},
     Shake256,
 };
-use zeroize::Zeroizing;
 
 /// The seed of a run: the public test seed, or the public seed of key `key`.
-fn seed(key: Option<u64>) -> Zeroizing<[u8; 48]> {
-    let mut seed = Zeroizing::new([0x42; 48]);
+fn seed_bytes(key: Option<u64>) -> [u8; limits::STREAM_LEN] {
+    let mut bytes = [0x42; limits::STREAM_LEN];
     if let Some(key) = key {
         let mut h = Shake256::default();
         h.update(b"shekyl-prism-comparison-e6-key-v1");
         h.update(&key.to_le_bytes());
-        h.finalize_xof().read(&mut *seed);
+        h.finalize_xof().read(&mut bytes);
     }
-    seed
+    bytes
 }
 
 fn message(n: u64) -> Vec<u8> {
@@ -63,36 +63,38 @@ fn run<L: Level>(
     count: u64,
     key: Option<u64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let seed = seed(key);
-    let native = Native::<L>::new(dir.join(name), seed.clone())?;
+    let bytes = seed_bytes(key);
+    let seed = SecretSeed::from_bytes(bytes);
+    let session = native::open::<L>(dir.join(name), &seed)?;
     if let Some(key) = key {
         println!(
             "KEY level={} key={key} seed={} public={}",
             L::NAME,
-            encode(&*seed),
-            encode(&native.key)
+            encode(&bytes),
+            encode(session.public_key())
         );
     }
+    let randomness = [0u8; limits::CALLER_RANDOMNESS_LEN];
     let mut unsignable = 0u64;
     for n in first..first + count {
         let m = message(n);
-        let old = native.sign_unsalted(&m, L::CHALLENGE_BITS).ok_or("width")?;
-        let new = native.sign(&m, &[0; 32], L::CHALLENGE_BITS);
+        let old = native::sign_unsalted(&session, &m, L::CHALLENGE_BITS).ok_or("width")?;
+        let new = native::sign(&session, &m, &randomness, L::CHALLENGE_BITS);
         let salted = match &new {
             Ok(s) => {
-                if prism_verify::verify::<L>(&native.key, &m, &s.signature).is_err() {
+                if prism_verify::verify::<L>(session.public_key(), &m, &s.signature).is_err() {
                     return Err("the default verifier refused a salted signature".into());
                 }
                 format!(
                     "signed hashes={} primes={} backend_errors={} malformed={} rejections={}",
-                    s.counts.hashes,
-                    s.counts.primes,
-                    s.counts.backend_errors,
-                    s.counts.malformed,
-                    s.counts.rejections
+                    s.report.hash_candidates,
+                    s.report.prime_candidates,
+                    s.report.backend_errors,
+                    s.report.malformed_responses,
+                    s.report.verification_rejections
                 )
             }
-            Err(e) => format!("failed {}", e.replace(' ', "-")),
+            Err(e) => format!("failed {e}").replace(' ', "-"),
         };
         println!(
             "SIGN level={} n={n} unsalted={} salted={salted}",
@@ -101,8 +103,8 @@ fn run<L: Level>(
         );
         if !matches!(old, Unsalted::Signed { .. }) {
             unsignable += 1;
-            let again = native.sign_unsalted(&m, L::CHALLENGE_BITS).ok_or("width")?;
-            let third = native.sign_unsalted(&m, L::CHALLENGE_BITS).ok_or("width")?;
+            let again = native::sign_unsalted(&session, &m, L::CHALLENGE_BITS).ok_or("width")?;
+            let third = native::sign_unsalted(&session, &m, L::CHALLENGE_BITS).ok_or("width")?;
             println!(
                 "UNSIGNABLE level={} n={n} message={} first={} second={} third={} same_on_retry={} salted={salted}",
                 L::NAME,

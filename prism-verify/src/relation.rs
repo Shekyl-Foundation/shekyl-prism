@@ -420,7 +420,7 @@ mod s5_vectors {
     fn sample<L: Level>(text: &str) -> Sample<L> {
         let key = hex_bytes(line(text, "A "));
         let identity = KeyIdentity::<L>::decode(&key).expect("key");
-        let salt = Salt::<L>::from_bytes(&hex_bytes(line(text, "salt "))).unwrap();
+        let salt = L::Salt::from_bytes(&hex_bytes(line(text, "salt "))).unwrap();
         let scalar = ChallengeScalar::derive::<L>(&identity, b"shekyl-prism-s5", salt);
         let mut from_file = decimal_le(line(text, "s "));
         from_file.resize(scalar.as_bytes().len(), 0);
@@ -557,16 +557,22 @@ mod s5_vectors {
         );
 
         let identity = KeyIdentity::<L>::decode(&sample.key).unwrap();
-        let composite = (0u64..65536)
+        let mut composite_response = sample.response;
+        composite_response.salt = (0u64..65_536)
             .find_map(|n| {
-                let mut bytes = sample.response.salt.as_bytes().to_vec();
-                bytes[..8].copy_from_slice(&n.to_le_bytes());
-                let salt = Salt::<L>::from_bytes(&bytes).unwrap();
-                let s = ChallengeScalar::derive(&identity, b"shekyl-prism-s5", salt);
-                (!degree_is_prime(L::E - 2, s.as_bytes())).then_some(s)
+                let salt = L::Salt::from_counter(n).unwrap();
+                let scalar = ChallengeScalar::derive(&identity, b"shekyl-prism-s5", salt);
+                (!degree_is_prime(L::E - 2, scalar.as_bytes())).then_some(salt)
             })
             .expect("a composite salt exists");
-        assert!(!degree_is_prime(L::E - 2, composite.as_bytes()));
+        assert_eq!(
+            verify::<L>(
+                &sample.key,
+                b"shekyl-prism-s5",
+                &composite_response.encode()
+            ),
+            Err(VerifyError::Composite)
+        );
 
         // (P, −Q) keeps the normalized y(P). The chain still reaches both
         // readings. The pairing check refuses it before that chain runs.

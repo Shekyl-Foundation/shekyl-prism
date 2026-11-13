@@ -19,6 +19,9 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PARAMS = {"NIST-I": (1, 248, 5, 32), "NIST-III": (3, 376, 65, 48), "NIST-V": (5, 500, 27, 64)}
+# prism-signer limits::SALT_COUNTERS, walked in fixture_challenges batches.
+SALT_COUNTERS = 65536
+CHALLENGE_BATCH = 512
 FIELDS = ("E", "Px", "Py", "Qx", "Qy")
 
 
@@ -72,7 +75,7 @@ def main():
                     raise SystemExit(f"recovered signing stream does not reproduce archived response: {entry['file']}")
             primes = errors = rejected = 0
             accepted = None
-            for block in range(0, 65536, 512):
+            for block in range(0, SALT_COUNTERS, CHALLENGE_BATCH):
                 candidates = subprocess.run([str(ROOT / "target/release/fixture_challenges"), level, pk, seed.hex(), str(block)], text=True, capture_output=True, check=True).stdout
                 for line in candidates.splitlines():
                     counter, salt, scalar_hex, prime = line.split()

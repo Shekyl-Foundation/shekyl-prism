@@ -56,12 +56,14 @@ caller-selected randomness prevents a covert channel is made.
 
 ## Comparison and feature boundary
 
-`prism-compare` owns archived unsalted challenge/search logic and experiment
-drivers. Neither production crate depends on it. Only the off-by-default
-`research-reduced-width` verifier feature exposes an entry point accepting
-a smaller challenge width or an archived response. Default `verify` never
-uses that entry point. Production signing does not enable the feature.
-The field crate contains no archived index type or layout constant.
+`prism-signer` owns the salted KDF, the native session, and the candidate
+budget. `prism-compare` owns archived unsalted challenge/search logic and
+the experiment drivers, and it calls that session. Neither production crate
+depends on `prism-compare`. Only the off-by-default `research-reduced-width`
+verifier feature exposes an entry point accepting a smaller challenge width
+or an archived response. Default `verify` never uses that entry point.
+Production signing does not enable the feature. The field crate contains
+no archived index type or layout constant.
 
 The comparison changes only the projection width, retaining real field
 sizes, degree arithmetic, native signing and all algebraic verification.

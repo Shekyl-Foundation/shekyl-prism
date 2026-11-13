@@ -18,13 +18,13 @@ pub struct ChallengeScalar {
 }
 impl ChallengeScalar {
     /// cSHAKE256(pk || salt || message), projected to odd E-3 bits.
-    pub fn derive<L: Level>(identity: &KeyIdentity<'_, L>, message: &[u8], salt: Salt<L>) -> Self {
+    pub fn derive<L: Level>(identity: &KeyIdentity<'_, L>, message: &[u8], salt: L::Salt) -> Self {
         Self::with_width::<L>(identity, message, salt, L::CHALLENGE_BITS)
     }
     fn with_width<L: Level>(
         identity: &KeyIdentity<'_, L>,
         message: &[u8],
-        salt: Salt<L>,
+        salt: L::Salt,
         bits: u32,
     ) -> Self {
         let mut hash: CShake256 = CoreWrapper::from_core(CShake256Core::new(CHALLENGE_DOMAIN));
@@ -42,7 +42,7 @@ impl ChallengeScalar {
     pub fn derive_width<L: Level>(
         identity: &KeyIdentity<'_, L>,
         message: &[u8],
-        salt: Salt<L>,
+        salt: L::Salt,
         bits: u32,
     ) -> Option<Self> {
         (bits > 0 && bits <= L::CHALLENGE_BITS)
@@ -85,8 +85,8 @@ mod tests {
         fn check<L: Level>() {
             let key = L::ext_encode(L::Ext::from_u64(3));
             let id = KeyIdentity::<L>::decode(&key).unwrap();
-            let mut bytes = vec![0; L::SALT_LEN];
-            let salt = Salt::<L>::from_bytes(&bytes).unwrap();
+            let salt = L::Salt::zero();
+            let mut bytes = salt.as_bytes().to_vec();
             let original = ChallengeScalar::derive(&id, b"binary\0message", salt);
             assert_eq!(original.as_bytes().len(), L::S_LEN);
             assert_eq!(original.as_bytes()[0] & 1, 1);
@@ -102,7 +102,7 @@ mod tests {
                     ChallengeScalar::derive(
                         &id,
                         b"binary\0message",
-                        Salt::from_bytes(&bytes).unwrap()
+                        L::Salt::from_bytes(&bytes).unwrap()
                     )
                 );
                 bytes[i] ^= 1;

@@ -37,6 +37,15 @@ impl Nist {
             Self::V => Level5::NAME,
         }
     }
+
+    /// Public salt length for this row, in bytes.
+    pub fn salt_len(self) -> usize {
+        match self {
+            Self::I => Level1::SALT_LEN,
+            Self::III => Level3::SALT_LEN,
+            Self::V => Level5::SALT_LEN,
+        }
+    }
 }
 
 impl fmt::Display for Nist {

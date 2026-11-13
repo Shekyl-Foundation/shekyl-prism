@@ -18,7 +18,7 @@ fn hex(s: &str) -> Option<Vec<u8>> {
 fn emit<L: Level>(key: &str, salt: &str) -> Option<()> {
     let key = hex(key)?;
     let id = KeyIdentity::<L>::decode(&key).ok()?;
-    let salt = Salt::<L>::from_bytes(&hex(salt)?)?;
+    let salt = L::Salt::from_bytes(&hex(salt)?)?;
     let s = ChallengeScalar::derive(&id, b"shekyl-prism-s5", salt);
     println!(
         "{} {}",

@@ -841,13 +841,23 @@ def chain_verdict(path, completion="library", **soft):
         fail.soft = False
 
 
+# `2λ` bits, the row salt length. It matches `fp_len` on these three rows;
+# the salt contract is the bit length, not the field width.
+def salt_len(level):
+    return (2 * LEVELS[level]["lambda"]) // 8
+
+
 def candidate_salt(level, counter):
-    width = LEVELS[level]["fp_len"]
+    width = salt_len(level)
     return (int(counter).to_bytes(8, "little") + bytes(width - 8)).hex()
 
 
-def first_prime_salt(level, key_hex, message, start=0, limit=65536):
-    for counter in range(start, min(start + limit, 65536)):
+# Counters one signing call may derive. The probe below uses the same bound.
+SALT_COUNTERS = 65536
+
+
+def first_prime_salt(level, key_hex, message, start=0, limit=SALT_COUNTERS):
+    for counter in range(start, min(start + limit, SALT_COUNTERS)):
         salt = candidate_salt(level, counter)
         scalar, prime = challenge_scalar(level, key_hex, message, salt)
         if prime == "prime":
@@ -886,7 +896,7 @@ def run_negatives(completion="library"):
 
         # 1. a salt whose degree is composite; no carried search index.
         composite_at = None
-        for counter in range(65536):
+        for counter in range(SALT_COUNTERS):
             candidate = candidate_salt(level, counter)
             _scalar, verdict = challenge_scalar(level, key, message, candidate)
             if verdict == "composite":

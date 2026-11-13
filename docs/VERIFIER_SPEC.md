@@ -177,8 +177,9 @@ time. The signer remains a separate crate and process backend.
   zero and nonzero caller randomness.
 - The default build has no reduced-width entry point: CI compiles a
   consumer that must fail on `prism_verify::research` and build only with
-  `research-reduced-width`. `prism-compare`'s research signer releases
-  the production signer's bytes at the production width.
+  `research-reduced-width`. At the production width the comparison driver
+  calls the production signing session, so the bytes it releases are the
+  production signer's bytes.
 - `scripts/sage/differential.sage` compares a fresh Sage execution against
   Rust, including the other-key cases. It requires Sage and pinned source.
 - Fuzz corpora are seeded with all honest signatures, so deep paths are

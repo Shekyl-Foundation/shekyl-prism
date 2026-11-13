@@ -39,65 +39,6 @@ pub fn first_prime<L: Level>(key: &[u8], message: &[u8]) -> Option<(u16, Vec<u8>
     None
 }
 
-/// Secret-stream derivation from the approved protocol, for real-backend
-/// research drivers. Returned material is wiped on drop, never logged.
-pub fn secret_stream<L: Level>(
-    seed: &[u8; 48],
-    label: &[u8],
-    context: &[u8],
-) -> zeroize::Zeroizing<[u8; 48]> {
-    let mut hash: CShake256 = CoreWrapper::from_core(CShake256Core::new(b"shekyl-prism-secret-v1"));
-    hash.update(seed);
-    hash.update(L::NAME.as_bytes());
-    hash.update(&(label.len() as u64).to_le_bytes());
-    hash.update(label);
-    hash.update(context);
-    let mut out = zeroize::Zeroizing::new([0; 48]);
-    hash.finalize_xof().read(&mut *out);
-    out
-}
-
-pub fn derived_salt<L: Level>(
-    seed: &[u8; 48],
-    key: &[u8],
-    message: &[u8],
-    randomness: &[u8; 32],
-    counter: u64,
-) -> prism_field::Salt<L> {
-    let salt_key = secret_stream::<L>(seed, b"salt", b"");
-    let mut hash: CShake256 = CoreWrapper::from_core(CShake256Core::new(b"shekyl-prism-salt-v1"));
-    hash.update(&salt_key[..]);
-    hash.update(key);
-    hash.update(randomness);
-    hash.update(&counter.to_le_bytes());
-    hash.update(message);
-    let mut out = vec![0; L::SALT_LEN];
-    hash.finalize_xof().read(&mut out);
-    prism_field::Salt::<L>::from_bytes(&out).expect("row salt length")
-}
-
-/// Decimal encoding of a public scalar, for the pinned native backend.
-pub fn decimal(bytes: &[u8]) -> String {
-    let mut digits = vec![0u16];
-    for byte in bytes.iter().rev() {
-        let mut carry = u16::from(*byte);
-        for digit in &mut digits {
-            let n = *digit * 256 + carry;
-            *digit = n % 10;
-            carry = n / 10;
-        }
-        while carry != 0 {
-            digits.push(carry % 10);
-            carry /= 10;
-        }
-    }
-    digits
-        .iter()
-        .rev()
-        .map(|d| char::from(b'0' + *d as u8))
-        .collect()
-}
-
 /// Research-only adapter of the archived index wire to the unchanged real
 /// algebraic verifier. The salt padding is ignored by verify_scalar;
 /// archived hashing, including the actual carried index, happens here.
@@ -221,7 +162,7 @@ mod tests {
         let key = hex(rows["A"]);
         let j: u16 = rows["j"].parse().unwrap();
         let scalar = unsalted::<L>(&key, rows["message"].as_bytes(), j, L::CHALLENGE_BITS).unwrap();
-        assert_eq!(decimal(&scalar), rows["s"]);
+        assert_eq!(prism_signer::decimal(&scalar), rows["s"]);
         assert!(prism_verify::degree_is_prime(L::E - 2, &scalar));
         let mut sig = Vec::new();
         for name in ["E", "Px", "Py", "Qx", "Qy"] {

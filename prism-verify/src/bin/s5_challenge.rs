@@ -60,7 +60,7 @@ fn emit<L: Level>(coefficient: &str, message: &str, salt_hex: &str) -> ExitCode 
     let Ok(salt_bytes) = decode_hex(salt_hex) else {
         return ExitCode::from(2);
     };
-    let Some(salt) = Salt::<L>::from_bytes(&salt_bytes) else {
+    let Some(salt) = L::Salt::from_bytes(&salt_bytes) else {
         return ExitCode::from(2);
     };
     let scalar = ChallengeScalar::derive(&identity, message.as_bytes(), salt);
