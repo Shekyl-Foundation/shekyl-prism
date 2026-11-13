@@ -1,0 +1,12 @@
+commit 9d2aef5bb6eb8d00402c591fd376b9390b37b88e
+toolchain rustc 1.94.0 (4a4ef493e 2026-03-02)
+machine x86_64
+command target/release/index_leak 
+d0ce5d1293b0e84464b1e7d3c9af8337adccdd8192114f5e75aafa340d7187a2  target/release/index_leak
+6366d153cc685804905fa29548ce53f5d3fba61a82b7269a7debf8217b29c2a3  target/native/prism_signer_lvl1
+354b1a410349d2b119b63f156f3c64763e21011c5aeb098d8ef40817fc79a569  target/native/prism_signer_lvl3
+a87706c8c3835b35fc1ecb0f516e65b1afd301100930880ebd30719511d7b635  target/native/prism_signer_lvl5
+started 2026-11-12T23:28:03Z load 14.62 9.26 7.97
+finished 2026-11-12T23:28:11Z load 15.37 9.60 8.10
+exit 0
+47f1494e4455ab11b060cf541803a3ed6c51dea83c6ea8f347e702b643f8bbc7  docs/comparison/e5/index_leak.txt
