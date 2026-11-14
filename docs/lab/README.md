@@ -8,6 +8,8 @@ This directory is the research record for shekyl-prism. It exists so that the wo
 | `LEDGER.md` | Every claim we may publish, with its evidence and status; every departure from ePrint 2026/443; the open obligations. |
 | `CONTRIBUTIONS.md` | Who did what, including the AI systems used. This is the source for the paper's disclosure. |
 
+Records written before 2026-11-14 name the parameter sets by level: `NIST-I` or level I is `p248`, `NIST-III` or level III is `p376`, `NIST-V` or level V is `p500` (`docs/PARAMETER_SETS.md`). They are not rewritten.
+
 Raw evidence stays where it already lives: `docs/comparison/`, `docs/benchmarks/`, `prism-isogeny/testdata/s5_model/`, and the test vectors. The notebook points at it and never copies it.
 
 ## Rules
