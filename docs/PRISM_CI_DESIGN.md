@@ -60,8 +60,9 @@ Wall clock is about 4–5 min, dominated by the C build when it runs.
 | `differential-prime` | 10,000 random challenge degrees per level from a committed Python script, checked against `sympy.isprime` through a small Rust driver; zero disagreements required (this session's one-off run made permanent) | gate |
 | `big-endian` | `cross test --target s390x-unknown-linux-gnu` under qemu | gate |
 | `c-vectors-full` | the C rebuild and diff, unconditionally | gate |
-| `mutants` | `cargo mutants -p prism-verify -p prism-field` (the suite runs in seconds, so the full set is cheap); surviving mutants listed in the job summary | report-only (core ruling) |
+| `mutants` | `cargo mutants -p prism-verify -p prism-field --shard k/8`, eight jobs. Every mutant of a crate runs that crate's whole suite, about half a minute for `prism-verify` since the acceptance path landed, and there are about 700 mutants, so one job no longer fits its 90-minute limit (it was cancelled by it every night from 2026-11-11). Surviving mutants listed in each job's summary | report-only (core ruling) |
 | `coverage` | `cargo llvm-cov` | report-only |
+| `report-red` | opens or comments on the issue `nightly RED` when any job above ended in failure **or was cancelled**, on a scheduled run or a dispatched one that asks for it. A job stopped by its own time limit is cancelled, not failed, and until 2026-11-14 that reported nothing | reporter |
 
 ## Required on `dev` (applied 2026-11-09, ruleset 26902731)
 
