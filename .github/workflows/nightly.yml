@@ -62,8 +62,7 @@ jobs:
       - name: Nightly toolchain and clang
         run: |
           set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends clang
+          bash scripts/ci/apt_install.sh clang
           rustup toolchain install nightly --profile minimal --component rust-src
       - name: Install cargo-fuzz 0.13.2
         run: python3 scripts/ci/install_pinned_tool.py cargo-fuzz
@@ -133,6 +132,10 @@ jobs:
         run: python3 -m pip install --break-system-packages 'sympy==1.14.0'
       - name: 10_000 degrees per level, zero disagreements
         run: python3 scripts/differential_prime.py
+      # The doc comment of `nonvanishing` states when its search can fail,
+      # for every `zeta`. This is the computation behind that statement.
+      - name: The theta base-change search fails only where its comment says
+        run: python3 scripts/theta_base_search.py
 
   big-endian:
     name: big-endian
@@ -161,16 +164,25 @@ jobs:
           persist-credentials: false
           submodules: true
       - name: Compiler
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential cmake
+        run: bash scripts/ci/apt_install.sh build-essential cmake
       - name: Rebuild the vectors from the pin
         run: python3 scripts/export_c_basis_hints.py
       - name: The committed vectors match
         run: bash scripts/ci/diff_testdata.sh
 
+  # Every mutant of a crate runs that crate's whole test suite, about half
+  # a minute for prism-verify, and there are some 700 mutants: hours in
+  # one job, against a 90-minute limit. The mutants are dealt round-robin
+  # to eight jobs, so each gets its share of every file and runs for a
+  # fraction of its limit.
   mutants:
-    name: mutants
+    name: mutants (${{ matrix.shard }}/8)
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
@@ -184,13 +196,15 @@ jobs:
       # Report-only. The exit code is recorded and then discarded. The
       # install step above still fails the job if the tool is not there.
       - name: Surviving mutants
+        env:
+          SHARD: ${{ matrix.shard }}
         run: |
           set +e
-          cargo mutants -p prism-verify -p prism-field --no-shuffle > mutants.txt
+          cargo mutants -p prism-verify -p prism-field --no-shuffle --shard "${SHARD}/8" --sharding round-robin > mutants.txt
           code=$?
           set -e
           {
-            echo "## cargo mutants"
+            echo "## cargo mutants, shard ${SHARD} of 8"
             echo "exit ${code} (report-only until dev → main)"
             echo '```'
             tail -n 80 mutants.txt
@@ -229,7 +243,9 @@ jobs:
   report-red:
     name: report-red
     needs: [fuzz, differential-prime, big-endian, c-vectors-full, mutants, coverage]
-    if: ${{ failure() && (github.event_name == 'schedule' || inputs.report) }}
+    # `failure()` is false for a job its own time limit cancelled. A
+    # cancelled job is red and is reported.
+    if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) && (github.event_name == 'schedule' || inputs.report) }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

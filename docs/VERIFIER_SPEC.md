@@ -124,7 +124,10 @@ consumes their appropriate order `2^(e−1)` multiples.
 Canonicalize each factor's order-four basis while preserving its pairing.
 A bounded enumeration over four coefficients replaces the Sage reference's
 order-four discrete logarithms. Build the product theta null and apply
-`base_change_theta(M0*Mi mod 4, e4)` to each chain. The adapted gluing,
+`base_change_theta(M0*Mi mod 4, e4)` to each chain; it has no result when
+none of its four shifts gives a nonzero sum, and the verifier then refuses
+with `Kernel`. No signature reaches that case (the reason is with the
+function). The adapted gluing,
 8-torsion steps and dual evaluation are ported from the pinned Theta_dim4
 reference. The balanced kernel stack uses O(log e) saved generator pairs.
 

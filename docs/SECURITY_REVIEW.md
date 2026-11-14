@@ -90,6 +90,37 @@ premise and the protocol reduction still require independent review.
    under the recorded conditions; see [BENCHMARKING.md](BENCHMARKING.md).
    A verification budget, adversarial-cost measurements and resource limits
    remain deployment decisions. This is not an idle-device latency bound.
+9. **Field sizes.** The three rows are the primes from before ePrint
+   2026/1486. Which primes to implement is open, pending a ruling; see the
+   next section.
+
+## Field sizes after ePrint 2026/1486
+
+Added 2026-11-14. The full record, with what was read and in which copy,
+is [SECURITY_ARGUMENT.md](SECURITY_ARGUMENT.md) §9. In short:
+
+- Wesolowski, ePrint 2026/1486, gives a heuristic algorithm for the
+  supersingular endomorphism ring and isogeny problems in time and memory
+  `p^(1/3+o(1))`, where the best before was about `p^(1/2)`. The paper
+  names PRISM among the schemes affected and runs its experiments on
+  `5·2^248 − 1`, the first row here.
+- The SQIsign specification of 2026-09-01 (version 3.0) answered by
+  moving to `3·2^324 − 1`, `27·2^500 − 1` and `17·2^664 − 1` for NIST
+  levels I, III and V, on a time–memory model of the attack. ePrint
+  2026/1821 analyses the same tradeoff and finds the algorithm an
+  improvement, over the memory ranges it considers practical, only at
+  level I.
+- **This repository's fields are the pre-attack ones**: `5·2^248 − 1`,
+  `65·2^376 − 1` and `27·2^500 − 1`.
+- **The attack applies to key recovery.** A PRISM secret key is knowledge
+  of the endomorphism ring of the public curve, which is the problem the
+  algorithm solves. The salt, the challenge and the verifier do not enter.
+- **The parameter question is open, pending a ruling.** No security level
+  is stated for any row, here or anywhere in this repository.
+
+A reviewer of this repository should treat every size, timing and
+operation count in it as belonging to those three rows, and should not
+read the labels I, III and V as levels.
 
 ## How to review reproducibly
 
