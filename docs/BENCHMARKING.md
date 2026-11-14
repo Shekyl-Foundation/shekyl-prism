@@ -235,7 +235,10 @@ verifying it, with the heap measured to the byte, and once more with the
 stack sampled. On the x86_64 development machine, at `db84af6` and, with
 the script and example copied in, at `c9df786`; record in
 [benchmarks/peak_heap_x86_64_2026-11-14.txt](benchmarks/peak_heap_x86_64_2026-11-14.txt).
-The two vectors of a level agree to the byte in every row.
+The two vectors of a level give the same bytes for each of the three
+named holders; their totals differ by one or two bytes (the decoded
+vector's own) and their stack samples by up to 1,504 bytes. The table is
+the first vector of each level.
 
 Table: peak heap of one verification, in bytes, and what holds it at the peak.
 
@@ -243,29 +246,41 @@ Table: peak heap of one verification, in bytes, and what holds it at the peak.
 | --- | ---: | ---: | ---: |
 | before the operation-count work (`c9df786`) | 797,706 | 2,383,998 | 3,175,598 |
 | at the head | 1,107,210 | 2,995,710 | 4,441,774 |
-| of which the two chains' point vectors | 663,616 (60%) | 1,986,688 (66%) | 2,646,144 (60%) |
-| of which the batched inversions' vectors | 250,112 (23%) | 571,776 (19%) | 1,016,320 (23%) |
-| of which the four doubling tables | 190,464 (17%) | 433,152 (14%) | 774,144 (17%) |
+| at the head, allocated under `DualChain::new` (the chains' point vectors) | 663,616 (60%) | 1,986,688 (66%) | 2,646,144 (60%) |
+| at the head, allocated under `invert_coords` (the batched inversions' vectors) | 250,112 (23%) | 571,776 (19%) | 1,016,320 (23%) |
+| at the head, allocated under `Doublings::new` (the four doubling tables) | 190,464 (17%) | 433,152 (14%) | 774,144 (17%) |
+| before, allocated under `DualChain::new` | 794,688 | 2,379,904 | 3,170,432 |
 | heap held before verifying (the decoded vector) | 3,194 | 4,366 | 5,534 |
 | largest stack sample | 88,800 | 130,088 | 172,856 |
 
-The operation-count work raised the peak by 39%, 26% and 40%: the
-doubling tables and the vectors of the batched inversions are new, and
-both are still held when the second chain is at its largest. The largest
-part was there before and is the chains' own.
+The operation-count work raised the peak by 39%, 26% and 40%. The rows
+are by the function that allocated, as Massif attributes them. The
+doubling tables are new. The batched inversions' vectors are new under
+that name, but part of them took the place of memory `DualChain::new`
+held before: at level I that function holds 131,072 bytes less than it
+did, so the net addition from the chains is 119,040 bytes beside the
+tables' 190,464. Both are still held when the second chain is at its
+largest. The largest part was there before and is the chains' own, and
+the tables are the smallest.
 
-Every byte of this is allocated inside one call of `verify` and freed
-before it returns; nothing is shared between calls and nothing is kept
-between them. So verifications running at once each hold their own, and
-four at once, one per core of the Pi 4, hold about 4.4 MB, 12.0 MB and
-17.8 MB of heap at the peak, with under 0.2 MB of stack each. That is
+All of this is held in vectors owned by values local to one call of
+`verify`, so it is freed when the call returns and nothing is shared
+between calls. That is read from the code, not measured: outside the
+counter feature the three crates have one `static`, the pinned-vector
+table of `prism_verify::reference`, which `verify` does not call. Massif
+agrees where its last sample falls after the call (544 bytes at levels I
+and III; at level V the last sample was taken during the release). So
+verifications running at once each hold their own, and four at once, one
+per core of the Pi 4, hold about 4.4 MB, 12.0 MB and 17.8 MB of heap at
+the peak; the largest stack sample of one is about 0.17 MB. That is
 arithmetic from the single-verification figure, not a measurement: no
 four-thread run was made, and memory was not measured on the Pi (the
 field elements are the same 64-bit limbs on aarch64, so the sizes should
 be the same, but that is not checked). It bounds memory only. Whether
 four verifications at once each take the single-thread time, with four
-working sets of this size in the Pi's 1 MB shared cache, is the open
-four-core question, and this does not answer it.
+working sets of this size in the one 1 MiB level-2 cache the Pi 4's four
+cores share (read from the device: `lscpu`, and `shared_cpu_list` 0-3),
+is the open four-core question, and this does not answer it.
 
 `prism-bench` prints the time of one extension-field multiplication,
 squaring and inversion per level after its verification timings. On the

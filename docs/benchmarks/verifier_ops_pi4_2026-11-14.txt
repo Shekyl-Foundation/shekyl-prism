@@ -5,7 +5,7 @@
 # Conditions are read before and after each run: load average, SoC temperature in millidegrees C, cpu0 clock in kHz, and the three busiest processes.
 # A resident node (shekyld, about 190% of one core, with its tor) ran throughout and was not stopped: this is a measurement under recorded load, not an idle-device baseline.
 # Firmware throttling flags could not be read. The 'before' binary predates the per-operation field timings, so it prints none.
-# The counter is cntvct_el0, a 54 MHz timer, not a cycle counter; cycles in the summary are nanoseconds times the recorded 1.8 GHz clock.
+# The counter is cntvct_el0, a 54 MHz timer, not a cycle counter; the estimated cycles in the summary are nanoseconds times an assumed 1.8 GHz, the clock read before and after each run and not sampled during one.
 RUN 1 tree=before
 # conditions before
 time=2026-11-14T01:04:57Z
