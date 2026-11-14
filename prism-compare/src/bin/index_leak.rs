@@ -10,7 +10,9 @@
 //! is prime. The archived signer took the first prime index unless its own
 //! final verification refused the response, so a nonzero count is a
 //! secret-dependent event made public. Stdout: one `INDEX` line per vector
-//! and one `SKIPPED` line per observed count.
+//! and one `SKIPPED` line per observed count. `level` is the key committed
+//! comparison records match. Its value is the committed label, not the set
+//! name.
 use prism_compare::{archived_vectors, unsalted};
 use prism_field::{ParameterSet, P248, P376, P500};
 use prism_verify::Set;

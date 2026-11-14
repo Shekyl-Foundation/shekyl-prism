@@ -11,7 +11,9 @@
 //! evaluated at index 0 and the salted one at salt `LE64(n)` zero-padded;
 //! both use the production projection and the production Baillie-PSW test.
 //! Stdout: one `DENSITY` line per set and version, with the prime count
-//! of each tenth of the run so the dispersion is visible.
+//! of each tenth of the run so the dispersion is visible. `level` is the
+//! key committed comparison records match. Its value is the committed
+//! label, not the set name.
 use prism_compare::{archived_vectors, unsalted};
 use prism_field::{Salt, P248, P376, P500};
 use prism_verify::{ChallengeScalar, Committed, KeyIdentity};

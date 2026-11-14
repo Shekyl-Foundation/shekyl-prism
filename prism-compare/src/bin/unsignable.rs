@@ -15,6 +15,8 @@
 //! message records both signers' candidate counts. A message the archived
 //! signer cannot sign is retried twice more to show the same failure, and
 //! its `UNSIGNABLE` line carries the salted outcome for the same message.
+//! `level` is the key committed comparison records match. Its value is the
+//! committed label, not the set name.
 use prism_compare::{
     encode,
     native::{self, Unsalted},

@@ -98,8 +98,9 @@ sage scripts/sage/differential.sage
 ```
 
 This fresh comparison does not rewrite committed known answers. Set
-`PRISM_DIFFERENTIAL_LEVEL=NIST-III` to restrict it to one parameter set,
-named by the `level` field its vectors carry (here `p376`).
+`PRISM_DIFFERENTIAL_LEVEL=NIST-III` to restrict it to one parameter set.
+The value is the `level` field the vectors carry: `NIST-III`, which is
+`p376`.
 The original model report is in
 [REPORT.md](prism-isogeny/testdata/s5_model/REPORT.md).
 
