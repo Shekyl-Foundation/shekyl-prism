@@ -161,7 +161,14 @@ fn kernel_by_ladders<F: Field>(
     })
 }
 
-fn change<F: Field>(matrix: Mat4, m0: [[u8; 4]; 4], zeta: F) -> [[F; 4]; 4] {
+/// The theta base change of one chain: `M0·M` modulo 4, at `zeta`.
+///
+/// `None` when [`base_change_theta`] finds no usable shift. No signature
+/// reaches that: `zeta` is the Weil pairing of an order-four basis, so
+/// `zeta⁴ = 1`, and the search fails only when `zeta² = −3`. Separately,
+/// the tests below try each of the 256 matrices this can build at the
+/// roots of `−3`, and none fails there either.
+fn change<F: Field>(matrix: Mat4, m0: [[u8; 4]; 4], zeta: F) -> Option<[[F; 4]; 4]> {
     let rows = matrix.rows().map(|row| row.map(|v| v.to_le_bytes()[0] & 3));
     let result = core::array::from_fn(|i| {
         core::array::from_fn(|j| {
@@ -287,7 +294,7 @@ fn build<L: Level>(lifted: &Lifted<L::Ext>, scalar: &[u8]) -> Result<Built<L::Ex
     // this order, so a refusal in the long chain costs nothing of the short.
     let (kernel1, change1) = (
         kernel(curves, &basis, &columns(m1), 0, L::E),
-        change(m1, m0, zeta),
+        change(m1, m0, zeta).ok_or(VerifyError::Kernel)?,
     );
     Stage::Chain1.enter();
     let chain1 =
@@ -295,7 +302,7 @@ fn build<L: Level>(lifted: &Lifted<L::Ext>, scalar: &[u8]) -> Result<Built<L::Ex
     Stage::Kernel.enter();
     let (kernel2, change2) = (
         kernel(curves, &basis, &columns(m2), 1, L::E),
-        change(m2, m0, zeta),
+        change(m2, m0, zeta).ok_or(VerifyError::Kernel)?,
     );
     Stage::Chain2.enter();
     let chain2 =
@@ -652,5 +659,51 @@ mod tests {
         let doubled = table.doubled(5);
         let old = dbl_iter(curve, point, 5);
         assert!(doubled.x.same(old.x) && doubled.y.same(old.y) && doubled.z.same(old.z));
+    }
+
+    /// The eight matrices `canonical_four` can return.
+    fn canonical_forms() -> Vec<[[u8; 2]; 2]> {
+        (0..4)
+            .flat_map(|d| [[[1, 0], [d, 1]], [[d, 3], [1, 0]]])
+            .collect()
+    }
+
+    /// Every base change `build` can ask for. Modulo 4 the challenge
+    /// matrices depend only on `s` modulo 4, which is 1 or 3, and `M0` is
+    /// one of 8 × 8 pairs of canonical forms: 2 × 64 × 2 = 256 matrices.
+    /// Each has a base change at both primitive fourth roots of unity, and
+    /// also at a root of `−3`, the one `zeta` at which the search can fail
+    /// at all: none of the 256 is a matrix it fails on.
+    fn every_reachable_base_change_exists<L: Level>() {
+        let root = L::Ext::from_u64(3).negate().sqrt().unwrap();
+        let zetas = [L::ext_i(), L::ext_i().negate(), root, root.negate()];
+        let mut tried = 0;
+        for s in [1, 3] {
+            let (_, m1, m2) = challenge_matrices(Residue::from_u64(L::E, s)).unwrap();
+            for mt in canonical_forms() {
+                for mu in canonical_forms() {
+                    let m0 = [
+                        [mt[0][0], 0, mt[1][0], 0],
+                        [0, mu[0][0], 0, mu[1][0]],
+                        [mt[0][1], 0, mt[1][1], 0],
+                        [0, mu[0][1], 0, mu[1][1]],
+                    ];
+                    for matrix in [m1, m2] {
+                        for zeta in zetas {
+                            assert!(change(matrix, m0, zeta).is_some(), "{} s={s}", L::NAME);
+                        }
+                        tried += 1;
+                    }
+                }
+            }
+        }
+        assert_eq!(tried, 256);
+    }
+
+    #[test]
+    fn no_base_change_the_verifier_can_ask_for_is_refused() {
+        every_reachable_base_change_exists::<Level1>();
+        every_reachable_base_change_exists::<Level3>();
+        every_reachable_base_change_exists::<Level5>();
     }
 }

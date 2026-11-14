@@ -44,4 +44,4 @@ Proposed meaning of "fully viable":
 4. Signer secret handling and side-channel status are stated, even where the answer is "not constant time".
 5. Timings on x86_64 and the Raspberry Pi 4 are taken with the field arithmetic optimized, and published with their records.
 6. A stranger can clone the repository, build it with one documented command, run the vectors, and regenerate every table in the paper.
-7. A prior-art search is recorded in the notebook.
+7. A prior-art search is recorded in the notebook. It is started, not finished (notebook, 2026-11-14): it has found one earlier implementation of the §5 variant (ePrint 2026/2312) and the cryptanalysis that moved SQIsign's primes (ePrint 2026/1486). What remains is to read 2026/2312 and its code in full, restate what is new here relative to it, and record a search for anything else, with its terms, places and dates (ledger O9, O12, O13).

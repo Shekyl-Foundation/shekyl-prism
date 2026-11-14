@@ -26,7 +26,11 @@ verifier at reduced challenge widths.
 The [verifier specification](docs/VERIFIER_SPEC.md) defines the current
 research encoding, including the `e′=e−2` parameter choice. Signatures are
 352 / 528 / 704 bytes, including salts of 32 / 48 / 64 bytes. I/III/V name the source field rows, not certified
-security levels for this modified salted construction. The approved wire
+security levels for this modified salted construction. Those rows are the
+primes from before the `p^(1/3+o(1))` isogeny algorithm of ePrint 2026/1486,
+which applies to PRISM key recovery and after which SQIsign moved to larger
+primes; which primes this repository should implement is open, pending a
+ruling ([SECURITY_ARGUMENT.md](docs/SECURITY_ARGUMENT.md) §9). The approved wire
 and signer contract is [SALT_PROTOCOL.md](docs/SALT_PROTOCOL.md); the
 unsalted implementation is preserved at `archive/unsalted-index-2026-11-12`.
 
