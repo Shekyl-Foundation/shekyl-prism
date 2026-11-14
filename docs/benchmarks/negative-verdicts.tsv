@@ -1,4 +1,4 @@
-# Sources: sha256 92ee22f5596c8cc74539963a775274ac9e323407f6ece23c3dcd7618df4a113d
+# Sources: sha256 6aa670d68a768fdd1b001a07077f716cecd7c24924f5a250b6295ad6e3997a32
 level	vector	case	verdict	ext_mul	ext_square	ext_inv	ext_sqrt	ext_is_square
 NIST-I	s5_lvl1.txt	both-y-negated	Sign	0	1	0	0	0
 NIST-I	s5_lvl1.txt	q-negated	Pairing	33982	17569	13	6	4
