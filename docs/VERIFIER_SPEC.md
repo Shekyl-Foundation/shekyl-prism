@@ -10,7 +10,7 @@ preserve the derivations, investigations and questions that led here.
 
 ## Parameters and encoding
 
-| Parameter | I | III | V |
+| Parameter | `p248` | `p376` | `p500` |
 | --- | --- | --- | --- |
 | `p = f·2^e − 1` | `5·2^248−1` | `65·2^376−1` | `27·2^500−1` |
 | Rational torsion exponent `e` | 248 | 376 | 500 |
@@ -20,11 +20,14 @@ preserve the derivations, investigations and questions that led here.
 | Free bits in odd `s` | 244 | 372 | 496 |
 | Degree `q` bit length | 491 | 747 | 995 |
 | Public-key bytes | 64 | 96 | 128 |
-| Salt bytes (2λ bits) | 32 | 48 | 64 |
+| Salt bytes (`e` rounded up to a multiple of 128 bits) | 32 | 48 | 64 |
+| Search bound (the salt's bit length) | 256 | 384 | 512 |
 | Signature bytes | 352 | 528 | 704 |
 
-I/III/V identify the paper's field rows. They do not certify the security
-level of this modified salted protocol. `CHAIN_STEPS` is `e′`; `E` is
+A parameter set is a prime and is named by it
+([PARAMETER_SETS.md](PARAMETER_SETS.md)); the paper's Table 2 calls these
+three NIST I, III and V, which does not certify a security level of this
+modified salted protocol. `CHAIN_STEPS` is `e′`; `E` is
 always the rational torsion exponent. `CHALLENGE_BITS` is the actual
 `e−3` width, including the forced odd bit. The historical `e−1` constant
 had the same byte width but overstated the number of challenge bits.
@@ -89,7 +92,8 @@ classes is made.
 ## Canonical public-key basis
 
 The bounded C-reference basis-index search is unchanged: search from 1
-through `2λ`, including the C's seven-bit hint fallback in one search.
+through the set's search bound, including the C's seven-bit hint fallback
+in one search.
 The verifier carries no basis hint byte. The square test on `1+b²` is in
 `F_p`, not over the integers.
 
@@ -188,6 +192,6 @@ time. The signer remains a separate crate and process backend.
 - Fuzz corpora are seeded with all honest signatures, so deep paths are
   reachable. Fuzzing is not a mathematical soundness proof.
 
-The benchmark uses an accepted honest signature at each level. Development
+The benchmark uses an accepted honest signature at each set. Development
 machine numbers are not a Raspberry Pi measurement. See
 [benchmark instructions](BENCHMARKING.md).

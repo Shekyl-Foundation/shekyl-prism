@@ -10,12 +10,15 @@
 //! is prime. The archived signer took the first prime index unless its own
 //! final verification refused the response, so a nonzero count is a
 //! secret-dependent event made public. Stdout: one `INDEX` line per vector
-//! and one `SKIPPED` line per observed count.
+//! and one `SKIPPED` line per observed count. `level` is the key committed
+//! comparison records match. Its value is the committed label, not the set
+//! name.
 use prism_compare::{archived_vectors, unsalted};
-use prism_field::{Level, Level1, Level3, Level5};
+use prism_field::{ParameterSet, P248, P376, P500};
+use prism_verify::Set;
 use std::collections::BTreeMap;
 
-fn earlier_primes<L: Level>(key: &[u8], message: &[u8], index: u16) -> Option<u32> {
+fn earlier_primes<L: ParameterSet>(key: &[u8], message: &[u8], index: u16) -> Option<u32> {
     let carried = unsalted::<L>(key, message, index, L::CHALLENGE_BITS)?;
     if !prism_verify::degree_is_prime(L::E - 2, &carried) {
         return None;
@@ -31,11 +34,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let vectors = archived_vectors();
     let mut skipped = BTreeMap::new();
     for v in &vectors {
-        let primes = match v.level.as_str() {
-            "NIST-I" => earlier_primes::<Level1>(&v.key, &v.message, v.index),
-            "NIST-III" => earlier_primes::<Level3>(&v.key, &v.message, v.index),
-            "NIST-V" => earlier_primes::<Level5>(&v.key, &v.message, v.index),
-            _ => None,
+        let primes = match Set::from_committed_label(&v.level) {
+            Ok(Set::P248) => earlier_primes::<P248>(&v.key, &v.message, v.index),
+            Ok(Set::P376) => earlier_primes::<P376>(&v.key, &v.message, v.index),
+            Ok(Set::P500) => earlier_primes::<P500>(&v.key, &v.message, v.index),
+            Err(_) => None,
         }
         .ok_or("an archived vector's carried index is not prime")?;
         println!(

@@ -11,16 +11,17 @@
 //! `shekyl-prism-small-extension` and the sample number. The degree is the
 //! smallest prime `q_j` from [`smallest_at_exponent`] at exponent `e − 2`.
 //!
-//! One argument is the sample count per level. Stdout is
-//! `<level> <exponent> <j> <s hex> <q hex>`, little-endian.
+//! One argument is the sample count per set. Stdout is
+//! `<committed label> <exponent> <j> <s hex> <q hex>`, little-endian. The
+//! label is the one the committed samples carry.
 
 use std::env;
 use std::io::{self, Write};
 use std::process::ExitCode;
 
 use prism_compare::first_prime;
-use prism_field::{Level, Level1, Level3, Level5};
-use prism_verify::{challenge_degree, KeyIdentity};
+use prism_field::{ParameterSet, P248, P376, P500};
+use prism_verify::{challenge_degree, Committed, KeyIdentity};
 
 const MESSAGE_PREFIX: &[u8] = b"shekyl-prism-small-extension";
 
@@ -35,7 +36,7 @@ fn main() -> ExitCode {
             }
         },
         None => {
-            eprintln!("sample_e_prime: pass the sample count per level");
+            eprintln!("sample_e_prime: pass the sample count per set");
             return ExitCode::FAILURE;
         }
     };
@@ -45,9 +46,9 @@ fn main() -> ExitCode {
     }
     let stdout = io::stdout();
     let mut out = io::BufWriter::new(stdout.lock());
-    if sample_level::<Level1>(count, &mut out).is_err()
-        || sample_level::<Level3>(count, &mut out).is_err()
-        || sample_level::<Level5>(count, &mut out).is_err()
+    if sample_set::<P248>(count, &mut out).is_err()
+        || sample_set::<P376>(count, &mut out).is_err()
+        || sample_set::<P500>(count, &mut out).is_err()
     {
         return ExitCode::FAILURE;
     }
@@ -58,7 +59,7 @@ fn main() -> ExitCode {
     ExitCode::SUCCESS
 }
 
-fn sample_level<L: Level>(count: u64, out: &mut impl Write) -> Result<(), ()> {
+fn sample_set<L: Committed>(count: u64, out: &mut impl Write) -> Result<(), ()> {
     let mut draw = 0u64;
     let mut produced = 0u64;
     while produced < count {
@@ -84,7 +85,7 @@ fn sample_level<L: Level>(count: u64, out: &mut impl Write) -> Result<(), ()> {
     Ok(())
 }
 
-fn write_sample<L: Level>(
+fn write_sample<L: Committed>(
     produced: u64,
     index: &str,
     scalar: &[u8],
@@ -96,7 +97,7 @@ fn write_sample<L: Level>(
     writeln!(
         out,
         "{name} {exponent} {index} {scalar} {degree}",
-        name = L::NAME,
+        name = L::LABEL,
         exponent = L::E - 2,
         scalar = hex(scalar),
         degree = hex(&degree),
@@ -104,8 +105,8 @@ fn write_sample<L: Level>(
     .map_err(|_| eprintln!("sample_e_prime: could not write stdout"))
 }
 
-/// Key bytes from `draw`, or `None` when this level's decoder refuses them.
-fn key_for<L: Level>(draw: u64) -> Option<Vec<u8>> {
+/// Key bytes from `draw`, or `None` when this set's decoder refuses them.
+fn key_for<L: ParameterSet>(draw: u64) -> Option<Vec<u8>> {
     let mut state = draw.wrapping_add(1);
     let mut bytes = vec![0u8; L::PUBLIC_KEY_LEN];
     for byte in &mut bytes {

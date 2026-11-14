@@ -29,7 +29,7 @@ one challenge from the carried salt and never searches.
 The signer takes a caller-supplied 32-byte randomness input R. The research
 API's default and committed vectors use all zeros; a wallet's default is
 outside this work. The signer itself draws no fresh randomness for salts.
-Keep the existing master-seed/level/label secret-stream derivation and use
+Keep the existing master-seed/legacy-label/label secret-stream derivation and use
 
 ```text
 salt_key = stream_seed("salt", "")

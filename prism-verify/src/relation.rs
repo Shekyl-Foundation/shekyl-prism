@@ -7,7 +7,7 @@
 //! accept path at exponent `e′ = e − 2`. Historical single-chain probes
 //! remain in tests to document the former basis and structure failures.
 
-use prism_field::{Field, Level};
+use prism_field::{Field, ParameterSet};
 #[cfg(test)]
 use prism_isogeny::chain::{chain_surface, SurfaceStop};
 #[cfg(test)]
@@ -35,7 +35,7 @@ use crate::stage::Stage;
 use crate::VerifyError;
 
 /// The isogeny relation for a key the public checks have already accepted.
-pub fn relate<L: Level>(
+pub fn relate<L: ParameterSet>(
     identity: &KeyIdentity<'_, L>,
     response: &Response<L>,
     scalar: &ChallengeScalar,
@@ -52,7 +52,7 @@ pub fn relate<L: Level>(
 /// The same relation, including the starting curve. `verify` never calls
 /// this with a zero key: that key is [`VerifyError::Origin`] first. The
 /// `E0` vectors call it directly.
-pub fn relate_points<L: Level>(
+pub fn relate_points<L: ParameterSet>(
     vk: L::Ext,
     sig: L::Ext,
     p_sig: AffinePoint<L>,
@@ -110,7 +110,7 @@ pub fn relate_points<L: Level>(
 /// `Q` is the cleared difference. `P − Q` for the lift is `R`, the cleared
 /// point whose full-point abscissa is `−x(P) − A`. A global sign on the
 /// lifted pair cancels in the pairing.
-fn pairing_holds<L: Level>(lifted: &Lifted<L::Ext>, scalar: &[u8]) -> bool {
+fn pairing_holds<L: ParameterSet>(lifted: &Lifted<L::Ext>, scalar: &[u8]) -> bool {
     Stage::Pairing.enter();
     let [r1, r2] = lifted.scaled;
     let [p_vk, q_vk] = lifted.vk;
@@ -126,7 +126,7 @@ fn pairing_holds<L: Level>(lifted: &Lifted<L::Ext>, scalar: &[u8]) -> bool {
 /// The `e′` chain for a basis and signature that have already passed the
 /// order and span checks.
 #[cfg(test)]
-fn e_prime_surface<L: Level>(
+fn e_prime_surface<L: ParameterSet>(
     vk: L::Ext,
     even: &EvenBasis<L::Ext>,
     push: [Xz<L::Ext>; 3],
@@ -160,21 +160,25 @@ fn e_prime_surface<L: Level>(
 }
 
 /// Order exactly `2^e`.
-fn order_e<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
+fn order_e<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
     let full = double_times::<L>(coefficient, point, L::E);
     let almost = double_times::<L>(coefficient, point, L::E - 1);
     full.z.is_zero() && !almost.z.is_zero()
 }
 
 /// `[2^{e−1}]` of two order-`2^e` points are distinct and nonzero.
-fn span_e<L: Level>(coefficient: L::Ext, p: Xz<L::Ext>, q: Xz<L::Ext>) -> bool {
+fn span_e<L: ParameterSet>(coefficient: L::Ext, p: Xz<L::Ext>, q: Xz<L::Ext>) -> bool {
     let p2 = double_times::<L>(coefficient, p, L::E - 1);
     let q2 = double_times::<L>(coefficient, q, L::E - 1);
     !p2.is_infinity() && !q2.is_infinity() && !p2.x.mul(q2.z).same(q2.x.mul(p2.z))
 }
 
 #[cfg(test)]
-fn pushed<L: Level>(vk: L::Ext, bases: [Xz<L::Ext>; 3], scalar: &[u8]) -> [Couple<L::Ext>; 6] {
+fn pushed<L: ParameterSet>(
+    vk: L::Ext,
+    bases: [Xz<L::Ext>; 3],
+    scalar: &[u8],
+) -> [Couple<L::Ext>; 6] {
     let at = |point: Xz<L::Ext>| Couple {
         first: point,
         second: Xz::infinity(),
@@ -189,14 +193,14 @@ fn pushed<L: Level>(vk: L::Ext, bases: [Xz<L::Ext>; 3], scalar: &[u8]) -> [Coupl
     ]
 }
 
-fn on_curve<L: Level>(coefficient: L::Ext, x: L::Ext, y: L::Ext) -> bool {
+fn on_curve<L: ParameterSet>(coefficient: L::Ext, x: L::Ext, y: L::Ext) -> bool {
     let square = x.square();
     y.square()
         .same(square.mul(x).add(coefficient.mul(square)).add(x))
 }
 
 #[cfg(test)]
-fn difference<L: Level>(
+fn difference<L: ParameterSet>(
     coefficient: L::Ext,
     px: L::Ext,
     py: L::Ext,
@@ -220,7 +224,7 @@ fn difference<L: Level>(
 }
 
 #[cfg(test)]
-fn scale<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>, scalar: &[u8]) -> Xz<L::Ext> {
+fn scale<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::Ext>, scalar: &[u8]) -> Xz<L::Ext> {
     let Some(constant) = a24(coefficient) else {
         return Xz::infinity();
     };
@@ -244,8 +248,9 @@ mod e0_vectors {
     use super::e_prime_surface;
     use crate::signature::{canonical_sign, AffinePoint};
     use crate::verify;
+    use crate::Committed;
     use crate::VerifyError;
-    use prism_field::{Field, Level, Level1};
+    use prism_field::{Field, ParameterSet, P248};
     #[cfg(test)]
     use prism_isogeny::chain::SurfaceStop;
     use prism_isogeny::endomorphism::{apply, multiply};
@@ -277,13 +282,13 @@ mod e0_vectors {
             .trim()
     }
 
-    fn affine<L: Level>(point: Jac<L::Ext>) -> (L::Ext, L::Ext) {
+    fn affine<L: ParameterSet>(point: Jac<L::Ext>) -> (L::Ext, L::Ext) {
         let z = point.z.inv().expect("finite");
         let z2 = z.square();
         (point.x.mul(z2), point.y.mul(z2.mul(z)))
     }
 
-    fn signature<L: Level>(block: &str) -> (AffinePoint<L>, AffinePoint<L>, Vec<u8>) {
+    fn signature<L: ParameterSet>(block: &str) -> (AffinePoint<L>, AffinePoint<L>, Vec<u8>) {
         let basis = starting_basis::<L>().expect("E0 basis");
         let (_, p, q) = lift_basis(
             Montgomery::normalized(L::Ext::zero()),
@@ -310,7 +315,7 @@ mod e0_vectors {
         (p, q, decimal(field(block, "s ")))
     }
 
-    fn exercise<L: Level>(block: &str) {
+    fn exercise<L: ParameterSet>(block: &str) {
         let (p, q, s) = signature::<L>(block);
         let zero = L::Ext::zero();
         let basis = starting_basis::<L>().expect("E0 basis");
@@ -339,10 +344,16 @@ mod e0_vectors {
     #[test]
     fn the_degree_q_graph_stops_before_both_readings() {
         let text = include_str!("../testdata/e0_endomorphisms.txt");
-        let block = text.split("NIST-").find(|block| !block.is_empty()).unwrap();
-        exercise::<Level1>(block);
+        // The file's blocks are headed by the committed label; `p248`'s
+        // runs from its heading to the next one.
+        let heading = format!("{}\n", P248::LABEL);
+        let rest = &text[text.find(&heading).unwrap() + heading.len()..];
+        let block = &rest[..rest
+            .find(<prism_field::P376 as Committed>::LABEL)
+            .unwrap_or(rest.len())];
+        exercise::<P248>(block);
         for length in [260usize, 388, 516] {
-            let err = verify::<Level1>(&[0u8; Level1::PUBLIC_KEY_LEN], b"m", &vec![0u8; length]);
+            let err = verify::<P248>(&[0u8; P248::PUBLIC_KEY_LEN], b"m", &vec![0u8; length]);
             assert_eq!(err, Err(VerifyError::Length));
         }
     }
@@ -358,7 +369,7 @@ mod s5_vectors {
     use crate::signature::{canonical_sign, AffinePoint, Response};
     use crate::verify;
     use crate::VerifyError;
-    use prism_field::{Field, Level, Level1, Level3, Level5, Salt};
+    use prism_field::{Field, ParameterSet, Salt, P248, P376, P500};
     #[cfg(test)]
     use prism_isogeny::chain::SurfaceStop;
     use prism_isogeny::jac::Jac;
@@ -397,13 +408,13 @@ mod s5_vectors {
         bytes
     }
 
-    struct Sample<L: Level> {
+    struct Sample<L: ParameterSet> {
         key: Vec<u8>,
         response: Response<L>,
         scalar: Vec<u8>,
     }
 
-    fn sample<L: Level>(text: &str) -> Sample<L> {
+    fn sample<L: ParameterSet>(text: &str) -> Sample<L> {
         let key = hex_bytes(line(text, "A "));
         let identity = KeyIdentity::<L>::decode(&key).expect("key");
         let salt = L::Salt::from_bytes(&hex_bytes(line(text, "salt "))).unwrap();
@@ -434,7 +445,7 @@ mod s5_vectors {
         Step(u32),
     }
 
-    fn surface_stop<L: Level>(sample: &Sample<L>, q_sign: L::Ext) -> Stop {
+    fn surface_stop<L: ParameterSet>(sample: &Sample<L>, q_sign: L::Ext) -> Stop {
         let coefficient = KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient();
         let hint = basis_hint::<L>(coefficient).unwrap();
         let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
@@ -459,7 +470,7 @@ mod s5_vectors {
         }
     }
 
-    fn honest<L: Level>(text: &str, chain: Stop, negated_q: Stop, full_order: bool) {
+    fn honest<L: ParameterSet>(text: &str, chain: Stop, negated_q: Stop, full_order: bool) {
         let sample = sample::<L>(text);
         assert!(
             basis_hint::<L>(KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient()).is_ok()
@@ -607,7 +618,7 @@ mod s5_vectors {
         }
     }
 
-    fn assert_weil_values<L: Level>(text: &str, vk_hex: &str, sig_hex: &str) {
+    fn assert_weil_values<L: ParameterSet>(text: &str, vk_hex: &str, sig_hex: &str) {
         let sample = sample::<L>(text);
         let one = L::Ext::one();
         let coefficient = KeyIdentity::<L>::decode(&sample.key)
@@ -659,16 +670,16 @@ mod s5_vectors {
             let vk = parts.next().expect("vk");
             let sig = parts.next().expect("sig");
             match name {
-                "s5_lvl1.txt" | "s5_lvl1b.txt" => assert_weil_values::<Level1>(text, vk, sig),
-                "s5_lvl3.txt" | "s5_lvl3b.txt" => assert_weil_values::<Level3>(text, vk, sig),
-                "s5_lvl5.txt" | "s5_lvl5b.txt" => assert_weil_values::<Level5>(text, vk, sig),
+                "s5_lvl1.txt" | "s5_lvl1b.txt" => assert_weil_values::<P248>(text, vk, sig),
+                "s5_lvl3.txt" | "s5_lvl3b.txt" => assert_weil_values::<P376>(text, vk, sig),
+                "s5_lvl5.txt" | "s5_lvl5b.txt" => assert_weil_values::<P500>(text, vk, sig),
                 _ => panic!("unexpected row {name}"),
             }
         }
         assert!(rows.next().is_none());
     }
 
-    fn assert_vk_basis<L: Level>(text: &str) {
+    fn assert_vk_basis<L: ParameterSet>(text: &str) {
         // The exporter writes the C canonical pair (P, Q) of E[2^e] whose
         // t·σ image is the signature: P is the cleared index point and Q is
         // the C's difference_point(P, R), which in Rust terms is
@@ -721,38 +732,38 @@ mod s5_vectors {
         // The kernel difference is `difference` of the cleared points.
         // With that point, every committed honest vector stops at step 1
         // and `(P, −Q)` reaches both readings. The earlier field, the
-        // cofactor of the uncleared difference, let levels I and III reach
+        // cofactor of the uncleared difference, let `p248` and `p376` reach
         // both readings. The accept path replaces this chain.
-        honest::<Level1>(
+        honest::<P248>(
             include_str!("../testdata/s5_lvl1.txt"),
             Stop::Step(1),
             Stop::Readings,
             true,
         );
-        honest::<Level3>(
+        honest::<P376>(
             include_str!("../testdata/s5_lvl3.txt"),
             Stop::Step(1),
             Stop::Readings,
             true,
         );
-        honest::<Level5>(
+        honest::<P500>(
             include_str!("../testdata/s5_lvl5.txt"),
             Stop::Step(1),
             Stop::Readings,
             false,
         );
-        assert_vk_basis::<Level1>(include_str!("../testdata/s5_lvl1.txt"));
-        assert_vk_basis::<Level3>(include_str!("../testdata/s5_lvl3.txt"));
-        assert_vk_basis::<Level5>(include_str!("../testdata/s5_lvl5.txt"));
-        assert_vk_basis::<Level1>(include_str!("../testdata/s5_lvl1b.txt"));
-        assert_vk_basis::<Level3>(include_str!("../testdata/s5_lvl3b.txt"));
-        assert_vk_basis::<Level5>(include_str!("../testdata/s5_lvl5b.txt"));
-        second_key::<Level1>(include_str!("../testdata/s5_lvl1b.txt"));
-        second_key::<Level3>(include_str!("../testdata/s5_lvl3b.txt"));
-        second_key::<Level5>(include_str!("../testdata/s5_lvl5b.txt"));
+        assert_vk_basis::<P248>(include_str!("../testdata/s5_lvl1.txt"));
+        assert_vk_basis::<P376>(include_str!("../testdata/s5_lvl3.txt"));
+        assert_vk_basis::<P500>(include_str!("../testdata/s5_lvl5.txt"));
+        assert_vk_basis::<P248>(include_str!("../testdata/s5_lvl1b.txt"));
+        assert_vk_basis::<P376>(include_str!("../testdata/s5_lvl3b.txt"));
+        assert_vk_basis::<P500>(include_str!("../testdata/s5_lvl5b.txt"));
+        second_key::<P248>(include_str!("../testdata/s5_lvl1b.txt"));
+        second_key::<P376>(include_str!("../testdata/s5_lvl3b.txt"));
+        second_key::<P500>(include_str!("../testdata/s5_lvl5b.txt"));
     }
 
-    fn second_key<L: Level>(text: &str) {
+    fn second_key<L: ParameterSet>(text: &str) {
         let sample = sample::<L>(text);
         assert_eq!(
             surface_stop::<L>(&sample, sample.response.q.y),

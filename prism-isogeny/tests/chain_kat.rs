@@ -8,19 +8,19 @@
 //! generated from the pinned C tree. The codomain and the image are compared
 //! projectively.
 
-use prism_field::{Field, Level, Level1};
+use prism_field::{Field, ParameterSet, P248};
 use prism_isogeny::chain::{chain, chain_surface};
 use prism_isogeny::gluing::{Couple, Kernel};
 use prism_isogeny::montgomery::{Montgomery, Xz};
 
-type Ext = <Level1 as Level>::Ext;
+type Ext = <P248 as ParameterSet>::Ext;
 
 fn element(hex: &str) -> Ext {
     let bytes: Vec<u8> = (0..hex.len())
         .step_by(2)
         .map(|index| u8::from_str_radix(&hex[index..index + 2], 16).unwrap())
         .collect();
-    Level1::ext_decode(&bytes).expect("canonical field element")
+    P248::ext_decode(&bytes).expect("canonical field element")
 }
 
 fn point(words: &[&str]) -> Xz<Ext> {
@@ -103,7 +103,7 @@ fn the_fixed_degree_kernel_on_the_starting_curve_splits() {
         kernel,
         true,
         &[pushed],
-        Level1::ext_i(),
+        P248::ext_i(),
         true,
     )
     .expect("the fixed-degree kernel splits");
@@ -147,7 +147,7 @@ fn check(text: &str, extra_torsion: bool) {
         kernel,
         extra_torsion,
         &[input],
-        Level1::ext_i(),
+        P248::ext_i(),
         true,
     )
     .expect("the reference chain splits");

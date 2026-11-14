@@ -9,7 +9,7 @@
 //! multiplications on 64-bit limbs. The challenge degree is public, so
 //! this code does not aim at a secret-independent running time.
 //! shekyl-core pins `crypto-bigint` 0.5.5 for fixed-width constant-time
-//! integers. A public modulus whose width changes with the NIST level
+//! integers. A public modulus whose width changes with the parameter set
 //! stays on these limbs instead.
 //!
 //! The test is the one `docs/VERIFIER_SPEC.md` specifies: trial division by
@@ -21,9 +21,9 @@ use core::cmp::Ordering;
 
 /// Width of the integers this module represents.
 ///
-/// `q = 2^{2e−1} − s^2` is 999 bits at NIST V, the widest parameter set, so
-/// 1024 bits carries every level with a limb to spare. `prism-verify`
-/// asserts each level's degree fits this width at compile time.
+/// `q = 2^{2e−1} − s^2` is 999 bits at `p500`, the widest parameter set, so
+/// 1024 bits carries every set with a limb to spare. `prism-verify`
+/// asserts each set's degree fits this width at compile time.
 pub(crate) const WIDTH_BITS: usize = 1024;
 
 const LIMB_BITS: usize = u64::BITS as usize;

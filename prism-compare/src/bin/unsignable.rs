@@ -6,7 +6,7 @@
 //! E6 and the signer half of E4: full-width signing of the same messages
 //! under the archived index protocol and the salted protocol.
 //!
-//! `unsignable <backend-dir> <level 1|3|5> <first> <count> [key]`. Message
+//! `unsignable <backend-dir> <p248|p376|p500> <first> <count> [key]`. Message
 //! `n` is `shekyl-prism-comparison-e6-v1 || LE64(n)` and caller randomness
 //! is zero. Without `key` the seed is the public test seed (0x42 repeated).
 //! With it, the seed is the first 48 bytes of
@@ -15,12 +15,15 @@
 //! message records both signers' candidate counts. A message the archived
 //! signer cannot sign is retried twice more to show the same failure, and
 //! its `UNSIGNABLE` line carries the salted outcome for the same message.
+//! `level` is the key committed comparison records match. Its value is the
+//! committed label, not the set name.
 use prism_compare::{
     encode,
     native::{self, Unsalted},
 };
-use prism_field::{Level, Level1, Level3, Level5};
+use prism_field::{P248, P376, P500};
 use prism_signer::{limits, SecretSeed};
+use prism_verify::{Committed, Set};
 use sha3::{
     digest::{ExtendableOutput, Update, XofReader},
     Shake256,
@@ -56,7 +59,7 @@ fn describe(outcome: &Unsalted) -> String {
         Unsalted::Exhausted => "exhausted".to_string(),
     }
 }
-fn run<L: Level>(
+fn run<L: Committed>(
     dir: &std::path::Path,
     name: &str,
     first: u64,
@@ -69,7 +72,7 @@ fn run<L: Level>(
     if let Some(key) = key {
         println!(
             "KEY level={} key={key} seed={} public={}",
-            L::NAME,
+            L::LABEL,
             encode(&bytes),
             encode(session.public_key())
         );
@@ -98,7 +101,7 @@ fn run<L: Level>(
         };
         println!(
             "SIGN level={} n={n} unsalted={} salted={salted}",
-            L::NAME,
+            L::LABEL,
             describe(&old).replace(' ', ";"),
         );
         if !matches!(old, Unsalted::Signed { .. }) {
@@ -107,7 +110,7 @@ fn run<L: Level>(
             let third = native::sign_unsalted(&session, &m, L::CHALLENGE_BITS).ok_or("width")?;
             println!(
                 "UNSIGNABLE level={} n={n} message={} first={} second={} third={} same_on_retry={} salted={salted}",
-                L::NAME,
+                L::LABEL,
                 encode(&m),
                 describe(&old).replace(' ', ";"),
                 describe(&again).replace(' ', ";"),
@@ -118,22 +121,21 @@ fn run<L: Level>(
     }
     println!(
         "TRIED level={} first={first} count={count} unsignable={unsignable}",
-        L::NAME
+        L::LABEL
     );
     Ok(())
 }
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let a: Vec<_> = std::env::args().skip(1).collect();
     if !(4..=5).contains(&a.len()) {
-        return Err("unsignable <backend-dir> <level 1|3|5> <first> <count> [key]".into());
+        return Err("unsignable <backend-dir> <p248|p376|p500> <first> <count> [key]".into());
     }
     let key = a.get(4).map(|k| k.parse()).transpose()?;
     let dir = std::path::PathBuf::from(&a[0]);
     let (first, count) = (a[2].parse()?, a[3].parse()?);
-    match a[1].as_str() {
-        "1" => run::<Level1>(&dir, "prism_signer_lvl1", first, count, key),
-        "3" => run::<Level3>(&dir, "prism_signer_lvl3", first, count, key),
-        "5" => run::<Level5>(&dir, "prism_signer_lvl5", first, count, key),
-        _ => Err("level is 1, 3 or 5".into()),
+    match a[1].parse::<Set>()? {
+        Set::P248 => run::<P248>(&dir, "prism_signer_lvl1", first, count, key),
+        Set::P376 => run::<P376>(&dir, "prism_signer_lvl3", first, count, key),
+        Set::P500 => run::<P500>(&dir, "prism_signer_lvl5", first, count, key),
     }
 }

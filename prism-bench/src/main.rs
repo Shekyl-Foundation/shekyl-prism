@@ -3,22 +3,22 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! Time a verification at NIST I, III, and V.
+//! Time a verification at every parameter set.
 //!
 //! Times the complete successful two-chain verification path. Only a run
 //! on an identified Raspberry Pi 4 Model B is the floor-device measurement.
 //! Userspace counters are cntvct_el0 on aarch64 and rdtsc on x86_64.
 //!
 //! After the verifications it times one extension-field multiplication,
-//! squaring and inversion per level. With the operation counts of
+//! squaring and inversion per set. With the operation counts of
 //! `docs/benchmarks/op-counts.txt` these turn a count into an estimate for
 //! the machine the run was on.
 
 use std::process::ExitCode;
 use std::time::Instant;
 
-use prism_field::{Field, Level, Level1, Level3, Level5, FIELD_BACKEND};
-use prism_verify::{reference::honest, verify_level, Nist, VectorError, VerifyError};
+use prism_field::{Field, ParameterSet, FIELD_BACKEND, P248, P376, P500};
+use prism_verify::{reference::honest, verify_set, Set, VectorError, VerifyError};
 
 /// Runs before the clock starts, to settle the frequency and the caches.
 const WARMUP: usize = 5;
@@ -31,26 +31,26 @@ fn main() -> ExitCode {
     println!("field-backend={FIELD_BACKEND}");
     println!("counter={}", counter_name());
     let mut refused = false;
-    for level in Nist::ALL {
-        match measure(level) {
+    for set in Set::ALL {
+        match measure(set) {
             Ok(timing) => println!(
-                "level={level} outcome=accepted samples={SAMPLES} median_ns={} spread_ns={} median_counter={} counter_spread={}",
+                "set={set} outcome=accepted samples={SAMPLES} median_ns={} spread_ns={} median_counter={} counter_spread={}",
                 timing.median_ns, timing.spread_ns, timing.median_counter, timing.counter_spread
             ),
             Err(err) => {
                 refused = true;
-                println!("level={level} refused=\"{err}\"");
+                println!("set={set} refused=\"{err}\"");
             }
         }
     }
-    for level in Nist::ALL {
-        let Ok(sample) = honest(level) else {
+    for set in Set::ALL {
+        let Ok(sample) = honest(set) else {
             continue;
         };
-        match level {
-            Nist::I => field_operations::<Level1>(level, &sample.public_key),
-            Nist::III => field_operations::<Level3>(level, &sample.public_key),
-            Nist::V => field_operations::<Level5>(level, &sample.public_key),
+        match set {
+            Set::P248 => field_operations::<P248>(set, &sample.public_key),
+            Set::P376 => field_operations::<P376>(set, &sample.public_key),
+            Set::P500 => field_operations::<P500>(set, &sample.public_key),
         }
     }
     if refused {
@@ -67,7 +67,7 @@ struct Timing {
     counter_spread: u128,
 }
 
-/// Why a level produced no timing.
+/// Why a set produced no timing.
 enum BenchError {
     /// The sample could not be built, so there is nothing to time.
     Prepare(VectorError),
@@ -84,9 +84,9 @@ impl std::fmt::Display for BenchError {
     }
 }
 
-fn measure(level: Nist) -> Result<Timing, BenchError> {
-    let sample = honest(level).map_err(BenchError::Prepare)?;
-    let run = || verify_level(level, &sample.public_key, sample.message, &sample.signature);
+fn measure(set: Set) -> Result<Timing, BenchError> {
+    let sample = honest(set).map_err(BenchError::Prepare)?;
+    let run = || verify_set(set, &sample.public_key, sample.message, &sample.signature);
     for _ in 0..WARMUP {
         expected(run())?;
     }
@@ -149,15 +149,15 @@ fn per_op<T: Copy>(start: T, batch: u32, step: impl Fn(T) -> T) -> (f64, f64) {
 
 /// Time one extension-field multiplication, squaring and inversion,
 /// starting from the sample key's coefficient.
-fn field_operations<L: Level>(level: Nist, key: &[u8]) {
+fn field_operations<L: ParameterSet>(set: Set, key: &[u8]) {
     let Some(start) = L::ext_decode(key) else {
-        println!("field level={level} refused=\"the sample key does not decode\"");
+        println!("field set={set} refused=\"the sample key does not decode\"");
         return;
     };
     let fixed = std::hint::black_box(start);
     let report = |name: &str, batch: u32, (ns, ticks): (f64, f64)| {
         println!(
-            "field level={level} op={name} batch={batch} samples={SAMPLES} ns_per_op={ns:.1} counter_per_op={ticks:.1}"
+            "field set={set} op={name} batch={batch} samples={SAMPLES} ns_per_op={ns:.1} counter_per_op={ticks:.1}"
         );
     };
     let mul = per_op(start, FIELD_BATCH, |x: L::Ext| x.mul(fixed));

@@ -7,9 +7,9 @@
 //! automorphism classes are excluded from this research encoding.
 use crate::signature::ext_less;
 use crate::VerifyError;
-use prism_field::{Field, Level};
+use prism_field::{Field, ParameterSet};
 
-pub(crate) fn check<L: Level>(a: L::Ext) -> Result<(), VerifyError> {
+pub(crate) fn check<L: ParameterSet>(a: L::Ext) -> Result<(), VerifyError> {
     let square = a.square();
     if square.same(L::Ext::from_u64(4)) {
         return Err(VerifyError::Singular);

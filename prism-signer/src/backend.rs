@@ -35,7 +35,7 @@ impl Backend {
         })
     }
 
-    /// The executable is the SHAKE backend for this row's exponent.
+    /// The executable is the SHAKE backend for this set's exponent.
     pub(crate) fn check_version(&self, exponent: u32) -> Result<(), Error> {
         let version = Command::new(&self.program)
             .arg("backend-version")

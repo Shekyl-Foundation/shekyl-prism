@@ -3,18 +3,18 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! `verify::<Level1>` on arbitrary bytes. A panic is a failed nightly.
+//! `verify::<P248>` on arbitrary bytes. A panic is a failed nightly.
 
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use prism_field::Level1;
+use prism_field::P248;
 use prism_verify::verify;
 
 fuzz_target!(|data: &[u8]| {
-    let _ = verify::<Level1>(data, data, data);
+    let _ = verify::<P248>(data, data, data);
     let (public_key, message, signature) = split(data);
-    let _ = verify::<Level1>(public_key, message, signature);
+    let _ = verify::<P248>(public_key, message, signature);
 });
 
 /// Lengths from the first four bytes, so a short input and a full signature

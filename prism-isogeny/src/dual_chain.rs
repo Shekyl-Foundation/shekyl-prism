@@ -353,13 +353,13 @@ impl<F: Field> DualChain<F> {
 mod tests {
     use super::{invert_all, invert_coords};
     use crate::theta::ThetaPoint;
-    use prism_field::{Field, Level, Level1};
+    use prism_field::{Field, ParameterSet, P248};
 
-    type F = <Level1 as Level>::Ext;
+    type F = <P248 as ParameterSet>::Ext;
 
     fn element(n: u64) -> F {
         // Not in the base field, so the inverses are not either.
-        F::from_u64(n).add(Level1::ext_i().mul(F::from_u64(n + 7)))
+        F::from_u64(n).add(P248::ext_i().mul(F::from_u64(n + 7)))
     }
 
     #[test]

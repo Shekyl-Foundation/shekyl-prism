@@ -158,12 +158,12 @@ pub fn take() -> [Slot; SLOTS] {
 #[cfg(all(test, feature = "op-count"))]
 mod tests {
     use super::*;
-    use crate::{Field, Level, Level1};
+    use crate::{Field, ParameterSet, P248};
 
     #[test]
     fn each_operation_lands_in_the_current_slot_of_its_field() {
-        type Ext = <Level1 as Level>::Ext;
-        type Base = <Level1 as Level>::Base;
+        type Ext = <P248 as ParameterSet>::Ext;
+        type Base = <P248 as ParameterSet>::Base;
         let _ = take();
         let x = Ext::from_u64(3);
         let b = Base::from_u64(5);
@@ -199,7 +199,7 @@ mod tests {
 
     #[test]
     fn the_last_slot_is_usable_and_counts_apart_from_its_neighbour() {
-        type Ext = <Level1 as Level>::Ext;
+        type Ext = <P248 as ParameterSet>::Ext;
         let _ = take();
         let x = Ext::from_u64(3);
         enter(SLOTS - 1);

@@ -4,7 +4,8 @@
 // BSD-3-Clause
 
 //! Public challenge probe for the vector generator; no secret inputs.
-use prism_field::{Level, Level1, Level3, Level5, Salt};
+use prism_field::{ParameterSet, Salt, P248, P376, P500};
+use prism_verify::Set;
 use prism_verify::{ChallengeScalar, KeyIdentity};
 fn hex(s: &str) -> Option<Vec<u8>> {
     if !s.len().is_multiple_of(2) {
@@ -15,7 +16,7 @@ fn hex(s: &str) -> Option<Vec<u8>> {
         .map(|p| u8::from_str_radix(std::str::from_utf8(p).ok()?, 16).ok())
         .collect()
 }
-fn emit<L: Level>(key: &str, salt: &str) -> Option<()> {
+fn emit<L: ParameterSet>(key: &str, salt: &str) -> Option<()> {
     let key = hex(key)?;
     let id = KeyIdentity::<L>::decode(&key).ok()?;
     let salt = L::Salt::from_bytes(&hex(salt)?)?;
@@ -33,14 +34,14 @@ fn emit<L: Level>(key: &str, salt: &str) -> Option<()> {
 fn main() -> std::process::ExitCode {
     let a: Vec<_> = std::env::args().skip(1).collect();
     if a.len() != 3 {
-        eprintln!("s5_vector <row> <A-hex> <salt-hex>");
+        eprintln!("s5_vector <p248|p376|p500> <A-hex> <salt-hex>");
         return std::process::ExitCode::from(2);
     }
-    let ok = match a[0].as_str() {
-        "I" | "NIST-I" => emit::<Level1>(&a[1], &a[2]),
-        "III" | "NIST-III" => emit::<Level3>(&a[1], &a[2]),
-        "V" | "NIST-V" => emit::<Level5>(&a[1], &a[2]),
-        _ => None,
+    let ok = match a[0].parse::<Set>() {
+        Ok(Set::P248) => emit::<P248>(&a[1], &a[2]),
+        Ok(Set::P376) => emit::<P376>(&a[1], &a[2]),
+        Ok(Set::P500) => emit::<P500>(&a[1], &a[2]),
+        Err(_) => None,
     };
     if ok.is_some() {
         std::process::ExitCode::SUCCESS

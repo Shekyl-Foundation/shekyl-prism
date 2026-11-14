@@ -5,7 +5,7 @@
 
 //! Salted challenge derivation. Public verification never searches.
 use crate::{identity::KeyIdentity, prime};
-use prism_field::{Level, Salt};
+use prism_field::{ParameterSet, Salt};
 use sha3::digest::core_api::CoreWrapper;
 use sha3::digest::{ExtendableOutput, Update, XofReader};
 use sha3::{CShake256, CShake256Core};
@@ -18,10 +18,14 @@ pub struct ChallengeScalar {
 }
 impl ChallengeScalar {
     /// cSHAKE256(pk || salt || message), projected to odd E-3 bits.
-    pub fn derive<L: Level>(identity: &KeyIdentity<'_, L>, message: &[u8], salt: L::Salt) -> Self {
+    pub fn derive<L: ParameterSet>(
+        identity: &KeyIdentity<'_, L>,
+        message: &[u8],
+        salt: L::Salt,
+    ) -> Self {
         Self::with_width::<L>(identity, message, salt, L::CHALLENGE_BITS)
     }
-    fn with_width<L: Level>(
+    fn with_width<L: ParameterSet>(
         identity: &KeyIdentity<'_, L>,
         message: &[u8],
         salt: L::Salt,
@@ -39,7 +43,7 @@ impl ChallengeScalar {
     }
     /// Research-only projection; it cannot increase the production width.
     #[cfg(feature = "research-reduced-width")]
-    pub fn derive_width<L: Level>(
+    pub fn derive_width<L: ParameterSet>(
         identity: &KeyIdentity<'_, L>,
         message: &[u8],
         salt: L::Salt,
@@ -49,7 +53,7 @@ impl ChallengeScalar {
             .then(|| Self::with_width::<L>(identity, message, salt, bits))
     }
     #[cfg(feature = "research-reduced-width")]
-    pub(crate) fn research_bytes<L: Level>(bytes: &[u8], bits: u32) -> Option<Self> {
+    pub(crate) fn research_bytes<L: ParameterSet>(bytes: &[u8], bits: u32) -> Option<Self> {
         if bits == 0
             || bits > L::CHALLENGE_BITS
             || bytes.len() != (bits as usize).div_ceil(8)
@@ -65,7 +69,7 @@ impl ChallengeScalar {
     pub fn as_bytes(&self) -> &[u8] {
         &self.bytes
     }
-    pub fn degree_is_prime<L: Level>(&self) -> bool {
+    pub fn degree_is_prime<L: ParameterSet>(&self) -> bool {
         const {
             assert!((L::E as usize) * 2 - 1 < prime::WIDTH_BITS);
         }
@@ -79,10 +83,10 @@ fn top_byte_mask(bits: u32) -> u8 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prism_field::{Field, Level1, Level3, Level5};
+    use prism_field::{Field, P248, P376, P500};
     #[test]
     fn salted_transcript_binds_message_and_all_salt_bytes_at_every_row() {
-        fn check<L: Level>() {
+        fn check<L: ParameterSet>() {
             let key = L::ext_encode(L::Ext::from_u64(3));
             let id = KeyIdentity::<L>::decode(&key).unwrap();
             let salt = L::Salt::zero();
@@ -108,9 +112,9 @@ mod tests {
                 bytes[i] ^= 1;
             }
         }
-        check::<Level1>();
-        check::<Level3>();
-        check::<Level5>();
+        check::<P248>();
+        check::<P376>();
+        check::<P500>();
     }
     #[test]
     fn top_mask_keeps_the_requested_bits() {

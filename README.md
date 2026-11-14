@@ -16,21 +16,24 @@ verifier at reduced challenge widths.
 
 | Crate | Role |
 | --- | --- |
-| `prism-field` | Three field rows, scalar `fp2` 0.6.0 backend |
+| `prism-field` | Three parameter sets (`p248`, `p376`, `p500`), scalar `fp2` 0.6.0 backend |
 | `prism-isogeny` | Montgomery and theta arithmetic, adapted chains and duals |
 | `prism-verify` | Canonical decoding, pairing, both chains and complete images |
 | `prism-signer` | Unix research API for an isolated deterministic C backend |
-| `prism-bench` | Successful complete verification at I, III and V |
+| `prism-bench` | Successful complete verification at every parameter set |
 | `prism-compare` | Archived derivation and explicit research experiments; no production dependency |
 
 The [verifier specification](docs/VERIFIER_SPEC.md) defines the current
 research encoding, including the `e′=e−2` parameter choice. Signatures are
-352 / 528 / 704 bytes, including salts of 32 / 48 / 64 bytes. I/III/V name the source field rows, not certified
-security levels for this modified salted construction. Those rows are the
-primes from before the `p^(1/3+o(1))` isogeny algorithm of ePrint 2026/1486,
-which applies to PRISM key recovery and after which SQIsign moved to larger
-primes; which primes this repository should implement is open, pending a
-ruling ([SECURITY_ARGUMENT.md](docs/SECURITY_ARGUMENT.md) §9). The approved wire
+352 / 528 / 704 bytes at `p248` / `p376` / `p500`, including salts of 32 / 48 / 64 bytes.
+A parameter set is a prime and is named by it; the category a prime is
+assessed at is documentation, in [PARAMETER_SETS.md](docs/PARAMETER_SETS.md),
+and is not a certified security level for this modified salted construction.
+Two of the three primes here are from before the `p^(1/3+o(1))` isogeny
+algorithm of ePrint 2026/1486, which applies to PRISM key recovery and after
+which SQIsign moved to larger primes. Ruled 2026-11-14: the sets are the five
+primes of that table, Shekyl uses `p500`, and `p324` and `p664` are still to
+be built ([SECURITY_ARGUMENT.md](docs/SECURITY_ARGUMENT.md) §9). The approved wire
 and signer contract is [SALT_PROTOCOL.md](docs/SALT_PROTOCOL.md); the
 unsalted implementation is preserved at `archive/unsalted-index-2026-11-12`.
 
@@ -95,7 +98,9 @@ sage scripts/sage/differential.sage
 ```
 
 This fresh comparison does not rewrite committed known answers. Set
-`PRISM_DIFFERENTIAL_LEVEL=NIST-III` to restrict it to a parameter row.
+`PRISM_DIFFERENTIAL_LEVEL=NIST-III` to restrict it to one parameter set.
+The value is the `level` field the vectors carry: `NIST-III`, which is
+`p376`.
 The original model report is in
 [REPORT.md](prism-isogeny/testdata/s5_model/REPORT.md).
 
@@ -108,7 +113,7 @@ comparison document from those records.
 
 The benchmark now times accepted signatures. Development-machine results
 and the Raspberry Pi 4 command are in [BENCHMARKING.md](docs/BENCHMARKING.md).
-The Pi measurement is recorded: level III takes about 449 ms in the
+The Pi measurement is recorded: `p376` takes about 449 ms in the
 captured conditions, for the unsalted verifier before its operation count
 was cut. That count, per stage and pinned in CI, and the times before and
 after on a development machine are in the same document. Independent cryptographic review and a deployment

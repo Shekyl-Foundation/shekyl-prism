@@ -9,13 +9,13 @@
 //! primality and the algebraic relation are the production checks.
 
 use crate::{accept, open, ChallengeScalar, VerifyError};
-use prism_field::Level;
+use prism_field::ParameterSet;
 
 /// Verify `signature` against a scalar the caller already derived.
 ///
 /// `scalar` is the little-endian challenge at `bits`, odd, and no wider
 /// than the row. The signature's salt is not hashed again.
-pub fn verify_scalar<L: Level>(
+pub fn verify_scalar<L: ParameterSet>(
     key: &[u8],
     signature: &[u8],
     scalar: &[u8],
@@ -30,7 +30,7 @@ pub fn verify_scalar<L: Level>(
 ///
 /// `bits == 0` or `bits` above the row is [`VerifyError::Length`]. A short
 /// signature is `Length` even when the key is the starting curve.
-pub fn verify_width<L: Level>(
+pub fn verify_width<L: ParameterSet>(
     key: &[u8],
     message: &[u8],
     signature: &[u8],
@@ -46,14 +46,14 @@ pub fn verify_width<L: Level>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prism_field::{Level, Level1};
+    use prism_field::{ParameterSet, P248};
 
     #[test]
     fn short_signature_is_length_before_origin() {
-        let key = vec![0u8; Level1::PUBLIC_KEY_LEN];
-        let err = verify_width::<Level1>(&key, b"m", &[], Level1::CHALLENGE_BITS);
+        let key = vec![0u8; P248::PUBLIC_KEY_LEN];
+        let err = verify_width::<P248>(&key, b"m", &[], P248::CHALLENGE_BITS);
         assert_eq!(err, Err(VerifyError::Length));
-        let err = verify_scalar::<Level1>(&key, &[], &[1], 1);
+        let err = verify_scalar::<P248>(&key, &[], &[1], 1);
         assert_eq!(err, Err(VerifyError::Length));
     }
 }

@@ -391,16 +391,16 @@ mod tests {
         assert!(one.a6.same(iso.codomain().a6));
         // Two steps is the one that used to die: both siblings land on the
         // dual kernel. Later discriminants need not be squares in this prime
-        // field; the NIST walk is over F_{p^2}.
+        // field; the walk at a parameter set is over F_{p^2}.
         let two = split_chain(coefficient, siblings, 2).expect("two steps");
         assert!(!(two.a4.same(one.a4) && two.a6.same(one.a6)));
     }
 
     #[test]
-    fn level_i_chain_walks_eight_steps() {
-        use prism_field::{Level, Level1};
-        let start = <Level1 as Level>::ext_from_base(<Level1 as Level>::fp_zero());
-        let i = <Level1 as Level>::ext_i();
+    fn p248_chain_walks_eight_steps() {
+        use prism_field::{ParameterSet, P248};
+        let start = <P248 as ParameterSet>::ext_from_base(<P248 as ParameterSet>::fp_zero());
+        let i = <P248 as ParameterSet>::ext_i();
         let walked = split_chain(start, [i, i.negate()], 8).expect("eight steps");
         assert!(!(walked.a4.is_zero() && walked.a6.is_zero()));
     }

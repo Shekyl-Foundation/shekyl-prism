@@ -108,7 +108,7 @@ evidence.
 
 | Claim | Code at the pin | Disposition |
 | --- | --- | --- |
-| Fields, exponents, byte and salt sizes | `prism-field/src/lib.rs`, `nist_level!` and `Salt` | Integer audit reproducible with `python3 scripts/security_parameters.py`; not a modulus primality proof |
+| Fields, exponents, byte and salt sizes | `prism-field/src/lib.rs`, `parameter_set!` and `Salt` | Integer audit reproducible with `python3 scripts/security_parameters.py`; not a modulus primality proof |
 | Hash domain, framing and projection | `prism-verify/src/challenge.rs`, `ChallengeScalar::derive` and `with_width`; `prism-verify/src/lib.rs`, `checked` | One hash per verification; no search; any salt of the row length is admissible |
 | Reduced-width entry points | `challenge.rs`, `derive_width`, `research_bytes`; `prism-verify/src/research.rs` | Compiled only under `research-reduced-width`; `scripts/ci/check_research_boundary.py` builds a consumer to show their absence by default |
 | Degree arithmetic and BPSW | `prism-verify/src/prime.rs`, `challenge_degree`, `degree_is_prime`, `is_prime` | Adversarial primality remains an assumption |
@@ -466,7 +466,7 @@ calculate best classical or quantum attack costs.
 | Challenge and concrete costs | Second-preimage and signer-collision work, memory, and other classical/quantum attacks for these rows | OPEN; §5 and §6 give the random-oracle estimates |
 | Formal reduction | Resource-bounded proof, including candidates, errors and QROM if claimed | OPEN; event decomposition and a mapped published bound only |
 | Implementation security | Review native secrets, timing, allocations, abnormal exits and compiler/backend pin | OPEN; no constant-time claim |
-| Field sizes | Parameter sets after ePrint 2026/1486 (§9) | OPEN; the three rows are the sizes from before that paper, pending a ruling |
+| Field sizes | Parameter sets after ePrint 2026/1486 (§9) | RULED 2026-11-14: five sets, named by prime; Shekyl uses `p500`. OPEN: `p324` and `p664` are not built, and no argument here assigns a level to any set |
 | Independent approval | Named cryptographic reviewer, reviewed commit, findings and signed-off scope | PENDING; no independent cryptographic approval recorded |
 
 No external reviewer has been contacted by this work.
@@ -534,11 +534,18 @@ level and asks for cryptanalysis of them.
   specification selected, not a security level for a row of this
   repository: the labels I, III and V here were never certified levels
   (§1), and this section does not assign new ones.
-- **The parameter question is open, pending a ruling.** Which primes
-  this repository implements, what each is called, and which one a
-  Shekyl authorization would use are not decided. Until they are, every
-  size, timing and count in this repository is for the pre-2026/1486
-  rows.
+- **Ruled 2026-11-14.** A parameter set is a prime, and there are five:
+  `5·2^248 − 1`, `3·2^324 − 1`, `65·2^376 − 1`, `27·2^500 − 1` and
+  `17·2^664 − 1`, named `p248`, `p324`, `p376`, `p500` and `p664`. There
+  is one algorithm. The category a prime is assessed at is documentation
+  and is not coded ([PARAMETER_SETS.md](PARAMETER_SETS.md)). Shekyl's
+  authorization uses `p500`. The two primes from before the algorithm,
+  `p248` and `p376`, are kept, so that later changes are still checked
+  against the vectors that exist.
+- **What is built.** `p248`, `p376` and `p500`. `p324` and `p664` are not
+  in the code yet, and when they are there will be no honest signature at
+  either until a signer exists for them. Every size, timing and count in
+  this repository is for the three built sets.
 
 **Another implementation of the §5 variant.** Ray, "ECLIPSE: Strongly
 Unforgeable Isogeny Signatures from the Prime-Degree Variant of PRISM",

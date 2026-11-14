@@ -293,8 +293,8 @@ then:
 sh scripts/run_comparison.sh e1/density density 100000
 sh scripts/run_comparison.sh e5/index_leak index_leak
 sh scripts/run_comparison.sh e3/trial-00 replay target/native 0 all     # trials 0 to 19
-sh scripts/run_comparison.sh e6/level1-0 unsignable target/native 1 0 5000
-sh scripts/run_comparison.sh e6/key-00 unsignable target/native 1 0 2000 0   # keys 0 to 11
+sh scripts/run_comparison.sh e6/level1-0 unsignable target/native p248 0 5000
+sh scripts/run_comparison.sh e6/key-00 unsignable target/native p248 0 2000 0   # keys 0 to 11
 python3 scripts/analyze_comparison.py
 ```
 

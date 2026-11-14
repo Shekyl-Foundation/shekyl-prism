@@ -6,7 +6,7 @@
 //! The Weil pairing without inversions against the affine loop it
 //! replaced: the same refusal or the same field element on every input.
 //!
-//! The input picks a level and a claimed order, then four scalars. The
+//! The input picks a set and a claimed order, then four scalars. The
 //! pair is `([a]P + [b]Q, [c]P + [d]Q)` on a committed signature's curve,
 //! so short inputs give the degenerate pairs (a zero point, dependent
 //! points, points of low order) and long ones the generic pair.
@@ -14,12 +14,12 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use prism_field::{Field, Level, Level1, Level3, Level5};
+use prism_field::{Field, ParameterSet, P248, P376, P500};
 use prism_isogeny::jac::{add, Jac};
 use prism_isogeny::montgomery::Montgomery;
 use prism_isogeny::pairing::{mul, oracle, weil};
 
-fn element<L: Level>(text: &str, name: &str) -> L::Ext {
+fn element<L: ParameterSet>(text: &str, name: &str) -> L::Ext {
     let hex = text
         .lines()
         .find_map(|line| line.strip_prefix(name))
@@ -32,7 +32,7 @@ fn element<L: Level>(text: &str, name: &str) -> L::Ext {
     L::ext_decode(&bytes).expect("a committed element is canonical")
 }
 
-fn level<L: Level>(text: &str, order: u8, scalars: &[u8]) {
+fn set<L: ParameterSet>(text: &str, order: u8, scalars: &[u8]) {
     let at = |x, y| Jac {
         x: element::<L>(text, x),
         y: element::<L>(text, y),
@@ -71,17 +71,17 @@ fuzz_target!(|data: &[u8]| {
         return;
     }
     match which % 3 {
-        0 => level::<Level1>(
+        0 => set::<P248>(
             include_str!("../../prism-verify/testdata/s5_lvl1.txt"),
             *order,
             scalars,
         ),
-        1 => level::<Level3>(
+        1 => set::<P376>(
             include_str!("../../prism-verify/testdata/s5_lvl3.txt"),
             *order,
             scalars,
         ),
-        _ => level::<Level5>(
+        _ => set::<P500>(
             include_str!("../../prism-verify/testdata/s5_lvl5.txt"),
             *order,
             scalars,

@@ -16,7 +16,7 @@
 //! difference of the uncleared points is a different point on about half
 //! of keys, and it is not the C basis.
 
-use prism_field::{Field, Level};
+use prism_field::{Field, ParameterSet};
 
 use crate::jac::xdbl_iter;
 use crate::montgomery::{a24, ladder, Montgomery, Xz};
@@ -53,13 +53,13 @@ pub struct RationalBasis<F> {
     pub even: EvenBasis<F>,
 }
 
-fn conjugate<L: Level>(value: L::Ext) -> L::Ext {
+fn conjugate<L: ParameterSet>(value: L::Ext) -> L::Ext {
     let (re, im) = L::ext_parts(value);
     L::ext_from_base(re).sub(L::ext_i().mul(L::ext_from_base(im)))
 }
 
 /// `x(P)` for the index the basis search settled on.
-pub fn basis_abscissa<L: Level>(
+pub fn basis_abscissa<L: ParameterSet>(
     coefficient: L::Ext,
     index: u16,
     coefficient_is_square: bool,
@@ -74,7 +74,7 @@ pub fn basis_abscissa<L: Level>(
 }
 
 /// Deterministic `P − Q` on a normalized Montgomery curve, as `difference_point`.
-pub fn difference<L: Level>(
+pub fn difference<L: ParameterSet>(
     coefficient: L::Ext,
     p: Xz<L::Ext>,
     q: Xz<L::Ext>,
@@ -113,7 +113,7 @@ pub fn difference<L: Level>(
     })
 }
 
-fn clear_cofactor<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>) -> Option<Xz<L::Ext>> {
+fn clear_cofactor<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::Ext>) -> Option<Xz<L::Ext>> {
     let constant = a24(coefficient)?;
     let width = usize::try_from(64 - L::ODD.leading_zeros()).unwrap_or(0);
     let bits = (0..width).rev().map(|shift| (L::ODD >> shift) & 1 == 1);
@@ -121,7 +121,7 @@ fn clear_cofactor<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>) -> Option<Xz
 }
 
 /// The order-`2^e` basis named by `index`.
-pub fn even_basis<L: Level>(
+pub fn even_basis<L: ParameterSet>(
     coefficient: L::Ext,
     index: u16,
     coefficient_is_square: bool,
@@ -149,7 +149,7 @@ pub fn even_basis<L: Level>(
 }
 
 /// Multiply by `odd`, then double `doubles` times.
-pub fn mul_odd_then_double<L: Level>(
+pub fn mul_odd_then_double<L: ParameterSet>(
     coefficient: L::Ext,
     point: Xz<L::Ext>,
     odd: u64,
@@ -174,7 +174,7 @@ fn same_x<F: Field>(left: Xz<F>, right: Xz<F>) -> bool {
 }
 
 /// The odd primes dividing `f`. `2` is not among them.
-pub fn odd_primes<L: Level>() -> &'static [u64] {
+pub fn odd_primes<L: ParameterSet>() -> &'static [u64] {
     match L::ODD {
         5 => &[5],
         27 => &[3],
@@ -184,7 +184,7 @@ pub fn odd_primes<L: Level>() -> &'static [u64] {
 }
 
 /// `[p+1]X = O`, and `[(p+1)/ℓ]X ≠ O` for `ℓ = 2` and every prime divisor of `f`.
-pub fn has_order_p_plus_one<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
+pub fn has_order_p_plus_one<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
     let killed = |odd, doubles| {
         mul_odd_then_double::<L>(coefficient, point, odd, doubles).is_some_and(is_infinity)
     };
@@ -204,13 +204,17 @@ pub fn has_order_p_plus_one<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>) ->
 /// `E[2^e] ≅ (Z/2^e)^2`, so `E[2]` has three nonzero points and they are the
 /// nonzero vectors of `(Z/2)^2`. Two distinct ones are a basis of that
 /// vector space, and therefore the two points generate `E[2^e]`.
-pub fn even_parts_generate<L: Level>(coefficient: L::Ext, p: Xz<L::Ext>, q: Xz<L::Ext>) -> bool {
+pub fn even_parts_generate<L: ParameterSet>(
+    coefficient: L::Ext,
+    p: Xz<L::Ext>,
+    q: Xz<L::Ext>,
+) -> bool {
     let p2 = double_times::<L>(coefficient, p, L::E - 1);
     let q2 = double_times::<L>(coefficient, q, L::E - 1);
     !is_infinity(p2) && !is_infinity(q2) && !same_x(p2, q2)
 }
 
-fn prime_field_basis<L: Level>(
+fn prime_field_basis<L: ParameterSet>(
     coefficient: L::Ext,
     left: Xz<L::Ext>,
     right: Xz<L::Ext>,
@@ -234,7 +238,11 @@ fn prime_field_basis<L: Level>(
 /// two elements generate `(Z/q)^2` for a prime `q` when neither is a scalar
 /// multiple of the other. A scalar and its negative have the same
 /// x-coordinate, so the multiples checked run only up to `q/2`.
-pub fn odd_parts_generate<L: Level>(coefficient: L::Ext, r: Xz<L::Ext>, t: Xz<L::Ext>) -> bool {
+pub fn odd_parts_generate<L: ParameterSet>(
+    coefficient: L::Ext,
+    r: Xz<L::Ext>,
+    t: Xz<L::Ext>,
+) -> bool {
     let u = double_times::<L>(coefficient, r, L::E);
     let v = double_times::<L>(coefficient, t, L::E);
     match L::ODD {
@@ -273,9 +281,10 @@ pub fn odd_parts_generate<L: Level>(coefficient: L::Ext, r: Xz<L::Ext>, t: Xz<L:
 /// `R` is the point named by the basis index, before multiplication by `f`.
 /// `T` is the point whose affine x-coordinate is the smallest positive
 /// integer for which both points have order `p+1`, their even parts generate
-/// `E[2^e]`, and their odd parts generate `E[f]`. The search stops at `2λ`
+/// `E[2^e]`, and their odd parts generate `E[f]`. The search stops at
+/// [`ParameterSet::SEARCH_BOUND`]
 /// candidates. `R − T` is [`difference`].
-pub fn rational_basis<L: Level>(
+pub fn rational_basis<L: ParameterSet>(
     coefficient: L::Ext,
     index: u16,
     coefficient_is_square: bool,
@@ -284,7 +293,7 @@ pub fn rational_basis<L: Level>(
     if !has_order_p_plus_one::<L>(coefficient, even.full_p) {
         return None;
     }
-    let bound = u64::from(2 * L::LAMBDA);
+    let bound = u64::from(L::SEARCH_BOUND);
     for candidate in 1..=bound {
         let t = Xz::affine(L::Ext::from_u64(candidate));
         if same_x(t, even.full_p) || !has_order_p_plus_one::<L>(coefficient, t) {
@@ -316,7 +325,7 @@ pub fn rational_basis<L: Level>(
     None
 }
 
-fn small_abscissa<L: Level>(real: u64, imag: u64) -> L::Ext {
+fn small_abscissa<L: ParameterSet>(real: u64, imag: u64) -> L::Ext {
     L::Ext::from_u64(real).add(L::ext_i().mul(L::Ext::from_u64(imag)))
 }
 
@@ -326,12 +335,13 @@ fn small_abscissa<L: Level>(real: u64, imag: u64) -> L::Ext {
 /// `p+1`. Every point with an abscissa in `F_p` has the same order-2 image,
 /// `(0, 0)`, because that is the only order-2 point fixed by Frobenius, so
 /// no second point with a real abscissa completes the basis. `T` is the
-/// least `a + b·i` with `0 ≤ a ≤ 2λ` and `1 ≤ b ≤ 2λ`, ordered by `a` then
+/// least `a + b·i` with `0 ≤ a ≤ N` and `1 ≤ b ≤ N`, for `N` the set's
+/// [`ParameterSet::SEARCH_BOUND`], ordered by `a` then
 /// `b`, for which both points have order `p+1`, their even parts generate
 /// `E[2^e]`, and their odd parts generate `E[f]`.
-pub fn starting_basis<L: Level>() -> Option<RationalBasis<L::Ext>> {
+pub fn starting_basis<L: ParameterSet>() -> Option<RationalBasis<L::Ext>> {
     let coefficient = L::Ext::zero();
-    let bound = u64::from(2 * L::LAMBDA);
+    let bound = u64::from(L::SEARCH_BOUND);
     let mut r = None;
     for candidate in 1..=bound {
         let point = Xz::affine(L::Ext::from_u64(candidate));
@@ -376,7 +386,11 @@ pub fn starting_basis<L: Level>() -> Option<RationalBasis<L::Ext>> {
 }
 
 /// `[2^times] point` on the normalized curve. Infinity is `Z = 0`.
-pub fn double_times<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>, times: u32) -> Xz<L::Ext> {
+pub fn double_times<L: ParameterSet>(
+    coefficient: L::Ext,
+    point: Xz<L::Ext>,
+    times: u32,
+) -> Xz<L::Ext> {
     xdbl_iter(Montgomery::normalized(coefficient), point, times)
 }
 
@@ -384,9 +398,9 @@ pub fn double_times<L: Level>(coefficient: L::Ext, point: Xz<L::Ext>, times: u32
 mod tests {
     use super::even_basis;
     use crate::torsion::double_times;
-    use prism_field::{Field, Level, Level1, Level3, Level5};
+    use prism_field::{Field, ParameterSet, P248, P376, P500};
 
-    fn key<L: Level>(hex: &str) -> L::Ext {
+    fn key<L: ParameterSet>(hex: &str) -> L::Ext {
         let bytes: Vec<u8> = (0..hex.len())
             .step_by(2)
             .map(|index| u8::from_str_radix(&hex[index..index + 2], 16).unwrap())
@@ -394,7 +408,7 @@ mod tests {
         L::ext_decode(&bytes).unwrap()
     }
 
-    fn order_is_two_to_the_e<L: Level>(hex: &str, hint: u8) {
+    fn order_is_two_to_the_e<L: ParameterSet>(hex: &str, hint: u8) {
         let coefficient = key::<L>(hex);
         let basis =
             even_basis::<L>(coefficient, u16::from(hint >> 1), hint & 1 == 1).expect(L::NAME);
@@ -429,36 +443,36 @@ mod tests {
         );
     }
 
-    fn starting<L: Level>() {
+    fn starting<L: ParameterSet>() {
         assert!(super::starting_basis::<L>().is_some(), "{}", L::NAME);
     }
 
     #[test]
-    fn the_starting_curve_has_a_basis_at_level_i() {
-        starting::<Level1>();
+    fn the_starting_curve_has_a_basis_at_p248() {
+        starting::<P248>();
     }
 
     #[test]
-    fn the_starting_curve_has_a_basis_at_level_iii() {
-        starting::<Level3>();
+    fn the_starting_curve_has_a_basis_at_p376() {
+        starting::<P376>();
     }
 
     #[test]
-    fn the_starting_curve_has_a_basis_at_level_v() {
-        starting::<Level5>();
+    fn the_starting_curve_has_a_basis_at_p500() {
+        starting::<P500>();
     }
 
     #[test]
     fn the_reference_keys_have_a_full_order_basis() {
-        order_is_two_to_the_e::<Level1>(
+        order_is_two_to_the_e::<P248>(
             "e1bea27fb0d6c4f6ee3e8453aa04de40159a4504ccdcd20297e961a683f30003c9318e7f04701121a0d291ee5b1f2a65af8a9c8c514194517b402d4877f7bf01",
             11,
         );
-        order_is_two_to_the_e::<Level3>(
+        order_is_two_to_the_e::<P376>(
             "6d8bff5340b0a6c2e120b56435381403147276e74ccc89fbfead5477453b8aba577d66678b65c320a6f89dab7a9ef3303990b85b491234294c5a5dc9c52396dcde9fa60e735339f2fd50c7df930fee6b313b6c85a7bba7c5da8bf4d90ee3eb2f",
             21,
         );
-        order_is_two_to_the_e::<Level5>(
+        order_is_two_to_the_e::<P500>(
             "9e70ccc3c05b879b170848e55c9811a4146ef12a3c39fcac82a06dc1b4524badf0f8f07b569e0edb63835109563058271e3a92724195121fc00ce08354523801685d9220043cbe9565303c9e8dc6da07cffbddc23a8ccd0a221199fc62d0e7d30577671fb73fa36fb9e7641587c2a0d86213b16c038038e0389c51f647bc0200",
             2,
         );

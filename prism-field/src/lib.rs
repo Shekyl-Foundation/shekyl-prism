@@ -3,18 +3,27 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! The three primes in Table 2 of ePrint 2026/443, instantiated with `fp2`,
-//! and the byte layout each of those levels encodes.
+//! The parameter sets, each a prime `p = f·2^e − 1` instantiated with `fp2`,
+//! and the byte layout each of them encodes.
 //!
-//! A level is a type. The encoding lengths and the salt below are
-//! part of that type's contract, so a level I encoding is refused by the
-//! level V decoder and no caller re-derives a length from a second constant.
+//! A parameter set is a prime, and it is a type: [`P248`], [`P376`] and
+//! [`P500`], named by `e`. The encoding lengths and the salt below are part
+//! of that type's contract, so a `p248` encoding is refused by the `p500`
+//! decoder and no caller re-derives a length from a second constant.
+//!
+//! The salt's bit length and the number of candidates a torsion search
+//! tries are both [`width_bits`]: `e` rounded up to a multiple of 128.
+//! Nothing here records a security level, and nothing here names a set by
+//! the string committed vectors carry. The category a prime is assessed at
+//! moves with research and is documentation: `docs/PARAMETER_SETS.md`,
+//! which no code reads. The committed string lives with the corpus, in
+//! `prism-verify`.
 //!
 //! `fp2` 0.6.0 is MIT OR Apache-2.0. Its default feature is `test-utils`, so
 //! this crate turns default features off. Packed arithmetic stays off as well:
 //! `65·2^376 − 1` is 383 bits and is not strictly below `2^382`, so the
-//! feature's modulus rule does not hold for every level. One crate feature
-//! cannot turn it on for some levels and leave the others scalar.
+//! feature's modulus rule does not hold for every set. One crate feature
+//! cannot turn it on for some sets and leave the others scalar.
 
 #![forbid(unsafe_code)]
 
@@ -23,10 +32,11 @@ use fp2::define_fp_core;
 
 pub mod ops;
 
-/// The bytes of one row's public salt.
+/// The bytes of one set's public salt.
 ///
-/// Each level owns a distinct type, [`Level::Salt`], whose array is exactly
-/// [`Level::SALT_LEN`] long. Every byte string of that length is valid.
+/// Each set owns a distinct type, [`ParameterSet::Salt`], whose array is
+/// exactly [`ParameterSet::SALT_LEN`] long. Every byte string of that length
+/// is valid.
 pub trait Salt: Copy + Eq + core::fmt::Debug {
     const LEN: usize;
 
@@ -66,12 +76,49 @@ pub trait Field: Copy {
     fn same(self, rhs: Self) -> bool;
 }
 
-/// One NIST column of Table 2.
-pub trait Level: Copy + Clone + Eq + Send + Sync + 'static {
+/// `e` rounded up to a multiple of 128.
+///
+/// This is the bit length of the public salt and the number of candidates
+/// each torsion search tries. A parameter set carries no security
+/// assessment; both widths are this rounding of its exponent. The two
+/// primes ruled but not yet built, `e = 324` and `e = 664`, round to 384
+/// and 768.
+///
+/// Panics if the rounding does not fit in `u32`.
+pub const fn width_bits(e: u32) -> u32 {
+    match e.div_ceil(128).checked_mul(128) {
+        Some(bits) => bits,
+        None => panic!("e rounded up to a multiple of 128 does not fit in u32"),
+    }
+}
+
+/// The candidate limit for a width that fits in a `u16`.
+///
+/// Panics if `bits` exceeds [`u16::MAX`]. Every ruled prime is far below
+/// that, and a wider prime would be a new counter, not a silent truncation.
+const fn candidate_bound(bits: u32) -> u16 {
+    assert!(
+        bits <= u16::MAX as u32,
+        "the width fits a candidate counter"
+    );
+    // CLIPPY: the assert is the range check. `TryFrom` is not const-stable,
+    // so the narrowing cast is the const form of that check.
+    #[allow(clippy::cast_possible_truncation)]
+    {
+        bits as u16
+    }
+}
+
+/// One parameter set: a prime `p = f·2^e − 1`, its two fields and the
+/// lengths its encodings use.
+pub trait ParameterSet: Copy + Clone + Eq + Send + Sync + 'static {
     type Base: Field;
     type Ext: Field;
+    /// The set's name, `p` and then `e`: `p248`, `p376`, `p500`.
+    ///
+    /// Display only. Committed vectors and the research signer's seed
+    /// streams do not use it.
     const NAME: &'static str;
-    const LAMBDA: u32;
     /// Valuation in `p = f·2^e − 1`.
     const E: u32;
     /// The odd cofactor `f` in `p + 1 = f·2^e`.
@@ -87,10 +134,20 @@ pub trait Level: Copy + Clone + Eq + Send + Sync + 'static {
     /// Byte length of `s`, which is [`Self::CHALLENGE_BITS`] rounded up. It
     /// is derived, not carried in the signature.
     const S_LEN: usize;
-    /// This row's salt. Its length is [`Self::SALT_LEN`].
+    /// This set's salt. Its length is [`Self::SALT_LEN`].
     type Salt: Salt;
-    /// Public salt length in bytes: `2λ` bits.
+    /// [`width_bits`] of [`Self::E`]. The salt's bit length, and the
+    /// candidate limit of each torsion search.
+    const WIDTH_BITS: u32;
+    /// Public salt length in bytes: [`Self::WIDTH_BITS`] / 8.
     const SALT_LEN: usize;
+    /// Candidates each torsion search tries: [`Self::WIDTH_BITS`].
+    ///
+    /// The public-key basis search, the second point of a rational basis
+    /// and the starting curve's basis share this limit. Reaching it means
+    /// something different in each search. The only failure estimate is
+    /// the public-key search's, and it lives with that search.
+    const SEARCH_BOUND: u16;
     /// Field elements a signature carries: `A_sig`, `x(P)`, `y(P)`, `x(Q)`,
     /// `y(Q)`.
     const SIGNATURE_ELEMENTS: usize;
@@ -106,23 +163,26 @@ pub trait Level: Copy + Clone + Eq + Send + Sync + 'static {
     fn ext_encode(value: Self::Ext) -> Vec<u8>;
 }
 
-macro_rules! nist_level {
+macro_rules! parameter_set {
     (
         $modname:ident,
-        $level:ident,
-        $name:literal,
-        $lambda:expr,
-        $e:expr,
+        $set:ident,
+        f = $f:literal,
+        e = $e:literal,
         $fp:ident,
         $fp2:ident,
         [$($limb:expr),+ $(,)?]
     ) => {
         pub mod $modname {
             use super::ops::{tally, Kind, Op};
-            use super::{define_fp2_from_type, define_fp_core, Field, Level, Salt};
+            use super::{
+                candidate_bound, define_fp2_from_type, define_fp_core, width_bits, Field,
+                ParameterSet, Salt,
+            };
 
-            /// `2λ` bits, stored as an array of that many bytes.
-            const SALT_BYTES: usize = (2 * ($lambda as usize)) / 8;
+            /// [`width_bits`] of this set's exponent.
+            const WIDTH: u32 = width_bits($e);
+            const SALT_BYTES: usize = WIDTH as usize / 8;
 
             #[derive(Clone, Copy, Debug, PartialEq, Eq)]
             pub struct SaltBytes([u8; SALT_BYTES]);
@@ -153,14 +213,14 @@ macro_rules! nist_level {
                 }
             }
 
-            // Two facts the rest of the workspace reads off a level without
+            // Two facts the rest of the workspace reads off a set without
             // re-testing: the challenge scalar occupies at least one byte, so
             // its derivation may touch both ends of the buffer; and
             // `p = f·2^e − 1` exceeds `2^64`, so every `u64` this crate lifts
             // into the field is already canonical.
             const _: () = assert!(
                 $e > 64,
-                "a level needs e > 64: one challenge byte, and a prime above 2^64"
+                "a set needs e > 64: one challenge byte, and a prime above 2^64"
             );
 
             define_fp_core!(
@@ -289,20 +349,14 @@ macro_rules! nist_level {
             }
 
             #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-            pub struct $level;
+            pub struct $set;
 
-            impl Level for $level {
+            impl ParameterSet for $set {
                 type Base = $fp;
                 type Ext = $fp2;
-                const NAME: &'static str = $name;
-                const LAMBDA: u32 = $lambda;
+                const NAME: &'static str = concat!("p", stringify!($e));
                 const E: u32 = $e;
-                const ODD: u64 = match $e {
-                    248 => 5,
-                    376 => 65,
-                    500 => 27,
-                    _ => panic!("Table 2 has no cofactor for this valuation"),
-                };
+                const ODD: u64 = $f;
                 const CHAIN_STEPS: u32 = $e - 2;
                 const CHALLENGE_BITS: u32 = $e - 3;
                 const FP_LEN: usize = <$fp>::ENCODED_LENGTH;
@@ -310,7 +364,9 @@ macro_rules! nist_level {
                 const PUBLIC_KEY_LEN: usize = <$fp2>::ENCODED_LENGTH;
                 type Salt = SaltBytes;
                 const S_LEN: usize = (Self::CHALLENGE_BITS as usize).div_ceil(8);
+                const WIDTH_BITS: u32 = WIDTH;
                 const SALT_LEN: usize = SALT_BYTES;
+                const SEARCH_BOUND: u16 = candidate_bound(WIDTH);
                 const SIGNATURE_ELEMENTS: usize = 5;
                 const SIGNATURE_LEN: usize =
                     Self::SIGNATURE_ELEMENTS * <$fp2>::ENCODED_LENGTH + Self::SALT_LEN;
@@ -343,18 +399,17 @@ macro_rules! nist_level {
                 }
             }
         }
-        pub use $modname::$level;
+        pub use $modname::$set;
     };
 }
 
-nist_level!(
-    level1,
-    Level1,
-    "NIST-I",
-    128,
-    248,
-    FpLevel1,
-    Fp2Level1,
+parameter_set!(
+    p248,
+    P248,
+    f = 5,
+    e = 248,
+    FpP248,
+    Fp2P248,
     [
         0xFFFFFFFFFFFFFFFFu64,
         0xFFFFFFFFFFFFFFFFu64,
@@ -363,14 +418,13 @@ nist_level!(
     ]
 );
 
-nist_level!(
-    level3,
-    Level3,
-    "NIST-III",
-    192,
-    376,
-    FpLevel3,
-    Fp2Level3,
+parameter_set!(
+    p376,
+    P376,
+    f = 65,
+    e = 376,
+    FpP376,
+    Fp2P376,
     [
         0xFFFFFFFFFFFFFFFFu64,
         0xFFFFFFFFFFFFFFFFu64,
@@ -381,14 +435,13 @@ nist_level!(
     ]
 );
 
-nist_level!(
-    level5,
-    Level5,
-    "NIST-V",
-    256,
-    500,
-    FpLevel5,
-    Fp2Level5,
+parameter_set!(
+    p500,
+    P500,
+    f = 27,
+    e = 500,
+    FpP500,
+    Fp2P500,
     [
         0xFFFFFFFFFFFFFFFFu64,
         0xFFFFFFFFFFFFFFFFu64,
@@ -406,13 +459,13 @@ pub const FIELD_BACKEND: &str = "scalar";
 
 #[cfg(test)]
 mod tests {
-    use super::{Field, Level, Level1, Level3, Level5, Salt};
+    use super::{width_bits, Field, ParameterSet, Salt, P248, P376, P500};
 
     fn hex(bytes: &[u8]) -> String {
         bytes.iter().map(|b| format!("{b:02x}")).collect()
     }
 
-    fn check_base<L: Level>(add: &str, mul: &str, inv: &str, sqrt_sq: &str) {
+    fn check_base<L: ParameterSet>(add: &str, mul: &str, inv: &str, sqrt_sq: &str) {
         let two = L::Base::from_u64(2);
         let three = L::Base::from_u64(3);
         assert_eq!(hex(&L::base_encode(two.add(three))), add);
@@ -425,7 +478,9 @@ mod tests {
         assert!(root.square().same(four));
         assert_eq!(L::FP_LEN * 2, L::FP2_LEN);
         assert_eq!(L::PUBLIC_KEY_LEN, L::FP2_LEN);
-        assert_eq!(L::SALT_LEN, (2 * (L::LAMBDA as usize)) / 8);
+        assert_eq!(L::WIDTH_BITS, L::E.div_ceil(128) * 128);
+        assert_eq!(L::SALT_LEN * 8, L::WIDTH_BITS as usize);
+        assert_eq!(u32::from(L::SEARCH_BOUND), L::WIDTH_BITS);
         assert_eq!(L::SALT_LEN, <L::Salt as Salt>::LEN);
         assert_eq!(L::CHAIN_STEPS, L::E - 2);
         assert_eq!(L::CHALLENGE_BITS, L::E - 3);
@@ -436,6 +491,69 @@ mod tests {
         );
     }
 
+    /// `p − 1 = f·2^e − 2` as little-endian bytes, from `f` and `e` alone.
+    fn modulus_minus_one(f: u64, e: u32, len: usize) -> Vec<u8> {
+        let mut bytes = vec![0u8; len];
+        // `f·2^e`: the bytes of `f` shifted up by `e` bits.
+        let (byte, bit) = ((e / 8) as usize, e % 8);
+        let shifted = u128::from(f) << bit;
+        for (offset, part) in shifted.to_le_bytes().iter().enumerate() {
+            if *part != 0 {
+                bytes[byte + offset] = *part;
+            }
+        }
+        // Minus two. The low byte is zero, since `e` is far above 8.
+        let mut borrow = 2u16;
+        for value in &mut bytes {
+            let wide = 0x100 + u16::from(*value) - borrow;
+            *value = wide as u8;
+            borrow = u16::from(wide < 0x100);
+        }
+        assert_eq!(borrow, 0);
+        bytes
+    }
+
+    /// The name, the cofactor, the exponent and the limbs of a set agree:
+    /// the field's `−1` is `f·2^e − 2`, computed from `f` and `e` without
+    /// reading the limb literals.
+    fn the_prime_is<L: ParameterSet>(name: &str, f: u64, e: u32) {
+        assert_eq!(L::NAME, name);
+        assert_eq!((L::ODD, L::E), (f, e));
+        assert_eq!(L::ODD % 2, 1, "{name}: f is odd");
+        assert_eq!(
+            L::base_encode(L::Base::one().negate()),
+            modulus_minus_one(L::ODD, L::E, L::FP_LEN),
+            "{name}: p + 1 = f·2^e"
+        );
+    }
+
+    #[test]
+    fn every_set_is_the_prime_its_name_and_cofactor_say() {
+        the_prime_is::<P248>("p248", 5, 248);
+        the_prime_is::<P376>("p376", 65, 376);
+        the_prime_is::<P500>("p500", 27, 500);
+    }
+
+    /// The committed sizes of the three built sets, and the widths of the
+    /// two ruled exponents that have no type yet. The sizes are the pin.
+    #[test]
+    fn the_width_is_e_rounded_up_to_128_bits() {
+        fn check<L: ParameterSet>(salt_bytes: usize, candidates: u16) {
+            let rounded = L::E.div_ceil(128) * 128;
+            assert_eq!(L::WIDTH_BITS, rounded, "{}", L::NAME);
+            assert_eq!(L::SALT_LEN, salt_bytes, "{}", L::NAME);
+            assert_eq!(L::SEARCH_BOUND, candidates, "{}", L::NAME);
+            assert_eq!(usize::from(L::SEARCH_BOUND), L::SALT_LEN * 8);
+            assert_eq!(width_bits(L::E), rounded);
+        }
+        check::<P248>(32, 256);
+        check::<P376>(48, 384);
+        check::<P500>(64, 512);
+        // Ruled, not built. Salt bytes are the width over 8: 48 and 96.
+        assert_eq!(width_bits(324), 384);
+        assert_eq!(width_bits(664), 768);
+    }
+
     fn hex_bytes(text: &str) -> Vec<u8> {
         (0..text.len())
             .step_by(2)
@@ -444,62 +562,62 @@ mod tests {
     }
 
     #[test]
-    fn level_i_matches_the_committed_integers() {
-        check_base::<Level1>(
+    fn p248_matches_the_committed_integers() {
+        check_base::<P248>(
             "0500000000000000000000000000000000000000000000000000000000000000",
             "0600000000000000000000000000000000000000000000000000000000000000",
             "0000000000000000000000000000000000000000000000000000000000008002",
             "0200000000000000000000000000000000000000000000000000000000000000",
         );
-        assert_eq!(Level1::PUBLIC_KEY_LEN, 64);
-        assert_eq!(Level1::SIGNATURE_LEN, 352);
-        assert_eq!(Level1::CHAIN_STEPS, 246);
+        assert_eq!(P248::PUBLIC_KEY_LEN, 64);
+        assert_eq!(P248::SIGNATURE_LEN, 352);
+        assert_eq!(P248::CHAIN_STEPS, 246);
     }
 
     #[test]
-    fn level_iii_matches_the_committed_integers() {
-        check_base::<Level3>(
+    fn p376_matches_the_committed_integers() {
+        check_base::<P376>(
             "050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008020",
             "020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
         );
-        assert_eq!(Level3::PUBLIC_KEY_LEN, 96);
-        assert_eq!(Level3::SIGNATURE_LEN, 528);
-        assert_eq!(Level3::CHAIN_STEPS, 374);
+        assert_eq!(P376::PUBLIC_KEY_LEN, 96);
+        assert_eq!(P376::SIGNATURE_LEN, 528);
+        assert_eq!(P376::CHAIN_STEPS, 374);
     }
 
     #[test]
-    fn level_v_matches_the_committed_integers() {
-        check_base::<Level5>(
+    fn p500_matches_the_committed_integers() {
+        check_base::<P500>(
             "05000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "06000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d800",
             "02000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
         );
-        assert_eq!(Level5::PUBLIC_KEY_LEN, 128);
-        assert_eq!(Level5::SIGNATURE_LEN, 704);
-        assert_eq!(Level5::CHAIN_STEPS, 498);
+        assert_eq!(P500::PUBLIC_KEY_LEN, 128);
+        assert_eq!(P500::SIGNATURE_LEN, 704);
+        assert_eq!(P500::CHAIN_STEPS, 498);
     }
 
     #[test]
     fn extension_matches_schoolbook_multiplication() {
         // (1 + 2i)(3 + 4i) = (3 - 8) + (4 + 6)i = -5 + 10i, since i^2 = -1.
-        let base = <Level1 as Level>::Base::from_u64;
+        let base = <P248 as ParameterSet>::Base::from_u64;
         let left =
-            Level1::ext_from_base(base(1)).add(Level1::ext_i().mul(Level1::ext_from_base(base(2))));
+            P248::ext_from_base(base(1)).add(P248::ext_i().mul(P248::ext_from_base(base(2))));
         let right =
-            Level1::ext_from_base(base(3)).add(Level1::ext_i().mul(Level1::ext_from_base(base(4))));
+            P248::ext_from_base(base(3)).add(P248::ext_i().mul(P248::ext_from_base(base(4))));
         let product = left.mul(right);
-        let (re, im) = Level1::ext_parts(product);
-        let minus_five = <Level1 as Level>::Base::zero().sub(base(5));
+        let (re, im) = P248::ext_parts(product);
+        let minus_five = <P248 as ParameterSet>::Base::zero().sub(base(5));
         assert!(re.same(minus_five));
         assert!(im.same(base(10)));
     }
 
     #[test]
     fn every_salt_byte_pattern_has_one_length_delimited_encoding() {
-        fn check<L: Level>() {
+        fn check<L: ParameterSet>() {
             for byte in [0, 1, 127, 255] {
                 let bytes = vec![byte; L::SALT_LEN];
                 assert_eq!(L::Salt::from_bytes(&bytes).unwrap().as_bytes(), bytes);
@@ -510,15 +628,15 @@ mod tests {
             assert_eq!(&counter.as_bytes()[..2], &[0x02, 0x01]);
             assert!(counter.as_bytes()[8..].iter().all(|byte| *byte == 0));
         }
-        check::<Level1>();
-        check::<Level3>();
-        check::<Level5>();
+        check::<P248>();
+        check::<P376>();
+        check::<P500>();
     }
 
     #[test]
     fn a_noncanonical_integer_does_not_decode() {
-        let mut bytes = vec![0u8; Level1::FP_LEN];
-        bytes[Level1::FP_LEN - 1] = 0xff;
-        assert!(Level1::base_decode(&bytes).is_none());
+        let mut bytes = vec![0u8; P248::FP_LEN];
+        bytes[P248::FP_LEN - 1] = 0xff;
+        assert!(P248::base_decode(&bytes).is_none());
     }
 }
