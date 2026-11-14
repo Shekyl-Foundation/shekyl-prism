@@ -85,6 +85,13 @@ jobs:
         run: python3 scripts/ci/check_research_boundary.py
       - name: The operation counter is in no default build
         run: python3 scripts/ci/check_op_count_isolation.py
+      # The affine oracles are for the fuzz crate alone. The self-test plants
+      # each breach in a copy of the manifests first, so a check that had
+      # gone blind fails here instead of passing.
+      - name: The replaced-routine oracles are in no build but the fuzz crate's
+        run: |
+          python3 scripts/ci/check_oracle_isolation.py --selftest
+          python3 scripts/ci/check_oracle_isolation.py
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       # The counter is compiled only when asked for, so its code and the
