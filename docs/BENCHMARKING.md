@@ -176,9 +176,42 @@ record in [benchmarks/verifier_ops_x86_64_2026-11-13.txt](benchmarks/verifier_op
 | before | 24.1 | 68.4 | 156.4 |
 | after | 11.5 | 32.5 | 73.9 |
 
-These are not floor-device figures. The Pi 4 runs of the salted verifier
-at the same two commits, and the cycles per operation they give, are not
-yet taken.
+On the floor device, a Raspberry Pi 4 Model B Rev 1.4, `scripts/bench_floor.sh`
+at `c9df786` and at `8f72373`, three alternating runs in one session on
+2026-11-14. Median of the three run medians, in milliseconds; record in
+[benchmarks/verifier_ops_pi4_2026-11-14.txt](benchmarks/verifier_ops_pi4_2026-11-14.txt).
+
+| | I | III | V |
+| --- | ---: | ---: | ---: |
+| before | 167.3 | 447.4 | 1016.3 |
+| after | 89.1 | 231.7 | 520.8 |
+
+The fall is 46.7%, 48.2% and 48.8%, against 52 to 53% on x86_64. The run
+medians of one tree differ by at most 0.2%. A resident node used about
+1.9 of the four cores throughout (load 3.0 to 3.8) and was not stopped,
+as in the 2026-11-12 record; the clock read 1.8 GHz and the temperature
+63.8 to 66.7 °C at every reading. Firmware throttling flags could not be
+read. This is a measurement under recorded load, not an idle-device
+baseline. The "before" figures are the salted verifier's and equal the
+unsalted ones of 2026-11-12 to within 0.7%.
+
+One extension-field operation on the Pi 4 at the head, median of the
+three runs. The bench's counter on aarch64 is a 54 MHz timer, not a cycle
+counter, so the cycles are the nanoseconds times the recorded 1.8 GHz:
+
+| | multiplication | squaring | inversion |
+| --- | ---: | ---: | ---: |
+| I | 348.6 ns, 627 cycles | 223.8 ns, 403 cycles | 6,292 ns, 11,326 cycles |
+| III | 628.0 ns, 1,130 cycles | 405.3 ns, 730 cycles | 12,149 ns, 21,868 cycles |
+| V | 1,097.0 ns, 1,975 cycles | 701.1 ns, 1,262 cycles | 19,743 ns, 35,537 cycles |
+
+A squaring costs 64% of a multiplication at every level on the Pi (70%,
+64% and 66% on x86_64), and an inversion 18 to 19 multiplications (40, 37
+and 31 on x86_64), so the inversions that were removed were worth less on
+the Pi than on x86_64, which is where the smaller fall comes from. At
+level I the counted multiplications, squarings and inversions at these
+prices come to 69.5 ms of the 89.1 ms measured, 78%; the rest is
+additions, subtractions, base-field work and everything outside the field.
 
 `prism-bench` prints the time of one extension-field multiplication,
 squaring and inversion per level after its verification timings. On the
