@@ -118,55 +118,57 @@ const FIELD_BATCH: u32 = 10_000;
 /// multiplications.
 const INVERSION_BATCH: u32 = 200;
 
-/// Time one extension-field operation, starting from the sample key's
-/// coefficient. Each batch is a dependent chain, so no operation can be
-/// reordered or dropped, and the figure includes no loop but its own.
+/// Nanoseconds and counter ticks of one application of `step`, the median
+/// over the samples of a batch of them. Each batch is a dependent chain
+/// from `start`, so no operation can be reordered or dropped. Generic over
+/// the step, so each operation gets its own loop and is called directly:
+/// the figure includes no loop but its own and no indirect call.
+fn per_op<T: Copy>(start: T, batch: u32, step: impl Fn(T) -> T) -> (f64, f64) {
+    let mut walls = Vec::with_capacity(SAMPLES);
+    let mut counters = Vec::with_capacity(SAMPLES);
+    for sample in 0..WARMUP + SAMPLES {
+        let mut x = std::hint::black_box(start);
+        let before = counter();
+        let clock = Instant::now();
+        for _ in 0..batch {
+            x = step(x);
+        }
+        let elapsed = clock.elapsed().as_nanos();
+        let delta = counter().wrapping_sub(before);
+        std::hint::black_box(x);
+        if sample >= WARMUP {
+            walls.push(elapsed);
+            counters.push(u128::from(delta));
+        }
+    }
+    let (ns, _) = median_spread(&mut walls);
+    let (ticks, _) = median_spread(&mut counters);
+    let batch = f64::from(batch);
+    (ns as f64 / batch, ticks as f64 / batch)
+}
+
+/// Time one extension-field multiplication, squaring and inversion,
+/// starting from the sample key's coefficient.
 fn field_operations<L: Level>(level: Nist, key: &[u8]) {
     let Some(start) = L::ext_decode(key) else {
         println!("field level={level} refused=\"the sample key does not decode\"");
         return;
     };
-    let per_op = |batch: u32, step: &dyn Fn(L::Ext) -> L::Ext| {
-        let mut walls = Vec::with_capacity(SAMPLES);
-        let mut counters = Vec::with_capacity(SAMPLES);
-        for sample in 0..WARMUP + SAMPLES {
-            let mut x = std::hint::black_box(start);
-            let before = counter();
-            let clock = Instant::now();
-            for _ in 0..batch {
-                x = step(x);
-            }
-            let elapsed = clock.elapsed().as_nanos();
-            let delta = counter().wrapping_sub(before);
-            std::hint::black_box(x);
-            if sample >= WARMUP {
-                walls.push(elapsed);
-                counters.push(u128::from(delta));
-            }
-        }
-        let (ns, _) = median_spread(&mut walls);
-        let (ticks, _) = median_spread(&mut counters);
-        let batch = f64::from(batch);
-        (ns as f64 / batch, ticks as f64 / batch)
-    };
     let fixed = std::hint::black_box(start);
-    for (name, batch, step) in [
-        (
-            "mul",
-            FIELD_BATCH,
-            &(|x: L::Ext| x.mul(fixed)) as &dyn Fn(L::Ext) -> L::Ext,
-        ),
-        ("square", FIELD_BATCH, &|x: L::Ext| x.square()),
-        // `x ↦ 1/x + c` keeps the chain off the two-cycle of a bare inverse.
-        ("inv", INVERSION_BATCH, &|x: L::Ext| {
-            x.inv().map_or(fixed, |y| y.add(fixed))
-        }),
-    ] {
-        let (ns, ticks) = per_op(batch, step);
+    let report = |name: &str, batch: u32, (ns, ticks): (f64, f64)| {
         println!(
             "field level={level} op={name} batch={batch} samples={SAMPLES} ns_per_op={ns:.1} counter_per_op={ticks:.1}"
         );
-    }
+    };
+    let mul = per_op(start, FIELD_BATCH, |x: L::Ext| x.mul(fixed));
+    report("mul", FIELD_BATCH, mul);
+    let square = per_op(start, FIELD_BATCH, |x: L::Ext| x.square());
+    report("square", FIELD_BATCH, square);
+    // `x ↦ 1/x + c` keeps the chain off the two-cycle of a bare inverse.
+    let inv = per_op(start, INVERSION_BATCH, |x: L::Ext| {
+        x.inv().map_or(fixed, |y| y.add(fixed))
+    });
+    report("inv", INVERSION_BATCH, inv);
 }
 
 fn expected(outcome: Result<(), VerifyError>) -> Result<(), BenchError> {

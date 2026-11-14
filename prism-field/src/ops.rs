@@ -74,46 +74,56 @@ pub struct Slot {
 
 #[cfg(feature = "op-count")]
 mod table {
-    use super::{Kind, Op, Slot, SLOTS};
+    use super::{Counts, Kind, Op, Slot, SLOTS};
     use core::cell::Cell;
+
+    /// Counters of one field in one slot, in the order of [`Op`].
+    type Row = [Cell<u64>; 5];
 
     thread_local! {
         static CURRENT: Cell<usize> = const { Cell::new(0) };
-        static TABLE: Cell<[Slot; SLOTS]> = const {
-            Cell::new([Slot {
-                base: super::Counts { mul: 0, square: 0, inv: 0, sqrt: 0, is_square: 0 },
-                ext: super::Counts { mul: 0, square: 0, inv: 0, sqrt: 0, is_square: 0 },
-            }; SLOTS])
-        };
+        /// One counter a cell, so a tally writes eight bytes and no more.
+        /// Two rows a slot: the base field's, then the extension's.
+        static TABLE: [[Row; 2]; SLOTS] =
+            const { [const { [const { [const { Cell::new(0) }; 5] }; 2] }; SLOTS] };
     }
 
     pub fn tally(kind: Kind, op: Op) {
         let slot = CURRENT.with(Cell::get);
         TABLE.with(|table| {
-            let mut rows = table.get();
-            let counts = match kind {
-                Kind::Base => &mut rows[slot].base,
-                Kind::Ext => &mut rows[slot].ext,
-            };
-            match op {
-                Op::Mul => counts.mul += 1,
-                Op::Square => counts.square += 1,
-                Op::Inv => counts.inv += 1,
-                Op::Sqrt => counts.sqrt += 1,
-                Op::IsSquare => counts.is_square += 1,
-            }
-            table.set(rows);
+            let counter = &table[slot][kind as usize][op as usize];
+            counter.set(counter.get() + 1);
         });
     }
 
     pub fn enter(slot: usize) {
-        assert!(slot < SLOTS, "an op-count slot is below SLOTS");
+        assert!(
+            slot < SLOTS,
+            "op-count slot {slot} is not below SLOTS ({SLOTS})"
+        );
         CURRENT.with(|current| current.set(slot));
+    }
+
+    /// Read a row out and leave it zero.
+    fn drain(row: &Row) -> Counts {
+        let of = |op: Op| row[op as usize].take();
+        Counts {
+            mul: of(Op::Mul),
+            square: of(Op::Square),
+            inv: of(Op::Inv),
+            sqrt: of(Op::Sqrt),
+            is_square: of(Op::IsSquare),
+        }
     }
 
     pub fn take() -> [Slot; SLOTS] {
         CURRENT.with(|current| current.set(0));
-        TABLE.with(|table| table.replace([Slot::default(); SLOTS]))
+        TABLE.with(|table| {
+            core::array::from_fn(|slot| Slot {
+                base: drain(&table[slot][Kind::Base as usize]),
+                ext: drain(&table[slot][Kind::Ext as usize]),
+            })
+        })
     }
 }
 
@@ -185,5 +195,27 @@ mod tests {
         assert_eq!(table[5].ext, counts(0, 0, 1, 1, 1));
         assert_eq!(table[5].base, counts(0, 0, 0, 0, 1));
         assert_eq!(take(), [Slot::default(); SLOTS]);
+    }
+
+    #[test]
+    fn the_last_slot_is_usable_and_counts_apart_from_its_neighbour() {
+        type Ext = <Level1 as Level>::Ext;
+        let _ = take();
+        let x = Ext::from_u64(3);
+        enter(SLOTS - 1);
+        let _ = x.mul(x);
+        enter(SLOTS - 2);
+        let _ = x.inv();
+        let table = take();
+        assert_eq!(table[SLOTS - 1].ext.mul, 1);
+        assert_eq!(table[SLOTS - 1].ext.inv, 0);
+        assert_eq!(table[SLOTS - 2].ext.inv, 1);
+        assert_eq!(table[SLOTS - 2].ext.mul, 0);
+    }
+
+    #[test]
+    #[should_panic(expected = "is not below SLOTS")]
+    fn a_slot_at_the_bound_is_refused() {
+        enter(SLOTS);
     }
 }
