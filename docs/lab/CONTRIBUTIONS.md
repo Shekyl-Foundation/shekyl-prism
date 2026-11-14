@@ -37,3 +37,5 @@ To be kept current. As of 2026-11-13:
 | Cornacchia fault in the pinned C reference | coding agent | coding agent (exporter patch) | reviewer read the routine |
 | Collision-replay cost and the salt | coding agent wrote the analysis (#14); reviewer measured it and proposed the salt; ruled by Rick 11-12 | coding agent | experiments E1 to E6 |
 | Hedged salt derivation | reviewer, on Rick's question 11-12 | coding agent | reviewer |
+| Operation-count metric as the machine-independent cost signal | reviewer, ruled by Rick 11-08; brief by reviewer 11-13 | coding agent (Claude Code) | CI on x86_64 and aarch64 |
+| Verifier cost: squaring, inversion-free Miller loop, shared chain inversion, scalar-multiplication reuse | reviewer named the four targets from a profile and the refusals to preserve | coding agent (Claude Code) chose the constructions (fraction-carrying Jacobian loop, one batch per chain, doubling tables per basis point) | the replaced routines kept as references; 2,712 negative verdicts pinned; Sage differential |

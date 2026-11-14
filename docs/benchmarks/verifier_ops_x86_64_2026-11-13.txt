@@ -1,0 +1,121 @@
+# Verification time before and after the operation-count work. x86_64 development machine, shared.
+# before: commit c9df7863624d9acd80eddbaf0b820454a50b6544 (the instrument, no optimization)
+# after:  commit aa6048be911bda7de22f0c2676fac75413cbaaac
+# rustc 1.94.0 (4a4ef493e 2026-03-02); Linux 6.12.113+deb13-amd64 x86_64
+# command: cargo build --release --locked -p prism-bench, then target/release/prism-verify-bench; five alternating runs.
+# The 'before' binary predates the per-operation field timings, so it prints none.
+RUN 1 tree=before started 2026-11-13T21:07:41Z load 4.77 8.25 13.27
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=24137665 spread_ns=4243322 median_counter=63029294 counter_spread=11094218
+level=NIST-III outcome=accepted samples=31 median_ns=67441425 spread_ns=3435282 median_counter=176104790 counter_spread=8970314
+level=NIST-V outcome=accepted samples=31 median_ns=150523729 spread_ns=7883188 median_counter=393051354 counter_spread=20584762
+exit 0
+RUN 1 tree=after started 2026-11-13T21:07:50Z load 4.58 8.09 13.17
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=11462957 spread_ns=1284913 median_counter=29932638 counter_spread=3367312
+level=NIST-III outcome=accepted samples=31 median_ns=31692469 spread_ns=3731287 median_counter=82756466 counter_spread=9744042
+level=NIST-V outcome=accepted samples=31 median_ns=70699028 spread_ns=2269905 median_counter=184611324 counter_spread=5927230
+field level=NIST-I op=mul batch=10000 samples=31 ns_per_op=43.1 counter_per_op=112.6
+field level=NIST-I op=square batch=10000 samples=31 ns_per_op=30.0 counter_per_op=78.2
+field level=NIST-I op=inv batch=200 samples=31 ns_per_op=1721.0 counter_per_op=4494.2
+field level=NIST-III op=mul batch=10000 samples=31 ns_per_op=82.6 counter_per_op=215.8
+field level=NIST-III op=square batch=10000 samples=31 ns_per_op=52.1 counter_per_op=136.0
+field level=NIST-III op=inv batch=200 samples=31 ns_per_op=2940.9 counter_per_op=7679.7
+field level=NIST-V op=mul batch=10000 samples=31 ns_per_op=144.1 counter_per_op=376.2
+field level=NIST-V op=square batch=10000 samples=31 ns_per_op=95.0 counter_per_op=248.1
+field level=NIST-V op=inv batch=200 samples=31 ns_per_op=4485.6 counter_per_op=11713.2
+exit 0
+RUN 2 tree=before started 2026-11-13T21:07:54Z load 4.53 8.02 13.12
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=24323525 spread_ns=5078838 median_counter=63514530 counter_spread=13262788
+level=NIST-III outcome=accepted samples=31 median_ns=68070946 spread_ns=4224206 median_counter=177748828 counter_spread=11030424
+level=NIST-V outcome=accepted samples=31 median_ns=156410900 spread_ns=8494309 median_counter=408424288 counter_spread=22180084
+exit 0
+RUN 2 tree=after started 2026-11-13T21:08:03Z load 4.38 7.88 13.01
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=11381405 spread_ns=529687 median_counter=29719576 counter_spread=1383176
+level=NIST-III outcome=accepted samples=31 median_ns=32527337 spread_ns=2059072 median_counter=84936554 counter_spread=5376968
+level=NIST-V outcome=accepted samples=31 median_ns=73912727 spread_ns=3735373 median_counter=193003254 counter_spread=9754204
+field level=NIST-I op=mul batch=10000 samples=31 ns_per_op=43.2 counter_per_op=112.7
+field level=NIST-I op=square batch=10000 samples=31 ns_per_op=30.8 counter_per_op=80.5
+field level=NIST-I op=inv batch=200 samples=31 ns_per_op=1746.6 counter_per_op=4561.0
+field level=NIST-III op=mul batch=10000 samples=31 ns_per_op=87.1 counter_per_op=227.4
+field level=NIST-III op=square batch=10000 samples=31 ns_per_op=55.8 counter_per_op=145.7
+field level=NIST-III op=inv batch=200 samples=31 ns_per_op=3144.9 counter_per_op=8212.3
+field level=NIST-V op=mul batch=10000 samples=31 ns_per_op=154.1 counter_per_op=402.3
+field level=NIST-V op=square batch=10000 samples=31 ns_per_op=101.1 counter_per_op=263.9
+field level=NIST-V op=inv batch=200 samples=31 ns_per_op=4789.9 counter_per_op=12507.7
+exit 0
+RUN 3 tree=before started 2026-11-13T21:08:07Z load 4.38 7.88 13.01
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=23491112 spread_ns=1445806 median_counter=61340616 counter_spread=3775620
+level=NIST-III outcome=accepted samples=31 median_ns=69371031 spread_ns=4437029 median_counter=181143696 counter_spread=11585900
+level=NIST-V outcome=accepted samples=31 median_ns=167778408 spread_ns=29636407 median_counter=438107182 counter_spread=77387392
+exit 0
+RUN 3 tree=after started 2026-11-13T21:08:17Z load 4.32 7.75 12.92
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=12762649 spread_ns=368303 median_counter=33326220 counter_spread=948628
+level=NIST-III outcome=accepted samples=31 median_ns=35441749 spread_ns=6453998 median_counter=92546456 counter_spread=16853528
+level=NIST-V outcome=accepted samples=31 median_ns=75613704 spread_ns=8938621 median_counter=197444934 counter_spread=23340948
+field level=NIST-I op=mul batch=10000 samples=31 ns_per_op=40.8 counter_per_op=106.5
+field level=NIST-I op=square batch=10000 samples=31 ns_per_op=29.4 counter_per_op=76.8
+field level=NIST-I op=inv batch=200 samples=31 ns_per_op=1675.7 counter_per_op=4375.9
+field level=NIST-III op=mul batch=10000 samples=31 ns_per_op=82.1 counter_per_op=214.4
+field level=NIST-III op=square batch=10000 samples=31 ns_per_op=53.2 counter_per_op=139.0
+field level=NIST-III op=inv batch=200 samples=31 ns_per_op=3007.1 counter_per_op=7852.4
+field level=NIST-V op=mul batch=10000 samples=31 ns_per_op=146.7 counter_per_op=383.2
+field level=NIST-V op=square batch=10000 samples=31 ns_per_op=96.9 counter_per_op=253.1
+field level=NIST-V op=inv batch=200 samples=31 ns_per_op=4554.2 counter_per_op=11892.3
+exit 0
+RUN 4 tree=before started 2026-11-13T21:08:21Z load 4.38 7.70 12.87
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=24564848 spread_ns=1807462 median_counter=64144464 counter_spread=4719932
+level=NIST-III outcome=accepted samples=31 median_ns=75245979 spread_ns=8193623 median_counter=196484248 counter_spread=21395374
+level=NIST-V outcome=accepted samples=31 median_ns=163046213 spread_ns=14501825 median_counter=425754836 counter_spread=37867794
+exit 0
+RUN 4 tree=after started 2026-11-13T21:08:31Z load 4.32 7.58 12.78
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=11426775 spread_ns=1372691 median_counter=29837958 counter_spread=3584410
+level=NIST-III outcome=accepted samples=31 median_ns=31964979 spread_ns=2919948 median_counter=83468250 counter_spread=7624934
+level=NIST-V outcome=accepted samples=31 median_ns=71414316 spread_ns=3408097 median_counter=186479658 counter_spread=8899496
+field level=NIST-I op=mul batch=10000 samples=31 ns_per_op=40.2 counter_per_op=104.9
+field level=NIST-I op=square batch=10000 samples=31 ns_per_op=29.5 counter_per_op=77.0
+field level=NIST-I op=inv batch=200 samples=31 ns_per_op=1682.9 counter_per_op=4394.6
+field level=NIST-III op=mul batch=10000 samples=31 ns_per_op=81.1 counter_per_op=211.7
+field level=NIST-III op=square batch=10000 samples=31 ns_per_op=53.2 counter_per_op=139.0
+field level=NIST-III op=inv batch=200 samples=31 ns_per_op=3070.7 counter_per_op=8018.4
+field level=NIST-V op=mul batch=10000 samples=31 ns_per_op=145.3 counter_per_op=379.3
+field level=NIST-V op=square batch=10000 samples=31 ns_per_op=94.4 counter_per_op=246.5
+field level=NIST-V op=inv batch=200 samples=31 ns_per_op=4458.7 counter_per_op=11642.8
+exit 0
+RUN 5 tree=before started 2026-11-13T21:08:35Z load 4.29 7.52 12.73
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=23593518 spread_ns=1161017 median_counter=61608038 counter_spread=3032852
+level=NIST-III outcome=accepted samples=31 median_ns=68429529 spread_ns=3833248 median_counter=178685514 counter_spread=10009334
+level=NIST-V outcome=accepted samples=31 median_ns=155478167 spread_ns=46637017 median_counter=405988742 counter_spread=121779820
+exit 0
+RUN 5 tree=after started 2026-11-13T21:08:44Z load 4.25 7.40 12.64
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=11825624 spread_ns=1813544 median_counter=30880504 counter_spread=4735422
+level=NIST-III outcome=accepted samples=31 median_ns=32662849 spread_ns=1565425 median_counter=85290134 counter_spread=4087948
+level=NIST-V outcome=accepted samples=31 median_ns=74789891 spread_ns=6491197 median_counter=195293456 counter_spread=16950194
+field level=NIST-I op=mul batch=10000 samples=31 ns_per_op=45.3 counter_per_op=118.3
+field level=NIST-I op=square batch=10000 samples=31 ns_per_op=32.2 counter_per_op=84.1
+field level=NIST-I op=inv batch=200 samples=31 ns_per_op=1809.6 counter_per_op=4725.5
+field level=NIST-III op=mul batch=10000 samples=31 ns_per_op=90.9 counter_per_op=237.3
+field level=NIST-III op=square batch=10000 samples=31 ns_per_op=58.5 counter_per_op=152.8
+field level=NIST-III op=inv batch=200 samples=31 ns_per_op=3249.1 counter_per_op=8484.4
+field level=NIST-V op=mul batch=10000 samples=31 ns_per_op=160.8 counter_per_op=419.9
+field level=NIST-V op=square batch=10000 samples=31 ns_per_op=104.0 counter_per_op=271.7
+field level=NIST-V op=inv batch=200 samples=31 ns_per_op=4906.8 counter_per_op=12813.2
+exit 0

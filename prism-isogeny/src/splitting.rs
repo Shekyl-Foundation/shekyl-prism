@@ -215,8 +215,8 @@ pub fn splitting_compute<F: Field>(
 }
 
 fn fourth_ratio<F: Field>(x: F, y: F) -> Option<ProjectiveCoefficient<F>> {
-    let x4 = x.mul(x).mul(x.mul(x));
-    let y4 = y.mul(y).mul(y.mul(y));
+    let x4 = x.square().square();
+    let y4 = y.square().square();
     let sum = x4.add(y4);
     let coefficient = ProjectiveCoefficient {
         a: sum.add(sum).negate(),
@@ -310,8 +310,8 @@ mod tests {
         // A/C = −2(x^4 + y^4)/(x^4 − y^4), read on the split null point.
         let x = splitting.null_point.x;
         let y = splitting.null_point.y;
-        let x4 = x.mul(x).mul(x.mul(x));
-        let y4 = y.mul(y).mul(y.mul(y));
+        let x4 = x.square().square();
+        let y4 = y.square().square();
         let sum = x4.add(y4);
         let a = sum.add(sum).negate();
         let c = x4.sub(y4);

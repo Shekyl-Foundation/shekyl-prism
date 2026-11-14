@@ -1,0 +1,258 @@
+# Verification time before and after the operation-count work. Raspberry Pi 4 Model B Rev 1.4 (Cortex-A72, aarch64), the floor device.
+# before: commit c9df7863624d9acd80eddbaf0b820454a50b6544 (the instrument, no optimization)
+# after:  commit 8f72373b059e8a420e973c509f417fbbdd8adb18
+# command: cargo build --release --locked -p prism-bench (nice 10, two jobs), then bash scripts/bench_floor.sh; three alternating runs, 2026-11-14 01:04Z to 01:09Z.
+# Conditions are read before and after each run: load average, SoC temperature in millidegrees C, cpu0 clock in kHz, and the three busiest processes.
+# A resident node (shekyld, about 190% of one core, with its tor) ran throughout and was not stopped: this is a measurement under recorded load, not an idle-device baseline.
+# Firmware throttling flags could not be read. The 'before' binary predates the per-operation field timings, so it prints none.
+# The counter is cntvct_el0, a 54 MHz timer, not a cycle counter; the estimated cycles in the summary are nanoseconds times an assumed 1.8 GHz, the clock read before and after each run and not sampled during one.
+RUN 1 tree=before
+# conditions before
+time=2026-11-14T01:04:57Z
+loadavg=3.77 2.65 2.23 3/225 1569327
+temp_millic=65731
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 190 shekyld
+ 100 ps
+ 2.6 tor
+# bench_floor.sh
+device=Raspberry Pi 4 Model B Rev 1.4
+source_commit=c9df7863624d9acd80eddbaf0b820454a50b6544
+source_dirty=false
+Linux 7.0.0-1020-raspi #20-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 11 16:02:28 UTC 2026 aarch64 GNU/Linux
+rustc 1.94.0 (4a4ef493e 2026-03-02)
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu2/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor=ondemand
+field-backend=scalar
+counter=cntvct_el0
+level=NIST-I outcome=accepted samples=31 median_ns=167191950 spread_ns=3772174 median_counter=9028422 counter_spread=203685
+level=NIST-III outcome=accepted samples=31 median_ns=447408616 spread_ns=8381310 median_counter=24160160 counter_spread=452555
+level=NIST-V outcome=accepted samples=31 median_ns=1016265479 spread_ns=22586436 median_counter=54878517 counter_spread=1219691
+# conditions after
+time=2026-11-14T01:05:57Z
+loadavg=3.31 2.71 2.28 3/226 1569442
+temp_millic=65244
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 190 shekyld
+ 100 ps
+ 2.6 tor
+exit 0
+RUN 1 tree=after
+# conditions before
+time=2026-11-14T01:05:57Z
+loadavg=3.31 2.71 2.28 3/226 1569449
+temp_millic=65731
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 190 shekyld
+ 100 ps
+ 2.6 tor
+# bench_floor.sh
+device=Raspberry Pi 4 Model B Rev 1.4
+source_commit=8f72373b059e8a420e973c509f417fbbdd8adb18
+source_dirty=false
+Linux 7.0.0-1020-raspi #20-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 11 16:02:28 UTC 2026 aarch64 GNU/Linux
+rustc 1.94.0 (4a4ef493e 2026-03-02)
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu2/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor=ondemand
+field-backend=scalar
+counter=cntvct_el0
+level=NIST-I outcome=accepted samples=31 median_ns=89116246 spread_ns=1260237 median_counter=4812308 counter_spread=68068
+level=NIST-III outcome=accepted samples=31 median_ns=231700526 spread_ns=1540014 median_counter=12511893 counter_spread=83161
+level=NIST-V outcome=accepted samples=31 median_ns=521501016 spread_ns=1641273 median_counter=28161157 counter_spread=88630
+field level=NIST-I op=mul batch=10000 samples=31 ns_per_op=348.3 counter_per_op=18.8
+field level=NIST-I op=square batch=10000 samples=31 ns_per_op=223.6 counter_per_op=12.1
+field level=NIST-I op=inv batch=200 samples=31 ns_per_op=6289.9 counter_per_op=339.7
+field level=NIST-III op=mul batch=10000 samples=31 ns_per_op=628.0 counter_per_op=33.9
+field level=NIST-III op=square batch=10000 samples=31 ns_per_op=405.0 counter_per_op=21.9
+field level=NIST-III op=inv batch=200 samples=31 ns_per_op=12147.1 counter_per_op=656.0
+field level=NIST-V op=mul batch=10000 samples=31 ns_per_op=1094.5 counter_per_op=59.1
+field level=NIST-V op=square batch=10000 samples=31 ns_per_op=701.1 counter_per_op=37.9
+field level=NIST-V op=inv batch=200 samples=31 ns_per_op=19727.1 counter_per_op=1065.3
+# conditions after
+time=2026-11-14T01:06:29Z
+loadavg=3.17 2.74 2.31 4/225 1569479
+temp_millic=65244
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 190 shekyld
+ 2.6 tor
+ 0.1 systemd
+exit 0
+RUN 2 tree=before
+# conditions before
+time=2026-11-14T01:06:29Z
+loadavg=3.17 2.74 2.31 3/225 1569486
+temp_millic=64270
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 190 shekyld
+ 100 ps
+ 2.6 tor
+# bench_floor.sh
+device=Raspberry Pi 4 Model B Rev 1.4
+source_commit=c9df7863624d9acd80eddbaf0b820454a50b6544
+source_dirty=false
+Linux 7.0.0-1020-raspi #20-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 11 16:02:28 UTC 2026 aarch64 GNU/Linux
+rustc 1.94.0 (4a4ef493e 2026-03-02)
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu2/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor=ondemand
+field-backend=scalar
+counter=cntvct_el0
+level=NIST-I outcome=accepted samples=31 median_ns=167318321 spread_ns=1552663 median_counter=9035235 counter_spread=83858
+level=NIST-III outcome=accepted samples=31 median_ns=447325190 spread_ns=21447623 median_counter=24155641 counter_spread=1158111
+level=NIST-V outcome=accepted samples=31 median_ns=1015030611 spread_ns=13727813 median_counter=54811842 counter_spread=741316
+# conditions after
+time=2026-11-14T01:07:28Z
+loadavg=3.14 2.81 2.36 4/225 1569599
+temp_millic=63783
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 190 shekyld
+ 100 ps
+ 2.6 tor
+exit 0
+RUN 2 tree=after
+# conditions before
+time=2026-11-14T01:07:28Z
+loadavg=3.14 2.81 2.36 2/225 1569606
+temp_millic=64757
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 190 shekyld
+ 2.6 tor
+ 0.1 systemd
+# bench_floor.sh
+device=Raspberry Pi 4 Model B Rev 1.4
+source_commit=8f72373b059e8a420e973c509f417fbbdd8adb18
+source_dirty=false
+Linux 7.0.0-1020-raspi #20-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 11 16:02:28 UTC 2026 aarch64 GNU/Linux
+rustc 1.94.0 (4a4ef493e 2026-03-02)
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu2/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor=ondemand
+field-backend=scalar
+counter=cntvct_el0
+level=NIST-I outcome=accepted samples=31 median_ns=89109451 spread_ns=851701 median_counter=4811959 counter_spread=46001
+level=NIST-III outcome=accepted samples=31 median_ns=232069099 spread_ns=5917372 median_counter=12531794 counter_spread=319533
+level=NIST-V outcome=accepted samples=31 median_ns=520825277 spread_ns=13088648 median_counter=28124670 counter_spread=706741
+field level=NIST-I op=mul batch=10000 samples=31 ns_per_op=348.6 counter_per_op=18.8
+field level=NIST-I op=square batch=10000 samples=31 ns_per_op=224.2 counter_per_op=12.1
+field level=NIST-I op=inv batch=200 samples=31 ns_per_op=6292.2 counter_per_op=339.8
+field level=NIST-III op=mul batch=10000 samples=31 ns_per_op=627.5 counter_per_op=33.9
+field level=NIST-III op=square batch=10000 samples=31 ns_per_op=405.3 counter_per_op=21.9
+field level=NIST-III op=inv batch=200 samples=31 ns_per_op=12148.9 counter_per_op=656.1
+field level=NIST-V op=mul batch=10000 samples=31 ns_per_op=1097.0 counter_per_op=59.2
+field level=NIST-V op=square batch=10000 samples=31 ns_per_op=700.4 counter_per_op=37.8
+field level=NIST-V op=inv batch=200 samples=31 ns_per_op=19742.9 counter_per_op=1066.1
+# conditions after
+time=2026-11-14T01:08:01Z
+loadavg=3.03 2.81 2.37 3/223 1569717
+temp_millic=65731
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 190 shekyld
+ 100 ps
+ 2.6 tor
+exit 0
+RUN 3 tree=before
+# conditions before
+time=2026-11-14T01:08:01Z
+loadavg=3.03 2.81 2.37 3/223 1569724
+temp_millic=65731
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 190 shekyld
+ 100 ps
+ 2.6 tor
+# bench_floor.sh
+device=Raspberry Pi 4 Model B Rev 1.4
+source_commit=c9df7863624d9acd80eddbaf0b820454a50b6544
+source_dirty=false
+Linux 7.0.0-1020-raspi #20-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 11 16:02:28 UTC 2026 aarch64 GNU/Linux
+rustc 1.94.0 (4a4ef493e 2026-03-02)
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu2/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor=ondemand
+field-backend=scalar
+counter=cntvct_el0
+level=NIST-I outcome=accepted samples=31 median_ns=167279598 spread_ns=1363254 median_counter=9033150 counter_spread=73612
+level=NIST-III outcome=accepted samples=31 median_ns=447783947 spread_ns=1876643 median_counter=24180428 counter_spread=101332
+level=NIST-V outcome=accepted samples=31 median_ns=1017210476 spread_ns=21422125 median_counter=54929543 counter_spread=1156795
+# conditions after
+time=2026-11-14T01:09:00Z
+loadavg=3.01 2.85 2.41 3/222 1569838
+temp_millic=64270
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 200 ps
+ 190 shekyld
+ 2.6 tor
+exit 0
+RUN 3 tree=after
+# conditions before
+time=2026-11-14T01:09:00Z
+loadavg=3.01 2.85 2.41 3/222 1569845
+temp_millic=65244
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 190 shekyld
+ 100 ps
+ 2.6 tor
+# bench_floor.sh
+device=Raspberry Pi 4 Model B Rev 1.4
+source_commit=8f72373b059e8a420e973c509f417fbbdd8adb18
+source_dirty=false
+Linux 7.0.0-1020-raspi #20-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 11 16:02:28 UTC 2026 aarch64 GNU/Linux
+rustc 1.94.0 (4a4ef493e 2026-03-02)
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu2/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor=ondemand
+field-backend=scalar
+counter=cntvct_el0
+level=NIST-I outcome=accepted samples=31 median_ns=89303024 spread_ns=1213034 median_counter=4822404 counter_spread=65501
+level=NIST-III outcome=accepted samples=31 median_ns=231473508 spread_ns=2507085 median_counter=12499636 counter_spread=135373
+level=NIST-V outcome=accepted samples=31 median_ns=520139001 spread_ns=1458589 median_counter=28087618 counter_spread=78749
+field level=NIST-I op=mul batch=10000 samples=31 ns_per_op=348.7 counter_per_op=18.8
+field level=NIST-I op=square batch=10000 samples=31 ns_per_op=223.8 counter_per_op=12.1
+field level=NIST-I op=inv batch=200 samples=31 ns_per_op=6297.8 counter_per_op=340.1
+field level=NIST-III op=mul batch=10000 samples=31 ns_per_op=628.0 counter_per_op=33.9
+field level=NIST-III op=square batch=10000 samples=31 ns_per_op=405.5 counter_per_op=21.9
+field level=NIST-III op=inv batch=200 samples=31 ns_per_op=12178.9 counter_per_op=657.7
+field level=NIST-V op=mul batch=10000 samples=31 ns_per_op=1098.6 counter_per_op=59.3
+field level=NIST-V op=square batch=10000 samples=31 ns_per_op=701.8 counter_per_op=37.9
+field level=NIST-V op=inv batch=200 samples=31 ns_per_op=19802.5 counter_per_op=1069.4
+# conditions after
+time=2026-11-14T01:09:32Z
+loadavg=3.00 2.86 2.43 4/222 1569877
+temp_millic=66705
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 190 shekyld
+ 100 ps
+ 2.6 tor
+exit 0
+# summary: median of the three run medians
+summary level=NIST-I before_ms=167.280 after_ms=89.116 fall=46.7%
+summary level=NIST-III before_ms=447.409 after_ms=231.701 fall=48.2%
+summary level=NIST-V before_ms=1016.265 after_ms=520.825 fall=48.8%
+summary field level=NIST-I op=mul ns_per_op=348.6 est_cycles_at_assumed_1.8GHz=627
+summary field level=NIST-I op=square ns_per_op=223.8 est_cycles_at_assumed_1.8GHz=403
+summary field level=NIST-I op=inv ns_per_op=6292.2 est_cycles_at_assumed_1.8GHz=11326
+summary field level=NIST-III op=mul ns_per_op=628.0 est_cycles_at_assumed_1.8GHz=1130
+summary field level=NIST-III op=square ns_per_op=405.3 est_cycles_at_assumed_1.8GHz=730
+summary field level=NIST-III op=inv ns_per_op=12148.9 est_cycles_at_assumed_1.8GHz=21868
+summary field level=NIST-V op=mul ns_per_op=1097.0 est_cycles_at_assumed_1.8GHz=1975
+summary field level=NIST-V op=square ns_per_op=701.1 est_cycles_at_assumed_1.8GHz=1262
+summary field level=NIST-V op=inv ns_per_op=19742.9 est_cycles_at_assumed_1.8GHz=35537

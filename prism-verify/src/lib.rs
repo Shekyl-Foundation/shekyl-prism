@@ -30,6 +30,7 @@ mod relation;
 #[cfg(feature = "research-reduced-width")]
 pub mod research;
 pub mod signature;
+pub mod stage;
 
 use prism_field::Level;
 
@@ -41,6 +42,7 @@ pub use prime::{challenge_degree, degree_is_prime, is_baillie_psw};
 pub use prism_field::Salt;
 pub use reference::{prepared, reference_key, Prepared, PreparedError, ReferenceKey, VectorError};
 pub use signature::{AffinePoint, Response};
+pub use stage::Stage;
 
 /// Why a signature was refused.
 ///
@@ -112,6 +114,7 @@ pub fn verify<L: Level>(
     signature: &[u8],
 ) -> Result<(), VerifyError> {
     let opened = open::<L>(public_key, signature)?;
+    Stage::Challenge.enter();
     let scalar = ChallengeScalar::derive(&opened.identity, message, opened.response.salt);
     accept(&opened, &scalar)
 }
@@ -132,6 +135,7 @@ pub(crate) fn open<'a, L: Level>(
     public_key: &'a [u8],
     signature: &[u8],
 ) -> Result<Opened<'a, L>, VerifyError> {
+    Stage::Public.enter();
     if public_key.len() != L::PUBLIC_KEY_LEN || signature.len() != L::SIGNATURE_LEN {
         return Err(VerifyError::Length);
     }
@@ -150,6 +154,7 @@ pub(crate) fn accept<L: Level>(
     opened: &Opened<'_, L>,
     scalar: &ChallengeScalar,
 ) -> Result<(), VerifyError> {
+    Stage::Challenge.enter();
     if !scalar.degree_is_prime::<L>() {
         return Err(VerifyError::Composite);
     }

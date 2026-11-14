@@ -10,7 +10,7 @@ use crate::VerifyError;
 use prism_field::{Field, Level};
 
 pub(crate) fn check<L: Level>(a: L::Ext) -> Result<(), VerifyError> {
-    let square = a.mul(a);
+    let square = a.square();
     if square.same(L::Ext::from_u64(4)) {
         return Err(VerifyError::Singular);
     }
@@ -32,7 +32,7 @@ pub(crate) fn check<L: Level>(a: L::Ext) -> Result<(), VerifyError> {
     let half = L::Ext::from_u64(2).inv().ok_or(VerifyError::Model)?;
     for root in [disc, disc.negate()] {
         let alpha = a.negate().add(root).mul(half);
-        let lambda2 = alpha.mul(alpha).sub(L::Ext::one());
+        let lambda2 = alpha.square().sub(L::Ext::one());
         if let Some(lambda) = lambda2.sqrt() {
             let moved = alpha
                 .mul(L::Ext::from_u64(3))

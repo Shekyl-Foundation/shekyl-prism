@@ -106,7 +106,7 @@ fn sample<L: Level>(count: u32) -> ExitCode {
         let Some(coefficient) = L::ext_decode(&bytes) else {
             continue;
         };
-        if coefficient.mul(coefficient).same(L::Ext::from_u64(4)) || coefficient.is_zero() {
+        if coefficient.square().same(L::Ext::from_u64(4)) || coefficient.is_zero() {
             continue;
         }
         if basis_hint::<L>(coefficient).is_err() {

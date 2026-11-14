@@ -45,7 +45,7 @@ impl<F: Field> Jac<F> {
 pub fn to_xz<F: Field>(point: Jac<F>) -> Xz<F> {
     let mut image = Xz {
         x: point.x,
-        z: point.z.mul(point.z),
+        z: point.z.square(),
     };
     if image.x.is_zero() && image.z.is_zero() {
         image = Xz::infinity();
@@ -56,22 +56,24 @@ pub fn to_xz<F: Field>(point: Jac<F>) -> Xz<F> {
 /// `[2] point` on the normalized curve. Infinity stays infinity.
 pub fn dbl<F: Field>(curve: Montgomery<F>, point: Jac<F>) -> Jac<F> {
     let infinity = point.x.is_zero() && point.z.is_zero();
-    let x2 = point.x.mul(point.x);
+    let x2 = point.x.square();
     let three_x2 = x2.add(x2).add(x2);
-    let z2 = point.z.mul(point.z);
-    let two_ax = curve.a.mul(point.x).add(curve.a.mul(point.x));
+    let z2 = point.z.square();
+    let a_x = curve.a.mul(point.x);
+    let two_ax = a_x.add(a_x);
     let alpha = three_x2.add(z2.mul(two_ax.add(z2)));
     let mut z = point.y.mul(point.z);
     z = z.add(z);
-    let four_a_y2_z2 = z.mul(z).mul(curve.a);
-    let two_y2 = point.y.mul(point.y).add(point.y.mul(point.y));
+    let four_a_y2_z2 = z.square().mul(curve.a);
+    let y2 = point.y.square();
+    let two_y2 = y2.add(y2);
     let four_x_y2 = two_y2.mul(point.x.add(point.x));
     let mut x = alpha
-        .mul(alpha)
+        .square()
         .sub(four_a_y2_z2)
         .sub(four_x_y2)
         .sub(four_x_y2);
-    let four_y4 = two_y2.mul(two_y2);
+    let four_y4 = two_y2.square();
     let y = four_x_y2.sub(x).mul(alpha).sub(four_y4).sub(four_y4);
     if infinity {
         x = point.x;
@@ -85,8 +87,8 @@ pub fn dbl<F: Field>(curve: Montgomery<F>, point: Jac<F>) -> Jac<F> {
 pub fn add<F: Field>(curve: Montgomery<F>, point: Jac<F>, other: Jac<F>) -> Jac<F> {
     let point_inf = point.z.is_zero();
     let other_inf = other.z.is_zero();
-    let z1_2 = point.z.mul(point.z);
-    let z2_2 = other.z.mul(other.z);
+    let z1_2 = point.z.square();
+    let z2_2 = other.z.square();
     let z2_3 = z2_2.mul(other.z);
     let z1_3 = z1_2.mul(point.z);
     let y1_z2_3 = z2_3.mul(point.y);
@@ -98,11 +100,10 @@ pub fn add<F: Field>(curve: Montgomery<F>, point: Jac<F>, other: Jac<F>) -> Jac<
 
     let dx_double = point.y.add(point.y);
     let two_a = curve.a.add(curve.a);
+    let x1_2 = point.x.square();
     let mut dy_double = two_a.mul(point.x).add(z1_2);
-    dy_double = dy_double.mul(z1_2).add(point.x.mul(point.x));
-    dy_double = dy_double
-        .add(point.x.mul(point.x))
-        .add(point.x.mul(point.x));
+    dy_double = dy_double.mul(z1_2).add(x1_2);
+    dy_double = dy_double.add(x1_2).add(x1_2);
     dy_double = dy_double.mul(other.z);
     if dx.is_zero() && dy.is_zero() {
         dx = dx_double;
@@ -110,9 +111,9 @@ pub fn add<F: Field>(curve: Montgomery<F>, point: Jac<F>, other: Jac<F>) -> Jac<
     }
 
     let z_product = point.z.mul(other.z);
-    let z_product_2 = z_product.mul(z_product);
-    let dx2 = dx.mul(dx);
-    let dy2 = dy.mul(dy);
+    let z_product_2 = z_product.square();
+    let dx2 = dx.square();
+    let dy2 = dy.square();
     let mut x = curve.a.mul(z_product_2).add(u1).add(u2);
     x = dy2.sub(x.mul(dx2));
     let mut y = u1.mul(dx2).sub(x).mul(dy);
@@ -129,8 +130,8 @@ pub fn add<F: Field>(curve: Montgomery<F>, point: Jac<F>, other: Jac<F>) -> Jac<
 
 /// `(u, v, w)` with `P+Q = (u−v : w)` and `P−Q = (u+v : w)`.
 pub fn add_components<F: Field>(curve: Montgomery<F>, point: Jac<F>, other: Jac<F>) -> (F, F, F) {
-    let z1_2 = point.z.mul(point.z);
-    let z2_2 = other.z.mul(other.z);
+    let z1_2 = point.z.square();
+    let z2_2 = other.z.square();
     let x1_z2_2 = point.x.mul(z2_2);
     let z1_2_x2 = z1_2.mul(other.x);
     let mut y1_z2_3 = point.y.mul(other.z);
@@ -140,10 +141,10 @@ pub fn add_components<F: Field>(curve: Montgomery<F>, point: Jac<F>, other: Jac<
     let z_product_2 = z1_2.mul(z2_2);
     let yy = y1_z2_3.mul(z1_3_y2);
     let v = yy.add(yy);
-    let y_sum = y1_z2_3.mul(y1_z2_3).add(z1_3_y2.mul(z1_3_y2));
+    let y_sum = y1_z2_3.square().add(z1_3_y2.square());
     let x_sum = x1_z2_2.add(z1_2_x2);
     let lambda = x1_z2_2.sub(z1_2_x2);
-    let lambda2 = lambda.mul(lambda);
+    let lambda2 = lambda.square();
     let gamma = curve.a.mul(z_product_2).add(x_sum);
     let u = y_sum.sub(gamma.mul(lambda2));
     let w = lambda2.mul(z_product_2);
@@ -154,7 +155,7 @@ pub fn add_components<F: Field>(curve: Montgomery<F>, point: Jac<F>, other: Jac<
 /// curve. The root is the one [`Field::sqrt`] returns, which uses the same
 /// even-coordinate rule as the reference.
 pub fn recover_y<F: Field>(curve: Montgomery<F>, x: F) -> Option<F> {
-    let x2 = x.mul(x);
+    let x2 = x.square();
     let rhs = curve.a.mul(x2).add(x).add(x2.mul(x));
     rhs.sqrt()
 }
@@ -183,7 +184,7 @@ pub fn lift_basis<F: Field>(
     let v1 = p.x.mul(q.z);
     let v2 = q.x.add(v1);
     let v3 = q.x.sub(v1);
-    let v3 = v3.mul(v3).mul(pmq.x);
+    let v3 = v3.square().mul(pmq.x);
     let two_a = curve.a.add(curve.a);
     let v1 = two_a.mul(q.z);
     let v2 = v2.add(v1);
@@ -197,7 +198,7 @@ pub fn lift_basis<F: Field>(
     let q_z = q.z.mul(scale);
     let q = Jac {
         x: q_x.mul(q_z),
-        y: q_y.mul(q_z.mul(q_z)),
+        y: q_y.mul(q_z.square()),
         z: q_z,
     };
     Some((curve, p, q))
@@ -251,6 +252,9 @@ mod tests {
         fn sub(self, rhs: Self) -> Self {
             Self(self.norm() - rhs.norm())
         }
+        fn square(self) -> Self {
+            self.mul(self)
+        }
         fn mul(self, rhs: Self) -> Self {
             Self(self.norm() * rhs.norm())
         }
@@ -296,7 +300,7 @@ mod tests {
         let mut x = None;
         for candidate in 1..40u64 {
             let x0 = Toy::from_u64(candidate);
-            let rhs = x0.mul(x0).mul(x0).add(curve.a.mul(x0.mul(x0))).add(x0);
+            let rhs = x0.square().mul(x0).add(curve.a.mul(x0.square())).add(x0);
             if rhs.is_square() {
                 x = Some((x0, rhs.sqrt().unwrap()));
                 break;

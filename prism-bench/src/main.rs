@@ -8,11 +8,16 @@
 //! Times the complete successful two-chain verification path. Only a run
 //! on an identified Raspberry Pi 4 Model B is the floor-device measurement.
 //! Userspace counters are cntvct_el0 on aarch64 and rdtsc on x86_64.
+//!
+//! After the verifications it times one extension-field multiplication,
+//! squaring and inversion per level. With the operation counts of
+//! `docs/benchmarks/op-counts.txt` these turn a count into an estimate for
+//! the machine the run was on.
 
 use std::process::ExitCode;
 use std::time::Instant;
 
-use prism_field::FIELD_BACKEND;
+use prism_field::{Field, Level, Level1, Level3, Level5, FIELD_BACKEND};
 use prism_verify::{reference::honest, verify_level, Nist, VectorError, VerifyError};
 
 /// Runs before the clock starts, to settle the frequency and the caches.
@@ -36,6 +41,16 @@ fn main() -> ExitCode {
                 refused = true;
                 println!("level={level} refused=\"{err}\"");
             }
+        }
+    }
+    for level in Nist::ALL {
+        let Ok(sample) = honest(level) else {
+            continue;
+        };
+        match level {
+            Nist::I => field_operations::<Level1>(level, &sample.public_key),
+            Nist::III => field_operations::<Level3>(level, &sample.public_key),
+            Nist::V => field_operations::<Level5>(level, &sample.public_key),
         }
     }
     if refused {
@@ -95,6 +110,65 @@ fn measure(level: Nist) -> Result<Timing, BenchError> {
         median_counter,
         counter_spread,
     })
+}
+
+/// Operations in one timed batch of multiplications or squarings.
+const FIELD_BATCH: u32 = 10_000;
+/// Inversions in one timed batch; an inversion is some hundreds of
+/// multiplications.
+const INVERSION_BATCH: u32 = 200;
+
+/// Nanoseconds and counter ticks of one application of `step`, the median
+/// over the samples of a batch of them. Each batch is a dependent chain
+/// from `start`, so no operation can be reordered or dropped. Generic over
+/// the step, so each operation gets its own loop and is called directly:
+/// the figure includes no loop but its own and no indirect call.
+fn per_op<T: Copy>(start: T, batch: u32, step: impl Fn(T) -> T) -> (f64, f64) {
+    let mut walls = Vec::with_capacity(SAMPLES);
+    let mut counters = Vec::with_capacity(SAMPLES);
+    for sample in 0..WARMUP + SAMPLES {
+        let mut x = std::hint::black_box(start);
+        let before = counter();
+        let clock = Instant::now();
+        for _ in 0..batch {
+            x = step(x);
+        }
+        let elapsed = clock.elapsed().as_nanos();
+        let delta = counter().wrapping_sub(before);
+        std::hint::black_box(x);
+        if sample >= WARMUP {
+            walls.push(elapsed);
+            counters.push(u128::from(delta));
+        }
+    }
+    let (ns, _) = median_spread(&mut walls);
+    let (ticks, _) = median_spread(&mut counters);
+    let batch = f64::from(batch);
+    (ns as f64 / batch, ticks as f64 / batch)
+}
+
+/// Time one extension-field multiplication, squaring and inversion,
+/// starting from the sample key's coefficient.
+fn field_operations<L: Level>(level: Nist, key: &[u8]) {
+    let Some(start) = L::ext_decode(key) else {
+        println!("field level={level} refused=\"the sample key does not decode\"");
+        return;
+    };
+    let fixed = std::hint::black_box(start);
+    let report = |name: &str, batch: u32, (ns, ticks): (f64, f64)| {
+        println!(
+            "field level={level} op={name} batch={batch} samples={SAMPLES} ns_per_op={ns:.1} counter_per_op={ticks:.1}"
+        );
+    };
+    let mul = per_op(start, FIELD_BATCH, |x: L::Ext| x.mul(fixed));
+    report("mul", FIELD_BATCH, mul);
+    let square = per_op(start, FIELD_BATCH, |x: L::Ext| x.square());
+    report("square", FIELD_BATCH, square);
+    // `x ↦ 1/x + c` keeps the chain off the two-cycle of a bare inverse.
+    let inv = per_op(start, INVERSION_BATCH, |x: L::Ext| {
+        x.inv().map_or(fixed, |y| y.add(fixed))
+    });
+    report("inv", INVERSION_BATCH, inv);
 }
 
 fn expected(outcome: Result<(), VerifyError>) -> Result<(), BenchError> {

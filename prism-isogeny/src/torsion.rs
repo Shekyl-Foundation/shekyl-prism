@@ -83,12 +83,12 @@ pub fn difference<L: Level>(
     let xx = p.x.mul(q.x);
     let zz = p.z.mul(q.z);
     let mut bxx = xx.sub(zz);
-    bxx = bxx.mul(bxx).mul(curve.c);
+    bxx = bxx.square().mul(curve.c);
     let xz = xx.add(zz);
     let px_qz = p.x.mul(q.z);
     let pz_qx = p.z.mul(q.x);
     let mut bzz = px_qz.sub(pz_qx);
-    bzz = bzz.mul(bzz).mul(curve.c);
+    bzz = bzz.square().mul(curve.c);
     let mut bxz = xz.mul(px_qz.add(pz_qx)).mul(curve.c);
     let cross = px_qz.mul(pz_qx).mul(curve.a);
     bxz = bxz.add(cross).add(cross);
@@ -96,16 +96,16 @@ pub fn difference<L: Level>(
     // Normalize by `C · conj(C)^2 · conj(P.z)^2 · conj(Q.z)^2`, which makes
     // the denominator a fourth power in `F_p`.
     let mut scale = conjugate::<L>(curve.c);
-    scale = scale.mul(scale).mul(curve.c);
+    scale = scale.square().mul(curve.c);
     let mut pz = conjugate::<L>(p.z);
-    scale = scale.mul(pz.mul(pz));
+    scale = scale.mul(pz.square());
     pz = conjugate::<L>(q.z);
-    scale = scale.mul(pz.mul(pz));
+    scale = scale.mul(pz.square());
     bxx = bxx.mul(scale);
     bxz = bxz.mul(scale);
     bzz = bzz.mul(scale);
 
-    let disc = bxz.mul(bxz).sub(bxx.mul(bzz));
+    let disc = bxz.square().sub(bxx.mul(bzz));
     let root = disc.sqrt()?;
     Some(Xz {
         x: bxz.add(root),

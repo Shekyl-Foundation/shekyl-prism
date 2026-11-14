@@ -51,9 +51,45 @@ fn inverse<F: Field>(mut a: [[F; 4]; 4]) -> Option<[[F; 4]; 4]> {
     Some(b)
 }
 
-fn invert_coords<F: Field>(point: ThetaPoint<F>) -> Option<[F; 4]> {
-    let c = point.coords();
-    Some([c[0].inv()?, c[1].inv()?, c[2].inv()?, c[3].inv()?])
+/// The inverse of every element, by one inversion (Montgomery's trick).
+/// `None` if any element is zero.
+///
+/// The zero test is on each element, not on their product: a zero theta
+/// coordinate is what a crafted signature aims for, and its refusal must
+/// not depend on how the inverses are computed. The results are the same
+/// field elements as one inversion each would give.
+fn invert_all<F: Field>(values: &[F]) -> Option<Vec<F>> {
+    if values.iter().any(|v| v.is_zero()) {
+        return None;
+    }
+    // `prefix[i]` is the product of the elements before `i`.
+    let mut prefix = Vec::with_capacity(values.len());
+    let mut product = F::one();
+    for value in values {
+        prefix.push(product);
+        product = product.mul(*value);
+    }
+    // `suffix` is the inverse of the product of the elements up to `i`.
+    let mut suffix = product.inv()?;
+    let mut inverses = vec![F::zero(); values.len()];
+    for i in (0..values.len()).rev() {
+        inverses[i] = suffix.mul(prefix[i]);
+        suffix = suffix.mul(values[i]);
+    }
+    Some(inverses)
+}
+
+/// The four inverse coordinates of each point, by one inversion for all of
+/// them. `None` if any coordinate of any point is zero.
+fn invert_coords<F: Field>(points: &[ThetaPoint<F>]) -> Option<Vec<[F; 4]>> {
+    let flat: Vec<F> = points.iter().flat_map(|p| p.coords()).collect();
+    let inverses = invert_all(&flat)?;
+    Some(
+        inverses
+            .chunks_exact(4)
+            .map(|c| [c[0], c[1], c[2], c[3]])
+            .collect(),
+    )
 }
 
 fn scaled<F: Field>(point: ThetaPoint<F>, factors: [F; 4]) -> ThetaPoint<F> {
@@ -168,7 +204,7 @@ impl<F: Field> Gluing<F> {
             zero,
             null: valid(hadamard(ThetaPoint::from_coords(abcd)))?,
             // H(H(null_bc)) is projectively null_bc.
-            dual_pre: invert_coords(null_bc)?,
+            dual_pre: invert_coords(&[null_bc])?.pop()?,
         })
     }
 
@@ -259,7 +295,6 @@ impl<F: Field> DualChain<F> {
         let mut null = gluing.null;
         let mut nulls = vec![null];
         let mut steps = Vec::new();
-        let mut dual_pre = Vec::new();
         for _ in 1..length {
             while stack.last()?.1 != 0 {
                 let (pair, remaining) = *stack.last()?;
@@ -270,7 +305,6 @@ impl<F: Field> DualChain<F> {
             }
             let (pair, _) = stack.pop()?;
             let step = isogeny_compute(pair[0], pair[1], false, true, true)?;
-            dual_pre.push(invert_coords(null)?);
             for (pair, remaining) in &mut stack {
                 *pair = pair.map(|p| isogeny_eval(&step, p));
                 *remaining = remaining.checked_sub(1)?;
@@ -279,6 +313,12 @@ impl<F: Field> DualChain<F> {
             nulls.push(null);
             steps.push(step);
         }
+        // The dual of step `i` needs the inverse coordinates of the null
+        // point it started from, `nulls[i]`. One inversion serves the whole
+        // chain. A zero coordinate at any step is refused here and not at
+        // its step; every refusal in this constructor is the same `None`,
+        // and nothing outside it runs in between.
+        let dual_pre = invert_coords(&nulls[..steps.len()])?;
         Some(Self {
             gluing,
             steps,
@@ -306,5 +346,70 @@ impl<F: Field> DualChain<F> {
 
     pub fn matches_dual(&self, other: &Self) -> bool {
         projectively_same(self.null, hadamard(other.null))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{invert_all, invert_coords};
+    use crate::theta::ThetaPoint;
+    use prism_field::{Field, Level, Level1};
+
+    type F = <Level1 as Level>::Ext;
+
+    fn element(n: u64) -> F {
+        // Not in the base field, so the inverses are not either.
+        F::from_u64(n).add(Level1::ext_i().mul(F::from_u64(n + 7)))
+    }
+
+    #[test]
+    fn the_shared_inversion_gives_each_element_its_own_inverse() {
+        for len in [1usize, 2, 4, 5, 8, 100] {
+            let values: Vec<F> = (0..len as u64).map(|n| element(3 * n + 1)).collect();
+            let shared = invert_all(&values).expect("no element is zero");
+            assert_eq!(shared.len(), len);
+            for (value, inverse) in values.iter().zip(&shared) {
+                let own = value.inv().expect("nonzero");
+                assert!(inverse.same(own), "length {len}");
+            }
+        }
+        assert_eq!(invert_all::<F>(&[]).map(|v| v.len()), Some(0));
+    }
+
+    #[test]
+    fn a_zero_in_any_position_is_refused() {
+        for len in [1usize, 4, 9] {
+            for zero in 0..len {
+                let mut values: Vec<F> = (0..len as u64).map(|n| element(n + 2)).collect();
+                values[zero] = F::zero();
+                assert!(invert_all(&values).is_none(), "zero at {zero} of {len}");
+            }
+        }
+    }
+
+    #[test]
+    fn a_zero_theta_coordinate_is_refused_in_each_position_of_each_point() {
+        let good = |n: u64| {
+            ThetaPoint::from_coords([element(n), element(n + 1), element(n + 2), element(n + 3)])
+        };
+        let points = [good(1), good(10), good(20)];
+        let inverses = invert_coords(&points).expect("no coordinate is zero");
+        for (point, inverse) in points.iter().zip(&inverses) {
+            for (c, i) in point.coords().iter().zip(inverse) {
+                assert!(c.mul(*i).same(F::one()));
+            }
+        }
+        for which in 0..points.len() {
+            for coordinate in 0..4 {
+                let mut bad = points;
+                let mut coords = bad[which].coords();
+                coords[coordinate] = F::zero();
+                bad[which] = ThetaPoint::from_coords(coords);
+                assert!(
+                    invert_coords(&bad).is_none(),
+                    "point {which}, coordinate {coordinate}"
+                );
+            }
+        }
     }
 }

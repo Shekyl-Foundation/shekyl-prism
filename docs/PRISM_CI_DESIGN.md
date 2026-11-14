@@ -36,9 +36,10 @@ The benchmark smoke test now requires successful complete verification.
 
 | Job | What it runs | Fails when |
 | --- | --- | --- |
-| `lint` | `cargo fmt --check`; `scripts/ci/check_research_boundary.py`; `cargo clippy --workspace --all-targets --locked -- -D warnings` on the pinned 1.94 toolchain, and again for `prism-compare --features experiments` | format or lint drift; a reduced-width verifier entry point reachable by default |
-| `test-x86_64` | `cargo test --workspace --locked` in debug (overflow checks on) and `--release` | any test, either profile |
+| `lint` | `cargo fmt --check`; `scripts/ci/check_research_boundary.py`; `scripts/ci/check_op_count_isolation.py`; `scripts/ci/check_oracle_isolation.py` (self-test, then the check: the `oracle` feature of `prism-isogeny` is named by the fuzz crate alone and is absent from the default feature graph of `prism-verify`); `cargo clippy --workspace --all-targets --locked -- -D warnings` on the pinned 1.94 toolchain, again for `prism-compare --features experiments`, and again for `prism-field` and `prism-verify` with `--features prism-field/op-count` | format or lint drift; a reduced-width verifier entry point reachable by default |
+| `test-x86_64` | `cargo test --workspace --locked` in debug (overflow checks on) and `--release`; then, in release and by name, the ignored comparison of the Weil pairing with its affine reference on 1,000 full-order pairs a level | any test, either profile; the pairing differs from its reference in a value or a refusal |
 | `test-aarch64` | the same on `ubuntu-24.04-arm` (free for public repos) | the portable `fp2` path disagrees |
+| `op-counts` (x86_64 and aarch64) | the counter's own test, then `scripts/op_counts.sh --check` twice: the field operations of every honest vector and the verdict and cost of every negative must equal `docs/benchmarks/op-counts.txt` and `negative-verdicts.tsv` byte for byte | a verification costs a different number of field operations, a negative is refused differently, or the count depends on the machine or the run |
 | `bench-smoke` | `cargo run --release -p prism-bench`; it already exits non-zero if any sample's outcome isn't the expected refusal. Timings are printed, not judged. | the bench stops timing the path it claims to |
 | `deny` | `cargo deny check` (licences, advisories, sources, bans) under rule 17 | a new crate, licence or advisory |
 | `hygiene` | 1. no AI-attribution trailer in any commit in the PR range (rule 90); 2. copyright header on every `.rs`/`.py`/`.c` (rule 92); 3. every crate inherits `unsafe_code = "forbid"` from `[workspace.lints]` | rule violation |
@@ -55,7 +56,7 @@ Wall clock is about 4–5 min, dominated by the C build when it runs.
 
 | Job | What it runs | Status |
 | --- | --- | --- |
-| `fuzz` | `cargo-fuzz` (nightly toolchain), 10 min per target, **built for `x86_64-unknown-linux-gnu`** (the pinned binary is musl and would otherwise target musl, where ASan is refused): `verify_level::<L>` for each level; public-key decode; signature decode. Corpus cached between runs. **The step fails unless the log shows ≥1,000 executions and the corpus is non-empty** (PR #7). **Implemented:** `scripts/seed_fuzz_corpus.py` seeds all five targets from the 113 honest signatures before fuzzing; verify seeds include the length framing required by each target. | gate (a crash is red; a run that did not execute is red) |
+| `fuzz` | `cargo-fuzz` (nightly toolchain), 10 min per target, **built for `x86_64-unknown-linux-gnu`** (the pinned binary is musl and would otherwise target musl, where ASan is refused): `verify_level::<L>` for each level; public-key decode; signature decode; `field_square` (`square` against `mul`); `weil_matches_affine` (the Weil pairing against the affine loop it replaced, value and refusal). Corpus cached between runs. **The step fails unless the log shows ≥1,000 executions and the corpus is non-empty** (PR #7). **Implemented:** `scripts/seed_fuzz_corpus.py` seeds every target before fuzzing, the verify and decode targets and `field_square` from the 113 honest signatures and `weil_matches_affine` with its own pairs; verify seeds include the length framing required by each target. | gate (a crash is red; a run that did not execute is red) |
 | `differential-prime` | 10,000 random challenge degrees per level from a committed Python script, checked against `sympy.isprime` through a small Rust driver; zero disagreements required (this session's one-off run made permanent) | gate |
 | `big-endian` | `cross test --target s390x-unknown-linux-gnu` under qemu | gate |
 | `c-vectors-full` | the C rebuild and diff, unconditionally | gate |
@@ -81,3 +82,5 @@ RULED by Rick 2026-11-08: an operation-count metric as CI's machine-independent 
 - The bench prints the counts per level. They are deterministic, so CI can fail on an unexplained rise.
 - The Pi run measures cycles per operation once, which turns the counts into a Pi estimate between manual runs.
 - Shared-runner wall time stays printed and unjudged.
+
+Implemented 2026-11-13 as the `op-counts` job. The feature is `op-count` on `prism-field`; no manifest enables it, and `lint` holds that. The counts are exact, so the gate is an exact match with the committed records and a change is explained by committing the new records with the code that caused it. The records and how to read them are in [BENCHMARKING.md](BENCHMARKING.md).

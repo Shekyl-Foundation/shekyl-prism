@@ -1,0 +1,100 @@
+# fp2 use_sum_of_products, off against on. x86_64 development machine, shared.
+# Tree: commit c9df786 plus the squaring change of the commit this file is in; the two
+# binaries differ only in the flag in prism-field/src/lib.rs.
+# rustc 1.94.0 (4a4ef493e 2026-03-02); command: prism-verify-bench (cargo build --release --locked -p prism-bench), three alternating runs.
+RUN 1 sum_of_products=off started 2026-11-13T20:42:18Z load 10.00 21.91 28.62
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=23292672 spread_ns=8395972 median_counter=60822632 counter_spread=21923884
+level=NIST-III outcome=accepted samples=31 median_ns=64875462 spread_ns=6282239 median_counter=169405118 counter_spread=16404400
+level=NIST-V outcome=accepted samples=31 median_ns=142415551 spread_ns=10174822 median_counter=371880294 counter_spread=26569636
+field level=NIST-I op=mul batch=10000 samples=31 ns_per_op=43.4 counter_per_op=113.4
+field level=NIST-I op=square batch=10000 samples=31 ns_per_op=30.6 counter_per_op=80.0
+field level=NIST-I op=inv batch=200 samples=31 ns_per_op=1711.2 counter_per_op=4468.7
+field level=NIST-III op=mul batch=10000 samples=31 ns_per_op=87.2 counter_per_op=227.6
+field level=NIST-III op=square batch=10000 samples=31 ns_per_op=56.6 counter_per_op=147.7
+field level=NIST-III op=inv batch=200 samples=31 ns_per_op=3155.2 counter_per_op=8239.1
+field level=NIST-V op=mul batch=10000 samples=31 ns_per_op=156.9 counter_per_op=409.7
+field level=NIST-V op=square batch=10000 samples=31 ns_per_op=99.8 counter_per_op=260.5
+field level=NIST-V op=inv batch=200 samples=31 ns_per_op=4770.4 counter_per_op=12457.3
+exit 0
+RUN 1 sum_of_products=on started 2026-11-13T20:42:26Z load 9.60 21.63 28.49
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=22184539 spread_ns=3127674 median_counter=57929030 counter_spread=8167356
+level=NIST-III outcome=accepted samples=31 median_ns=66132002 spread_ns=8688702 median_counter=172686272 counter_spread=22688520
+level=NIST-V outcome=accepted samples=31 median_ns=286955101 spread_ns=137250964 median_counter=749307130 counter_spread=358393968
+field level=NIST-I op=mul batch=10000 samples=31 ns_per_op=84.6 counter_per_op=220.9
+field level=NIST-I op=square batch=10000 samples=31 ns_per_op=55.8 counter_per_op=145.7
+field level=NIST-I op=inv batch=200 samples=31 ns_per_op=2964.7 counter_per_op=7742.0
+field level=NIST-III op=mul batch=10000 samples=31 ns_per_op=188.6 counter_per_op=492.6
+field level=NIST-III op=square batch=10000 samples=31 ns_per_op=120.3 counter_per_op=314.2
+field level=NIST-III op=inv batch=200 samples=31 ns_per_op=5681.1 counter_per_op=14835.3
+field level=NIST-V op=mul batch=10000 samples=31 ns_per_op=318.4 counter_per_op=831.5
+field level=NIST-V op=square batch=10000 samples=31 ns_per_op=197.9 counter_per_op=516.9
+field level=NIST-V op=inv batch=200 samples=31 ns_per_op=8673.2 counter_per_op=22648.5
+exit 0
+RUN 2 sum_of_products=off started 2026-11-13T20:42:40Z load 10.50 21.23 28.25
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=26553548 spread_ns=523907 median_counter=69347536 counter_spread=1368132
+level=NIST-III outcome=accepted samples=31 median_ns=73808917 spread_ns=3097928 median_counter=192732256 counter_spread=8088312
+level=NIST-V outcome=accepted samples=31 median_ns=146014943 spread_ns=23628170 median_counter=381278810 counter_spread=61698934
+field level=NIST-I op=mul batch=10000 samples=31 ns_per_op=43.2 counter_per_op=112.8
+field level=NIST-I op=square batch=10000 samples=31 ns_per_op=30.6 counter_per_op=79.8
+field level=NIST-I op=inv batch=200 samples=31 ns_per_op=1691.0 counter_per_op=4415.9
+field level=NIST-III op=mul batch=10000 samples=31 ns_per_op=86.1 counter_per_op=224.9
+field level=NIST-III op=square batch=10000 samples=31 ns_per_op=55.4 counter_per_op=144.8
+field level=NIST-III op=inv batch=200 samples=31 ns_per_op=3081.7 counter_per_op=8047.3
+field level=NIST-V op=mul batch=10000 samples=31 ns_per_op=151.2 counter_per_op=394.8
+field level=NIST-V op=square batch=10000 samples=31 ns_per_op=96.7 counter_per_op=252.5
+field level=NIST-V op=inv batch=200 samples=31 ns_per_op=4587.4 counter_per_op=11979.0
+exit 0
+RUN 2 sum_of_products=on started 2026-11-13T20:42:50Z load 10.41 20.86 28.05
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=22061446 spread_ns=2660739 median_counter=57607670 counter_spread=6948752
+level=NIST-III outcome=accepted samples=31 median_ns=66098855 spread_ns=4741881 median_counter=172599818 counter_spread=12384268
+level=NIST-V outcome=accepted samples=31 median_ns=138357829 spread_ns=26607642 median_counter=361284666 counter_spread=69478692
+field level=NIST-I op=mul batch=10000 samples=31 ns_per_op=37.4 counter_per_op=97.6
+field level=NIST-I op=square batch=10000 samples=31 ns_per_op=29.2 counter_per_op=76.2
+field level=NIST-I op=inv batch=200 samples=31 ns_per_op=1697.2 counter_per_op=4432.1
+field level=NIST-III op=mul batch=10000 samples=31 ns_per_op=96.3 counter_per_op=251.5
+field level=NIST-III op=square batch=10000 samples=31 ns_per_op=53.1 counter_per_op=138.7
+field level=NIST-III op=inv batch=200 samples=31 ns_per_op=3002.2 counter_per_op=7839.7
+field level=NIST-V op=mul batch=10000 samples=31 ns_per_op=163.7 counter_per_op=427.4
+field level=NIST-V op=square batch=10000 samples=31 ns_per_op=95.2 counter_per_op=248.7
+field level=NIST-V op=inv batch=200 samples=31 ns_per_op=4463.0 counter_per_op=11654.2
+exit 0
+RUN 3 sum_of_products=off started 2026-11-13T20:42:58Z load 9.42 20.30 27.79
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=22740725 spread_ns=5071833 median_counter=59381602 counter_spread=13233142
+level=NIST-III outcome=accepted samples=31 median_ns=61072183 spread_ns=12102467 median_counter=159473846 counter_spread=31604250
+level=NIST-V outcome=accepted samples=31 median_ns=137073059 spread_ns=12472829 median_counter=357929668 counter_spread=32569698
+field level=NIST-I op=mul batch=10000 samples=31 ns_per_op=42.6 counter_per_op=111.2
+field level=NIST-I op=square batch=10000 samples=31 ns_per_op=29.7 counter_per_op=77.7
+field level=NIST-I op=inv batch=200 samples=31 ns_per_op=1768.9 counter_per_op=4619.2
+field level=NIST-III op=mul batch=10000 samples=31 ns_per_op=84.9 counter_per_op=221.7
+field level=NIST-III op=square batch=10000 samples=31 ns_per_op=55.2 counter_per_op=144.0
+field level=NIST-III op=inv batch=200 samples=31 ns_per_op=3051.3 counter_per_op=7967.9
+field level=NIST-V op=mul batch=10000 samples=31 ns_per_op=152.7 counter_per_op=398.8
+field level=NIST-V op=square batch=10000 samples=31 ns_per_op=99.5 counter_per_op=259.9
+field level=NIST-V op=inv batch=200 samples=31 ns_per_op=4843.3 counter_per_op=12647.2
+exit 0
+RUN 3 sum_of_products=on started 2026-11-13T20:43:07Z load 10.75 20.22 27.69
+field-backend=scalar
+counter=rdtsc
+level=NIST-I outcome=accepted samples=31 median_ns=22389323 spread_ns=2201855 median_counter=58464018 counter_spread=5749698
+level=NIST-III outcome=accepted samples=31 median_ns=65118909 spread_ns=7420899 median_counter=170040950 counter_spread=19377548
+level=NIST-V outcome=accepted samples=31 median_ns=143041349 spread_ns=107087015 median_counter=373514556 counter_spread=279628760
+field level=NIST-I op=mul batch=10000 samples=31 ns_per_op=38.2 counter_per_op=99.7
+field level=NIST-I op=square batch=10000 samples=31 ns_per_op=29.7 counter_per_op=77.6
+field level=NIST-I op=inv batch=200 samples=31 ns_per_op=1635.4 counter_per_op=4270.6
+field level=NIST-III op=mul batch=10000 samples=31 ns_per_op=97.2 counter_per_op=253.8
+field level=NIST-III op=square batch=10000 samples=31 ns_per_op=54.4 counter_per_op=142.1
+field level=NIST-III op=inv batch=200 samples=31 ns_per_op=3069.1 counter_per_op=8014.4
+field level=NIST-V op=mul batch=10000 samples=31 ns_per_op=164.4 counter_per_op=429.3
+field level=NIST-V op=square batch=10000 samples=31 ns_per_op=99.1 counter_per_op=258.7
+field level=NIST-V op=inv batch=200 samples=31 ns_per_op=4699.9 counter_per_op=12272.8
+exit 0

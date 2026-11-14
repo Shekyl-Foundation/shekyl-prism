@@ -40,10 +40,7 @@ impl<'key, L: Level> KeyIdentity<'key, L> {
             // public, so anyone could sign for it.
             return Err(VerifyError::Origin);
         }
-        if coefficient
-            .mul(coefficient)
-            .same(L::Ext::from_u64(SINGULAR_SQUARE))
-        {
+        if coefficient.square().same(L::Ext::from_u64(SINGULAR_SQUARE)) {
             return Err(VerifyError::Singular);
         }
         Ok(Self {

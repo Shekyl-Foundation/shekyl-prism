@@ -129,7 +129,7 @@ pub fn basis_hint<L: Level>(coefficient: L::Ext) -> Result<BasisHint, VerifyErro
 /// Square `A`: the first `b` for which `1 + b^2` is a non-square in `F_p`
 /// and `x(P) = −A / (1 + i·b)` is on the curve.
 fn nqr_factor_index<L: Level>(coefficient: L::Ext) -> Option<u16> {
-    let square = coefficient.mul(coefficient);
+    let square = coefficient.square();
     (1..=search_bound::<L>()).find(|candidate| {
         let b = u64::from(*candidate);
         if L::Base::from_u64(b * b + 1).is_square() {
@@ -144,7 +144,7 @@ fn nqr_factor_index<L: Level>(coefficient: L::Ext) -> Option<u16> {
         // `−A/z` is a square times a non-square.
         let shift = L::ext_i().mul(L::Ext::from_u64(b));
         let z = L::Ext::one().add(shift);
-        !shift.mul(square).sub(z.mul(z)).is_square()
+        !shift.mul(square).sub(z.square()).is_square()
     })
 }
 
@@ -167,7 +167,7 @@ fn multiple_index<L: Level>(coefficient: L::Ext) -> Option<u16> {
 
 /// `x^3 + A x^2 + x`. A square value means `x` is the abscissa of a point.
 fn montgomery_rhs<L: Level>(coefficient: L::Ext, x: L::Ext) -> L::Ext {
-    let square = x.mul(x);
+    let square = x.square();
     square.mul(x).add(coefficient.mul(square)).add(x)
 }
 
@@ -223,7 +223,7 @@ mod tests {
         let mut squares = 0;
         let mut nonsquares = 0;
         for (re, im, coefficient) in coefficients::<L>() {
-            if coefficient.mul(coefficient).same(L::Ext::from_u64(4)) {
+            if coefficient.square().same(L::Ext::from_u64(4)) {
                 continue;
             }
             let is_square = coefficient.is_square();

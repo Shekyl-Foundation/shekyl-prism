@@ -291,8 +291,8 @@ pub fn gluing_eval<F: Field>(gluing: &Gluing<F>, point: CoupleJac<F>) -> ThetaPo
     };
     let t1 = apply_isomorphism(&gluing.matrix, t1, true);
     let t2 = apply_isomorphism(&gluing.matrix, t2, false);
-    let t1 = ThetaPoint::from_coords(t1.coords().map(|coord| coord.mul(coord)));
-    let t2 = ThetaPoint::from_coords(t2.coords().map(|coord| coord.mul(coord)));
+    let t1 = ThetaPoint::from_coords(t1.coords().map(|coord| coord.square()));
+    let t2 = ThetaPoint::from_coords(t2.coords().map(|coord| coord.square()));
     let difference = ThetaPoint {
         x: t1.x.sub(t2.x),
         y: t1.y.sub(t2.y),
