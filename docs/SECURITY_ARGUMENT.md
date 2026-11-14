@@ -29,7 +29,9 @@ unsalted collision replay. [SALT_COMPARISON.md](SALT_COMPARISON.md) holds
 the measurements, including both attacks carried out against the real
 signer and verifier at reduced challenge widths.
 
-Using the paper's field rows still does not import its security levels.
+Using the paper's field rows still does not import its security levels,
+and since ePrint 2026/1486 those rows are no longer the sizes anyone
+chooses for a new parameter set (§9).
 The salt changes the hash-side term only. The polarized-map, primality
 and encoding obligations A1 to A3 (§4), the isogeny assumption (§6) and
 the signer's side channels are exactly as open as before.
@@ -464,9 +466,103 @@ calculate best classical or quantum attack costs.
 | Challenge and concrete costs | Second-preimage and signer-collision work, memory, and other classical/quantum attacks for these rows | OPEN; §5 and §6 give the random-oracle estimates |
 | Formal reduction | Resource-bounded proof, including candidates, errors and QROM if claimed | OPEN; event decomposition and a mapped published bound only |
 | Implementation security | Review native secrets, timing, allocations, abnormal exits and compiler/backend pin | OPEN; no constant-time claim |
+| Field sizes | Parameter sets after ePrint 2026/1486 (§9) | OPEN; the three rows are the sizes from before that paper, pending a ruling |
 | Independent approval | Named cryptographic reviewer, reviewed commit, findings and signed-off scope | PENDING; no independent cryptographic approval recorded |
 
 No external reviewer has been contacted by this work.
+
+## 9. The isogeny problem after ePrint 2026/1486
+
+Added 2026-11-14. Nothing in this section is a result of this work; it
+records published results that bear on the field sizes, and what they
+mean for the three rows here. The texts were read in the copies under
+`docs/papers/`, and section numbers refer to those copies.
+
+**The algorithm.** [Wesolowski, ePrint 2026/1486](https://eprint.iacr.org/2026/1486)
+proves, under a heuristic assumption on the smoothness of certain random
+integers, that a non-scalar endomorphism of a supersingular curve over
+`F_{p²}` can be found in expected time and memory `p^(1/3+o(1))`
+(Theorem 1.1), and with it the endomorphism ring problem and the isogeny
+problem (Corollary 1.2). The previous best was `p^(1/2)·(log p)^O(1)`.
+Its §1.1 lists PRISM by name among the schemes affected, with the SQIsign
+family, and says the algorithm "does not constitute a complete break of
+these cryptosystems, but warrants a careful reevaluation of their
+concrete security parameters". Its experiments are over
+`p = 5·2^248 − 1`, which is the first row here. Its §4.1 gives rough
+lower estimates of its own cost at round sizes of `log₂ p` (256, 384,
+512); they are the paper's figures for those sizes and its own cost
+model, and are not restated here as a level for any row.
+
+**Memory.** The algorithm's memory is essentially as large as its time.
+The paper notes that the van Oorschot–Wiener tradeoff interpolates
+between it and the earlier low-memory algorithms. [Mamah, ePrint
+2026/1821](https://eprint.iacr.org/2026/1821) studies that tradeoff and
+concludes that, over the memory ranges it considers practical, the new
+algorithm is expected to improve on the state of the art only at NIST
+level I; that at higher levels its memory requirement offsets the
+asymptotic advantage; and that with high parallelization the van
+Oorschot–Wiener variant can recover it. It also treats quantum
+claw-finding. Only its abstract and introduction were read for this
+section.
+
+**The SQIsign response.** The SQIsign specification of 2026-09-01
+(version 3.0; its primes are the ones later papers call the round-3
+primes) replaced its primes. Its parameter
+sets (§5.2) are `3·2^324 − 1`, `27·2^500 − 1` and `17·2^664 − 1` for
+NIST levels I, III and V. The specification models the attack as a
+time–memory compromise `t²·w = Õ(p)`, calls scaling the primes by a full
+factor of 3/2 "an overreaction", describes its choice as
+"middle-of-the-road", and says it expects the new primes to meet the
+targets "barring new improvements such as a memory-free `p^(1/3+o(1))`
+attack". It also lists more aggressive and more conservative primes per
+level and asks for cryptanalysis of them.
+
+**What this means here.**
+
+- The three rows of this repository are `5·2^248 − 1`, `65·2^376 − 1`
+  and `27·2^500 − 1`. They are the SQIsign primes from before this
+  algorithm, which ePrint 2026/443 adopted for PRISM. This repository
+  took them from the pinned C reference and has not changed them.
+- The algorithm applies to key recovery directly. A PRISM secret key is
+  knowledge of the endomorphism ring of the public curve `E_vk`: the
+  signer needs it to produce an isogeny of a prescribed prime degree,
+  and anyone who computes it can sign. Corollary 1.2 is an algorithm for
+  exactly that problem. No property of the salt, the challenge width,
+  the encoding or the verifier bears on it.
+- Two of the three primes still appear in the round-3 specification, in
+  different places: `27·2^500 − 1`, the largest row here, is its NIST
+  level III prime, and `65·2^376 − 1`, the middle row here, is in its
+  list of more conservative alternatives for level I. `5·2^248 − 1`
+  appears in neither. This is a statement about which primes that
+  specification names, not a security level for a row of this
+  repository: the labels I, III and V here were never certified levels
+  (§1), and this section does not assign new ones.
+- **The parameter question is open, pending a ruling.** Which primes
+  this repository implements, what each is called, and which one a
+  Shekyl authorization would use are not decided. Until they are, every
+  size, timing and count in this repository is for the pre-2026/1486
+  rows.
+
+**Another implementation of the §5 variant.** Ray, "ECLIPSE: Strongly
+Unforgeable Isogeny Signatures from the Prime-Degree Variant of PRISM",
+ePrint 2026/2312, describes an implementation of the §5 construction
+with the §6 salt on the round-3 primes, in Rust with a SageMath model,
+and states that to its author's knowledge none existed before it. Its
+abstract leaves a formal strong-unforgeability argument to future work.
+It is not among the copies under `docs/papers/`; a copy dated 2026-10-08
+was read for this section in its abstract, its list of contributions and
+its parameter paragraph only. Nothing in it is imported as security of
+this signer, and what in this repository is new relative to it has not
+been established (`docs/lab/LEDGER.md`, C12 and O13).
+
+Copies read, SHA-256: 2026/1486
+`ccc85233147b4de39f093b70c6c29864ff13e9d1becb5f1f1b4c81416b73d3d7`;
+2026/1821
+`f5d4ac9b376002a3de32c6276ce67ff114d997f3826f2e214c3e2239ff7710b4`;
+the SQIsign specification of 2026-09-01
+`843912e5eb3dee20288af9fc9f01c0e1f1055834d3ce87c4687795c13adfd73c`;
+2026/2312 (not bundled)
+`89d4f31163ebcf4a09a22ac195e93ffc8a06578a702fca4107f34d728823c211`.
 
 ## Appendix A. The unsalted protocol
 
