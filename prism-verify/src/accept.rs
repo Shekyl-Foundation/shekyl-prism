@@ -6,7 +6,7 @@
 //! Two adapted chains and the complete image check of the Sage model.
 use crate::stage::Stage;
 use crate::{AffinePoint, VerifyError};
-use prism_field::{Field, Level};
+use prism_field::{Field, ParameterSet};
 use prism_isogeny::dual_chain::{canonical_four, product_null, Couple, DualChain};
 use prism_isogeny::jac::{add, dbl, dbl_iter, lift_basis, to_xz, Jac};
 use prism_isogeny::modular::{challenge_matrices, Mat4, Residue};
@@ -15,7 +15,7 @@ use prism_isogeny::pairing::{mul, weil};
 use prism_isogeny::theta_base::base_change_theta;
 use prism_isogeny::torsion::EvenBasis;
 
-fn affine<L: Level>(point: AffinePoint<L>) -> Jac<L::Ext> {
+fn affine<L: ParameterSet>(point: AffinePoint<L>) -> Jac<L::Ext> {
     Jac {
         x: point.x,
         y: point.y,
@@ -30,7 +30,7 @@ fn negative<F: Field>(p: Jac<F>) -> Jac<F> {
     }
 }
 
-/// `[2^k] X` for every `k` a scalar of this level can use.
+/// `[2^k] X` for every `k` a scalar of this set can use.
 ///
 /// The ladders of one verification share their base points: each kernel
 /// generator is a combination of the same four, and the image check scales
@@ -202,7 +202,7 @@ pub(crate) struct Lifted<F> {
 /// the basis does not lift.
 ///
 /// Verifier only, variable time. Never call with a secret scalar.
-pub(crate) fn lift<L: Level>(
+pub(crate) fn lift<L: ParameterSet>(
     vk: L::Ext,
     even: &EvenBasis<L::Ext>,
     sig: L::Ext,
@@ -231,7 +231,7 @@ type Basis<F> = [Jac<F>; 4];
 
 /// The challenge as a residue and the kernel basis `[P₁, R₁, P₂, R₂′]`,
 /// with `R₂′ = [q⁻¹] R₂`.
-fn basis_points<L: Level>(
+fn basis_points<L: ParameterSet>(
     lifted: &Lifted<L::Ext>,
     scalar: &[u8],
 ) -> Result<(Residue, Basis<L::Ext>), VerifyError> {
@@ -244,7 +244,7 @@ fn basis_points<L: Level>(
 }
 
 /// A table for each basis point, on its own curve.
-fn doublings<L: Level>(
+fn doublings<L: ParameterSet>(
     curves: [Montgomery<L::Ext>; 2],
     points: [Jac<L::Ext>; 4],
 ) -> [Doublings<L::Ext>; 4] {
@@ -263,7 +263,10 @@ struct Built<F> {
 /// Both chains, and the three points whose images are compared.
 ///
 /// Verifier only, variable time. Never call with a secret scalar.
-fn build<L: Level>(lifted: &Lifted<L::Ext>, scalar: &[u8]) -> Result<Built<L::Ext>, VerifyError> {
+fn build<L: ParameterSet>(
+    lifted: &Lifted<L::Ext>,
+    scalar: &[u8],
+) -> Result<Built<L::Ext>, VerifyError> {
     Stage::Kernel.enter();
     let Lifted {
         curves,
@@ -333,7 +336,10 @@ fn build<L: Level>(lifted: &Lifted<L::Ext>, scalar: &[u8]) -> Result<Built<L::Ex
 /// has passed before this is called.
 ///
 /// Verifier only, variable time. Never call with a secret scalar.
-pub(crate) fn check<L: Level>(lifted: &Lifted<L::Ext>, scalar: &[u8]) -> Result<(), VerifyError> {
+pub(crate) fn check<L: ParameterSet>(
+    lifted: &Lifted<L::Ext>,
+    scalar: &[u8],
+) -> Result<(), VerifyError> {
     let Built {
         chains: [chain1, chain2],
         images,
@@ -359,7 +365,7 @@ pub(crate) fn check<L: Level>(lifted: &Lifted<L::Ext>, scalar: &[u8]) -> Result<
 mod tests {
     use super::*;
     use crate::{basis_hint, ChallengeScalar, KeyIdentity, Salt};
-    use prism_field::{Level1, Level3, Level5};
+    use prism_field::{P248, P376, P500};
     use prism_isogeny::{
         theta::{projectively_same, ThetaPoint},
         torsion::even_basis,
@@ -374,7 +380,7 @@ mod tests {
         }
         value
     }
-    fn ext<L: Level>(text: &str) -> L::Ext {
+    fn ext<L: ParameterSet>(text: &str) -> L::Ext {
         let text = text.replace(' ', "");
         if let Some((im, re)) = text.split_once("*i+") {
             L::ext_from_base(decimal::<L::Base>(im))
@@ -390,7 +396,7 @@ mod tests {
             .map(|p| u8::from_str_radix(std::str::from_utf8(p).unwrap(), 16).unwrap())
             .collect()
     }
-    fn known<L: Level>(vector: &str, nulls: &str) {
+    fn known<L: ParameterSet>(vector: &str, nulls: &str) {
         let field = |name: &str| {
             vector
                 .lines()
@@ -446,27 +452,27 @@ mod tests {
     }
     #[test]
     fn both_chains_match_every_sage_null_point() {
-        known::<Level1>(
+        known::<P248>(
             include_str!("../testdata/s5_lvl1.txt"),
             include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl1_nulls.json"),
         );
-        known::<Level1>(
+        known::<P248>(
             include_str!("../testdata/s5_lvl1b.txt"),
             include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl1b_nulls.json"),
         );
-        known::<Level3>(
+        known::<P376>(
             include_str!("../testdata/s5_lvl3.txt"),
             include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl3_nulls.json"),
         );
-        known::<Level3>(
+        known::<P376>(
             include_str!("../testdata/s5_lvl3b.txt"),
             include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl3b_nulls.json"),
         );
-        known::<Level5>(
+        known::<P500>(
             include_str!("../testdata/s5_lvl5.txt"),
             include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl5_nulls.json"),
         );
-        known::<Level5>(
+        known::<P500>(
             include_str!("../testdata/s5_lvl5b.txt"),
             include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl5b_nulls.json"),
         );
@@ -511,7 +517,7 @@ mod tests {
 
     /// The kernel from shared doublings against one ladder per coefficient,
     /// on the vector's own matrices and on `random` sets of scalars.
-    fn kernels_agree<L: Level>(text: &str, name: &str, random: u32) {
+    fn kernels_agree<L: ParameterSet>(text: &str, name: &str, random: u32) {
         let field = |row: &str| text.lines().find_map(|l| l.strip_prefix(row)).unwrap();
         let key = hex(field("A "));
         let id = KeyIdentity::<L>::decode(&key).unwrap();
@@ -601,12 +607,12 @@ mod tests {
             // Random sets on the six primary vectors; the rest check their
             // own two matrices.
             let random = if name.starts_with("s5_lvl") { 6 } else { 0 };
-            let level = text.lines().find_map(|l| l.strip_prefix("level ")).unwrap();
-            match level {
-                "NIST-I" => kernels_agree::<Level1>(&text, &name, random),
-                "NIST-III" => kernels_agree::<Level3>(&text, &name, random),
-                "NIST-V" => kernels_agree::<Level5>(&text, &name, random),
-                other => panic!("{name}: level {other}"),
+            let label = text.lines().find_map(|l| l.strip_prefix("level ")).unwrap();
+            match crate::Set::from_legacy_label(label) {
+                Ok(crate::Set::P248) => kernels_agree::<P248>(&text, &name, random),
+                Ok(crate::Set::P376) => kernels_agree::<P376>(&text, &name, random),
+                Ok(crate::Set::P500) => kernels_agree::<P500>(&text, &name, random),
+                Err(_) => panic!("{name}: label {label}"),
             }
         }
     }
@@ -635,7 +641,7 @@ mod tests {
     fn a_table_multiplies_as_the_ladder_does() {
         let text = include_str!("../testdata/s5_lvl1.txt");
         let f = |row: &str| {
-            Level1::ext_decode(&hex(text
+            P248::ext_decode(&hex(text
                 .lines()
                 .find_map(|l| l.strip_prefix(row))
                 .unwrap()))
@@ -645,7 +651,7 @@ mod tests {
         let point = Jac {
             x: f("Px "),
             y: f("Py "),
-            z: <Level1 as Level>::Ext::one(),
+            z: <P248 as ParameterSet>::Ext::one(),
         };
         let table = Doublings::new(curve, point, 248);
         assert!(table.times(&[]).is_infinity() && table.times(&[0; 31]).is_infinity());
@@ -674,7 +680,7 @@ mod tests {
     /// Each has a base change at both primitive fourth roots of unity, and
     /// also at a root of `−3`, the one `zeta` at which the search can fail
     /// at all: none of the 256 is a matrix it fails on.
-    fn every_reachable_base_change_exists<L: Level>() {
+    fn every_reachable_base_change_exists<L: ParameterSet>() {
         let root = L::Ext::from_u64(3).negate().sqrt().unwrap();
         let zetas = [L::ext_i(), L::ext_i().negate(), root, root.negate()];
         let mut tried = 0;
@@ -702,8 +708,8 @@ mod tests {
 
     #[test]
     fn no_base_change_the_verifier_can_ask_for_is_refused() {
-        every_reachable_base_change_exists::<Level1>();
-        every_reachable_base_change_exists::<Level3>();
-        every_reachable_base_change_exists::<Level5>();
+        every_reachable_base_change_exists::<P248>();
+        every_reachable_base_change_exists::<P376>();
+        every_reachable_base_change_exists::<P500>();
     }
 }

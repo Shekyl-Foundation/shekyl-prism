@@ -7,7 +7,7 @@
 
 use core::cmp::Ordering;
 
-use prism_field::{Field, Level, Salt};
+use prism_field::{Field, ParameterSet, Salt};
 
 use crate::VerifyError;
 
@@ -21,14 +21,14 @@ mod at {
     pub(super) const P_Y: usize = 2;
     pub(super) const Q_X: usize = 3;
     pub(super) const Q_Y: usize = 4;
-    /// Field elements in the layout. `Level::SIGNATURE_ELEMENTS` agrees with
+    /// Field elements in the layout. `ParameterSet::SIGNATURE_ELEMENTS` agrees with
     /// this, which [`super::Response::decode`] asserts at compile time.
     pub(super) const COUNT: usize = 5;
 }
 
 /// A point of the signature's basis image, in affine coordinates.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct AffinePoint<L: Level> {
+pub struct AffinePoint<L: ParameterSet> {
     pub x: L::Ext,
     pub y: L::Ext,
 }
@@ -39,22 +39,22 @@ pub struct AffinePoint<L: Level> {
 /// by `verify`, rather than by this byte decoder.
 /// The full verifier checks both image components after the adapted chains.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Response<L: Level> {
+pub struct Response<L: ParameterSet> {
     /// `A_sig`, the Montgomery coefficient of `E_sig`.
     pub curve: L::Ext,
     pub p: AffinePoint<L>,
     pub q: AffinePoint<L>,
-    /// Public salt. Every byte pattern of the row's salt length is valid.
+    /// Public salt. Every byte pattern of the set's salt length is valid.
     pub salt: L::Salt,
 }
 
-impl<L: Level> Response<L> {
+impl<L: ParameterSet> Response<L> {
     /// Decode `signature`: `Length`, then `Canonical`.
     pub fn decode(signature: &[u8]) -> Result<Self, VerifyError> {
         const {
             assert!(
                 L::SIGNATURE_ELEMENTS == at::COUNT,
-                "the level's element count is not this module's layout"
+                "the set's element count is not this module's layout"
             );
         }
         if signature.len() != L::SIGNATURE_LEN {
@@ -86,7 +86,7 @@ impl<L: Level> Response<L> {
     }
 }
 
-fn element<L: Level>(signature: &[u8], position: usize) -> Result<L::Ext, VerifyError> {
+fn element<L: ParameterSet>(signature: &[u8], position: usize) -> Result<L::Ext, VerifyError> {
     let at = position * L::FP2_LEN;
     signature
         .get(at..at + L::FP2_LEN)
@@ -94,7 +94,7 @@ fn element<L: Level>(signature: &[u8], position: usize) -> Result<L::Ext, Verify
         .ok_or(VerifyError::Canonical)
 }
 
-fn salt<L: Level>(signature: &[u8]) -> Result<L::Salt, VerifyError> {
+fn salt<L: ParameterSet>(signature: &[u8]) -> Result<L::Salt, VerifyError> {
     let at = L::SIGNATURE_ELEMENTS * L::FP2_LEN;
     L::Salt::from_bytes(signature.get(at..).ok_or(VerifyError::Length)?).ok_or(VerifyError::Length)
 }
@@ -103,13 +103,13 @@ fn salt<L: Level>(signature: &[u8]) -> Result<L::Salt, VerifyError> {
 ///
 /// `y = 0` is an order-2 point: it cannot be a basis image, and it is its own
 /// negation, so no inequality would separate it.
-pub fn canonical_sign<L: Level>(y: L::Ext) -> bool {
+pub fn canonical_sign<L: ParameterSet>(y: L::Ext) -> bool {
     !y.is_zero() && ext_less::<L>(y, y.negate())
 }
 
 /// `<_{F_{p^2}}`: the real part as an integer in `[0, p)`, then the
 /// imaginary part.
-pub fn ext_less<L: Level>(left: L::Ext, right: L::Ext) -> bool {
+pub fn ext_less<L: ParameterSet>(left: L::Ext, right: L::Ext) -> bool {
     let (left_re, left_im) = L::ext_parts(left);
     let (right_re, right_im) = L::ext_parts(right);
     match little_endian_cmp(&L::base_encode(left_re), &L::base_encode(right_re)) {

@@ -6,7 +6,7 @@
 //! The public key's identity, and every refusal that is a property of the
 //! key alone.
 
-use prism_field::{Field, Level};
+use prism_field::{Field, ParameterSet};
 
 use crate::VerifyError;
 
@@ -21,12 +21,12 @@ const SINGULAR_SQUARE: u64 = 4;
 /// the verifier checks that basis's order and span before pairing/chains.
 /// Both verification and index search hash these exact canonical bytes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct KeyIdentity<'key, L: Level> {
+pub struct KeyIdentity<'key, L: ParameterSet> {
     bytes: &'key [u8],
     coefficient: L::Ext,
 }
 
-impl<'key, L: Level> KeyIdentity<'key, L> {
+impl<'key, L: ParameterSet> KeyIdentity<'key, L> {
     /// Decode `public_key`, refusing the lengths and curves no key may have.
     ///
     /// `Length`, then `Canonical`, then `Origin`, then `Singular`.

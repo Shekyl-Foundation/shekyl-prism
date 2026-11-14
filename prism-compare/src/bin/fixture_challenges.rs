@@ -8,8 +8,9 @@
 /// walks `limits::SALT_COUNTERS` in steps of this size.
 const CHALLENGE_BATCH: u64 = 512;
 
-use prism_field::{Level, Level1, Level3, Level5, Salt};
+use prism_field::{ParameterSet, Salt, P248, P376, P500};
 use prism_signer::limits;
+use prism_verify::Set;
 use prism_verify::{ChallengeScalar, KeyIdentity};
 fn hex(s: &str) -> Option<Vec<u8>> {
     if !s.len().is_multiple_of(2) {
@@ -23,7 +24,7 @@ fn hex(s: &str) -> Option<Vec<u8>> {
 fn encode(b: &[u8]) -> String {
     b.iter().map(|b| format!("{b:02x}")).collect()
 }
-fn run<L: Level>(key: &[u8], seed: &[u8; limits::STREAM_LEN], start: u64) -> Option<()> {
+fn run<L: ParameterSet>(key: &[u8], seed: &[u8; limits::STREAM_LEN], start: u64) -> Option<()> {
     let id = KeyIdentity::<L>::decode(key).ok()?;
     let randomness = [0u8; limits::CALLER_RANDOMNESS_LEN];
     for counter in start..(start.saturating_add(CHALLENGE_BATCH)).min(limits::SALT_COUNTERS) {
@@ -43,18 +44,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let a: Vec<_> = std::env::args().skip(1).collect();
     if a.len() != 4 {
         return Err(
-            "fixture_challenges <row> <public-key-hex> <PUBLIC-test-seed-hex> <counter>".into(),
+            "fixture_challenges <legacy-label> <public-key-hex> <PUBLIC-test-seed-hex> <counter>"
+                .into(),
         );
     }
     let key = hex(&a[1]).ok_or("key hex")?;
     let bytes = hex(&a[2]).ok_or("seed hex")?;
     let seed: [u8; limits::STREAM_LEN] = bytes.try_into().map_err(|_| "seed length")?;
     let start = a[3].parse()?;
-    let ok = match a[0].as_str() {
-        "NIST-I" => run::<Level1>(&key, &seed, start),
-        "NIST-III" => run::<Level3>(&key, &seed, start),
-        "NIST-V" => run::<Level5>(&key, &seed, start),
-        _ => None,
+    // The row is read from committed data, so it is the legacy label.
+    let ok = match Set::from_legacy_label(&a[0]) {
+        Ok(Set::P248) => run::<P248>(&key, &seed, start),
+        Ok(Set::P376) => run::<P376>(&key, &seed, start),
+        Ok(Set::P500) => run::<P500>(&key, &seed, start),
+        Err(_) => None,
     };
-    ok.ok_or("row/key refused".into())
+    ok.ok_or("label or key refused".into())
 }

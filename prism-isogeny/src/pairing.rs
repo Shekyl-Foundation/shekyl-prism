@@ -447,7 +447,7 @@ mod tests {
         use super::super::{mul, oracle, weil};
         use crate::jac::{add, dbl_iter, Jac};
         use crate::montgomery::Montgomery;
-        use prism_field::{Field, Level, Level1, Level3, Level5};
+        use prism_field::{Field, ParameterSet, P248, P376, P500};
 
         const VECTORS: [&str; 6] = [
             include_str!("../../prism-verify/testdata/s5_lvl1.txt"),
@@ -458,7 +458,7 @@ mod tests {
             include_str!("../../prism-verify/testdata/s5_lvl5b.txt"),
         ];
 
-        fn element<L: Level>(text: &str, name: &str) -> L::Ext {
+        fn element<L: ParameterSet>(text: &str, name: &str) -> L::Ext {
             let hex = text
                 .lines()
                 .find_map(|line| line.strip_prefix(name))
@@ -471,11 +471,11 @@ mod tests {
             L::ext_decode(&bytes).expect("a committed element is canonical")
         }
 
-        type Point<L> = Jac<<L as Level>::Ext>;
-        type Curve<L> = Montgomery<<L as Level>::Ext>;
+        type Point<L> = Jac<<L as ParameterSet>::Ext>;
+        type Curve<L> = Montgomery<<L as ParameterSet>::Ext>;
 
         /// The response curve and its two points, a basis of the `2^e`-torsion.
-        fn basis<L: Level>(text: &str) -> (Curve<L>, Point<L>, Point<L>) {
+        fn basis<L: ParameterSet>(text: &str) -> (Curve<L>, Point<L>, Point<L>) {
             let at = |x, y| Jac {
                 x: element::<L>(text, x),
                 y: element::<L>(text, y),
@@ -500,7 +500,7 @@ mod tests {
             }
 
             /// A scalar below `2^e`, with its low bit as asked.
-            fn scalar<L: Level>(&mut self, odd: Option<bool>) -> Vec<u8> {
+            fn scalar<L: ParameterSet>(&mut self, odd: Option<bool>) -> Vec<u8> {
                 let mut bytes = vec![0u8; (L::E as usize).div_ceil(8)];
                 for chunk in bytes.chunks_mut(8) {
                     let word = self.next().to_le_bytes();
@@ -548,7 +548,7 @@ mod tests {
 
         /// `pairs` full-order independent pairs, which must have a value,
         /// then `pairs / 4` unconstrained pairs, which may be refused.
-        fn random<L: Level>(text: &str, seed: u64, pairs: u32) {
+        fn random<L: ParameterSet>(text: &str, seed: u64, pairs: u32) {
             let (curve, p, q) = basis::<L>(text);
             let mut stream = Stream(seed);
             for n in 0..pairs {
@@ -579,7 +579,7 @@ mod tests {
 
         /// Inputs a forger would choose. Each must be treated alike by both
         /// loops; `values` counts those that have a pairing value at all.
-        fn adversarial<L: Level>(text: &str, seed: u64) -> u32 {
+        fn adversarial<L: ParameterSet>(text: &str, seed: u64) -> u32 {
             let (curve, p, q) = basis::<L>(text);
             let e = L::E;
             let negate = |point: Jac<L::Ext>| Jac {
@@ -684,7 +684,7 @@ mod tests {
             values
         }
 
-        fn every_level(run: impl Fn(usize, &str)) {
+        fn every_set(run: impl Fn(usize, &str)) {
             for (n, text) in VECTORS.iter().enumerate() {
                 run(n, text);
             }
@@ -692,12 +692,12 @@ mod tests {
 
         #[test]
         fn adversarial_inputs_are_refused_or_valued_alike() {
-            every_level(|n, text| {
+            every_set(|n, text| {
                 let seed = 0x5052_4953_4d00_0000 + n as u64;
                 let values = match n / 2 {
-                    0 => adversarial::<Level1>(text, seed),
-                    1 => adversarial::<Level3>(text, seed),
-                    _ => adversarial::<Level5>(text, seed),
+                    0 => adversarial::<P248>(text, seed),
+                    1 => adversarial::<P376>(text, seed),
+                    _ => adversarial::<P500>(text, seed),
                 };
                 // The honest basis has a value, so the set is not all
                 // refusals; most of the rest must be refused.
@@ -707,22 +707,22 @@ mod tests {
 
         #[test]
         fn a_sample_of_random_pairs_agrees() {
-            every_level(|n, text| match n / 2 {
-                0 => random::<Level1>(text, 11 + n as u64, 8),
-                1 => random::<Level3>(text, 11 + n as u64, 8),
-                _ => random::<Level5>(text, 11 + n as u64, 8),
+            every_set(|n, text| match n / 2 {
+                0 => random::<P248>(text, 11 + n as u64, 8),
+                1 => random::<P376>(text, 11 + n as u64, 8),
+                _ => random::<P500>(text, 11 + n as u64, 8),
             });
         }
 
-        /// 1,000 full-order pairs and 250 unconstrained ones per level.
+        /// 1,000 full-order pairs and 250 unconstrained ones per set.
         /// Minutes in a debug build, so CI runs it in release by name.
         #[test]
         #[ignore = "long: run in release with --ignored"]
-        fn a_thousand_random_pairs_per_level_agree() {
-            every_level(|n, text| match n / 2 {
-                0 => random::<Level1>(text, 1000 + n as u64, 500),
-                1 => random::<Level3>(text, 1000 + n as u64, 500),
-                _ => random::<Level5>(text, 1000 + n as u64, 500),
+        fn a_thousand_random_pairs_per_set_agree() {
+            every_set(|n, text| match n / 2 {
+                0 => random::<P248>(text, 1000 + n as u64, 500),
+                1 => random::<P376>(text, 1000 + n as u64, 500),
+                _ => random::<P500>(text, 1000 + n as u64, 500),
             });
         }
     }

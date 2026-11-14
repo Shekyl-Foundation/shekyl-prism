@@ -23,7 +23,7 @@
 //! cases, and [`C_HINT_MAX_INDEX`] is an encoding fact rather than a bound
 //! on the search.
 
-use prism_field::{Field, Level};
+use prism_field::{Field, ParameterSet};
 
 use crate::VerifyError;
 
@@ -35,25 +35,26 @@ use crate::VerifyError;
 /// does for every key.
 pub const C_HINT_MAX_INDEX: u16 = 127;
 
-/// Candidate indices the search tries before refusing: `2λ`.
+/// Candidate indices the search tries before refusing: the set's
+/// [`ParameterSet::SEARCH_BOUND`], `N` below.
 ///
 /// The C loops without a bound. A verifier cannot, because whoever picks `A`
-/// picks the search length, so the bound is derived from the level's own
-/// security parameter rather than from the width of the C's hint byte:
+/// picks the search length. The bound belongs to the parameter set and not
+/// to the width of the C's hint byte:
 ///
-/// | Branch | Trials in `2λ` candidates | Failure probability |
+/// | Branch | Trials in `N` candidates | Failure probability |
 /// | --- | --- | --- |
-/// | `A` not a square | all `2λ`, each on the curve with probability about 1/2 | about `2^-2λ` |
-/// | `A` a square | about `λ`, the rest spent on the `1 + b^2` non-square filter | about `2^-λ` |
+/// | `A` not a square | all `N`, each on the curve with probability about 1/2 | about `2^-N` |
+/// | `A` a square | about `N/2`, the rest spent on the `1 + b^2` non-square filter | about `2^-(N/2)` |
 ///
 /// So a key this verifier refuses and the C accepts arises with probability
-/// at most about `2^-λ` — the level's own security target, and the bar the
-/// C's own comment aims at when it calls the fallback negligible. The
-/// earlier seven-bit ceiling put the square branch at about `2^-63`
-/// regardless of level, which is a weaker claim than the scheme's.
-pub fn search_bound<L: Level>() -> u16 {
-    // `L::LAMBDA` is 128, 192 or 256, so `2λ` is always a `u16`.
-    u16::try_from(2 * L::LAMBDA).expect("2λ fits a u16 at every level")
+/// at most about `2^-(N/2)`: `2^-128`, `2^-192` and `2^-256` at the three
+/// sets. The figures are heuristic, from treating the candidates as
+/// independent; they are the argument the bound was chosen by and are not
+/// proved or measured here. The earlier seven-bit ceiling put the square
+/// branch at about `2^-63` at every set.
+pub fn search_bound<L: ParameterSet>() -> u16 {
+    L::SEARCH_BOUND
 }
 
 /// The basis index, in the form the C reference compresses into one byte.
@@ -65,7 +66,7 @@ pub struct BasisHint {
 
 impl BasisHint {
     /// `b` when `A` is a square, `n` when it is not. At least 1, and at most
-    /// [`search_bound`] for the level it was derived at.
+    /// [`search_bound`] for the set it was derived at.
     pub fn index(self) -> u16 {
         self.index
     }
@@ -111,7 +112,7 @@ impl BasisHint {
 /// [`VerifyError::Basis`]. That bound is the only divergence from the C
 /// reference's unbounded loop, and `docs/VERIFIER_SPEC.md` records what it
 /// costs.
-pub fn basis_hint<L: Level>(coefficient: L::Ext) -> Result<BasisHint, VerifyError> {
+pub fn basis_hint<L: ParameterSet>(coefficient: L::Ext) -> Result<BasisHint, VerifyError> {
     let coefficient_is_square = coefficient.is_square();
     let index = if coefficient_is_square {
         nqr_factor_index::<L>(coefficient)
@@ -128,7 +129,7 @@ pub fn basis_hint<L: Level>(coefficient: L::Ext) -> Result<BasisHint, VerifyErro
 
 /// Square `A`: the first `b` for which `1 + b^2` is a non-square in `F_p`
 /// and `x(P) = −A / (1 + i·b)` is on the curve.
-fn nqr_factor_index<L: Level>(coefficient: L::Ext) -> Option<u16> {
+fn nqr_factor_index<L: ParameterSet>(coefficient: L::Ext) -> Option<u16> {
     let square = coefficient.square();
     (1..=search_bound::<L>()).find(|candidate| {
         let b = u64::from(*candidate);
@@ -154,7 +155,7 @@ fn nqr_factor_index<L: Level>(coefficient: L::Ext) -> Option<u16> {
 /// search passes 255 while `x` keeps accumulating `A`. The abscissa it ends
 /// on is still the one this index names, because `x` is what the loop tests
 /// and the counter is only reported back as a hint.
-fn multiple_index<L: Level>(coefficient: L::Ext) -> Option<u16> {
+fn multiple_index<L: ParameterSet>(coefficient: L::Ext) -> Option<u16> {
     let mut x = coefficient;
     for candidate in 1..=search_bound::<L>() {
         if montgomery_rhs::<L>(coefficient, x).is_square() {
@@ -166,7 +167,7 @@ fn multiple_index<L: Level>(coefficient: L::Ext) -> Option<u16> {
 }
 
 /// `x^3 + A x^2 + x`. A square value means `x` is the abscissa of a point.
-fn montgomery_rhs<L: Level>(coefficient: L::Ext, x: L::Ext) -> L::Ext {
+fn montgomery_rhs<L: ParameterSet>(coefficient: L::Ext, x: L::Ext) -> L::Ext {
     let square = x.square();
     square.mul(x).add(coefficient.mul(square)).add(x)
 }
@@ -174,13 +175,13 @@ fn montgomery_rhs<L: Level>(coefficient: L::Ext, x: L::Ext) -> L::Ext {
 #[cfg(test)]
 mod tests {
     use super::{basis_hint, montgomery_rhs, search_bound, BasisHint, C_HINT_MAX_INDEX};
-    use prism_field::{Field, Level, Level1, Level3, Level5};
+    use prism_field::{Field, ParameterSet, P248, P376, P500};
 
     /// `x(P)` for an index, by the definition in `docs/VERIFIER_SPEC.md`:
     /// `−A/(1 + i·b)` for a square `A`, and `n·A` otherwise. The search
     /// itself never builds this point, so this is the definition rather than
     /// a second copy of the predicate.
-    fn named_point<L: Level>(coefficient: L::Ext, hint: BasisHint) -> Option<L::Ext> {
+    fn named_point<L: ParameterSet>(coefficient: L::Ext, hint: BasisHint) -> Option<L::Ext> {
         let index = u64::from(hint.index());
         if hint.coefficient_is_square() {
             let z = L::Ext::one().add(L::ext_i().mul(L::Ext::from_u64(index)));
@@ -192,7 +193,7 @@ mod tests {
 
     /// `true` when the index names a point of the curve and clears the
     /// square-`A` branch's `1 + b^2` filter.
-    fn qualifies<L: Level>(coefficient: L::Ext, index: u16, is_square: bool) -> bool {
+    fn qualifies<L: ParameterSet>(coefficient: L::Ext, index: u16, is_square: bool) -> bool {
         let hint = BasisHint {
             index,
             coefficient_is_square: is_square,
@@ -209,7 +210,7 @@ mod tests {
     /// in `F_{p^2}` — `a^{(p^2-1)/2} = (a^{p-1})^{(p+1)/2} = 1` — so a family
     /// of small integers would exercise the square branch only. The
     /// imaginary part is what reaches the other one.
-    fn coefficients<L: Level>() -> impl Iterator<Item = (u64, u64, L::Ext)> {
+    fn coefficients<L: ParameterSet>() -> impl Iterator<Item = (u64, u64, L::Ext)> {
         (1u64..=6).flat_map(|re| {
             (0u64..=6).map(move |im| {
                 let value = L::ext_from_base(L::Base::from_u64(re))
@@ -219,7 +220,7 @@ mod tests {
         })
     }
 
-    fn check_level<L: Level>() {
+    fn check_set<L: ParameterSet>() {
         let mut squares = 0;
         let mut nonsquares = 0;
         for (re, im, coefficient) in coefficients::<L>() {
@@ -270,22 +271,22 @@ mod tests {
 
     #[test]
     fn the_derived_index_is_the_smallest_on_curve_index() {
-        check_level::<Level1>();
-        check_level::<Level3>();
-        check_level::<Level5>();
+        check_set::<P248>();
+        check_set::<P376>();
+        check_set::<P500>();
     }
 
     #[test]
     fn the_search_bound_is_twice_the_security_parameter() {
-        // The bound is the level's own, not the C hint byte's width. Every
-        // level searches past the seven-bit ceiling the C can encode.
-        assert_eq!(search_bound::<Level1>(), 256);
-        assert_eq!(search_bound::<Level3>(), 384);
-        assert_eq!(search_bound::<Level5>(), 512);
+        // The bound is the set's own, not the C hint byte's width. Every
+        // set searches past the seven-bit ceiling the C can encode.
+        assert_eq!(search_bound::<P248>(), 256);
+        assert_eq!(search_bound::<P376>(), 384);
+        assert_eq!(search_bound::<P500>(), 512);
         for bound in [
-            search_bound::<Level1>(),
-            search_bound::<Level3>(),
-            search_bound::<Level5>(),
+            search_bound::<P248>(),
+            search_bound::<P376>(),
+            search_bound::<P500>(),
         ] {
             assert!(bound > C_HINT_MAX_INDEX);
         }
@@ -310,7 +311,7 @@ mod tests {
         assert_eq!(BasisHint::from_c_byte(1), None);
         // An index past the ceiling has no byte: the C stores the signal and
         // its verifier re-searches, which is what this module always does.
-        for index in [C_HINT_MAX_INDEX + 1, search_bound::<Level5>()] {
+        for index in [C_HINT_MAX_INDEX + 1, search_bound::<P500>()] {
             let hint = BasisHint {
                 index,
                 coefficient_is_square: true,

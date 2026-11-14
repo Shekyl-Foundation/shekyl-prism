@@ -10,8 +10,8 @@
 // table from `src/precomp/ref/lvl1/hd_splitting_transforms.c` (Apache-2.0;
 // Antonin Leroux and the SQIsign authors). See `NOTICE`.
 //
-// The ten matrices and the two index tables are identical at every NIST
-// level in that tree. Verification calls splitting with `randomize` false,
+// The ten matrices and the two index tables are identical at every
+// parameter set in that tree. Verification calls splitting with `randomize` false,
 // so the six signing-only normalisation matrices are not in this port.
 
 //! Identify a theta codomain with an elliptic product.
@@ -286,12 +286,12 @@ fn couple_coordinate<F: Field>(null_n: F, null_m: F, point_u: F, point_v: F) -> 
 mod tests {
     use super::{elliptic_product, montgomery_couple, splitting_compute};
     use crate::theta::ThetaPoint;
-    use prism_field::{Field, Level, Level1};
+    use prism_field::{Field, ParameterSet, P248};
 
-    type Ext = <Level1 as Level>::Ext;
+    type Ext = <P248 as ParameterSet>::Ext;
 
     fn real(value: u64) -> Ext {
-        Level1::ext_from_base(<Level1 as Level>::Base::from_u64(value))
+        P248::ext_from_base(<P248 as ParameterSet>::Base::from_u64(value))
     }
 
     #[test]
@@ -303,8 +303,7 @@ mod tests {
             z: real(3),
             t: real(6),
         };
-        let splitting =
-            splitting_compute(null_point, Level1::ext_i(), None).expect("one structure");
+        let splitting = splitting_compute(null_point, P248::ext_i(), None).expect("one structure");
         assert_eq!(splitting.index, 9);
         let product = elliptic_product(splitting.null_point).expect("product");
         // A/C = −2(x^4 + y^4)/(x^4 − y^4), read on the split null point.
@@ -329,7 +328,7 @@ mod tests {
             z: real(3),
             t: real(4),
         };
-        assert!(splitting_compute(null_point, Level1::ext_i(), None).is_none());
+        assert!(splitting_compute(null_point, P248::ext_i(), None).is_none());
     }
 
     #[test]
@@ -340,6 +339,6 @@ mod tests {
             z: real(3),
             t: real(6),
         };
-        assert!(splitting_compute(null_point, Level1::ext_i(), Some(8)).is_none());
+        assert!(splitting_compute(null_point, P248::ext_i(), Some(8)).is_none());
     }
 }

@@ -9,14 +9,14 @@
 //! reporter (`examples/op_counts.rs`), so both see the same inputs under
 //! the same names. Every case is deterministic in the vector's text.
 
-use prism_field::{Field, Level, Salt};
+use prism_field::{Field, ParameterSet, Salt};
 use prism_isogeny::{
     jac::{add, dbl_iter, to_xz, Jac},
     montgomery::Montgomery,
     pairing::mul,
 };
 use prism_verify::{
-    signature::canonical_sign, AffinePoint, ChallengeScalar, KeyIdentity, Nist, Response,
+    signature::canonical_sign, AffinePoint, ChallengeScalar, KeyIdentity, Response, Set,
     VerifyError,
 };
 use std::{
@@ -36,7 +36,7 @@ fn hex(text: &str) -> Vec<u8> {
         .collect()
 }
 /// Public key, message and decoded response of one vector file.
-pub fn vector<L: Level>(text: &str) -> (Vec<u8>, Vec<u8>, Response<L>) {
+pub fn vector<L: ParameterSet>(text: &str) -> (Vec<u8>, Vec<u8>, Response<L>) {
     let pk = hex(field(text, "A "));
     let mut sig = Vec::new();
     for name in ["E ", "Px ", "Py ", "Qx ", "Qy "] {
@@ -49,9 +49,9 @@ pub fn vector<L: Level>(text: &str) -> (Vec<u8>, Vec<u8>, Response<L>) {
         Response::decode(&sig).unwrap(),
     )
 }
-/// The level a vector file names.
-pub fn level(text: &str) -> Nist {
-    field(text, "level ").parse().unwrap()
+/// The set a vector file names.
+pub fn set(text: &str) -> Set {
+    Set::from_legacy_label(field(text, "level ")).unwrap()
 }
 /// Every committed honest vector, sorted by path.
 pub fn files() -> Vec<PathBuf> {
@@ -65,7 +65,7 @@ pub fn files() -> Vec<PathBuf> {
     files.sort();
     files
 }
-/// The six vectors the negatives are derived from, two keys per level.
+/// The six vectors the negatives are derived from, two keys per set.
 pub fn primary() -> Vec<PathBuf> {
     let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata");
     ["1", "1b", "3", "3b", "5", "5b"]
@@ -84,14 +84,14 @@ pub struct Case {
     pub allowed: &'static [VerifyError],
 }
 
-fn point<L: Level>(p: AffinePoint<L>) -> Jac<L::Ext> {
+fn point<L: ParameterSet>(p: AffinePoint<L>) -> Jac<L::Ext> {
     Jac {
         x: p.x,
         y: p.y,
         z: L::Ext::one(),
     }
 }
-fn affine<L: Level>(p: Jac<L::Ext>) -> AffinePoint<L> {
+fn affine<L: ParameterSet>(p: Jac<L::Ext>) -> AffinePoint<L> {
     let inv = p.z.inv().unwrap();
     let inv2 = inv.square();
     AffinePoint {
@@ -99,7 +99,7 @@ fn affine<L: Level>(p: Jac<L::Ext>) -> AffinePoint<L> {
         y: p.y.mul(inv2).mul(inv),
     }
 }
-fn normalize<L: Level>(mut r: Response<L>) -> Response<L> {
+fn normalize<L: ParameterSet>(mut r: Response<L>) -> Response<L> {
     if !canonical_sign::<L>(r.p.y) {
         r.p.y = r.p.y.negate();
         r.q.y = r.q.y.negate();
@@ -115,7 +115,7 @@ const TRANSLATE: &[VerifyError] = &[
 const EXCLUDED_MODEL: &[VerifyError] = &[VerifyError::Singular, VerifyError::Model];
 
 /// Every negative derived from one honest vector, in a fixed order.
-pub fn negatives<L: Level>(text: &str) -> Vec<Case> {
+pub fn negatives<L: ParameterSet>(text: &str) -> Vec<Case> {
     let (pk, msg, r) = vector::<L>(text);
     let curve = Montgomery::normalized(r.curve);
     let id = KeyIdentity::<L>::decode(&pk).unwrap();
@@ -317,7 +317,7 @@ pub fn negatives<L: Level>(text: &str) -> Vec<Case> {
         signature: other.encode(),
         allowed: &[VerifyError::Image],
     });
-    let other_key = prism_verify::reference_key(level(text))
+    let other_key = prism_verify::reference_key(set(text))
         .unwrap()
         .public_key
         .clone();

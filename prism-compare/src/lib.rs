@@ -5,14 +5,19 @@
 
 //! Research-only archived unsalted-v1 hashing. Never a production dependency.
 #![forbid(unsafe_code)]
-use prism_field::Level;
+use prism_field::ParameterSet;
 use prism_verify::KeyIdentity;
 use sha3::{
     digest::{core_api::CoreWrapper, ExtendableOutput, Update, XofReader},
     CShake256, CShake256Core,
 };
 
-pub fn unsalted<L: Level>(key: &[u8], message: &[u8], index: u16, bits: u32) -> Option<Vec<u8>> {
+pub fn unsalted<L: ParameterSet>(
+    key: &[u8],
+    message: &[u8],
+    index: u16,
+    bits: u32,
+) -> Option<Vec<u8>> {
     KeyIdentity::<L>::decode(key).ok()?;
     if bits == 0 || bits > L::CHALLENGE_BITS {
         return None;
@@ -29,7 +34,7 @@ pub fn unsalted<L: Level>(key: &[u8], message: &[u8], index: u16, bits: u32) -> 
     Some(bytes)
 }
 
-pub fn first_prime<L: Level>(key: &[u8], message: &[u8]) -> Option<(u16, Vec<u8>)> {
+pub fn first_prime<L: ParameterSet>(key: &[u8], message: &[u8]) -> Option<(u16, Vec<u8>)> {
     for index in 0..=u16::MAX {
         let scalar = unsalted::<L>(key, message, index, L::CHALLENGE_BITS)?;
         if prism_verify::degree_is_prime(L::E - 2, &scalar) {
@@ -43,7 +48,7 @@ pub fn first_prime<L: Level>(key: &[u8], message: &[u8]) -> Option<(u16, Vec<u8>
 /// algebraic verifier. The salt padding is ignored by verify_scalar;
 /// archived hashing, including the actual carried index, happens here.
 #[cfg(feature = "experiments")]
-pub fn verify_unsalted<L: Level>(
+pub fn verify_unsalted<L: ParameterSet>(
     key: &[u8],
     message: &[u8],
     signature: &[u8],
@@ -82,7 +87,8 @@ pub fn decode(text: &str) -> Option<Vec<u8>> {
         .collect()
 }
 
-/// One archived unsalted vector: level name, message, key, the five
+/// One archived unsalted vector: its `level` field (the legacy label),
+/// message, key, the five
 /// response elements in wire order, and the carried index.
 pub struct Archived {
     pub file: String,
@@ -135,7 +141,7 @@ pub fn archived_vectors() -> Vec<Archived> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prism_field::{Level1, Level3, Level5};
+    use prism_field::{P248, P376, P500};
     use std::path::{Path, PathBuf};
     fn hex(s: &str) -> Vec<u8> {
         s.as_bytes()
@@ -158,7 +164,7 @@ mod tests {
         assert_eq!(out.len(), 113);
         out
     }
-    fn check<L: Level>(rows: &std::collections::HashMap<&str, &str>) {
+    fn check<L: ParameterSet>(rows: &std::collections::HashMap<&str, &str>) {
         let key = hex(rows["A"]);
         let j: u16 = rows["j"].parse().unwrap();
         let scalar = unsalted::<L>(&key, rows["message"].as_bytes(), j, L::CHALLENGE_BITS).unwrap();
@@ -185,11 +191,11 @@ mod tests {
             let text = std::fs::read_to_string(p).unwrap();
             let rows: std::collections::HashMap<_, _> =
                 text.lines().filter_map(|s| s.split_once(' ')).collect();
-            match rows["level"] {
-                "NIST-I" => check::<Level1>(&rows),
-                "NIST-III" => check::<Level3>(&rows),
-                "NIST-V" => check::<Level5>(&rows),
-                _ => panic!("row"),
+            match prism_verify::Set::from_legacy_label(rows["level"]) {
+                Ok(prism_verify::Set::P248) => check::<P248>(&rows),
+                Ok(prism_verify::Set::P376) => check::<P376>(&rows),
+                Ok(prism_verify::Set::P500) => check::<P500>(&rows),
+                Err(_) => panic!("row"),
             }
         }
     }

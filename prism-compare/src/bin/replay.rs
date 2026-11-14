@@ -15,7 +15,7 @@ use prism_compare::{
     encode,
     native::{self, Unsalted},
 };
-use prism_field::{Level, Level1, Salt};
+use prism_field::{ParameterSet, Salt, P248};
 use prism_signer::{limits, SecretSeed};
 use sha3::{
     digest::{core_api::CoreWrapper, ExtendableOutput, Update, XofReader},
@@ -23,7 +23,7 @@ use sha3::{
 };
 use std::{collections::HashMap, path::PathBuf, time::Instant};
 
-type L = Level1;
+type L = P248;
 struct Template {
     base: CShake256,
     bits: u32,
@@ -123,7 +123,7 @@ fn run(dir: &std::path::Path, trial: u64, bits: u32) -> Result<(), Box<dyn std::
     }
     let seed = SecretSeed::from_bytes([0x42; limits::STREAM_LEN]);
     let session = native::open::<L>(dir.join("prism_signer_lvl1"), &seed)?;
-    let zero = <L as Level>::Salt::zero();
+    let zero = <L as ParameterSet>::Salt::zero();
     // Unsalted: the attacker collides two messages offline at index 0, the
     // archived signer signs the first, and the same bytes are submitted for
     // the second. A collision the signer cannot sign costs the attacker a

@@ -10,7 +10,7 @@
 //! Integers modulo `2^e` and the 4×4 matrices of the accept path.
 //!
 //! `e` is the torsion exponent, at most 500, so eight `u64` limbs cover
-//! every level. With `t = s⁻¹` modulo `2^e` and columns in
+//! every set. With `t = s⁻¹` modulo `2^e` and columns in
 //! `(b1, b2, b3, b4)`,
 //!
 //! ```text
@@ -385,7 +385,7 @@ mod tests {
     }
 
     #[test]
-    fn the_known_answer_matrices_match_at_every_level() {
+    fn the_known_answer_matrices_match_at_every_set() {
         agrees(
             include_str!("../testdata/s5_model/s5_lvl1_matrices.json"),
             248,

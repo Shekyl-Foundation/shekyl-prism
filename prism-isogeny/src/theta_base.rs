@@ -7,7 +7,7 @@
 // `pkg/basis_change/base_change_dim2.py` (Apache-2.0, Pierrick Dartois).
 // See `NOTICE`.
 
-//! Level-2 theta coordinates after a symplectic base change of `A[4]`.
+//! ParameterSet-2 theta coordinates after a symplectic base change of `A[4]`.
 //!
 //! The matrix is in `Sp_4(Z/4Z)`, entries `0..3`, row then column. `zeta`
 //! is `e_4` of the product basis. The result is the matrix `N` such that
@@ -120,9 +120,9 @@ pub fn base_change_theta<F: Field>(matrix: [[u8; 4]; 4], zeta: F) -> Option<[[F;
 #[cfg(test)]
 mod tests {
     use super::{base_change_theta, nonvanishing};
-    use prism_field::{Field, Level, Level1, Level3, Level5};
+    use prism_field::{Field, ParameterSet, P248, P376, P500};
 
-    fn digits<L: Level>(text: &str, negative: bool) -> L::Base {
+    fn digits<L: ParameterSet>(text: &str, negative: bool) -> L::Base {
         let mut bytes = vec![0u8; L::FP_LEN];
         for byte in text.bytes() {
             let mut carry = u16::from(byte - b'0');
@@ -140,7 +140,7 @@ mod tests {
         }
     }
 
-    fn sage_fp2<L: Level>(text: &str) -> L::Ext {
+    fn sage_fp2<L: ParameterSet>(text: &str) -> L::Ext {
         let text = text.replace(' ', "");
         if text == "0" {
             return L::Ext::zero();
@@ -228,7 +228,7 @@ mod tests {
         rows
     }
 
-    fn agrees<L: Level>(file: &str) {
+    fn agrees<L: ParameterSet>(file: &str) {
         let marker = "\"e4\": \"";
         let at = file.find(marker).expect("e4");
         let rest = &file[at + marker.len()..];
@@ -252,12 +252,12 @@ mod tests {
 
     #[test]
     fn the_theta_base_change_matches_the_closed_form_files() {
-        agrees::<Level1>(include_str!("../testdata/s5_model/s5_lvl1_matrices.json"));
-        agrees::<Level1>(include_str!("../testdata/s5_model/s5_lvl1b_matrices.json"));
-        agrees::<Level3>(include_str!("../testdata/s5_model/s5_lvl3_matrices.json"));
-        agrees::<Level3>(include_str!("../testdata/s5_model/s5_lvl3b_matrices.json"));
-        agrees::<Level5>(include_str!("../testdata/s5_model/s5_lvl5_matrices.json"));
-        agrees::<Level5>(include_str!("../testdata/s5_model/s5_lvl5b_matrices.json"));
+        agrees::<P248>(include_str!("../testdata/s5_model/s5_lvl1_matrices.json"));
+        agrees::<P248>(include_str!("../testdata/s5_model/s5_lvl1b_matrices.json"));
+        agrees::<P376>(include_str!("../testdata/s5_model/s5_lvl3_matrices.json"));
+        agrees::<P376>(include_str!("../testdata/s5_model/s5_lvl3b_matrices.json"));
+        agrees::<P500>(include_str!("../testdata/s5_model/s5_lvl5_matrices.json"));
+        agrees::<P500>(include_str!("../testdata/s5_model/s5_lvl5b_matrices.json"));
     }
 
     /// The two blocks the search reads, from the eight entries of the
@@ -304,7 +304,7 @@ mod tests {
         ]
     }
 
-    fn succeeds_for_every_matrix<L: Level>() {
+    fn succeeds_for_every_matrix<L: ParameterSet>() {
         let arbitrary =
             L::Ext::from_u64(0x9e37_79b9_7f4a_7c15).add(L::ext_i().mul(L::Ext::from_u64(41)));
         let cases = [
@@ -334,15 +334,15 @@ mod tests {
     /// The search does not fail for a `zeta` that is not a primitive fourth
     /// root of unity, whatever the matrix: not for `1`, `−1` or `0`, and not
     /// for two arbitrary elements; nor at the two primitive roots. Every one
-    /// of the `4^8` right halves is tried at each, at every level, so this
+    /// of the `4^8` right halves is tried at each, at every set, so this
     /// covers every matrix that is not symplectic and the all-zero matrix.
     /// The function returns a matrix for all of them; it does not check its
     /// inputs.
     #[test]
     fn the_search_succeeds_for_every_matrix_when_zeta_squared_is_not_minus_three() {
-        succeeds_for_every_matrix::<Level1>();
-        succeeds_for_every_matrix::<Level3>();
-        succeeds_for_every_matrix::<Level5>();
+        succeeds_for_every_matrix::<P248>();
+        succeeds_for_every_matrix::<P376>();
+        succeeds_for_every_matrix::<P500>();
     }
 
     /// Named cases of the test above, through the public function: the
@@ -350,11 +350,11 @@ mod tests {
     /// right columns are equal), each at a primitive fourth root and at `1`.
     #[test]
     fn a_matrix_comes_back_for_the_zero_matrix_and_for_one_that_is_not_symplectic() {
-        type F = <Level1 as Level>::Ext;
+        type F = <P248 as ParameterSet>::Ext;
         let not_symplectic = [[1u8; 4]; 4];
         let (c, d) = ([[1, 1], [1, 1]], [[1, 1], [1, 1]]);
         assert!(!symplectic_half(c, d));
-        for zeta in [Level1::ext_i(), F::one()] {
+        for zeta in [P248::ext_i(), F::one()] {
             assert!(base_change_theta([[0u8; 4]; 4], zeta).is_some());
             assert!(base_change_theta(not_symplectic, zeta).is_some());
         }
@@ -362,8 +362,8 @@ mod tests {
 
     /// The one way the search fails: `zeta² = −3`, and one of 1,152 right
     /// halves. The function returns `None` for each of them, and none of
-    /// them is the right half of a symplectic matrix. At every level.
-    fn fails_only_at_a_root_of_minus_three<L: Level>() {
+    /// them is the right half of a symplectic matrix. At every set.
+    fn fails_only_at_a_root_of_minus_three<L: ParameterSet>() {
         let root = L::Ext::from_u64(3)
             .negate()
             .sqrt()
@@ -400,8 +400,8 @@ mod tests {
 
     #[test]
     fn the_search_fails_only_at_a_root_of_minus_three_and_then_returns_none() {
-        fails_only_at_a_root_of_minus_three::<Level1>();
-        fails_only_at_a_root_of_minus_three::<Level3>();
-        fails_only_at_a_root_of_minus_three::<Level5>();
+        fails_only_at_a_root_of_minus_three::<P248>();
+        fails_only_at_a_root_of_minus_three::<P376>();
+        fails_only_at_a_root_of_minus_three::<P500>();
     }
 }

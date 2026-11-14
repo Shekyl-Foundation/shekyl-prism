@@ -3,9 +3,9 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! `square` is `mul` by itself, in both fields at every level.
+//! `square` is `mul` by itself, in both fields at every set.
 
-use prism_field::{Field, Level, Level1, Level3, Level5};
+use prism_field::{Field, ParameterSet, P248, P376, P500};
 
 /// xorshift64*: a fixed stream, so a failure names its sample.
 struct Stream(u64);
@@ -19,10 +19,10 @@ impl Stream {
     }
 
     /// A base-field element from `FP_LEN` stream bytes with the top byte
-    /// cleared. `2^(8·(FP_LEN−1))` is below `p` at every level, so the
+    /// cleared. `2^(8·(FP_LEN−1))` is below `p` at every set, so the
     /// bytes are canonical, and the values cover all but the top of the
     /// range; the named elements below cover the top.
-    fn base<L: Level>(&mut self) -> L::Base {
+    fn base<L: ParameterSet>(&mut self) -> L::Base {
         let mut bytes = vec![0u8; L::FP_LEN];
         for chunk in bytes.chunks_mut(8) {
             let word = self.next().to_le_bytes();
@@ -32,7 +32,7 @@ impl Stream {
         L::base_decode(&bytes).expect("a value below 2^(8(len-1)) is canonical")
     }
 
-    fn ext<L: Level>(&mut self) -> L::Ext {
+    fn ext<L: ParameterSet>(&mut self) -> L::Ext {
         let re = L::ext_from_base(self.base::<L>());
         let im = L::ext_from_base(self.base::<L>());
         re.add(im.mul(L::ext_i()))
@@ -43,7 +43,7 @@ fn agree<F: Field>(x: F, what: &str) {
     assert!(x.square().same(x.mul(x)), "{what}");
 }
 
-fn level<L: Level>(seed: u64) {
+fn set<L: ParameterSet>(seed: u64) {
     let one = L::Ext::one();
     let minus_one = one.negate();
     let i = L::ext_i();
@@ -80,17 +80,17 @@ fn level<L: Level>(seed: u64) {
 
 #[test]
 fn square_equals_mul_by_itself() {
-    level::<Level1>(0x5348_454b_594c_0001);
-    level::<Level3>(0x5348_454b_594c_0003);
-    level::<Level5>(0x5348_454b_594c_0005);
+    set::<P248>(0x5348_454b_594c_0001);
+    set::<P376>(0x5348_454b_594c_0003);
+    set::<P500>(0x5348_454b_594c_0005);
 }
 
 /// The comparison can fail: a squaring that dropped the cross term would
 /// agree on the base field embedded in the extension and nowhere else.
 #[test]
 fn the_comparison_distinguishes_a_wrong_square() {
-    let x = <Level1 as Level>::Ext::one().add(Level1::ext_i());
-    let (re, im) = Level1::ext_parts(x);
-    let wrong = Level1::ext_from_base(re.square().sub(im.square()));
+    let x = <P248 as ParameterSet>::Ext::one().add(P248::ext_i());
+    let (re, im) = P248::ext_parts(x);
+    let wrong = P248::ext_from_base(re.square().sub(im.square()));
     assert!(!wrong.same(x.mul(x)));
 }

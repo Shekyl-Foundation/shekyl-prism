@@ -5,27 +5,28 @@
 
 //! The challenge scalar the verifier derives, for the Sage accept model.
 //!
-//! `s5_challenge <I|III|V> <A-hex> <message> <salt-hex>` prints the
+//! `s5_challenge <level-field> <A-hex> <message> <salt-hex>` prints the
 //! little-endian scalar and `prime` or `composite`. The scalar is
 //! [`ChallengeScalar::derive`] at `e′ − 1` bits, and the degree is
 //! the verifier's own Baillie–PSW test. The model shells out to this so a
 //! negative's `s` is the verifier's `s`, not a second hash.
 
+use prism_verify::Set;
 use std::env;
 use std::process::ExitCode;
 
-use prism_field::{Level, Level1, Level3, Level5, Salt};
+use prism_field::{ParameterSet, Salt, P248, P376, P500};
 use prism_verify::{ChallengeScalar, KeyIdentity};
 
 fn main() -> ExitCode {
     let mut args = env::args().skip(1);
-    let (level, coefficient, message, salt_hex) =
+    let (set, coefficient, message, salt_hex) =
         match (args.next(), args.next(), args.next(), args.next()) {
-            (Some(level), Some(coefficient), Some(message), Some(salt_hex)) => {
-                (level, coefficient, message, salt_hex)
+            (Some(set), Some(coefficient), Some(message), Some(salt_hex)) => {
+                (set, coefficient, message, salt_hex)
             }
             _ => {
-                eprintln!("usage: s5_challenge <I|III|V> <A-hex> <message> <salt-hex>");
+                eprintln!("usage: s5_challenge <level-field> <A-hex> <message> <salt-hex>");
                 return ExitCode::from(2);
             }
         };
@@ -33,18 +34,19 @@ fn main() -> ExitCode {
         eprintln!("s5_challenge: trailing arguments");
         return ExitCode::from(2);
     }
-    match level.as_str() {
-        "I" | "NIST-I" => emit::<Level1>(&coefficient, &message, &salt_hex),
-        "III" | "NIST-III" => emit::<Level3>(&coefficient, &message, &salt_hex),
-        "V" | "NIST-V" => emit::<Level5>(&coefficient, &message, &salt_hex),
-        _ => {
-            eprintln!("level is I, III, or V");
+    // The Sage model passes the `level` field of the vector it is checking.
+    match Set::from_legacy_label(&set) {
+        Ok(Set::P248) => emit::<P248>(&coefficient, &message, &salt_hex),
+        Ok(Set::P376) => emit::<P376>(&coefficient, &message, &salt_hex),
+        Ok(Set::P500) => emit::<P500>(&coefficient, &message, &salt_hex),
+        Err(_) => {
+            eprintln!("s5_challenge: the first argument is a vector's level field");
             ExitCode::from(2)
         }
     }
 }
 
-fn emit<L: Level>(coefficient: &str, message: &str, salt_hex: &str) -> ExitCode {
+fn emit<L: ParameterSet>(coefficient: &str, message: &str, salt_hex: &str) -> ExitCode {
     let Ok(key) = decode_hex(coefficient) else {
         eprintln!("s5_challenge: A is hex");
         return ExitCode::from(2);
@@ -54,7 +56,7 @@ fn emit<L: Level>(coefficient: &str, message: &str, salt_hex: &str) -> ExitCode 
         return ExitCode::from(2);
     }
     let Ok(identity) = KeyIdentity::<L>::decode(&key) else {
-        eprintln!("s5_challenge: A is not a key this level accepts");
+        eprintln!("s5_challenge: A is not a key this set accepts");
         return ExitCode::from(1);
     };
     let Ok(salt_bytes) = decode_hex(salt_hex) else {

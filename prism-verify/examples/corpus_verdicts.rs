@@ -5,17 +5,18 @@
 //! The verdict of every file of a fuzz corpus, for comparing two builds.
 //!
 //! ```text
-//! cargo run --release --locked -p prism-verify --example corpus_verdicts -- 1 fuzz/corpus/verify_level_1
+//! cargo run --release --locked -p prism-verify --example corpus_verdicts -- p248 fuzz/corpus/verify_level_1
 //! ```
 //!
-//! The arguments are the level (1, 3 or 5) and a directory. Each file is
+//! The arguments are the set (`p248`, `p376` or `p500`) and a directory. Each file is
 //! read the way the `verify_level_*` fuzz targets read their input: once
 //! as key, message and signature all at once, and once split by the two
 //! little-endian lengths in its first four bytes. One line per file, in
 //! name order: the file name and the two verdicts. A behaviour-preserving
 //! change gives the same output before and after.
 
-use prism_field::{Level, Level1, Level3, Level5};
+use prism_field::{ParameterSet, P248, P376, P500};
+use prism_verify::Set;
 use prism_verify::{verify, VerifyError};
 use std::path::PathBuf;
 
@@ -43,7 +44,7 @@ fn show(verdict: Result<(), VerifyError>) -> String {
     }
 }
 
-fn run<L: Level>(files: &[PathBuf]) -> Result<(), String> {
+fn run<L: ParameterSet>(files: &[PathBuf]) -> Result<(), String> {
     for path in files {
         let data = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
         let whole = verify::<L>(&data, &data, &data);
@@ -61,8 +62,8 @@ fn run<L: Level>(files: &[PathBuf]) -> Result<(), String> {
 
 fn main() -> std::process::ExitCode {
     let arguments: Vec<String> = std::env::args().skip(1).collect();
-    let [level, directory] = arguments.as_slice() else {
-        eprintln!("corpus_verdicts <level 1|3|5> <directory>");
+    let [set, directory] = arguments.as_slice() else {
+        eprintln!("corpus_verdicts <p248|p376|p500> <directory>");
         return std::process::ExitCode::from(2);
     };
     let mut files: Vec<PathBuf> = match std::fs::read_dir(directory) {
@@ -77,11 +78,11 @@ fn main() -> std::process::ExitCode {
         eprintln!("corpus_verdicts: {directory} holds no file");
         return std::process::ExitCode::FAILURE;
     }
-    let outcome = match level.as_str() {
-        "1" => run::<Level1>(&files),
-        "3" => run::<Level3>(&files),
-        "5" => run::<Level5>(&files),
-        _ => Err("level is 1, 3 or 5".into()),
+    let outcome = match set.parse::<Set>() {
+        Ok(Set::P248) => run::<P248>(&files),
+        Ok(Set::P376) => run::<P376>(&files),
+        Ok(Set::P500) => run::<P500>(&files),
+        Err(unknown) => Err(unknown.to_string()),
     };
     match outcome {
         Ok(()) => std::process::ExitCode::SUCCESS,

@@ -9,17 +9,17 @@
 //! conjugation. `i^2 = −1` and `π^2 = [−p]`, so the norm of this element is
 //! `a^2 + b^2 + p(c^2 + d^2)`.
 
-use prism_field::{Field, Level};
+use prism_field::{Field, ParameterSet};
 
 use crate::jac::{add, Jac};
 use crate::montgomery::Montgomery;
 
-fn conjugate<L: Level>(value: L::Ext) -> L::Ext {
+fn conjugate<L: ParameterSet>(value: L::Ext) -> L::Ext {
     let (re, im) = L::ext_parts(value);
     L::ext_from_base(re).sub(L::ext_i().mul(L::ext_from_base(im)))
 }
 
-fn i_map<L: Level>(point: Jac<L::Ext>) -> Jac<L::Ext> {
+fn i_map<L: ParameterSet>(point: Jac<L::Ext>) -> Jac<L::Ext> {
     Jac {
         x: point.x.negate(),
         y: point.y.mul(L::ext_i()),
@@ -27,7 +27,7 @@ fn i_map<L: Level>(point: Jac<L::Ext>) -> Jac<L::Ext> {
     }
 }
 
-fn frobenius<L: Level>(point: Jac<L::Ext>) -> Jac<L::Ext> {
+fn frobenius<L: ParameterSet>(point: Jac<L::Ext>) -> Jac<L::Ext> {
     Jac {
         x: conjugate::<L>(point.x),
         y: conjugate::<L>(point.y),
@@ -35,7 +35,11 @@ fn frobenius<L: Level>(point: Jac<L::Ext>) -> Jac<L::Ext> {
     }
 }
 
-fn mul_le<L: Level>(curve: Montgomery<L::Ext>, point: Jac<L::Ext>, scalar: &[u8]) -> Jac<L::Ext> {
+fn mul_le<L: ParameterSet>(
+    curve: Montgomery<L::Ext>,
+    point: Jac<L::Ext>,
+    scalar: &[u8],
+) -> Jac<L::Ext> {
     let mut bits = Vec::new();
     for byte in scalar.iter().rev() {
         for shift in (0..8).rev() {
@@ -55,7 +59,7 @@ fn mul_le<L: Level>(curve: Montgomery<L::Ext>, point: Jac<L::Ext>, scalar: &[u8]
     acc
 }
 
-fn small_scalar<L: Level>(
+fn small_scalar<L: ParameterSet>(
     curve: Montgomery<L::Ext>,
     point: Jac<L::Ext>,
     scalar: i64,
@@ -70,7 +74,13 @@ fn small_scalar<L: Level>(
 }
 
 /// `α(point)` for `α = a + bi + cπ + diπ`. `a` and `b` are little-endian.
-pub fn apply<L: Level>(point: Jac<L::Ext>, a: &[u8], b: &[u8], c: i64, d: i64) -> Jac<L::Ext> {
+pub fn apply<L: ParameterSet>(
+    point: Jac<L::Ext>,
+    a: &[u8],
+    b: &[u8],
+    c: i64,
+    d: i64,
+) -> Jac<L::Ext> {
     let curve = Montgomery::normalized(L::Ext::zero());
     let frobenius = frobenius::<L>(point);
     let terms = [
@@ -86,6 +96,6 @@ pub fn apply<L: Level>(point: Jac<L::Ext>, a: &[u8], b: &[u8], c: i64, d: i64) -
 }
 
 /// `[scalar] point` on `E0`, scalar little-endian.
-pub fn multiply<L: Level>(point: Jac<L::Ext>, scalar_le: &[u8]) -> Jac<L::Ext> {
+pub fn multiply<L: ParameterSet>(point: Jac<L::Ext>, scalar_le: &[u8]) -> Jac<L::Ext> {
     mul_le::<L>(Montgomery::normalized(L::Ext::zero()), point, scalar_le)
 }

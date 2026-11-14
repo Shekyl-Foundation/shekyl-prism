@@ -20,13 +20,13 @@
 #[allow(dead_code)]
 mod support;
 
-use prism_field::{Level, Level1, Level3, Level5};
-use prism_verify::{verify, Nist};
+use prism_field::{ParameterSet, P248, P376, P500};
+use prism_verify::{verify, Set};
 use std::hint::black_box;
 use std::process::ExitCode;
-use support::{level, vector};
+use support::{set, vector};
 
-fn run<L: Level>(text: &str, check: bool) -> bool {
+fn run<L: ParameterSet>(text: &str, check: bool) -> bool {
     let (key, message, response) = vector::<L>(text);
     let signature = response.encode();
     let inputs = black_box((&key, &message, &signature));
@@ -50,10 +50,10 @@ fn main() -> ExitCode {
             return ExitCode::from(2);
         }
     };
-    let accepted = match level(&text) {
-        Nist::I => run::<Level1>(&text, check),
-        Nist::III => run::<Level3>(&text, check),
-        Nist::V => run::<Level5>(&text, check),
+    let accepted = match set(&text) {
+        Set::P248 => run::<P248>(&text, check),
+        Set::P376 => run::<P376>(&text, check),
+        Set::P500 => run::<P500>(&text, check),
     };
     if accepted {
         ExitCode::SUCCESS

@@ -8,7 +8,7 @@
 //! has not been audited for secret-dependent timing or memory access.
 //!
 //! One [`Session`] keygens once and signs many messages. [`Signer`] is that
-//! session at a level named at run time. The salt KDF and the native response
+//! session at a set named at run time. The salt KDF and the native response
 //! live here; a reduced-width experiment calls [`Session::search`] with its
 //! own challenge and verifier.
 
@@ -21,9 +21,9 @@ pub use backend::decimal;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-use prism_field::{Field, Level, Level1, Level3, Level5, Salt};
+use prism_field::{Field, ParameterSet, Salt, P248, P376, P500};
 use prism_verify::{
-    signature::canonical_sign, verify, ChallengeScalar, KeyIdentity, Nist, Response,
+    signature::canonical_sign, verify, ChallengeScalar, KeyIdentity, Response, Set,
 };
 use sha3::{
     digest::{core_api::CoreWrapper, ExtendableOutput, Update, XofReader},
@@ -102,25 +102,25 @@ pub struct SigningReport {
 pub enum Attempt {
     /// The degree is not prime. The counter is spent; the backend is not.
     Composite,
-    /// A prime degree, little-endian. Shorter than the row's scalar width is
+    /// A prime degree, little-endian. Shorter than the set's scalar width is
     /// zero-extended for the backend. Longer aborts the search.
     Prime(Vec<u8>),
 }
 
 /// One keygen. The scratch directory lives as long as this session.
-pub struct Session<'a, L: Level> {
+pub struct Session<'a, L: ParameterSet> {
     backend: backend::Backend,
     seed: &'a SecretSeed,
     public_key: Vec<u8>,
-    level: core::marker::PhantomData<L>,
+    set: core::marker::PhantomData<L>,
 }
 
-impl<'a, L: Level> Session<'a, L> {
-    /// Keygen under `seed`. The backend must be this row's SHAKE signer.
+impl<'a, L: ParameterSet> Session<'a, L> {
+    /// Keygen under `seed`. The backend must be this set's SHAKE signer.
     pub fn open(program: impl AsRef<Path>, seed: &'a SecretSeed) -> Result<Self, Error> {
         let backend = backend::Backend::open(program.as_ref())?;
         backend.check_version(L::E)?;
-        let stream = stream(&seed.0, L::NAME, b"keygen", b"");
+        let stream = stream(&seed.0, L::LEGACY_LABEL, b"keygen", b"");
         let text = backend.keygen(&stream).map_err(Error::from)?;
         let public_key = decode_hex(line(&text, "A ")?)?;
         KeyIdentity::<L>::decode(&public_key).map_err(|_| Error::Malformed)?;
@@ -128,7 +128,7 @@ impl<'a, L: Level> Session<'a, L> {
             backend,
             seed,
             public_key,
-            level: core::marker::PhantomData,
+            set: core::marker::PhantomData,
         })
     }
 
@@ -148,7 +148,7 @@ impl<'a, L: Level> Session<'a, L> {
 
     /// Native response for `scalar` and `salt`, sign-normalized, not verified.
     ///
-    /// `scalar` is little-endian and at most [`Level::S_LEN`] bytes. The
+    /// `scalar` is little-endian and at most [`ParameterSet::S_LEN`] bytes. The
     /// backend receives it padded to that width. The caller verifies.
     pub fn candidate(&self, scalar: &[u8], salt: L::Salt) -> Result<Vec<u8>, CandidateError> {
         if scalar.len() > L::S_LEN {
@@ -156,7 +156,7 @@ impl<'a, L: Level> Session<'a, L> {
         }
         let mut canonical = scalar.to_vec();
         canonical.resize(L::S_LEN, 0);
-        let stream = stream(&self.seed.0, L::NAME, b"sign", &canonical);
+        let stream = stream(&self.seed.0, L::LEGACY_LABEL, b"sign", &canonical);
         let text = self
             .backend
             .sign_scalar(&backend::decimal(&canonical), &stream)?;
@@ -239,14 +239,14 @@ impl<'a, L: Level> Session<'a, L> {
 }
 
 /// The salt the signer would derive. `seed` is the master seed, not a stream.
-pub fn salt_for<L: Level>(
+pub fn salt_for<L: ParameterSet>(
     seed: &[u8; limits::STREAM_LEN],
     public_key: &[u8],
     message: &[u8],
     randomness: &[u8; limits::CALLER_RANDOMNESS_LEN],
     counter: u64,
 ) -> L::Salt {
-    let salt_key = stream(seed, L::NAME, b"salt", b"");
+    let salt_key = stream(seed, L::LEGACY_LABEL, b"salt", b"");
     let mut hash: CShake256 = CoreWrapper::from_core(CShake256Core::new(b"shekyl-prism-salt-v1"));
     hash.update(salt_key.as_slice());
     hash.update(public_key);
@@ -260,13 +260,13 @@ pub fn salt_for<L: Level>(
 
 fn stream(
     seed: &[u8; limits::STREAM_LEN],
-    level: &str,
+    set: &str,
     label: &[u8],
     context: &[u8],
 ) -> Zeroizing<[u8; limits::STREAM_LEN]> {
     let mut hash: CShake256 = CoreWrapper::from_core(CShake256Core::new(b"shekyl-prism-secret-v1"));
     hash.update(seed);
-    hash.update(level.as_bytes());
+    hash.update(set.as_bytes());
     hash.update(&(label.len() as u64).to_le_bytes());
     hash.update(label);
     hash.update(context);
@@ -275,18 +275,18 @@ fn stream(
     out
 }
 
-/// The level-specific `prism_signer_lvl{1,3,5}` executable built with
+/// The set-specific `prism_signer_lvl{1,3,5}` executable built with
 /// `scripts/export_s5_vectors.sh backend`. Never use the fixture exporter.
 pub struct Signer {
     backend: PathBuf,
-    level: Nist,
+    set: Set,
     seed: SecretSeed,
 }
 impl Signer {
-    pub fn new(backend: impl AsRef<Path>, level: Nist, seed: SecretSeed) -> Self {
+    pub fn new(backend: impl AsRef<Path>, set: Set, seed: SecretSeed) -> Self {
         Self {
             backend: backend.as_ref().to_path_buf(),
-            level,
+            set,
             seed,
         }
     }
@@ -315,16 +315,16 @@ impl Signer {
         self.session()?.sign(message, randomness)
     }
     fn session(&self) -> Result<Opened<'_>, Error> {
-        match self.level {
-            Nist::I => Ok(Opened::Level1(Session::<Level1>::open(
+        match self.set {
+            Set::P248 => Ok(Opened::P248(Session::<P248>::open(
                 &self.backend,
                 &self.seed,
             )?)),
-            Nist::III => Ok(Opened::Level3(Session::<Level3>::open(
+            Set::P376 => Ok(Opened::P376(Session::<P376>::open(
                 &self.backend,
                 &self.seed,
             )?)),
-            Nist::V => Ok(Opened::Level5(Session::<Level5>::open(
+            Set::P500 => Ok(Opened::P500(Session::<P500>::open(
                 &self.backend,
                 &self.seed,
             )?)),
@@ -333,16 +333,16 @@ impl Signer {
 }
 
 enum Opened<'a> {
-    Level1(Session<'a, Level1>),
-    Level3(Session<'a, Level3>),
-    Level5(Session<'a, Level5>),
+    P248(Session<'a, P248>),
+    P376(Session<'a, P376>),
+    P500(Session<'a, P500>),
 }
 impl Opened<'_> {
     fn public_key(&self) -> &[u8] {
         match self {
-            Self::Level1(session) => session.public_key(),
-            Self::Level3(session) => session.public_key(),
-            Self::Level5(session) => session.public_key(),
+            Self::P248(session) => session.public_key(),
+            Self::P376(session) => session.public_key(),
+            Self::P500(session) => session.public_key(),
         }
     }
     fn sign(
@@ -351,9 +351,9 @@ impl Opened<'_> {
         randomness: &[u8; limits::CALLER_RANDOMNESS_LEN],
     ) -> Result<SigningReport, Error> {
         match self {
-            Self::Level1(session) => session.sign(message, randomness),
-            Self::Level3(session) => session.sign(message, randomness),
-            Self::Level5(session) => session.sign(message, randomness),
+            Self::P248(session) => session.sign(message, randomness),
+            Self::P376(session) => session.sign(message, randomness),
+            Self::P500(session) => session.sign(message, randomness),
         }
     }
 }
@@ -367,7 +367,10 @@ impl From<CandidateError> for Error {
     }
 }
 
-fn response_from_text<L: Level>(text: &str, salt: L::Salt) -> Result<Response<L>, CandidateError> {
+fn response_from_text<L: ParameterSet>(
+    text: &str,
+    salt: L::Salt,
+) -> Result<Response<L>, CandidateError> {
     let mut signature = Vec::new();
     for name in ["E ", "Px ", "Py ", "Qx ", "Qy "] {
         signature.extend(decode_hex(line(text, name)?).map_err(|_| CandidateError::Malformed)?);
@@ -409,11 +412,11 @@ fn decode_hex(text: &str) -> Result<Vec<u8>, CandidateError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prism_field::Level;
+    use prism_field::ParameterSet;
 
     #[test]
     fn the_salt_kdf_binds_every_input_and_writes_the_row_length() {
-        fn check<L: Level>() {
+        fn check<L: ParameterSet>() {
             let seed = [0x42; limits::STREAM_LEN];
             let key = L::ext_encode(L::Ext::from_u64(3));
             let randomness = [0u8; limits::CALLER_RANDOMNESS_LEN];
@@ -431,8 +434,55 @@ mod tests {
                 salt_for::<L>(&other_seed, &key, b"message", &randomness, 0)
             );
         }
-        check::<Level1>();
-        check::<Level3>();
-        check::<Level5>();
+        check::<P248>();
+        check::<P376>();
+        check::<P500>();
+    }
+
+    /// The streams a seed expands to, as they were before sets were named
+    /// by prime. The legacy label is absorbed into every one of them, so
+    /// these values are what keeps every committed vector reproducible
+    /// from its seed. They were printed at `04455de`, where the absorbed
+    /// string was the set's name.
+    #[test]
+    fn the_seed_streams_are_the_ones_the_committed_vectors_came_from() {
+        fn first<L: ParameterSet>(label: &[u8], context: &[u8]) -> String {
+            let seed = [0x42; limits::STREAM_LEN];
+            stream(&seed, L::LEGACY_LABEL, label, context)
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect()
+        }
+        fn all<L: ParameterSet>() -> [String; 3] {
+            [
+                first::<L>(b"keygen", b""),
+                first::<L>(b"sign", b"canonical"),
+                first::<L>(b"salt", b""),
+            ]
+        }
+        assert_eq!(
+            all::<prism_field::P248>(),
+            [
+                "3fa64cbe900118c657bc7472f48405f3a75fe20b96e515d8f1b70985f9be9adcd2ce310bde24bda9a13a665281cfb9e1",
+                "279d6ee3adc74303aafb91eca08ce603884121882533d9cbdff00ec74cb8241aaede7f2d55627f1e99a1b8caaf3254ca",
+                "d1bae86a7350093ec2e15179a5b28379de8fc6986d5b6a74a9b900429dd308ac56810de3f6605a65e369ea5270f45e78",
+            ]
+        );
+        assert_eq!(
+            all::<prism_field::P376>(),
+            [
+                "278feddbb46d1df20c1a176bf3eb3befb0b858808ffdab433df00401debad299881929834e588a694f7d20907e5d7194",
+                "23edf16a44fe62ef051f4d985440904f981d0380c2ca6f62ca6675af855b41e8c66783098ab5f1c91dbd4397a2197911",
+                "50748eb3041deaf8f91c3a5905e2e0b48031093a55a1cc582b7d4c634f8dfa8f93738236955f075d7751b0cfb0dada3f",
+            ]
+        );
+        assert_eq!(
+            all::<prism_field::P500>(),
+            [
+                "1d10371043abefcd0fc93fa68ee8af0b5bb5d82c6f11aa68aa889e05257afe8910b39068651c2410c47f0535e7e3a7a2",
+                "2b835119589333e1bdffdec4cb382da3dcd5b53a0a2338764bb7909eeca40d6d3dd48758b5926032de229daa78911953",
+                "95d57c9fdc264cfe1b78b07b50f57169f77ed3726f6befd6b327bf3f37890fa97a2b0a7089317359d62faa91ecc2bf5f",
+            ]
+        );
     }
 }

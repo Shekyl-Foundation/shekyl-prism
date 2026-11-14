@@ -5,17 +5,18 @@
 
 //! Print the order-`2^e` basis Rust derives from `A`, for the C differential.
 //!
-//! `even_basis <I|III|V> <A-hex>` prints four affine x-coordinates: `P`,
+//! `even_basis <p248|p376|p500> <A-hex>` prints four affine x-coordinates: `P`,
 //! the cleared point `R`, `Q = difference(P, R)` (the field the verifier
 //! uses), and `[f]` of the difference of the uncleared points. The fourth
 //! value is the rejected variant: it equals `Q` on only about half of keys.
-//! `sample <I|III|V> <count>` prints that many coefficients that have a
+//! `sample <p248|p376|p500> <count>` prints that many coefficients that have a
 //! basis.
 
+use prism_verify::Set;
 use std::env;
 use std::process::ExitCode;
 
-use prism_field::{Field, Level, Level1, Level3, Level5};
+use prism_field::{Field, ParameterSet, P248, P376, P500};
 use prism_isogeny::torsion::{even_basis, mul_odd_then_double};
 use prism_verify::basis::basis_hint;
 use sha3::{Digest, Sha3_256};
@@ -23,35 +24,35 @@ use sha3::{Digest, Sha3_256};
 fn main() -> ExitCode {
     let mut args = env::args().skip(1);
     let Some(command) = args.next() else {
-        eprintln!("usage: even_basis <I|III|V> <A-hex> | sample <I|III|V> <count>");
+        eprintln!("usage: even_basis <p248|p376|p500> <A-hex> | sample <p248|p376|p500> <count>");
         return ExitCode::from(2);
     };
     if command == "sample" {
-        let Some(level) = args.next() else {
+        let Some(set) = args.next() else {
             return ExitCode::from(2);
         };
         let Some(count) = args.next().and_then(|text| text.parse::<u32>().ok()) else {
             return ExitCode::from(2);
         };
-        return match level.as_str() {
-            "I" => sample::<Level1>(count),
-            "III" => sample::<Level3>(count),
-            "V" => sample::<Level5>(count),
-            _ => ExitCode::from(2),
+        return match set.parse::<Set>() {
+            Ok(Set::P248) => sample::<P248>(count),
+            Ok(Set::P376) => sample::<P376>(count),
+            Ok(Set::P500) => sample::<P500>(count),
+            Err(_) => ExitCode::from(2),
         };
     }
     let Some(coefficient) = args.next() else {
         return ExitCode::from(2);
     };
-    match command.as_str() {
-        "I" => show::<Level1>(&coefficient),
-        "III" => show::<Level3>(&coefficient),
-        "V" => show::<Level5>(&coefficient),
-        _ => ExitCode::from(2),
+    match command.parse::<Set>() {
+        Ok(Set::P248) => show::<P248>(&coefficient),
+        Ok(Set::P376) => show::<P376>(&coefficient),
+        Ok(Set::P500) => show::<P500>(&coefficient),
+        Err(_) => ExitCode::from(2),
     }
 }
 
-fn show<L: Level>(hex: &str) -> ExitCode {
+fn show<L: ParameterSet>(hex: &str) -> ExitCode {
     let Ok(bytes) = decode_hex(hex) else {
         eprintln!("A is not hex");
         return ExitCode::FAILURE;
@@ -84,7 +85,7 @@ fn show<L: Level>(hex: &str) -> ExitCode {
     ExitCode::SUCCESS
 }
 
-fn sample<L: Level>(count: u32) -> ExitCode {
+fn sample<L: ParameterSet>(count: u32) -> ExitCode {
     let mut produced = 0u32;
     let mut counter = 0u64;
     while produced < count {
@@ -94,7 +95,7 @@ fn sample<L: Level>(count: u32) -> ExitCode {
         let mut block = 0u64;
         while filled < bytes.len() {
             let mut hasher = Sha3_256::new();
-            hasher.update(L::NAME.as_bytes());
+            hasher.update(L::LEGACY_LABEL.as_bytes());
             hasher.update(counter.to_le_bytes());
             hasher.update(block.to_le_bytes());
             let digest = hasher.finalize();

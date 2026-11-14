@@ -5,11 +5,11 @@
 
 //! The research adapter against the production signer, on the real backend.
 use prism_compare::native::{self, Unsalted};
-use prism_field::{Level, Level1, Level3, Level5};
+use prism_field::{ParameterSet, P248, P376, P500};
 use prism_signer::{limits, SecretSeed, Signer};
-use prism_verify::Nist;
+use prism_verify::Set;
 
-fn agree<L: Level>(dir: &std::path::Path, nist: Nist, name: &str) {
+fn agree<L: ParameterSet>(dir: &std::path::Path, nist: Set, name: &str) {
     let backend = dir.join(name);
     let seed = SecretSeed::from_bytes([0x42; limits::STREAM_LEN]);
     let signer = Signer::new(
@@ -85,7 +85,7 @@ fn research_signing_is_production_signing_at_full_width() {
     let dir = std::path::PathBuf::from(
         std::env::var_os("PRISM_SIGNER_BACKEND_DIR").expect("set PRISM_SIGNER_BACKEND_DIR"),
     );
-    agree::<Level1>(&dir, Nist::I, "prism_signer_lvl1");
-    agree::<Level3>(&dir, Nist::III, "prism_signer_lvl3");
-    agree::<Level5>(&dir, Nist::V, "prism_signer_lvl5");
+    agree::<P248>(&dir, Set::P248, "prism_signer_lvl1");
+    agree::<P376>(&dir, Set::P376, "prism_signer_lvl3");
+    agree::<P500>(&dir, Set::P500, "prism_signer_lvl5");
 }

@@ -657,7 +657,6 @@ def run_vector(path, run_chains=True, soft=None, completion="closed"):
     return "Ok"
 
 
-SHORT = {"NIST-I": "I", "NIST-III": "III", "NIST-V": "V"}
 SIBLING = {
     "s5_lvl1.txt": "s5_lvl1b.txt",
     "s5_lvl1b.txt": "s5_lvl1.txt",
@@ -722,7 +721,7 @@ def rust_binary(name):
 def challenge_scalar(level, coefficient_hex, message, salt):
     binary = rust_binary("s5_challenge")
     proc = subprocess.run(
-        [str(binary), SHORT[level], coefficient_hex, message, salt],
+        [str(binary), level, coefficient_hex, message, salt],
         check=True,
         capture_output=True,
         text=True,

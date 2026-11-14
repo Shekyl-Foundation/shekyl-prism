@@ -268,7 +268,8 @@ mod tests {
     }
 
     /// A stand-in field. Arithmetic is the integer ring modulo 1019, which is
-    /// enough for the projective identities and is not a NIST prime.
+    /// enough for the projective identities and is not the prime of any
+    /// parameter set.
     #[derive(Clone, Copy, Debug)]
     struct Toy(i64);
     const P: i64 = 1019;

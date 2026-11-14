@@ -25,12 +25,12 @@
 mod support;
 
 use prism_field::ops::{self, Counts, Slot};
-use prism_field::{Level, Level1, Level3, Level5};
-use prism_verify::{verify, Nist, Stage, VerifyError};
+use prism_field::{ParameterSet, P248, P376, P500};
+use prism_verify::{verify, Set, Stage, VerifyError};
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
-use support::{files, level, negatives, primary, vector};
+use support::{files, negatives, primary, set, vector};
 
 fn fields(counts: Slot) -> String {
     let one = |name: &str, c: Counts| {
@@ -47,7 +47,7 @@ fn total(table: &[Slot]) -> Slot {
         ext: sum.ext.plus(slot.ext),
     })
 }
-fn counted<L: Level>(
+fn counted<L: ParameterSet>(
     key: &[u8],
     message: &[u8],
     signature: &[u8],
@@ -74,7 +74,7 @@ fn stages(kind: &str, table: &[Slot]) {
     }
     println!("COUNT {kind} stage=total {}", fields(total(table)));
 }
-fn accept<L: Level>(path: &Path, text: &str, per_stage: bool) -> Result<Slot, String> {
+fn accept<L: ParameterSet>(path: &Path, text: &str, per_stage: bool) -> Result<Slot, String> {
     let (key, message, response) = vector::<L>(text);
     let (verdict, table) = counted::<L>(&key, &message, &response.encode());
     if verdict != Ok(()) {
@@ -87,7 +87,7 @@ fn accept<L: Level>(path: &Path, text: &str, per_stage: bool) -> Result<Slot, St
             name(path)
         ));
     }
-    let kind = format!("accept level={} vector={}", L::NAME, name(path));
+    let kind = format!("accept set={} vector={}", L::NAME, name(path));
     if per_stage {
         stages(&kind, &table);
     } else {
@@ -97,7 +97,7 @@ fn accept<L: Level>(path: &Path, text: &str, per_stage: bool) -> Result<Slot, St
 }
 /// Every negative of one primary vector: its verdict and total cost, the
 /// per-stage counts of the first case of each refusal, and the dearest.
-fn refuse<L: Level>(path: &Path, text: &str, accepted: Slot) -> Result<(), String> {
+fn refuse<L: ParameterSet>(path: &Path, text: &str, accepted: Slot) -> Result<(), String> {
     let mut seen = BTreeSet::new();
     let mut dearest: Option<(u64, String, VerifyError)> = None;
     let mut most_inversions = 0;
@@ -121,7 +121,7 @@ fn refuse<L: Level>(path: &Path, text: &str, accepted: Slot) -> Result<(), Strin
         );
         if seen.insert(error) {
             let kind = format!(
-                "refuse level={} vector={} case={} error={error:?}",
+                "refuse set={} vector={} case={} error={error:?}",
                 L::NAME,
                 name(path),
                 case.name
@@ -140,7 +140,7 @@ fn refuse<L: Level>(path: &Path, text: &str, accepted: Slot) -> Result<(), Strin
     let (products, case, error) = dearest.ok_or("no negatives")?;
     let accepted_products = accepted.ext.mul + accepted.ext.square;
     println!(
-        "COUNT dearest-refusal level={} vector={} case={case} error={error:?} ext_mul_and_square={products} accept_ext_mul_and_square={accepted_products} most_ext_inv_of_any_refusal={most_inversions} accept_ext_inv={} above_accept={}",
+        "COUNT dearest-refusal set={} vector={} case={case} error={error:?} ext_mul_and_square={products} accept_ext_mul_and_square={accepted_products} most_ext_inv_of_any_refusal={most_inversions} accept_ext_inv={} above_accept={}",
         L::NAME,
         name(path),
         accepted.ext.inv,
@@ -165,7 +165,7 @@ fn refuse<L: Level>(path: &Path, text: &str, accepted: Slot) -> Result<(), Strin
     .map(|e| format!("{e:?}"))
     .collect();
     println!(
-        "COUNT refusals-without-a-vector level={} vector={} {}",
+        "COUNT refusals-without-a-vector set={} vector={} {}",
         L::NAME,
         name(path),
         if missing.is_empty() {
@@ -184,16 +184,16 @@ fn run() -> Result<(), String> {
     for path in files() {
         let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         let first = primary.contains(&path);
-        let accepted = match level(&text) {
-            Nist::I => accept::<Level1>(&path, &text, first),
-            Nist::III => accept::<Level3>(&path, &text, first),
-            Nist::V => accept::<Level5>(&path, &text, first),
+        let accepted = match set(&text) {
+            Set::P248 => accept::<P248>(&path, &text, first),
+            Set::P376 => accept::<P376>(&path, &text, first),
+            Set::P500 => accept::<P500>(&path, &text, first),
         }?;
         if first {
-            match level(&text) {
-                Nist::I => refuse::<Level1>(&path, &text, accepted),
-                Nist::III => refuse::<Level3>(&path, &text, accepted),
-                Nist::V => refuse::<Level5>(&path, &text, accepted),
+            match set(&text) {
+                Set::P248 => refuse::<P248>(&path, &text, accepted),
+                Set::P376 => refuse::<P376>(&path, &text, accepted),
+                Set::P500 => refuse::<P500>(&path, &text, accepted),
             }?;
         }
     }

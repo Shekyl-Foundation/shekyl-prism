@@ -3,18 +3,18 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! `square` against `mul` by itself, in both fields at every level.
+//! `square` against `mul` by itself, in both fields at every set.
 //!
 //! The input is cut into field encodings. One that is not canonical has
 //! the top byte of each base-field half cleared, which is below `p` at
-//! every level, so every input reaches the comparison.
+//! every set, so every input reaches the comparison.
 
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use prism_field::{Field, Level, Level1, Level3, Level5};
+use prism_field::{Field, ParameterSet, P248, P376, P500};
 
-fn level<L: Level>(data: &[u8]) {
+fn set<L: ParameterSet>(data: &[u8]) {
     for chunk in data.chunks_exact(L::FP2_LEN) {
         let mut bytes = chunk.to_vec();
         let x = L::ext_decode(&bytes).unwrap_or_else(|| {
@@ -30,7 +30,7 @@ fn level<L: Level>(data: &[u8]) {
 }
 
 fuzz_target!(|data: &[u8]| {
-    level::<Level1>(data);
-    level::<Level3>(data);
-    level::<Level5>(data);
+    set::<P248>(data);
+    set::<P376>(data);
+    set::<P500>(data);
 });

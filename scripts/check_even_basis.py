@@ -24,7 +24,7 @@ TREE = ROOT / "external" / "PRISM_v2"
 BUILD = pathlib.Path("/tmp/prism-v2-ref")
 EXPORTER = ROOT / "scripts" / "c" / "export_even_basis.c"
 
-LEVELS = (("I", "lvl1", "248"), ("III", "lvl3", "376"), ("V", "lvl5", "500"))
+LEVELS = (("p248", "lvl1", "248"), ("p376", "lvl3", "376"), ("p500", "lvl5", "500"))
 TARGET = {
     "x86_64": "TARGET_AMD64",
     "aarch64": "TARGET_ARM64",

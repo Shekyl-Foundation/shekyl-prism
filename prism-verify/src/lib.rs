@@ -22,25 +22,25 @@ mod accept;
 pub mod basis;
 pub mod challenge;
 pub mod identity;
-pub mod level;
 mod model;
 mod prime;
 pub mod reference;
 mod relation;
 #[cfg(feature = "research-reduced-width")]
 pub mod research;
+pub mod set;
 pub mod signature;
 pub mod stage;
 
-use prism_field::Level;
+use prism_field::ParameterSet;
 
 pub use basis::{basis_hint, search_bound, BasisHint, C_HINT_MAX_INDEX};
 pub use challenge::{ChallengeScalar, CHALLENGE_DOMAIN};
 pub use identity::KeyIdentity;
-pub use level::{verify_level, Nist, UnknownLevel};
 pub use prime::{challenge_degree, degree_is_prime, is_baillie_psw};
 pub use prism_field::Salt;
 pub use reference::{prepared, reference_key, Prepared, PreparedError, ReferenceKey, VectorError};
+pub use set::{verify_set, Set, UnknownSet};
 pub use signature::{AffinePoint, Response};
 pub use stage::Stage;
 
@@ -52,7 +52,7 @@ pub use stage::Stage;
 /// derived order is not a global precedence rule for malformed inputs.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum VerifyError {
-    /// The byte string is not this level's length.
+    /// The byte string is not this set's length.
     Length,
     /// A field element is not the canonical representative in `0..p`.
     Canonical,
@@ -68,7 +68,8 @@ pub enum VerifyError {
     ///
     /// The search is the reference's, including the indices its `start = 128`
     /// fallback covers, so this refuses only keys whose smallest index
-    /// exceeds `2λ` — about `2^-λ` of keys, the level's own security target.
+    /// exceeds the set's `SEARCH_BOUND`. The bound's doc comment gives the
+    /// heuristic estimate of how rare that is.
     /// `docs/VERIFIER_SPEC.md` records the bound and what it costs.
     Basis,
     /// `2^{2e′−1} − s_j^2` is not a Baillie–PSW prime, `e′ = e − 2`.
@@ -88,7 +89,7 @@ pub enum VerifyError {
 impl core::fmt::Display for VerifyError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let reason = match self {
-            Self::Length => "not this level's length",
+            Self::Length => "not this set's length",
             Self::Canonical => "a field element is not canonical",
             Self::Origin => "the starting curve",
             Self::Singular => "a singular Montgomery curve",
@@ -108,7 +109,7 @@ impl core::fmt::Display for VerifyError {
 impl std::error::Error for VerifyError {}
 
 /// Run the public checks, then Algorithm 3.
-pub fn verify<L: Level>(
+pub fn verify<L: ParameterSet>(
     public_key: &[u8],
     message: &[u8],
     signature: &[u8],
@@ -120,7 +121,7 @@ pub fn verify<L: Level>(
 }
 
 /// A key and response that passed the checks shared by every verifier entry.
-pub(crate) struct Opened<'a, L: Level> {
+pub(crate) struct Opened<'a, L: ParameterSet> {
     pub identity: KeyIdentity<'a, L>,
     pub response: Response<L>,
 }
@@ -131,7 +132,7 @@ pub(crate) struct Opened<'a, L: Level> {
 /// on an element already decoded, so it comes before the basis search, whose
 /// length an attacker chooses with `A` — up to [`search_bound`] Legendre
 /// symbols.
-pub(crate) fn open<'a, L: Level>(
+pub(crate) fn open<'a, L: ParameterSet>(
     public_key: &'a [u8],
     signature: &[u8],
 ) -> Result<Opened<'a, L>, VerifyError> {
@@ -150,7 +151,7 @@ pub(crate) fn open<'a, L: Level>(
 }
 
 /// Primality, then the relation. The challenge hash has already run.
-pub(crate) fn accept<L: Level>(
+pub(crate) fn accept<L: ParameterSet>(
     opened: &Opened<'_, L>,
     scalar: &ChallengeScalar,
 ) -> Result<(), VerifyError> {
@@ -164,12 +165,12 @@ pub(crate) fn accept<L: Level>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prism_field::{Field, Level, Level1, Level3, Level5};
+    use prism_field::{Field, ParameterSet, P248, P376, P500};
     use signature::{canonical_sign, ext_less};
 
-    type Ext1 = <Level1 as Level>::Ext;
+    type Ext1 = <P248 as ParameterSet>::Ext;
 
-    fn key<L: Level>(coefficient: u64) -> Vec<u8> {
+    fn key<L: ParameterSet>(coefficient: u64) -> Vec<u8> {
         L::ext_encode(L::Ext::from_u64(coefficient))
     }
 
@@ -200,33 +201,33 @@ mod tests {
 
     #[test]
     fn a_short_signature_is_a_length_refusal() {
-        let err = verify::<Level1>(&[0u8; Level1::PUBLIC_KEY_LEN], b"m", &[0u8; 4]);
+        let err = verify::<P248>(&[0u8; P248::PUBLIC_KEY_LEN], b"m", &[0u8; 4]);
         assert_eq!(err, Err(VerifyError::Length));
         // A wrong length is refused before the key is looked at, so the
         // starting curve does not shadow it.
-        let err = verify::<Level1>(&[0u8; Level1::PUBLIC_KEY_LEN], b"m", &[]);
+        let err = verify::<P248>(&[0u8; P248::PUBLIC_KEY_LEN], b"m", &[]);
         assert_eq!(err, Err(VerifyError::Length));
     }
 
     #[test]
     fn salt_prism_lengths_are_not_this_encoding() {
         for n in [260usize, 388, 516] {
-            assert_ne!(n, Level1::SIGNATURE_LEN);
-            assert_ne!(n, Level3::SIGNATURE_LEN);
-            assert_ne!(n, Level5::SIGNATURE_LEN);
+            assert_ne!(n, P248::SIGNATURE_LEN);
+            assert_ne!(n, P376::SIGNATURE_LEN);
+            assert_ne!(n, P500::SIGNATURE_LEN);
         }
-        assert_eq!(Level1::SIGNATURE_LEN, 352);
-        assert_eq!(Level3::SIGNATURE_LEN, 528);
-        assert_eq!(Level5::SIGNATURE_LEN, 704);
-        assert_eq!(Level3::CHAIN_STEPS, Level3::E - 2);
+        assert_eq!(P248::SIGNATURE_LEN, 352);
+        assert_eq!(P376::SIGNATURE_LEN, 528);
+        assert_eq!(P500::SIGNATURE_LEN, 704);
+        assert_eq!(P376::CHAIN_STEPS, P376::E - 2);
     }
 
     #[test]
     fn the_starting_curve_is_refused() {
-        let pk = vec![0u8; Level1::PUBLIC_KEY_LEN];
-        let sig = vec![0u8; Level1::SIGNATURE_LEN];
+        let pk = vec![0u8; P248::PUBLIC_KEY_LEN];
+        let sig = vec![0u8; P248::SIGNATURE_LEN];
         assert_eq!(
-            verify::<Level1>(&pk, b"shekyl-prism", &sig),
+            verify::<P248>(&pk, b"shekyl-prism", &sig),
             Err(VerifyError::Origin)
         );
     }
@@ -234,20 +235,20 @@ mod tests {
     #[test]
     fn a_singular_curve_is_refused() {
         // `A = 2` is a square root of four, so the curve is singular.
-        let sig = vec![0u8; Level1::SIGNATURE_LEN];
+        let sig = vec![0u8; P248::SIGNATURE_LEN];
         assert_eq!(
-            verify::<Level1>(&key::<Level1>(2), b"shekyl-prism", &sig),
+            verify::<P248>(&key::<P248>(2), b"shekyl-prism", &sig),
             Err(VerifyError::Singular)
         );
     }
 
     #[test]
     fn a_noncanonical_key_is_refused() {
-        let mut pk = vec![0xffu8; Level1::PUBLIC_KEY_LEN];
-        pk[Level1::FP_LEN - 1] = 0xff;
-        let sig = vec![0u8; Level1::SIGNATURE_LEN];
+        let mut pk = vec![0xffu8; P248::PUBLIC_KEY_LEN];
+        pk[P248::FP_LEN - 1] = 0xff;
+        let sig = vec![0u8; P248::SIGNATURE_LEN];
         assert_eq!(
-            verify::<Level1>(&pk, b"shekyl-prism", &sig),
+            verify::<P248>(&pk, b"shekyl-prism", &sig),
             Err(VerifyError::Canonical)
         );
     }
@@ -258,22 +259,23 @@ mod tests {
         // `Canonical` can shadow the refusal; every field element of the
         // signature is out of range. The basis search is the next check
         // after the decode, so a `Canonical` answer here is what keeps a
-        // junk signature from paying for up to `2λ` Legendre symbols.
-        let pk = key::<Level1>(3);
-        let sig = vec![0xffu8; Level1::SIGNATURE_LEN];
+        // junk signature from paying for up to `SEARCH_BOUND` Legendre
+        // symbols.
+        let pk = key::<P248>(3);
+        let sig = vec![0xffu8; P248::SIGNATURE_LEN];
         assert_eq!(
-            verify::<Level1>(&pk, b"shekyl-prism", &sig),
+            verify::<P248>(&pk, b"shekyl-prism", &sig),
             Err(VerifyError::Canonical)
         );
     }
 
     #[test]
     fn zero_y_is_refused() {
-        let pk = key::<Level1>(3);
-        assert_eq!(pk.len(), Level1::PUBLIC_KEY_LEN);
-        let sig = vec![0u8; Level1::SIGNATURE_LEN];
+        let pk = key::<P248>(3);
+        assert_eq!(pk.len(), P248::PUBLIC_KEY_LEN);
+        let sig = vec![0u8; P248::SIGNATURE_LEN];
         assert_eq!(
-            verify::<Level1>(&pk, b"shekyl-prism", &sig),
+            verify::<P248>(&pk, b"shekyl-prism", &sig),
             Err(VerifyError::Sign)
         );
     }
@@ -281,25 +283,24 @@ mod tests {
     #[test]
     fn the_sign_order_is_the_integer_order() {
         let one = Ext1::one();
-        assert!(ext_less::<Level1>(one, one.negate()));
-        assert!(!ext_less::<Level1>(one.negate(), one));
-        let i = Level1::ext_i();
-        assert!(ext_less::<Level1>(i, i.negate()));
-        assert!(!canonical_sign::<Level1>(Ext1::zero()));
-        assert!(canonical_sign::<Level1>(one));
-        assert!(!canonical_sign::<Level1>(one.negate()));
+        assert!(ext_less::<P248>(one, one.negate()));
+        assert!(!ext_less::<P248>(one.negate(), one));
+        let i = P248::ext_i();
+        assert!(ext_less::<P248>(i, i.negate()));
+        assert!(!canonical_sign::<P248>(Ext1::zero()));
+        assert!(canonical_sign::<P248>(one));
+        assert!(!canonical_sign::<P248>(one.negate()));
     }
 
     #[test]
     fn a_bad_sign_is_refused_before_the_challenge_is_hashed() {
         // The key's basis exists and the salt names a prime degree,
         // so the only failing check below `Composite` is the sign test.
-        let sample = prepared(Nist::I).expect("level I sample");
-        let mut response =
-            Response::<Level1>::decode(&sample.signature).expect("the sample decodes");
+        let sample = prepared(Set::P248).expect("`p248` sample");
+        let mut response = Response::<P248>::decode(&sample.signature).expect("the sample decodes");
         response.p.y = response.p.y.negate();
         assert_eq!(
-            verify::<Level1>(&sample.public_key, sample.message, &response.encode()),
+            verify::<P248>(&sample.public_key, sample.message, &response.encode()),
             Err(VerifyError::Sign)
         );
         // And with the sign restored, another salt whose degree is composite
@@ -308,8 +309,8 @@ mod tests {
         let composite = (0u64..65_536)
             .find_map(|n| {
                 let mut probe = response;
-                probe.salt = <Level1 as Level>::Salt::from_counter(n).unwrap();
-                (verify::<Level1>(&sample.public_key, sample.message, &probe.encode())
+                probe.salt = <P248 as ParameterSet>::Salt::from_counter(n).unwrap();
+                (verify::<P248>(&sample.public_key, sample.message, &probe.encode())
                     == Err(VerifyError::Composite))
                 .then_some(probe)
             })
@@ -317,7 +318,7 @@ mod tests {
         let mut both = composite;
         both.p.y = both.p.y.negate();
         assert_eq!(
-            verify::<Level1>(&sample.public_key, sample.message, &both.encode()),
+            verify::<P248>(&sample.public_key, sample.message, &both.encode()),
             Err(VerifyError::Sign),
             "a signature failing Sign and Composite is refused with Sign"
         );
@@ -325,21 +326,21 @@ mod tests {
 
     #[test]
     fn the_derived_index_equals_the_c_hint() {
-        for level in Nist::ALL {
-            let row = reference_key(level).unwrap_or_else(|err| panic!("{level}: {err}"));
-            let derived = match level {
-                Nist::I => derive_hint::<Level1>(&row.public_key),
-                Nist::III => derive_hint::<Level3>(&row.public_key),
-                Nist::V => derive_hint::<Level5>(&row.public_key),
+        for set in Set::ALL {
+            let row = reference_key(set).unwrap_or_else(|err| panic!("{set}: {err}"));
+            let derived = match set {
+                Set::P248 => derive_hint::<P248>(&row.public_key),
+                Set::P376 => derive_hint::<P376>(&row.public_key),
+                Set::P500 => derive_hint::<P500>(&row.public_key),
             };
-            assert_eq!(derived, Ok(row.hint), "{level}");
+            assert_eq!(derived, Ok(row.hint), "{set}");
             // The byte the C returned round-trips through the typed hint.
             let byte = row.hint.to_c_byte().expect("the C named this index");
-            assert_eq!(BasisHint::from_c_byte(byte), Some(row.hint), "{level}");
+            assert_eq!(BasisHint::from_c_byte(byte), Some(row.hint), "{set}");
         }
     }
 
-    fn derive_hint<L: Level>(public_key: &[u8]) -> Result<BasisHint, VerifyError> {
+    fn derive_hint<L: ParameterSet>(public_key: &[u8]) -> Result<BasisHint, VerifyError> {
         let identity = KeyIdentity::<L>::decode(public_key)?;
         basis_hint::<L>(identity.coefficient())
     }
@@ -348,47 +349,47 @@ mod tests {
     fn the_pinned_hints_are_the_committed_bytes() {
         // The hint bytes `scripts/export_c_basis_hints.py` wrote from its
         // frozen seed. A regeneration that changes a byte updates this table.
-        for (level, byte) in [(Nist::I, 11u8), (Nist::III, 13), (Nist::V, 21)] {
-            let row = reference_key(level).unwrap_or_else(|err| panic!("{level}: {err}"));
-            assert_eq!(row.hint.to_c_byte(), Some(byte), "{level}");
+        for (set, byte) in [(Set::P248, 11u8), (Set::P376, 13), (Set::P500, 21)] {
+            let row = reference_key(set).unwrap_or_else(|err| panic!("{set}: {err}"));
+            assert_eq!(row.hint.to_c_byte(), Some(byte), "{set}");
             assert!(row.hint.index() >= 1 && row.hint.index() <= C_HINT_MAX_INDEX);
         }
     }
 
     #[test]
     fn a_signature_round_trips_through_the_layout() {
-        for level in Nist::ALL {
-            let sample = prepared(level).unwrap_or_else(|err| panic!("{level}: {err}"));
-            let decoded = match level {
-                Nist::I => Response::<Level1>::decode(&sample.signature).map(|r| r.encode()),
-                Nist::III => Response::<Level3>::decode(&sample.signature).map(|r| r.encode()),
-                Nist::V => Response::<Level5>::decode(&sample.signature).map(|r| r.encode()),
+        for set in Set::ALL {
+            let sample = prepared(set).unwrap_or_else(|err| panic!("{set}: {err}"));
+            let decoded = match set {
+                Set::P248 => Response::<P248>::decode(&sample.signature).map(|r| r.encode()),
+                Set::P376 => Response::<P376>::decode(&sample.signature).map(|r| r.encode()),
+                Set::P500 => Response::<P500>::decode(&sample.signature).map(|r| r.encode()),
             };
-            assert_eq!(decoded, Ok(sample.signature.clone()), "{level}");
+            assert_eq!(decoded, Ok(sample.signature.clone()), "{set}");
         }
     }
 
     #[test]
     fn a_carried_salt_reaches_the_real_relation_without_a_search() {
-        let sample = prepared(Nist::I).expect("sample");
+        let sample = prepared(Set::P248).expect("sample");
         assert_eq!(
-            verify_level(
-                Nist::I,
+            verify_set(
+                Set::P248,
                 &sample.public_key,
                 sample.message,
                 &sample.signature
             ),
             Err(VerifyError::Kernel)
         );
-        let mut response = Response::<Level1>::decode(&sample.signature).unwrap();
+        let mut response = Response::<P248>::decode(&sample.signature).unwrap();
         let mut salt = response.salt.as_bytes().to_vec();
         salt[0] ^= 1;
-        response.salt = <Level1 as Level>::Salt::from_bytes(&salt).unwrap();
-        let id = KeyIdentity::<Level1>::decode(&sample.public_key).unwrap();
+        response.salt = <P248 as ParameterSet>::Salt::from_bytes(&salt).unwrap();
+        let id = KeyIdentity::<P248>::decode(&sample.public_key).unwrap();
         let prime =
-            ChallengeScalar::derive(&id, sample.message, response.salt).degree_is_prime::<Level1>();
+            ChallengeScalar::derive(&id, sample.message, response.salt).degree_is_prime::<P248>();
         assert_eq!(
-            verify::<Level1>(&sample.public_key, sample.message, &response.encode()),
+            verify::<P248>(&sample.public_key, sample.message, &response.encode()),
             Err(if prime {
                 VerifyError::Kernel
             } else {
@@ -398,23 +399,27 @@ mod tests {
     }
 
     #[test]
-    fn a_level_name_parses_or_is_its_own_error() {
-        for (text, level) in [
-            ("1", Nist::I),
-            ("I", Nist::I),
-            ("NIST-I", Nist::I),
-            ("3", Nist::III),
-            ("III", Nist::III),
-            ("5", Nist::V),
-            ("V", Nist::V),
+    fn a_set_name_parses_or_is_its_own_error() {
+        for (name, label, set) in [
+            ("p248", P248::LEGACY_LABEL, Set::P248),
+            ("p376", P376::LEGACY_LABEL, Set::P376),
+            ("p500", P500::LEGACY_LABEL, Set::P500),
         ] {
-            assert_eq!(text.parse::<Nist>(), Ok(level), "{text}");
+            assert_eq!(name.parse::<Set>(), Ok(set), "{name}");
+            assert_eq!(set.to_string(), name);
+            assert_eq!(Set::from_legacy_label(label), Ok(set), "{label}");
+            assert_eq!(set.legacy_label(), label);
+            // The two ways in are kept apart: a name is not a label, and a
+            // label is not a name.
+            assert_eq!(label.parse::<Set>(), Err(UnknownSet), "{label}");
+            assert_eq!(Set::from_legacy_label(name), Err(UnknownSet), "{name}");
         }
-        for text in ["", "2", "iv", "NIST-II"] {
-            assert_eq!(text.parse::<Nist>(), Err(UnknownLevel), "{text}");
+        for text in ["", "248", "P248", "p324", "p664", "1", "I", "iv"] {
+            assert_eq!(text.parse::<Set>(), Err(UnknownSet), "{text}");
+            assert_eq!(Set::from_legacy_label(text), Err(UnknownSet), "{text}");
         }
-        // An unknown level is not a length refusal.
-        assert_ne!(UnknownLevel.to_string(), VerifyError::Length.to_string());
+        // An unknown set is not a length refusal.
+        assert_ne!(UnknownSet.to_string(), VerifyError::Length.to_string());
     }
 
     #[test]
@@ -428,9 +433,9 @@ mod tests {
 
     #[test]
     fn the_three_field_primes_pass_baillie_psw() {
-        assert!(is_baillie_psw(&prime_bytes(5, Level1::E)));
-        assert!(is_baillie_psw(&prime_bytes(65, Level3::E)));
-        assert!(is_baillie_psw(&prime_bytes(27, Level5::E)));
+        assert!(is_baillie_psw(&prime_bytes(5, P248::E)));
+        assert!(is_baillie_psw(&prime_bytes(65, P376::E)));
+        assert!(is_baillie_psw(&prime_bytes(27, P500::E)));
     }
 
     /// `cofactor·2^shift − 1`, little-endian.

@@ -3,18 +3,18 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! `verify::<Level5>` on arbitrary bytes. A panic is a failed nightly.
+//! `verify::<P500>` on arbitrary bytes. A panic is a failed nightly.
 
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use prism_field::Level5;
+use prism_field::P500;
 use prism_verify::verify;
 
 fuzz_target!(|data: &[u8]| {
-    let _ = verify::<Level5>(data, data, data);
+    let _ = verify::<P500>(data, data, data);
     let (public_key, message, signature) = split(data);
-    let _ = verify::<Level5>(public_key, message, signature);
+    let _ = verify::<P500>(public_key, message, signature);
 });
 
 fn split(data: &[u8]) -> (&[u8], &[u8], &[u8]) {
