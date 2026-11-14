@@ -191,9 +191,19 @@ medians of one tree differ by at most 0.2%. A resident node used about
 1.9 of the four cores throughout (load 3.0 to 3.8) and was not stopped,
 as in the 2026-11-12 record; the clock read 1.8 GHz and the temperature
 63.8 to 66.7 °C at every reading. Firmware throttling flags could not be
-read. This is a measurement under recorded load, not an idle-device
-baseline. The "before" figures are the salted verifier's and equal the
-unsalted ones of 2026-11-12 to within 0.7%.
+read. This is a measurement under recorded load. The "before" figures
+are the salted verifier's and equal the unsalted ones of 2026-11-12 to
+within 0.7%.
+
+The idle-device baseline, the same session an hour later with the
+resident node stopped for the timed runs (load about 1, 51.6 to 55.5 °C):
+166.8 / 447.7 / 1018.0 ms before and 89.3 / 232.3 / 522.5 ms after, a
+fall of 46.5%, 48.1% and 48.7%; record in
+[benchmarks/verifier_ops_pi4_idle_2026-11-14.txt](benchmarks/verifier_ops_pi4_idle_2026-11-14.txt).
+Every figure is within 0.5% of the loaded one, and the per-operation
+times within 0.5%: a node using two of the four cores does not move a
+single-threaded verification on this device. The bench is one thread, so
+neither record says anything about verifying on all four cores at once.
 
 One extension-field operation on the Pi 4 at the head, median of the
 three runs. The bench's counter on aarch64 is a 54 MHz timer, not a cycle
