@@ -51,7 +51,7 @@ pub fn vector<L: ParameterSet>(text: &str) -> (Vec<u8>, Vec<u8>, Response<L>) {
 }
 /// The set a vector file names.
 pub fn set(text: &str) -> Set {
-    Set::from_legacy_label(field(text, "level ")).unwrap()
+    Set::from_committed_label(field(text, "level ")).unwrap()
 }
 /// Every committed honest vector, sorted by path.
 pub fn files() -> Vec<PathBuf> {

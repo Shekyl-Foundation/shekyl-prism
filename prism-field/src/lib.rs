@@ -11,9 +11,13 @@
 //! of that type's contract, so a `p248` encoding is refused by the `p500`
 //! decoder and no caller re-derives a length from a second constant.
 //!
-//! Nothing here records a security level. The category a prime is assessed
-//! at moves with research and is documentation: `docs/PARAMETER_SETS.md`,
-//! which no code reads.
+//! The salt's bit length and the number of candidates a torsion search
+//! tries are both [`width_bits`]: `e` rounded up to a multiple of 128.
+//! Nothing here records a security level, and nothing here names a set by
+//! the string committed vectors carry. The category a prime is assessed at
+//! moves with research and is documentation: `docs/PARAMETER_SETS.md`,
+//! which no code reads. The committed string lives with the corpus, in
+//! `prism-verify`.
 //!
 //! `fp2` 0.6.0 is MIT OR Apache-2.0. Its default feature is `test-utils`, so
 //! this crate turns default features off. Packed arithmetic stays off as well:
@@ -72,24 +76,49 @@ pub trait Field: Copy {
     fn same(self, rhs: Self) -> bool;
 }
 
+/// `e` rounded up to a multiple of 128.
+///
+/// This is the bit length of the public salt and the number of candidates
+/// each torsion search tries. A parameter set carries no security
+/// assessment; both widths are this rounding of its exponent. The two
+/// primes ruled but not yet built, `e = 324` and `e = 664`, round to 384
+/// and 768.
+///
+/// Panics if the rounding does not fit in `u32`.
+pub const fn width_bits(e: u32) -> u32 {
+    match e.div_ceil(128).checked_mul(128) {
+        Some(bits) => bits,
+        None => panic!("e rounded up to a multiple of 128 does not fit in u32"),
+    }
+}
+
+/// The candidate limit for a width that fits in a `u16`.
+///
+/// Panics if `bits` exceeds [`u16::MAX`]. Every ruled prime is far below
+/// that, and a wider prime would be a new counter, not a silent truncation.
+const fn candidate_bound(bits: u32) -> u16 {
+    assert!(
+        bits <= u16::MAX as u32,
+        "the width fits a candidate counter"
+    );
+    // CLIPPY: the assert is the range check. `TryFrom` is not const-stable,
+    // so the narrowing cast is the const form of that check.
+    #[allow(clippy::cast_possible_truncation)]
+    {
+        bits as u16
+    }
+}
+
 /// One parameter set: a prime `p = f·2^e − 1`, its two fields and the
 /// lengths its encodings use.
 pub trait ParameterSet: Copy + Clone + Eq + Send + Sync + 'static {
     type Base: Field;
     type Ext: Field;
-    /// The set's name, `p` and then `e`: `p248`, `p376`, `p500`. For
-    /// people to read. Nothing hashes it and nothing looks data up by it;
-    /// that is [`Self::LEGACY_LABEL`].
-    const NAME: &'static str;
-    /// The string this set was known by before sets were named by prime.
+    /// The set's name, `p` and then `e`: `p248`, `p376`, `p500`.
     ///
-    /// It is opaque and it never changes. Committed vectors and records
-    /// carry it in their `level` field, and the research signer absorbs it
-    /// into the streams its public test seeds expand to, so changing one
-    /// byte of it would change every committed vector. It says nothing
-    /// about the set, and a set added later has no need of one in this
-    /// form: it would use its [`Self::NAME`].
-    const LEGACY_LABEL: &'static str;
+    /// Display only. Committed vectors and the research signer's seed
+    /// streams do not use it.
+    const NAME: &'static str;
     /// Valuation in `p = f·2^e − 1`.
     const E: u32;
     /// The odd cofactor `f` in `p + 1 = f·2^e`.
@@ -107,45 +136,17 @@ pub trait ParameterSet: Copy + Clone + Eq + Send + Sync + 'static {
     const S_LEN: usize;
     /// This set's salt. Its length is [`Self::SALT_LEN`].
     type Salt: Salt;
-    /// Public salt length in bytes: `e` rounded up to a multiple of 128
-    /// bits, so 32, 48 and 64 bytes at `p248`, `p376` and `p500`.
+    /// [`width_bits`] of [`Self::E`]. The salt's bit length, and the
+    /// candidate limit of each torsion search.
+    const WIDTH_BITS: u32;
+    /// Public salt length in bytes: [`Self::WIDTH_BITS`] / 8.
     const SALT_LEN: usize;
-    /// How many candidates each search for a torsion basis point tries
-    /// before it gives up: 256, 384 and 512.
+    /// Candidates each torsion search tries: [`Self::WIDTH_BITS`].
     ///
-    /// Three searches use it, and reaching it means something different
-    /// in each.
-    ///
-    /// - The basis index of a public key
-    ///   (`prism_verify::basis_hint`): the candidates are small
-    ///   field elements, each tried as the abscissa of a point of full
-    ///   even order. With no candidate inside the bound the key is refused
-    ///   as `Basis`. The reference signer searches without a bound, so
-    ///   this is a key the reference accepts and this verifier does not.
-    /// - The second point of a basis of `E[p + 1]`
-    ///   (`prism_isogeny::torsion::rational_basis`): the candidates are the
-    ///   integers `1..=SEARCH_BOUND` as abscissas. With none inside the
-    ///   bound there is no basis and the caller refuses.
-    /// - The basis of the starting curve `y² = x³ + x`
-    ///   (`prism_isogeny::torsion::starting_basis`): a fixed computation
-    ///   for each prime, with no input. It either finds its basis inside
-    ///   the bound or it does not, and a test holds that it does for every
-    ///   set. No probability applies.
-    ///
-    /// Only the first has an estimate of how often it fails, and it is
-    /// the argument the bound was first chosen by: heuristic, inherited,
-    /// and not proved here. It treats the candidates as independent. When
-    /// the curve coefficient is not a square, all `N` candidates are
-    /// tried and each lies on the curve with probability about one half,
-    /// so the search fails with probability about `2^-N`. When it is a
-    /// square, about half the candidates are first discarded by a
-    /// non-square filter on `1 + b²`, the remaining `N/2` or so each
-    /// succeed with probability about one half, and the search fails with
-    /// probability about `2^-(N/2)`. The one measurement is small: over
-    /// the 113 committed keys the largest basis index is 16.
-    ///
-    /// The second search also requires full order and independence of the
-    /// first point, and no failure estimate is made for it here.
+    /// The public-key basis search, the second point of a rational basis
+    /// and the starting curve's basis share this limit. Reaching it means
+    /// something different in each search. The only failure estimate is
+    /// the public-key search's, and it lives with that search.
     const SEARCH_BOUND: u16;
     /// Field elements a signature carries: `A_sig`, `x(P)`, `y(P)`, `x(Q)`,
     /// `y(Q)`.
@@ -168,24 +169,20 @@ macro_rules! parameter_set {
         $set:ident,
         f = $f:literal,
         e = $e:literal,
-        salt_len = $salt_len:literal,
-        search_bound = $search_bound:literal,
-        legacy_label = $legacy_label:literal,
         $fp:ident,
         $fp2:ident,
         [$($limb:expr),+ $(,)?]
     ) => {
         pub mod $modname {
             use super::ops::{tally, Kind, Op};
-            use super::{define_fp2_from_type, define_fp_core, Field, ParameterSet, Salt};
+            use super::{
+                candidate_bound, define_fp2_from_type, define_fp_core, width_bits, Field,
+                ParameterSet, Salt,
+            };
 
-            const SALT_BYTES: usize = $salt_len;
-
-            // The salt is `e` rounded up to a multiple of 128 bits.
-            const _: () = assert!(
-                SALT_BYTES == ($e as usize).div_ceil(128) * 16,
-                "the salt is e rounded up to a multiple of 128 bits"
-            );
+            /// [`width_bits`] of this set's exponent.
+            const WIDTH: u32 = width_bits($e);
+            const SALT_BYTES: usize = WIDTH as usize / 8;
 
             #[derive(Clone, Copy, Debug, PartialEq, Eq)]
             pub struct SaltBytes([u8; SALT_BYTES]);
@@ -358,7 +355,6 @@ macro_rules! parameter_set {
                 type Base = $fp;
                 type Ext = $fp2;
                 const NAME: &'static str = concat!("p", stringify!($e));
-                const LEGACY_LABEL: &'static str = $legacy_label;
                 const E: u32 = $e;
                 const ODD: u64 = $f;
                 const CHAIN_STEPS: u32 = $e - 2;
@@ -368,8 +364,9 @@ macro_rules! parameter_set {
                 const PUBLIC_KEY_LEN: usize = <$fp2>::ENCODED_LENGTH;
                 type Salt = SaltBytes;
                 const S_LEN: usize = (Self::CHALLENGE_BITS as usize).div_ceil(8);
+                const WIDTH_BITS: u32 = WIDTH;
                 const SALT_LEN: usize = SALT_BYTES;
-                const SEARCH_BOUND: u16 = $search_bound;
+                const SEARCH_BOUND: u16 = candidate_bound(WIDTH);
                 const SIGNATURE_ELEMENTS: usize = 5;
                 const SIGNATURE_LEN: usize =
                     Self::SIGNATURE_ELEMENTS * <$fp2>::ENCODED_LENGTH + Self::SALT_LEN;
@@ -411,9 +408,6 @@ parameter_set!(
     P248,
     f = 5,
     e = 248,
-    salt_len = 32,
-    search_bound = 256,
-    legacy_label = "NIST-I",
     FpP248,
     Fp2P248,
     [
@@ -429,9 +423,6 @@ parameter_set!(
     P376,
     f = 65,
     e = 376,
-    salt_len = 48,
-    search_bound = 384,
-    legacy_label = "NIST-III",
     FpP376,
     Fp2P376,
     [
@@ -449,9 +440,6 @@ parameter_set!(
     P500,
     f = 27,
     e = 500,
-    salt_len = 64,
-    search_bound = 512,
-    legacy_label = "NIST-V",
     FpP500,
     Fp2P500,
     [
@@ -471,7 +459,7 @@ pub const FIELD_BACKEND: &str = "scalar";
 
 #[cfg(test)]
 mod tests {
-    use super::{Field, ParameterSet, Salt, P248, P376, P500};
+    use super::{width_bits, Field, ParameterSet, Salt, P248, P376, P500};
 
     fn hex(bytes: &[u8]) -> String {
         bytes.iter().map(|b| format!("{b:02x}")).collect()
@@ -490,7 +478,9 @@ mod tests {
         assert!(root.square().same(four));
         assert_eq!(L::FP_LEN * 2, L::FP2_LEN);
         assert_eq!(L::PUBLIC_KEY_LEN, L::FP2_LEN);
-        assert_eq!(L::SALT_LEN, (L::E as usize).div_ceil(128) * 16);
+        assert_eq!(L::WIDTH_BITS, L::E.div_ceil(128) * 128);
+        assert_eq!(L::SALT_LEN * 8, L::WIDTH_BITS as usize);
+        assert_eq!(u32::from(L::SEARCH_BOUND), L::WIDTH_BITS);
         assert_eq!(L::SALT_LEN, <L::Salt as Salt>::LEN);
         assert_eq!(L::CHAIN_STEPS, L::E - 2);
         assert_eq!(L::CHALLENGE_BITS, L::E - 3);
@@ -544,21 +534,24 @@ mod tests {
         the_prime_is::<P500>("p500", 27, 500);
     }
 
-    /// The legacy labels are data: committed vectors and the research
-    /// signer's seed streams carry these exact bytes.
+    /// The committed sizes of the three built sets, and the widths of the
+    /// two ruled exponents that have no type yet. The sizes are the pin.
     #[test]
-    fn the_legacy_labels_are_the_committed_strings() {
-        assert_eq!(P248::LEGACY_LABEL, "NIST-I");
-        assert_eq!(P376::LEGACY_LABEL, "NIST-III");
-        assert_eq!(P500::LEGACY_LABEL, "NIST-V");
-        assert_eq!(
-            (P248::SALT_LEN, P376::SALT_LEN, P500::SALT_LEN),
-            (32, 48, 64)
-        );
-        assert_eq!(
-            (P248::SEARCH_BOUND, P376::SEARCH_BOUND, P500::SEARCH_BOUND),
-            (256, 384, 512)
-        );
+    fn the_width_is_e_rounded_up_to_128_bits() {
+        fn check<L: ParameterSet>(salt_bytes: usize, candidates: u16) {
+            let rounded = L::E.div_ceil(128) * 128;
+            assert_eq!(L::WIDTH_BITS, rounded, "{}", L::NAME);
+            assert_eq!(L::SALT_LEN, salt_bytes, "{}", L::NAME);
+            assert_eq!(L::SEARCH_BOUND, candidates, "{}", L::NAME);
+            assert_eq!(usize::from(L::SEARCH_BOUND), L::SALT_LEN * 8);
+            assert_eq!(width_bits(L::E), rounded);
+        }
+        check::<P248>(32, 256);
+        check::<P376>(48, 384);
+        check::<P500>(64, 512);
+        // Ruled, not built. Salt bytes are the width over 8: 48 and 96.
+        assert_eq!(width_bits(324), 384);
+        assert_eq!(width_bits(664), 768);
     }
 
     fn hex_bytes(text: &str) -> Vec<u8> {

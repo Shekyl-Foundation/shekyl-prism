@@ -12,7 +12,7 @@
 //! smallest prime `q_j` from [`smallest_at_exponent`] at exponent `e − 2`.
 //!
 //! One argument is the sample count per set. Stdout is
-//! `<legacy label> <exponent> <j> <s hex> <q hex>`, little-endian. The
+//! `<committed label> <exponent> <j> <s hex> <q hex>`, little-endian. The
 //! label is the one the committed samples carry.
 
 use std::env;
@@ -21,7 +21,7 @@ use std::process::ExitCode;
 
 use prism_compare::first_prime;
 use prism_field::{ParameterSet, P248, P376, P500};
-use prism_verify::{challenge_degree, KeyIdentity};
+use prism_verify::{challenge_degree, Committed, KeyIdentity};
 
 const MESSAGE_PREFIX: &[u8] = b"shekyl-prism-small-extension";
 
@@ -59,7 +59,7 @@ fn main() -> ExitCode {
     ExitCode::SUCCESS
 }
 
-fn sample_set<L: ParameterSet>(count: u64, out: &mut impl Write) -> Result<(), ()> {
+fn sample_set<L: Committed>(count: u64, out: &mut impl Write) -> Result<(), ()> {
     let mut draw = 0u64;
     let mut produced = 0u64;
     while produced < count {
@@ -85,7 +85,7 @@ fn sample_set<L: ParameterSet>(count: u64, out: &mut impl Write) -> Result<(), (
     Ok(())
 }
 
-fn write_sample<L: ParameterSet>(
+fn write_sample<L: Committed>(
     produced: u64,
     index: &str,
     scalar: &[u8],
@@ -97,7 +97,7 @@ fn write_sample<L: ParameterSet>(
     writeln!(
         out,
         "{name} {exponent} {index} {scalar} {degree}",
-        name = L::LEGACY_LABEL,
+        name = L::LABEL,
         exponent = L::E - 2,
         scalar = hex(scalar),
         degree = hex(&degree),

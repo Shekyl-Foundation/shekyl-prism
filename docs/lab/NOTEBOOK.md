@@ -211,3 +211,13 @@ Automated review of the PR (Copilot, 2026-11-14), two findings, both right. (1) 
 Not done here: the `p324` and `p664` fields, the accept policy in the type system, the set identifier and its containers. Each is a later part with its own brief.
 Open: whether the heuristic behind the search bound carries to `p324` and `p664` at 384 and 768; nothing in this part contradicts it, and nothing in this part tests it.
 Who: Rick ruled / reviewer wrote the design round and the brief / coding agent (Claude Code) implemented and ran / not yet reviewed.
+
+Corrections (2026-11-14, later the same day): the search bound was left as the stored values of `2λ`, and the corpus string was a required constant of every prime. Both are corrected in the entry below. The conclusion above, that no behaviour changed and that the label bytes stayed, still stands. The failure-probability heuristic is still not a claim about `p324` or `p664`.
+
+### 2026-11-14 — The width is a function of `e`, and the corpus string leaves the prime
+Question: the review of this branch found the search bound still defined as twice a security parameter, and the NIST string still required of every prime. Can both become facts of their owners, with the three built sets unchanged?
+Expected: the salt length and the candidate limit are one rounding of `e`, so deriving them deletes the literals and the `2λ` test without moving a byte of a vector. The corpus string moves to a trait implemented only by the three sets that have vectors, and the seed streams stay the pinned bytes.
+Done: `width_bits` is `e` rounded up to a multiple of 128. `SALT_LEN` is that width in bytes and `SEARCH_BOUND` is that width as a candidate count. The macro no longer takes either, nor a label. `Committed` in `prism-verify` holds `NIST-I`, `NIST-III`, `NIST-V` for `P248`, `P376`, `P500`. The signer absorbs `Committed::LABEL`. `search_bound` in `prism-verify` keeps the public-key failure estimate and says the other two searches have none. A test pins 32/256, 48/384, 64/512, and 384 and 768 for the unbuilt exponents.
+Result: Ran. The workspace tests pass. The operation-count records differ in their source digest only. `scripts/security_parameters.py` prints the same table; its row names and collision targets now live in the script, keyed by `e`.
+Conclusion: a later prime takes its salt and its search limit from `width_bits` and gains a corpus label only when committed data exists. The heuristic for the public-key search is unchanged and is still not proved for the two unbuilt primes.
+Who: review of the branch proposed the split / coding agent (Grok) implemented it and ran the tests / not yet reviewed.

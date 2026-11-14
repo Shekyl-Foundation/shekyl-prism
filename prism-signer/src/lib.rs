@@ -23,7 +23,7 @@ use std::path::{Path, PathBuf};
 
 use prism_field::{Field, ParameterSet, Salt, P248, P376, P500};
 use prism_verify::{
-    signature::canonical_sign, verify, ChallengeScalar, KeyIdentity, Response, Set,
+    signature::canonical_sign, verify, ChallengeScalar, Committed, KeyIdentity, Response, Set,
 };
 use sha3::{
     digest::{core_api::CoreWrapper, ExtendableOutput, Update, XofReader},
@@ -108,19 +108,19 @@ pub enum Attempt {
 }
 
 /// One keygen. The scratch directory lives as long as this session.
-pub struct Session<'a, L: ParameterSet> {
+pub struct Session<'a, L: Committed> {
     backend: backend::Backend,
     seed: &'a SecretSeed,
     public_key: Vec<u8>,
     set: core::marker::PhantomData<L>,
 }
 
-impl<'a, L: ParameterSet> Session<'a, L> {
+impl<'a, L: Committed> Session<'a, L> {
     /// Keygen under `seed`. The backend must be this set's SHAKE signer.
     pub fn open(program: impl AsRef<Path>, seed: &'a SecretSeed) -> Result<Self, Error> {
         let backend = backend::Backend::open(program.as_ref())?;
         backend.check_version(L::E)?;
-        let stream = stream(&seed.0, L::LEGACY_LABEL, b"keygen", b"");
+        let stream = stream(&seed.0, L::LABEL, b"keygen", b"");
         let text = backend.keygen(&stream).map_err(Error::from)?;
         let public_key = decode_hex(line(&text, "A ")?)?;
         KeyIdentity::<L>::decode(&public_key).map_err(|_| Error::Malformed)?;
@@ -156,7 +156,7 @@ impl<'a, L: ParameterSet> Session<'a, L> {
         }
         let mut canonical = scalar.to_vec();
         canonical.resize(L::S_LEN, 0);
-        let stream = stream(&self.seed.0, L::LEGACY_LABEL, b"sign", &canonical);
+        let stream = stream(&self.seed.0, L::LABEL, b"sign", &canonical);
         let text = self
             .backend
             .sign_scalar(&backend::decimal(&canonical), &stream)?;
@@ -239,14 +239,14 @@ impl<'a, L: ParameterSet> Session<'a, L> {
 }
 
 /// The salt the signer would derive. `seed` is the master seed, not a stream.
-pub fn salt_for<L: ParameterSet>(
+pub fn salt_for<L: Committed>(
     seed: &[u8; limits::STREAM_LEN],
     public_key: &[u8],
     message: &[u8],
     randomness: &[u8; limits::CALLER_RANDOMNESS_LEN],
     counter: u64,
 ) -> L::Salt {
-    let salt_key = stream(seed, L::LEGACY_LABEL, b"salt", b"");
+    let salt_key = stream(seed, L::LABEL, b"salt", b"");
     let mut hash: CShake256 = CoreWrapper::from_core(CShake256Core::new(b"shekyl-prism-salt-v1"));
     hash.update(salt_key.as_slice());
     hash.update(public_key);
@@ -260,13 +260,13 @@ pub fn salt_for<L: ParameterSet>(
 
 fn stream(
     seed: &[u8; limits::STREAM_LEN],
-    set: &str,
+    committed_label: &str,
     label: &[u8],
     context: &[u8],
 ) -> Zeroizing<[u8; limits::STREAM_LEN]> {
     let mut hash: CShake256 = CoreWrapper::from_core(CShake256Core::new(b"shekyl-prism-secret-v1"));
     hash.update(seed);
-    hash.update(set.as_bytes());
+    hash.update(committed_label.as_bytes());
     hash.update(&(label.len() as u64).to_le_bytes());
     hash.update(label);
     hash.update(context);
@@ -412,11 +412,11 @@ fn decode_hex(text: &str) -> Result<Vec<u8>, CandidateError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prism_field::ParameterSet;
+    use prism_verify::Committed;
 
     #[test]
     fn the_salt_kdf_binds_every_input_and_writes_the_row_length() {
-        fn check<L: ParameterSet>() {
+        fn check<L: Committed>() {
             let seed = [0x42; limits::STREAM_LEN];
             let key = L::ext_encode(L::Ext::from_u64(3));
             let randomness = [0u8; limits::CALLER_RANDOMNESS_LEN];
@@ -440,20 +440,20 @@ mod tests {
     }
 
     /// The streams a seed expands to, as they were before sets were named
-    /// by prime. The legacy label is absorbed into every one of them, so
+    /// by prime. The committed label is absorbed into every one of them, so
     /// these values are what keeps every committed vector reproducible
     /// from its seed. They were printed at `04455de`, where the absorbed
     /// string was the set's name.
     #[test]
     fn the_seed_streams_are_the_ones_the_committed_vectors_came_from() {
-        fn first<L: ParameterSet>(label: &[u8], context: &[u8]) -> String {
+        fn first<L: Committed>(label: &[u8], context: &[u8]) -> String {
             let seed = [0x42; limits::STREAM_LEN];
-            stream(&seed, L::LEGACY_LABEL, label, context)
+            stream(&seed, L::LABEL, label, context)
                 .iter()
                 .map(|byte| format!("{byte:02x}"))
                 .collect()
         }
-        fn all<L: ParameterSet>() -> [String; 3] {
+        fn all<L: Committed>() -> [String; 3] {
             [
                 first::<L>(b"keygen", b""),
                 first::<L>(b"sign", b"canonical"),

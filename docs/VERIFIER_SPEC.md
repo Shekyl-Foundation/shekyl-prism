@@ -21,7 +21,7 @@ preserve the derivations, investigations and questions that led here.
 | Degree `q` bit length | 491 | 747 | 995 |
 | Public-key bytes | 64 | 96 | 128 |
 | Salt bytes (`e` rounded up to a multiple of 128 bits) | 32 | 48 | 64 |
-| Search bound | 256 | 384 | 512 |
+| Search bound (the salt's bit length) | 256 | 384 | 512 |
 | Signature bytes | 352 | 528 | 704 |
 
 A parameter set is a prime and is named by it

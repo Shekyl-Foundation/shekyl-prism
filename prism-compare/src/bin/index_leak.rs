@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let vectors = archived_vectors();
     let mut skipped = BTreeMap::new();
     for v in &vectors {
-        let primes = match Set::from_legacy_label(&v.level) {
+        let primes = match Set::from_committed_label(&v.level) {
             Ok(Set::P248) => earlier_primes::<P248>(&v.key, &v.message, v.index),
             Ok(Set::P376) => earlier_primes::<P376>(&v.key, &v.message, v.index),
             Ok(Set::P500) => earlier_primes::<P500>(&v.key, &v.message, v.index),

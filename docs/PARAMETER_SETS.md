@@ -5,8 +5,9 @@ Status: current as of 2026-11-14. Ruled by Rick on 2026-11-14.
 A parameter set is a prime `p = f·2^e − 1`. There is one algorithm, and
 each set is that algorithm over one prime. A set is named by its exponent:
 `p248`, `p376`, `p500`. In the code a set is a type (`P248`, `P376`,
-`P500` in `prism-field`), and its name, exponent, cofactor, salt length
-and search bound are constants of that type.
+`P500` in `prism-field`). Its name, exponent and cofactor are constants
+of that type. Its salt length and its search bound are `e` rounded up
+to a multiple of 128, in bytes and in candidates: `ParameterSet::WIDTH_BITS`.
 
 **No code reads this file.** In particular no code reads the category
 column below. The category a prime is assessed at is an assessment, and it
@@ -33,11 +34,15 @@ Five primes are ruled. Three are implemented. Sizes are in bytes.
   signature is five elements of `F_{p²}` and the salt.
 - The salt is `e` rounded up to a multiple of 128 bits. The three
   implemented sets already had those lengths; the rule is what fixes the
-  two that are not built yet (ruled 2026-11-14).
+  two that are not built yet (ruled 2026-11-14). `width_bits` is that
+  rounding, and a test pins 384 and 768 for `e = 324` and `e = 664`.
 - The sizes of `p324` and `p664` are left blank until those sets are in
   the code and a test pins them.
-- The search bound of each implemented set is 256, 384 and 512. What it
-  limits is in the doc comment of `ParameterSet::SEARCH_BOUND`.
+- The search bound is the same rounding, counted in candidates: 256, 384
+  and 512 for the three built sets, 384 and 768 for the two that are not.
+  The public-key search is the one search with a failure estimate, and
+  that estimate lives on `prism_verify::search_bound`. The rational basis
+  and the starting basis share the limit and have no estimate.
 
 ## What each prime is currently assessed at
 
@@ -77,7 +82,8 @@ assessed at then. The mapping is fixed:
 
 Those strings are also data. Committed vectors carry `level NIST-I` and so
 on, file names carry `lvl1`, and the research signer absorbs the string
-into the streams its public test seeds expand to. In the code each set
-keeps its string as `ParameterSet::LEGACY_LABEL`, an opaque constant that
-never changes. No vector, fixture or record file was renamed or edited
-when the sets were renamed.
+into the streams its public test seeds expand to. The string is not a
+constant of the prime. `Committed` in `prism-verify` is implemented for
+the three sets that have a corpus, and `Committed::LABEL` is the string.
+A prime with no corpus does not implement it. No vector, fixture or
+record file was renamed or edited when the sets were renamed.

@@ -13,19 +13,19 @@
 //! Stdout: one `DENSITY` line per set and version, with the prime count
 //! of each tenth of the run so the dispersion is visible.
 use prism_compare::{archived_vectors, unsalted};
-use prism_field::{ParameterSet, Salt, P248, P376, P500};
-use prism_verify::{ChallengeScalar, KeyIdentity};
+use prism_field::{Salt, P248, P376, P500};
+use prism_verify::{ChallengeScalar, Committed, KeyIdentity};
 
 fn message(n: u64) -> Vec<u8> {
     let mut m = b"shekyl-prism-comparison-e1-v1".to_vec();
     m.extend(n.to_le_bytes());
     m
 }
-fn set<L: ParameterSet>(samples: u64, salted: bool) -> String {
+fn set<L: Committed>(samples: u64, salted: bool) -> String {
     let key = archived_vectors()
         .into_iter()
-        .find(|v| v.level == L::LEGACY_LABEL && !v.file.contains('/'))
-        .expect("an archived primary vector with this legacy label")
+        .find(|v| v.level == L::LABEL && !v.file.contains('/'))
+        .expect("an archived primary vector with this committed label")
         .key;
     let id = KeyIdentity::<L>::decode(&key).expect("archived key");
     let mut blocks = [0u64; 10];
@@ -43,7 +43,7 @@ fn set<L: ParameterSet>(samples: u64, salted: bool) -> String {
     let primes: u64 = blocks.iter().sum();
     format!(
         "DENSITY level={} hash={} bits={} free_bits={} samples={samples} primes={primes} density={:.6} tenths={}",
-        L::LEGACY_LABEL,
+        L::LABEL,
         if salted { "challenge-v2-salted" } else { "challenge-v1-unsalted" },
         L::CHALLENGE_BITS,
         L::CHALLENGE_BITS - 1,

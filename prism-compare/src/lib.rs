@@ -87,7 +87,7 @@ pub fn decode(text: &str) -> Option<Vec<u8>> {
         .collect()
 }
 
-/// One archived unsalted vector: its `level` field (the legacy label),
+/// One archived unsalted vector: its `level` field (the committed label),
 /// message, key, the five
 /// response elements in wire order, and the carried index.
 pub struct Archived {
@@ -191,7 +191,7 @@ mod tests {
             let text = std::fs::read_to_string(p).unwrap();
             let rows: std::collections::HashMap<_, _> =
                 text.lines().filter_map(|s| s.split_once(' ')).collect();
-            match prism_verify::Set::from_legacy_label(rows["level"]) {
+            match prism_verify::Set::from_committed_label(rows["level"]) {
                 Ok(prism_verify::Set::P248) => check::<P248>(&rows),
                 Ok(prism_verify::Set::P376) => check::<P376>(&rows),
                 Ok(prism_verify::Set::P500) => check::<P500>(&rows),

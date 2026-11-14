@@ -35,12 +35,17 @@ use crate::VerifyError;
 /// does for every key.
 pub const C_HINT_MAX_INDEX: u16 = 127;
 
-/// Candidate indices the search tries before refusing: the set's
-/// [`ParameterSet::SEARCH_BOUND`], `N` below.
+/// Candidates the public-key search tries before refusing.
 ///
-/// The C loops without a bound. A verifier cannot, because whoever picks `A`
-/// picks the search length. The bound belongs to the parameter set and not
-/// to the width of the C's hint byte:
+/// The limit is the set's [`ParameterSet::WIDTH_BITS`]: `e` rounded up to
+/// a multiple of 128. The C loops without a bound. A verifier cannot,
+/// because whoever picks `A` picks the search length. The limit is not the
+/// width of the C hint byte.
+///
+/// This estimate is this search's. The rational basis and the starting
+/// basis share the limit and have none here: the rational basis also
+/// requires full order and independence, and the starting basis is a fixed
+/// computation with no input.
 ///
 /// | Branch | Trials in `N` candidates | Failure probability |
 /// | --- | --- | --- |
@@ -49,8 +54,8 @@ pub const C_HINT_MAX_INDEX: u16 = 127;
 ///
 /// So a key this verifier refuses and the C accepts arises with probability
 /// at most about `2^-(N/2)`: `2^-128`, `2^-192` and `2^-256` at the three
-/// sets. The figures are heuristic, from treating the candidates as
-/// independent; they are the argument the bound was chosen by and are not
+/// built sets. The figures are heuristic, from treating the candidates as
+/// independent; they are the argument the limit was chosen by and are not
 /// proved or measured here. The earlier seven-bit ceiling put the square
 /// branch at about `2^-63` at every set.
 pub fn search_bound<L: ParameterSet>() -> u16 {
@@ -277,19 +282,14 @@ mod tests {
     }
 
     #[test]
-    fn the_search_bound_is_twice_the_security_parameter() {
-        // The bound is the set's own, not the C hint byte's width. Every
-        // set searches past the seven-bit ceiling the C can encode.
-        assert_eq!(search_bound::<P248>(), 256);
-        assert_eq!(search_bound::<P376>(), 384);
-        assert_eq!(search_bound::<P500>(), 512);
-        for bound in [
-            search_bound::<P248>(),
-            search_bound::<P376>(),
-            search_bound::<P500>(),
-        ] {
-            assert!(bound > C_HINT_MAX_INDEX);
+    fn the_search_reaches_past_the_hint_byte() {
+        fn check<L: ParameterSet>() {
+            assert_eq!(u32::from(search_bound::<L>()), L::WIDTH_BITS);
+            assert!(search_bound::<L>() > C_HINT_MAX_INDEX);
         }
+        check::<P248>();
+        check::<P376>();
+        check::<P500>();
     }
 
     #[test]

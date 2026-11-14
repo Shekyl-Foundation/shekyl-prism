@@ -5,11 +5,11 @@
 
 //! The research adapter against the production signer, on the real backend.
 use prism_compare::native::{self, Unsalted};
-use prism_field::{ParameterSet, P248, P376, P500};
+use prism_field::{P248, P376, P500};
 use prism_signer::{limits, SecretSeed, Signer};
-use prism_verify::Set;
+use prism_verify::{Committed, Set};
 
-fn agree<L: ParameterSet>(dir: &std::path::Path, nist: Set, name: &str) {
+fn agree<L: Committed>(dir: &std::path::Path, nist: Set, name: &str) {
     let backend = dir.join(name);
     let seed = SecretSeed::from_bytes([0x42; limits::STREAM_LEN]);
     let signer = Signer::new(

@@ -40,7 +40,7 @@ pub use identity::KeyIdentity;
 pub use prime::{challenge_degree, degree_is_prime, is_baillie_psw};
 pub use prism_field::Salt;
 pub use reference::{prepared, reference_key, Prepared, PreparedError, ReferenceKey, VectorError};
-pub use set::{verify_set, Set, UnknownLegacyLabel, UnknownSet};
+pub use set::{verify_set, Committed, Set, UnknownCommittedLabel, UnknownSet};
 pub use signature::{AffinePoint, Response};
 pub use stage::Stage;
 
@@ -68,8 +68,8 @@ pub enum VerifyError {
     ///
     /// The search is the reference's, including the indices its `start = 128`
     /// fallback covers, so this refuses only keys whose smallest index
-    /// exceeds the set's `SEARCH_BOUND`. The bound's doc comment gives the
-    /// heuristic estimate of how rare that is.
+    /// exceeds the set's [`search_bound`]. That function's comment gives
+    /// the heuristic estimate of how rare that is.
     /// `docs/VERIFIER_SPEC.md` records the bound and what it costs.
     Basis,
     /// `2^{2e′−1} − s_j^2` is not a Baillie–PSW prime, `e′ = e − 2`.
@@ -401,28 +401,32 @@ mod tests {
     #[test]
     fn a_set_name_parses_or_is_its_own_error() {
         for (name, label, set) in [
-            ("p248", P248::LEGACY_LABEL, Set::P248),
-            ("p376", P376::LEGACY_LABEL, Set::P376),
-            ("p500", P500::LEGACY_LABEL, Set::P500),
+            ("p248", P248::LABEL, Set::P248),
+            ("p376", P376::LABEL, Set::P376),
+            ("p500", P500::LABEL, Set::P500),
         ] {
             assert_eq!(name.parse::<Set>(), Ok(set), "{name}");
             assert_eq!(set.to_string(), name);
-            assert_eq!(Set::from_legacy_label(label), Ok(set), "{label}");
-            assert_eq!(set.legacy_label(), label);
+            assert_eq!(Set::from_committed_label(label), Ok(set), "{label}");
+            assert_eq!(set.committed_label(), label);
             // The two ways in are kept apart: a name is not a label, and a
             // label is not a name.
             assert_eq!(label.parse::<Set>(), Err(UnknownSet), "{label}");
             assert_eq!(
-                Set::from_legacy_label(name),
-                Err(UnknownLegacyLabel),
+                Set::from_committed_label(name),
+                Err(UnknownCommittedLabel),
                 "{name}"
             );
         }
+        assert_eq!(
+            (P248::LABEL, P376::LABEL, P500::LABEL),
+            ("NIST-I", "NIST-III", "NIST-V")
+        );
         for text in ["", "248", "P248", "p324", "p664", "1", "I", "iv"] {
             assert_eq!(text.parse::<Set>(), Err(UnknownSet), "{text}");
             assert_eq!(
-                Set::from_legacy_label(text),
-                Err(UnknownLegacyLabel),
+                Set::from_committed_label(text),
+                Err(UnknownCommittedLabel),
                 "{text}"
             );
         }
@@ -432,9 +436,11 @@ mod tests {
         // the other's.
         for set in Set::ALL {
             assert!(UnknownSet.to_string().contains(set.name()));
-            assert!(!UnknownSet.to_string().contains(set.legacy_label()));
-            assert!(UnknownLegacyLabel.to_string().contains(set.legacy_label()));
-            assert!(!UnknownLegacyLabel.to_string().contains(set.name()));
+            assert!(!UnknownSet.to_string().contains(set.committed_label()));
+            assert!(UnknownCommittedLabel
+                .to_string()
+                .contains(set.committed_label()));
+            assert!(!UnknownCommittedLabel.to_string().contains(set.name()));
         }
     }
 

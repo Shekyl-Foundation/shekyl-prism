@@ -22,7 +22,7 @@ use crate::{ChallengeScalar, KeyIdentity, Salt};
 
 /// `A` from the C tree's key generation, one row per parameter set.
 ///
-/// Lines are `<legacy label> <hex of A> <hint byte>`. The hint is what
+/// Lines are `<committed label> <hex of A> <hint byte>`. The hint is what
 /// `ec_curve_to_basis_2f_to_hint` returned. It is not part of the public key.
 const C_BASIS_HINTS: &str = include_str!("../testdata/c_basis_hints.txt");
 
@@ -42,7 +42,7 @@ pub struct ReferenceKey {
 /// Why a pinned row could not be read.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum VectorError {
-    /// A row is not `<legacy label> <hex of A> <hint byte>`.
+    /// A row is not `<committed label> <hex of A> <hint byte>`.
     Malformed,
     /// The file carries no row for this set.
     Missing,
@@ -51,7 +51,7 @@ pub enum VectorError {
 impl core::fmt::Display for VectorError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let reason = match self {
-            Self::Malformed => "a pinned row is not <legacy label> <hex A> <hint>",
+            Self::Malformed => "a pinned row is not <committed label> <hex A> <hint>",
             Self::Missing => "no pinned row for this set",
         };
         f.write_str(reason)
@@ -81,7 +81,7 @@ fn parse_rows(text: &str) -> Result<Vec<ReferenceKey>, VectorError> {
 fn parse_row(line: &str) -> Result<ReferenceKey, VectorError> {
     let mut fields = line.split_whitespace();
     let mut next = || fields.next().ok_or(VectorError::Malformed);
-    let set = Set::from_legacy_label(next()?).map_err(|_| VectorError::Malformed)?;
+    let set = Set::from_committed_label(next()?).map_err(|_| VectorError::Malformed)?;
     let public_key = decode_hex(next()?)?;
     let hint = next()?
         .parse()

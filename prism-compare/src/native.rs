@@ -7,9 +7,9 @@
 //! Reduced width and the archived index loop stay here. The salt KDF,
 //! native process, and candidate budget stay in `prism-signer`.
 
-use prism_field::{ParameterSet, Salt};
+use prism_field::Salt;
 use prism_signer::{limits, Attempt, SecretSeed, Session, SigningReport};
-use prism_verify::{ChallengeScalar, KeyIdentity};
+use prism_verify::{ChallengeScalar, Committed, KeyIdentity};
 use std::path::Path;
 
 /// A reduced-width signature and the report of the search that found it.
@@ -42,7 +42,7 @@ pub enum Unsalted {
 }
 
 /// Open the production session. The caller keeps `seed` alive.
-pub fn open<'a, L: ParameterSet>(
+pub fn open<'a, L: Committed>(
     program: impl AsRef<Path>,
     seed: &'a SecretSeed,
 ) -> Result<Session<'a, L>, prism_signer::Error> {
@@ -50,7 +50,7 @@ pub fn open<'a, L: ParameterSet>(
 }
 
 /// Salted signing at projection width `bits`. Full width matches [`Session::sign`].
-pub fn sign<L: ParameterSet>(
+pub fn sign<L: Committed>(
     session: &Session<L>,
     message: &[u8],
     randomness: &[u8; limits::CALLER_RANDOMNESS_LEN],
@@ -97,7 +97,7 @@ pub fn sign<L: ParameterSet>(
 /// (`prism-signer` `sign_set`), on the same backend and the same
 /// scalar-keyed stream: ascending index, first prime degree, a backend
 /// or malformed result ends the call, a refused response moves on.
-pub fn sign_unsalted<L: ParameterSet>(
+pub fn sign_unsalted<L: Committed>(
     session: &Session<L>,
     message: &[u8],
     bits: u32,

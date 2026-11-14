@@ -35,7 +35,7 @@ fn main() -> ExitCode {
         return ExitCode::from(2);
     }
     // The Sage model passes the `level` field of the vector it is checking.
-    match Set::from_legacy_label(&set) {
+    match Set::from_committed_label(&set) {
         Ok(Set::P248) => emit::<P248>(&coefficient, &message, &salt_hex),
         Ok(Set::P376) => emit::<P376>(&coefficient, &message, &salt_hex),
         Ok(Set::P500) => emit::<P500>(&coefficient, &message, &salt_hex),

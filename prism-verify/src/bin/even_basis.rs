@@ -19,6 +19,7 @@ use std::process::ExitCode;
 use prism_field::{Field, ParameterSet, P248, P376, P500};
 use prism_isogeny::torsion::{even_basis, mul_odd_then_double};
 use prism_verify::basis::basis_hint;
+use prism_verify::Committed;
 use sha3::{Digest, Sha3_256};
 
 fn main() -> ExitCode {
@@ -85,7 +86,7 @@ fn show<L: ParameterSet>(hex: &str) -> ExitCode {
     ExitCode::SUCCESS
 }
 
-fn sample<L: ParameterSet>(count: u32) -> ExitCode {
+fn sample<L: Committed>(count: u32) -> ExitCode {
     let mut produced = 0u32;
     let mut counter = 0u64;
     while produced < count {
@@ -95,7 +96,7 @@ fn sample<L: ParameterSet>(count: u32) -> ExitCode {
         let mut block = 0u64;
         while filled < bytes.len() {
             let mut hasher = Sha3_256::new();
-            hasher.update(L::LEGACY_LABEL.as_bytes());
+            hasher.update(L::LABEL.as_bytes());
             hasher.update(counter.to_le_bytes());
             hasher.update(block.to_le_bytes());
             let digest = hasher.finalize();

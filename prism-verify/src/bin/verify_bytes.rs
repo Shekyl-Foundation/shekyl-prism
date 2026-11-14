@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         // Records come from committed vectors, so the first field is the
         // vector's `level` field.
-        let set = Set::from_legacy_label(fields[0])?;
+        let set = Set::from_committed_label(fields[0])?;
         let pk = hex(fields[1]).ok_or("key hex")?;
         let msg = hex(fields[2]).ok_or("message hex")?;
         let sig = hex(fields[3]).ok_or("signature hex")?;

@@ -12,12 +12,17 @@
 //!
 //! - [`str::parse`] reads the set's name, `p248`, `p376` or `p500`. That is
 //!   what a person types.
-//! - [`Set::from_legacy_label`] reads the opaque string committed vectors
+//! - [`Set::from_committed_label`] reads the opaque string committed vectors
 //!   and records carry in their `level` field. That is what data says.
 //!
-//! Each has its own error, [`UnknownSet`] and [`UnknownLegacyLabel`], so a
+//! Each has its own error, [`UnknownSet`] and [`UnknownCommittedLabel`], so a
 //! message never suggests the other way's strings, and neither is a
 //! stand-in refusal.
+//!
+//! The committed string is not a fact about the prime. [`Committed`] is
+//! implemented for the three sets that already have vectors and seed
+//! streams. A prime with no corpus does not implement it, and the field
+//! crate never sees the string.
 
 use core::fmt;
 use core::str::FromStr;
@@ -25,6 +30,29 @@ use core::str::FromStr;
 use prism_field::{ParameterSet, P248, P376, P500};
 
 use crate::{verify, VerifyError};
+
+/// A parameter set that committed vectors and the research signer's seed
+/// streams already name.
+///
+/// The string is opaque and it never changes. It is the `level` field of
+/// those vectors, and the research signer absorbs the same bytes into its
+/// seed streams. A set added later implements this when its corpus exists,
+/// and not before.
+pub trait Committed: ParameterSet {
+    const LABEL: &'static str;
+}
+
+impl Committed for P248 {
+    const LABEL: &'static str = "NIST-I";
+}
+
+impl Committed for P376 {
+    const LABEL: &'static str = "NIST-III";
+}
+
+impl Committed for P500 {
+    const LABEL: &'static str = "NIST-V";
+}
 
 /// One of the parameter sets, as a value.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -47,22 +75,21 @@ impl Set {
         }
     }
 
-    /// The string committed data knows this set by:
-    /// [`ParameterSet::LEGACY_LABEL`].
-    pub fn legacy_label(self) -> &'static str {
+    /// [`Committed::LABEL`] for this set.
+    pub fn committed_label(self) -> &'static str {
         match self {
-            Self::P248 => P248::LEGACY_LABEL,
-            Self::P376 => P376::LEGACY_LABEL,
-            Self::P500 => P500::LEGACY_LABEL,
+            Self::P248 => P248::LABEL,
+            Self::P376 => P376::LABEL,
+            Self::P500 => P500::LABEL,
         }
     }
 
     /// The set a committed vector or record names in its `level` field.
-    pub fn from_legacy_label(label: &str) -> Result<Self, UnknownLegacyLabel> {
+    pub fn from_committed_label(label: &str) -> Result<Self, UnknownCommittedLabel> {
         Self::ALL
             .into_iter()
-            .find(|set| set.legacy_label() == label)
-            .ok_or(UnknownLegacyLabel)
+            .find(|set| set.committed_label() == label)
+            .ok_or(UnknownCommittedLabel)
     }
 
     /// Public salt length for this set, in bytes.
@@ -88,21 +115,21 @@ pub struct UnknownSet;
 /// A string that is not the `level` field of any committed vector or
 /// record.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct UnknownLegacyLabel;
+pub struct UnknownCommittedLabel;
 
-impl fmt::Display for UnknownLegacyLabel {
+impl fmt::Display for UnknownCommittedLabel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "not a level field of the committed data: expected {}, {} or {}",
-            P248::LEGACY_LABEL,
-            P376::LEGACY_LABEL,
-            P500::LEGACY_LABEL
+            P248::LABEL,
+            P376::LABEL,
+            P500::LABEL
         )
     }
 }
 
-impl std::error::Error for UnknownLegacyLabel {}
+impl std::error::Error for UnknownCommittedLabel {}
 
 impl fmt::Display for UnknownSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

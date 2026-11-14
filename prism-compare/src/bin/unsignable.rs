@@ -19,9 +19,9 @@ use prism_compare::{
     encode,
     native::{self, Unsalted},
 };
-use prism_field::{ParameterSet, P248, P376, P500};
+use prism_field::{P248, P376, P500};
 use prism_signer::{limits, SecretSeed};
-use prism_verify::Set;
+use prism_verify::{Committed, Set};
 use sha3::{
     digest::{ExtendableOutput, Update, XofReader},
     Shake256,
@@ -57,7 +57,7 @@ fn describe(outcome: &Unsalted) -> String {
         Unsalted::Exhausted => "exhausted".to_string(),
     }
 }
-fn run<L: ParameterSet>(
+fn run<L: Committed>(
     dir: &std::path::Path,
     name: &str,
     first: u64,
@@ -70,7 +70,7 @@ fn run<L: ParameterSet>(
     if let Some(key) = key {
         println!(
             "KEY level={} key={key} seed={} public={}",
-            L::LEGACY_LABEL,
+            L::LABEL,
             encode(&bytes),
             encode(session.public_key())
         );
@@ -99,7 +99,7 @@ fn run<L: ParameterSet>(
         };
         println!(
             "SIGN level={} n={n} unsalted={} salted={salted}",
-            L::LEGACY_LABEL,
+            L::LABEL,
             describe(&old).replace(' ', ";"),
         );
         if !matches!(old, Unsalted::Signed { .. }) {
@@ -108,7 +108,7 @@ fn run<L: ParameterSet>(
             let third = native::sign_unsalted(&session, &m, L::CHALLENGE_BITS).ok_or("width")?;
             println!(
                 "UNSIGNABLE level={} n={n} message={} first={} second={} third={} same_on_retry={} salted={salted}",
-                L::LEGACY_LABEL,
+                L::LABEL,
                 encode(&m),
                 describe(&old).replace(' ', ";"),
                 describe(&again).replace(' ', ";"),
@@ -119,7 +119,7 @@ fn run<L: ParameterSet>(
     }
     println!(
         "TRIED level={} first={first} count={count} unsignable={unsignable}",
-        L::LEGACY_LABEL
+        L::LABEL
     );
     Ok(())
 }

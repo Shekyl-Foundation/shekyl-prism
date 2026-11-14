@@ -248,6 +248,7 @@ mod e0_vectors {
     use super::e_prime_surface;
     use crate::signature::{canonical_sign, AffinePoint};
     use crate::verify;
+    use crate::Committed;
     use crate::VerifyError;
     use prism_field::{Field, ParameterSet, P248};
     #[cfg(test)]
@@ -343,12 +344,12 @@ mod e0_vectors {
     #[test]
     fn the_degree_q_graph_stops_before_both_readings() {
         let text = include_str!("../testdata/e0_endomorphisms.txt");
-        // The file's blocks are headed by the legacy label; `p248`'s runs
-        // from its heading to the next one.
-        let heading = format!("{}\n", P248::LEGACY_LABEL);
+        // The file's blocks are headed by the committed label; `p248`'s
+        // runs from its heading to the next one.
+        let heading = format!("{}\n", P248::LABEL);
         let rest = &text[text.find(&heading).unwrap() + heading.len()..];
         let block = &rest[..rest
-            .find(prism_field::P376::LEGACY_LABEL)
+            .find(<prism_field::P376 as Committed>::LABEL)
             .unwrap_or(rest.len())];
         exercise::<P248>(block);
         for length in [260usize, 388, 516] {

@@ -28,20 +28,21 @@ def main() -> None:
             raise ValueError(f"parameter declaration changed: {declaration}")
     rows = re.findall(
         r'parameter_set!\(\s*p(\d+),\s*P\d+,\s*f = (\d+),\s*e = (\d+),'
-        r'\s*salt_len = \d+,\s*search_bound = \d+,'
-        r'\s*legacy_label = "([^"]+)",\s*FpP\d+,\s*Fp2P\d+,'
+        r'\s*FpP\d+,\s*Fp2P\d+,'
         r'\s*\[(.*?)\]\s*\);',
         text,
         re.S,
     )
     if [(row[0], row[2]) for row in rows] != [("248", "248"), ("376", "376"), ("500", "500")]:
         raise ValueError("expected exactly the three parameter sets in source order")
-    # The collision target each row of the published argument was written
-    # against, in bits. It is an input of this analysis and of the table in
-    # docs/SECURITY_ARGUMENT.md, keyed by the exponent. No Rust code carries
-    # it: the category a prime is assessed at is documentation.
+    # The collision target and the row name each row of the published
+    # argument was written against. Both are inputs of this analysis and of
+    # the table in docs/SECURITY_ARGUMENT.md, keyed by the exponent. No Rust
+    # code carries either: the category a prime is assessed at is
+    # documentation, and the row name is the string that argument used.
     targets = {"248": 128, "376": 192, "500": 256}
-    rows = [(label, targets[e], e, limbs, f) for _name, f, e, label, limbs in rows]
+    names = {"248": "NIST-I", "376": "NIST-III", "500": "NIST-V"}
+    rows = [(names[e], targets[e], e, limbs, f) for _name, f, e, limbs in rows]
     cofactors = {e: f for _label, _target, e, _limbs, f in rows}
     print("| Row | e | r | free bits | q bits | N² > 4p | 4q < N² | rho threshold |")
     print("| --- | ---: | ---: | ---: | ---: | --- | --- | --- |")
