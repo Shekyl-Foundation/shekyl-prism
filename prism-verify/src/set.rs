@@ -15,8 +15,9 @@
 //! - [`Set::from_legacy_label`] reads the opaque string committed vectors
 //!   and records carry in their `level` field. That is what data says.
 //!
-//! An unrecognized string is its own error either way, not a stand-in
-//! refusal.
+//! Each has its own error, [`UnknownSet`] and [`UnknownLegacyLabel`], so a
+//! message never suggests the other way's strings, and neither is a
+//! stand-in refusal.
 
 use core::fmt;
 use core::str::FromStr;
@@ -57,11 +58,11 @@ impl Set {
     }
 
     /// The set a committed vector or record names in its `level` field.
-    pub fn from_legacy_label(label: &str) -> Result<Self, UnknownSet> {
+    pub fn from_legacy_label(label: &str) -> Result<Self, UnknownLegacyLabel> {
         Self::ALL
             .into_iter()
             .find(|set| set.legacy_label() == label)
-            .ok_or(UnknownSet)
+            .ok_or(UnknownLegacyLabel)
     }
 
     /// Public salt length for this set, in bytes.
@@ -80,13 +81,38 @@ impl fmt::Display for Set {
     }
 }
 
-/// A string that names no parameter set.
+/// A string that is not the name of a parameter set.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct UnknownSet;
 
+/// A string that is not the `level` field of any committed vector or
+/// record.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct UnknownLegacyLabel;
+
+impl fmt::Display for UnknownLegacyLabel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "not a level field of the committed data: expected {}, {} or {}",
+            P248::LEGACY_LABEL,
+            P376::LEGACY_LABEL,
+            P500::LEGACY_LABEL
+        )
+    }
+}
+
+impl std::error::Error for UnknownLegacyLabel {}
+
 impl fmt::Display for UnknownSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("not a parameter set: expected p248, p376 or p500")
+        write!(
+            f,
+            "not the name of a parameter set: expected {}, {} or {}",
+            P248::NAME,
+            P376::NAME,
+            P500::NAME
+        )
     }
 }
 

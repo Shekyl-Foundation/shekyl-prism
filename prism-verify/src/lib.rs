@@ -40,7 +40,7 @@ pub use identity::KeyIdentity;
 pub use prime::{challenge_degree, degree_is_prime, is_baillie_psw};
 pub use prism_field::Salt;
 pub use reference::{prepared, reference_key, Prepared, PreparedError, ReferenceKey, VectorError};
-pub use set::{verify_set, Set, UnknownSet};
+pub use set::{verify_set, Set, UnknownLegacyLabel, UnknownSet};
 pub use signature::{AffinePoint, Response};
 pub use stage::Stage;
 
@@ -412,14 +412,30 @@ mod tests {
             // The two ways in are kept apart: a name is not a label, and a
             // label is not a name.
             assert_eq!(label.parse::<Set>(), Err(UnknownSet), "{label}");
-            assert_eq!(Set::from_legacy_label(name), Err(UnknownSet), "{name}");
+            assert_eq!(
+                Set::from_legacy_label(name),
+                Err(UnknownLegacyLabel),
+                "{name}"
+            );
         }
         for text in ["", "248", "P248", "p324", "p664", "1", "I", "iv"] {
             assert_eq!(text.parse::<Set>(), Err(UnknownSet), "{text}");
-            assert_eq!(Set::from_legacy_label(text), Err(UnknownSet), "{text}");
+            assert_eq!(
+                Set::from_legacy_label(text),
+                Err(UnknownLegacyLabel),
+                "{text}"
+            );
         }
         // An unknown set is not a length refusal.
         assert_ne!(UnknownSet.to_string(), VerifyError::Length.to_string());
+        // Each error names the strings its own parser accepts, and none of
+        // the other's.
+        for set in Set::ALL {
+            assert!(UnknownSet.to_string().contains(set.name()));
+            assert!(!UnknownSet.to_string().contains(set.legacy_label()));
+            assert!(UnknownLegacyLabel.to_string().contains(set.legacy_label()));
+            assert!(!UnknownLegacyLabel.to_string().contains(set.name()));
+        }
     }
 
     #[test]

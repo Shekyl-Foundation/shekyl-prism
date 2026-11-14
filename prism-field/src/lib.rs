@@ -132,13 +132,20 @@ pub trait ParameterSet: Copy + Clone + Eq + Send + Sync + 'static {
     ///   the bound or it does not, and a test holds that it does for every
     ///   set. No probability applies.
     ///
-    /// For the first two, each candidate is expected to pass with a
-    /// probability near one half, or one quarter on the branch where the
-    /// curve coefficient is a square, so a search of `N` candidates fails
-    /// with probability about `2^-N`, or `2^-(N/2)` on that branch. Those
-    /// two figures are heuristic and inherited from the argument the bound
-    /// was first chosen by; they are not proved here. The one measurement
-    /// is small: over the 113 committed keys the largest basis index is 16.
+    /// Only the first has an estimate of how often it fails, and it is
+    /// the argument the bound was first chosen by: heuristic, inherited,
+    /// and not proved here. It treats the candidates as independent. When
+    /// the curve coefficient is not a square, all `N` candidates are
+    /// tried and each lies on the curve with probability about one half,
+    /// so the search fails with probability about `2^-N`. When it is a
+    /// square, about half the candidates are first discarded by a
+    /// non-square filter on `1 + b²`, the remaining `N/2` or so each
+    /// succeed with probability about one half, and the search fails with
+    /// probability about `2^-(N/2)`. The one measurement is small: over
+    /// the 113 committed keys the largest basis index is 16.
+    ///
+    /// The second search also requires full order and independence of the
+    /// first point, and no failure estimate is made for it here.
     const SEARCH_BOUND: u16;
     /// Field elements a signature carries: `A_sig`, `x(P)`, `y(P)`, `x(Q)`,
     /// `y(Q)`.
