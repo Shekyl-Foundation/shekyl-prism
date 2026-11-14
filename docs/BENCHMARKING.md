@@ -205,8 +205,16 @@ times within 0.5%: a node using two of the four cores does not move a
 single-threaded verification on this device. The bench is one thread, so
 neither record says anything about verifying on all four cores at once.
 
-One extension-field operation on the Pi 4 at the head, median of the
-three runs. The bench's counter on aarch64 is a 54 MHz timer, not a cycle
+One extension-field operation on the Pi 4, median of three runs at
+`5a65904`; record in
+[benchmarks/field_ops_pi4_2026-11-14.txt](benchmarks/field_ops_pi4_2026-11-14.txt).
+Until that commit the bench called each operation through a `&dyn Fn`
+inside the timed loop. The same record has the earlier bench beside it:
+the indirect call added 4.4, 7.5 and 8.2 ns to a multiplication (1.3%,
+1.2% and 0.7%) and nothing measurable to a squaring or an inversion. The
+per-operation lines inside the two verification records above, and the
+x86_64 figures below, were taken with the earlier bench and carry that
+much on their multiplications. The bench's counter on aarch64 is a 54 MHz timer, not a cycle
 counter, so no cycle count was measured: the cycle figures are the
 nanoseconds times 1.8 GHz, the clock read before and after each run and
 not sampled during one.
@@ -215,16 +223,16 @@ Table: time measured; cycles **estimated at an assumed 1.8 GHz**, not counted.
 
 | | multiplication: ns measured, cycles estimated at an assumed 1.8 GHz | squaring: ns measured, cycles estimated at an assumed 1.8 GHz | inversion: ns measured, cycles estimated at an assumed 1.8 GHz |
 | --- | ---: | ---: | ---: |
-| I | 348.6 ns, est. 627 | 223.8 ns, est. 403 | 6,292 ns, est. 11,326 |
-| III | 628.0 ns, est. 1,130 | 405.3 ns, est. 730 | 12,149 ns, est. 21,868 |
-| V | 1,097.0 ns, est. 1,975 | 701.1 ns, est. 1,262 | 19,743 ns, est. 35,537 |
+| I | 344.2 ns, est. 620 | 223.2 ns, est. 402 | 6,285 ns, est. 11,312 |
+| III | 620.1 ns, est. 1,116 | 405.3 ns, est. 730 | 12,159 ns, est. 21,886 |
+| V | 1,089.7 ns, est. 1,961 | 700.6 ns, est. 1,261 | 19,731 ns, est. 35,516 |
 
-A squaring costs 64% of a multiplication at every level on the Pi (70%,
-64% and 66% on x86_64), and an inversion 18 to 19 multiplications (40, 37
+A squaring costs 64 to 65% of a multiplication on the Pi (70%,
+64% and 66% on x86_64), and an inversion 18 to 20 multiplications (40, 37
 and 31 on x86_64), so the inversions that were removed were worth less on
 the Pi than on x86_64, which is where the smaller fall comes from. At
 level I the counted multiplications, squarings and inversions at these
-prices come to 69.5 ms of the 89.1 ms measured, 78%; the rest is
+prices come to 68.9 ms of the 89.1 ms measured, 77%; the rest is
 additions, subtractions, base-field work and everything outside the field.
 
 ### Memory of one verification
