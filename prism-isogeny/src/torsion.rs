@@ -16,7 +16,7 @@
 //! difference of the uncleared points is a different point on about half
 //! of keys, and it is not the C basis.
 
-use prism_field::{Field, ParameterSet};
+use prism_field::{Field, ParameterSet, MAX_ODD_PRIMES};
 
 use crate::jac::xdbl_iter;
 use crate::montgomery::{a24, ladder, Montgomery, Xz};
@@ -173,16 +173,6 @@ fn same_x<F: Field>(left: Xz<F>, right: Xz<F>) -> bool {
     left.x.mul(right.z).same(right.x.mul(left.z))
 }
 
-/// The odd primes dividing `f`. `2` is not among them.
-pub fn odd_primes<L: ParameterSet>() -> &'static [u64] {
-    match L::ODD {
-        5 => &[5],
-        27 => &[3],
-        65 => &[5, 13],
-        _ => &[],
-    }
-}
-
 /// `[p+1]X = O`, and `[(p+1)/ℓ]X ≠ O` for `ℓ = 2` and every prime divisor of `f`.
 pub fn has_order_p_plus_one<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
     let killed = |odd, doubles| {
@@ -194,7 +184,7 @@ pub fn has_order_p_plus_one<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::E
     if killed(L::ODD, L::E - 1) {
         return false;
     }
-    odd_primes::<L>()
+    L::ODD_PRIMES
         .iter()
         .all(|prime| !killed(L::ODD / prime, L::E))
 }
@@ -233,7 +223,8 @@ fn prime_field_basis<L: ParameterSet>(
 
 /// The images of `R` and `T` in `E[f]` generate `E[f]`.
 ///
-/// `E[f]` for these three cofactors splits into prime-power factors. Two
+/// `E[f]` splits into prime-power factors, one for each prime in
+/// [`ParameterSet::ODD_PRIMES`]. Two
 /// elements generate `(Z/p^k)^2` when their images generate `(Z/p)^2`, and
 /// two elements generate `(Z/q)^2` for a prime `q` when neither is a scalar
 /// multiple of the other. A scalar and its negative have the same
@@ -245,35 +236,31 @@ pub fn odd_parts_generate<L: ParameterSet>(
 ) -> bool {
     let u = double_times::<L>(coefficient, r, L::E);
     let v = double_times::<L>(coefficient, t, L::E);
-    match L::ODD {
-        5 => prime_field_basis::<L>(coefficient, u, v, 5),
-        27 => {
-            let Some(u3) = mul_odd_then_double::<L>(coefficient, u, 9, 0) else {
-                return false;
-            };
-            let Some(v3) = mul_odd_then_double::<L>(coefficient, v, 9, 0) else {
-                return false;
-            };
-            prime_field_basis::<L>(coefficient, u3, v3, 3)
-        }
-        65 => {
-            let Some(u5) = mul_odd_then_double::<L>(coefficient, u, 13, 0) else {
-                return false;
-            };
-            let Some(v5) = mul_odd_then_double::<L>(coefficient, v, 13, 0) else {
-                return false;
-            };
-            let Some(u13) = mul_odd_then_double::<L>(coefficient, u, 5, 0) else {
-                return false;
-            };
-            let Some(v13) = mul_odd_then_double::<L>(coefficient, v, 5, 0) else {
-                return false;
-            };
-            prime_field_basis::<L>(coefficient, u5, v5, 5)
-                && prime_field_basis::<L>(coefficient, u13, v13, 13)
-        }
-        _ => false,
+    // The image of each point in `E[q]`, for each prime `q` of `f`:
+    // multiplying by `f/q` kills the other primes and leaves order `q`.
+    // Every projection is made before any is compared.
+    let mut projected = [None; MAX_ODD_PRIMES];
+    for (slot, &prime) in projected.iter_mut().zip(L::ODD_PRIMES) {
+        let rest = L::ODD / prime;
+        let project = |point| {
+            if rest == 1 {
+                Some(point)
+            } else {
+                mul_odd_then_double::<L>(coefficient, point, rest, 0)
+            }
+        };
+        let Some(left) = project(u) else {
+            return false;
+        };
+        let Some(right) = project(v) else {
+            return false;
+        };
+        *slot = Some((left, right, prime));
     }
+    projected
+        .iter()
+        .flatten()
+        .all(|&(left, right, prime)| prime_field_basis::<L>(coefficient, left, right, prime))
 }
 
 /// `(R, T)` a basis of `E[p+1]`.

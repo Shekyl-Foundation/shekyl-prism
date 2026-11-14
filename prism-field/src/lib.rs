@@ -109,6 +109,48 @@ const fn candidate_bound(bits: u32) -> u16 {
     }
 }
 
+/// The most distinct odd primes a cofactor `f` may have. The torsion code
+/// holds one projected pair of points for each on its stack.
+pub const MAX_ODD_PRIMES: usize = 4;
+
+/// Whether `primes` is the list of the distinct prime factors of `f`: each
+/// is an odd prime, they increase, each divides `f`, and dividing `f` by
+/// all of them as often as they go leaves 1.
+///
+/// A parameter set states its cofactor's primes beside the cofactor, and
+/// this is checked when the set is compiled. A list that leaves a prime
+/// out would let a point of too small an order pass for full order.
+pub const fn are_the_odd_primes_of(f: u64, primes: &[u64]) -> bool {
+    if f == 0 || primes.len() > MAX_ODD_PRIMES {
+        return false;
+    }
+    let mut rest = f;
+    let mut previous = 2;
+    let mut i = 0;
+    while i < primes.len() {
+        let prime = primes[i];
+        if prime <= previous || prime.is_multiple_of(2) {
+            return false;
+        }
+        let mut divisor = 3;
+        while divisor * divisor <= prime {
+            if prime.is_multiple_of(divisor) {
+                return false;
+            }
+            divisor += 2;
+        }
+        if !rest.is_multiple_of(prime) {
+            return false;
+        }
+        while rest.is_multiple_of(prime) {
+            rest /= prime;
+        }
+        previous = prime;
+        i += 1;
+    }
+    rest == 1
+}
+
 /// One parameter set: a prime `p = f·2^e − 1`, its two fields and the
 /// lengths its encodings use.
 pub trait ParameterSet: Copy + Clone + Eq + Send + Sync + 'static {
@@ -123,6 +165,9 @@ pub trait ParameterSet: Copy + Clone + Eq + Send + Sync + 'static {
     const E: u32;
     /// The odd cofactor `f` in `p + 1 = f·2^e`.
     const ODD: u64;
+    /// The distinct primes dividing [`Self::ODD`], increasing. Stated by
+    /// the set and checked against `f` when it is compiled.
+    const ODD_PRIMES: &'static [u64];
     /// Instantiated long-chain length `e′ = e − 2`. The short chain
     /// has length `CHAIN_STEPS − 1`; the rational torsion exponent is `E`.
     const CHAIN_STEPS: u32;
@@ -168,6 +213,7 @@ macro_rules! parameter_set {
         $modname:ident,
         $set:ident,
         f = $f:literal,
+        odd_primes = [$($odd_prime:literal),+ $(,)?],
         e = $e:literal,
         $fp:ident,
         $fp2:ident,
@@ -176,9 +222,15 @@ macro_rules! parameter_set {
         pub mod $modname {
             use super::ops::{tally, Kind, Op};
             use super::{
-                candidate_bound, define_fp2_from_type, define_fp_core, width_bits, Field,
-                ParameterSet, Salt,
+                are_the_odd_primes_of, candidate_bound, define_fp2_from_type, define_fp_core,
+                width_bits, Field, ParameterSet, Salt,
             };
+
+            const ODD_PRIMES: &[u64] = &[$($odd_prime),+];
+            const _: () = assert!(
+                are_the_odd_primes_of($f, ODD_PRIMES),
+                "odd_primes must be exactly the distinct prime factors of f, increasing"
+            );
 
             /// [`width_bits`] of this set's exponent.
             const WIDTH: u32 = width_bits($e);
@@ -357,6 +409,7 @@ macro_rules! parameter_set {
                 const NAME: &'static str = concat!("p", stringify!($e));
                 const E: u32 = $e;
                 const ODD: u64 = $f;
+                const ODD_PRIMES: &'static [u64] = ODD_PRIMES;
                 const CHAIN_STEPS: u32 = $e - 2;
                 const CHALLENGE_BITS: u32 = $e - 3;
                 const FP_LEN: usize = <$fp>::ENCODED_LENGTH;
@@ -407,6 +460,7 @@ parameter_set!(
     p248,
     P248,
     f = 5,
+    odd_primes = [5],
     e = 248,
     FpP248,
     Fp2P248,
@@ -422,6 +476,7 @@ parameter_set!(
     p376,
     P376,
     f = 65,
+    odd_primes = [5, 13],
     e = 376,
     FpP376,
     Fp2P376,
@@ -439,6 +494,7 @@ parameter_set!(
     p500,
     P500,
     f = 27,
+    odd_primes = [3],
     e = 500,
     FpP500,
     Fp2P500,
@@ -511,6 +567,55 @@ mod tests {
         }
         assert_eq!(borrow, 0);
         bytes
+    }
+
+    /// Each listed prime is prime and odd, each divides `f`, and dividing
+    /// `f` by all of them repeatedly leaves 1. Written out here without the
+    /// function the macro checks with, so the two cannot share a mistake.
+    fn the_odd_primes_factor_the_cofactor<L: ParameterSet>() {
+        let mut rest = L::ODD;
+        assert!(!L::ODD_PRIMES.is_empty(), "{}", L::NAME);
+        for &prime in L::ODD_PRIMES {
+            assert!(prime > 2 && prime % 2 == 1, "{} {prime} is odd", L::NAME);
+            assert!(
+                (2..prime).all(|d| prime % d != 0),
+                "{} {prime} is prime",
+                L::NAME
+            );
+            assert_eq!(L::ODD % prime, 0, "{} {prime} divides f", L::NAME);
+            while rest % prime == 0 {
+                rest /= prime;
+            }
+        }
+        assert_eq!(rest, 1, "{}: the primes account for all of f", L::NAME);
+        assert!(super::are_the_odd_primes_of(L::ODD, L::ODD_PRIMES));
+    }
+
+    #[test]
+    fn every_set_states_the_primes_of_its_cofactor() {
+        the_odd_primes_factor_the_cofactor::<P248>();
+        the_odd_primes_factor_the_cofactor::<P376>();
+        the_odd_primes_factor_the_cofactor::<P500>();
+        assert_eq!(P248::ODD_PRIMES, &[5]);
+        assert_eq!(P376::ODD_PRIMES, &[5, 13]);
+        assert_eq!(P500::ODD_PRIMES, &[3]);
+    }
+
+    /// The check refuses a list that is not exactly the prime factors.
+    #[test]
+    fn a_wrong_list_of_odd_primes_is_refused() {
+        use super::are_the_odd_primes_of as ok;
+        assert!(ok(65, &[5, 13]) && ok(27, &[3]) && ok(5, &[5]) && ok(3, &[3]));
+        assert!(!ok(65, &[5]), "a prime left out");
+        assert!(!ok(65, &[]), "none listed");
+        assert!(!ok(3, &[]), "none listed for a prime cofactor");
+        assert!(!ok(65, &[13, 5]), "not increasing");
+        assert!(!ok(65, &[5, 5, 13]), "repeated");
+        assert!(!ok(27, &[9]), "not prime");
+        assert!(!ok(27, &[3, 5]), "does not divide");
+        assert!(!ok(30, &[2, 3, 5]), "even");
+        assert!(!ok(0, &[3]), "zero");
+        assert!(!ok(3 * 5 * 7 * 11 * 13, &[3, 5, 7, 11, 13]), "too many");
     }
 
     /// The name, the cofactor, the exponent and the limbs of a set agree:
