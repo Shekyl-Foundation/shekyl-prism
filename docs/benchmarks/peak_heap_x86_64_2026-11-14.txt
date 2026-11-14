@@ -1,0 +1,61 @@
+# Peak heap and stack of one verification, before and after the operation-count work. x86_64 development machine.
+# command: sh scripts/peak_heap.sh (Valgrind Massif on the verify_once example; see the script for what each column is).
+# Memory was measured on x86_64 only; it was not measured on the Raspberry Pi 4.
+#
+# ---- after: the head ----
+# Written by scripts/peak_heap.sh.
+# valgrind-3.24.0; rustc 1.94.0 (4a4ef493e 2026-03-02); Linux 6.12.113+deb13-amd64 x86_64
+# source_commit=db84af6f31b1f05955df4ea541b1a11fe6b6884d source_dirty=false
+PEAK vector=s5_lvl1.txt load_heap_bytes=3194 verify_heap_bytes=1107210 allocator_overhead_bytes=238 largest_stack_sample_bytes=88800
+SITE vector=s5_lvl1.txt bytes=663616 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl1.txt bytes=250112 holder=prism_isogeny::dual_chain::invert_coords
+SITE vector=s5_lvl1.txt bytes=190464 holder=prism_verify::accept::Doublings::new
+SITE vector=s5_lvl1.txt bytes=3018 holder=other
+PEAK vector=s5_lvl1b.txt load_heap_bytes=3195 verify_heap_bytes=1107211 allocator_overhead_bytes=237 largest_stack_sample_bytes=88584
+SITE vector=s5_lvl1b.txt bytes=663616 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl1b.txt bytes=250112 holder=prism_isogeny::dual_chain::invert_coords
+SITE vector=s5_lvl1b.txt bytes=190464 holder=prism_verify::accept::Doublings::new
+SITE vector=s5_lvl1b.txt bytes=3019 holder=other
+PEAK vector=s5_lvl3.txt load_heap_bytes=4366 verify_heap_bytes=2995710 allocator_overhead_bytes=250 largest_stack_sample_bytes=130088
+SITE vector=s5_lvl3.txt bytes=1986688 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl3.txt bytes=571776 holder=prism_isogeny::dual_chain::invert_coords
+SITE vector=s5_lvl3.txt bytes=433152 holder=prism_verify::accept::Doublings::new
+SITE vector=s5_lvl3.txt bytes=4094 holder=other
+PEAK vector=s5_lvl3b.txt load_heap_bytes=4368 verify_heap_bytes=2995712 allocator_overhead_bytes=248 largest_stack_sample_bytes=130848
+SITE vector=s5_lvl3b.txt bytes=1986688 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl3b.txt bytes=571776 holder=prism_isogeny::dual_chain::invert_coords
+SITE vector=s5_lvl3b.txt bytes=433152 holder=prism_verify::accept::Doublings::new
+SITE vector=s5_lvl3b.txt bytes=4096 holder=other
+PEAK vector=s5_lvl5.txt load_heap_bytes=5534 verify_heap_bytes=4441774 allocator_overhead_bytes=234 largest_stack_sample_bytes=172856
+SITE vector=s5_lvl5.txt bytes=2646144 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl5.txt bytes=1016320 holder=prism_isogeny::dual_chain::invert_coords
+SITE vector=s5_lvl5.txt bytes=774144 holder=prism_verify::accept::Doublings::new
+SITE vector=s5_lvl5.txt bytes=5166 holder=other
+PEAK vector=s5_lvl5b.txt load_heap_bytes=5535 verify_heap_bytes=4441775 allocator_overhead_bytes=233 largest_stack_sample_bytes=171352
+SITE vector=s5_lvl5b.txt bytes=2646144 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl5b.txt bytes=1016320 holder=prism_isogeny::dual_chain::invert_coords
+SITE vector=s5_lvl5b.txt bytes=774144 holder=prism_verify::accept::Doublings::new
+SITE vector=s5_lvl5b.txt bytes=5167 holder=other
+#
+# ---- before: commit c9df786, with scripts/peak_heap.sh and examples/verify_once.rs of db84af6 copied in (hence source_dirty=true) ----
+# Written by scripts/peak_heap.sh.
+# valgrind-3.24.0; rustc 1.94.0 (4a4ef493e 2026-03-02); Linux 6.12.113+deb13-amd64 x86_64
+# source_commit=c9df7863624d9acd80eddbaf0b820454a50b6544 source_dirty=true
+PEAK vector=s5_lvl1.txt load_heap_bytes=3194 verify_heap_bytes=797706 allocator_overhead_bytes=190 largest_stack_sample_bytes=83608
+SITE vector=s5_lvl1.txt bytes=794688 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl1.txt bytes=3018 holder=other
+PEAK vector=s5_lvl1b.txt load_heap_bytes=3195 verify_heap_bytes=797707 allocator_overhead_bytes=189 largest_stack_sample_bytes=82880
+SITE vector=s5_lvl1b.txt bytes=794688 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl1b.txt bytes=3019 holder=other
+PEAK vector=s5_lvl3.txt load_heap_bytes=4366 verify_heap_bytes=2383998 allocator_overhead_bytes=202 largest_stack_sample_bytes=121192
+SITE vector=s5_lvl3.txt bytes=2379904 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl3.txt bytes=4094 holder=other
+PEAK vector=s5_lvl3b.txt load_heap_bytes=4368 verify_heap_bytes=2384000 allocator_overhead_bytes=200 largest_stack_sample_bytes=121192
+SITE vector=s5_lvl3b.txt bytes=2379904 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl3b.txt bytes=4096 holder=other
+PEAK vector=s5_lvl5.txt load_heap_bytes=5534 verify_heap_bytes=3175598 allocator_overhead_bytes=186 largest_stack_sample_bytes=159512
+SITE vector=s5_lvl5.txt bytes=3170432 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl5.txt bytes=5166 holder=other
+PEAK vector=s5_lvl5b.txt load_heap_bytes=5535 verify_heap_bytes=3175599 allocator_overhead_bytes=185 largest_stack_sample_bytes=159512
+SITE vector=s5_lvl5b.txt bytes=3170432 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl5b.txt bytes=5167 holder=other

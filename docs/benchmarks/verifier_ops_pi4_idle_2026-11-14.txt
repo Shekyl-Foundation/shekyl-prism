@@ -248,12 +248,12 @@ exit 0
 summary level=NIST-I before_ms=166.818 after_ms=89.270 fall=46.5%
 summary level=NIST-III before_ms=447.732 after_ms=232.326 fall=48.1%
 summary level=NIST-V before_ms=1018.006 after_ms=522.478 fall=48.7%
-summary field level=NIST-I op=mul ns_per_op=349.7 cycles_at_1.8GHz=629
-summary field level=NIST-I op=square ns_per_op=224.8 cycles_at_1.8GHz=405
-summary field level=NIST-I op=inv ns_per_op=6320.3 cycles_at_1.8GHz=11377
-summary field level=NIST-III op=mul ns_per_op=630.5 cycles_at_1.8GHz=1135
-summary field level=NIST-III op=square ns_per_op=406.4 cycles_at_1.8GHz=732
-summary field level=NIST-III op=inv ns_per_op=12209.6 cycles_at_1.8GHz=21977
-summary field level=NIST-V op=mul ns_per_op=1100.0 cycles_at_1.8GHz=1980
-summary field level=NIST-V op=square ns_per_op=703.7 cycles_at_1.8GHz=1267
-summary field level=NIST-V op=inv ns_per_op=19839.2 cycles_at_1.8GHz=35711
+summary field level=NIST-I op=mul ns_per_op=349.7 est_cycles_at_assumed_1.8GHz=629
+summary field level=NIST-I op=square ns_per_op=224.8 est_cycles_at_assumed_1.8GHz=405
+summary field level=NIST-I op=inv ns_per_op=6320.3 est_cycles_at_assumed_1.8GHz=11377
+summary field level=NIST-III op=mul ns_per_op=630.5 est_cycles_at_assumed_1.8GHz=1135
+summary field level=NIST-III op=square ns_per_op=406.4 est_cycles_at_assumed_1.8GHz=732
+summary field level=NIST-III op=inv ns_per_op=12209.6 est_cycles_at_assumed_1.8GHz=21977
+summary field level=NIST-V op=mul ns_per_op=1100.0 est_cycles_at_assumed_1.8GHz=1980
+summary field level=NIST-V op=square ns_per_op=703.7 est_cycles_at_assumed_1.8GHz=1267
+summary field level=NIST-V op=inv ns_per_op=19839.2 est_cycles_at_assumed_1.8GHz=35711
