@@ -47,15 +47,18 @@ fn power<F: Field>(zeta: F, exponent: i32) -> F {
 /// coefficients, so whether they all vanish depends on `zeta` and on the
 /// two blocks alone. Over all 65,536 pairs of blocks the four shifts all
 /// vanish in exactly one case: `zeta² = −3` and one of 1,152 pairs, where
-/// every sum is `3 + zeta²`. The tests below walk every pair.
+/// every sum is `3 + zeta²`. `scripts/theta_base_search.py` shows that for
+/// every `zeta` at once, from the common divisor of the sums of each
+/// pair. The tests below walk every pair in the three fields at the two
+/// roots of `−3`, and at `1`, `−1`, `0`, `±i` and two arbitrary elements.
 ///
 /// Nothing that reaches this through `prism_verify::verify` is in that
-/// case, for two independent reasons. `zeta` there is a Weil pairing
-/// value on the 4-torsion, so `zeta⁴ = 1`, and `zeta² = −3` would make
-/// `9 = 1`. And the matrix there is a product of symplectic matrices,
-/// while none of the 1,152 pairs is the right half of a symplectic
-/// matrix. The refusal stays: a default here would be the first shift,
-/// which is indistinguishable from a search that succeeded.
+/// case. `zeta` there is a Weil pairing value on the 4-torsion, so
+/// `zeta⁴ = 1`, and `zeta² = −3` would make `9 = 1`. Separately, none of
+/// the 256 matrices the verifier can form has one of the 1,152 pairs as
+/// its right half; a test in `prism-verify` tries each of them at the
+/// roots of `−3`. The refusal stays: a default here would be the first
+/// shift, which is indistinguishable from a search that succeeded.
 fn nonvanishing<F: Field>(c: [[i32; 2]; 2], d: [[i32; 2]; 2], zeta: F) -> Option<(i32, i32)> {
     for ir0 in 0..2 {
         for ir1 in 0..2 {
@@ -301,30 +304,45 @@ mod tests {
         ]
     }
 
-    /// The search does not fail for a `zeta` that is not a primitive fourth
-    /// root of unity, whatever the matrix: not for `1`, `−1` or `0`, and not
-    /// for two arbitrary elements. Every one of the `4^8` right halves is
-    /// tried, so this covers every matrix that is not symplectic and the
-    /// all-zero matrix. The function returns a matrix for all of them; it
-    /// does not check its inputs.
-    #[test]
-    fn the_search_succeeds_for_every_matrix_when_zeta_squared_is_not_minus_three() {
-        type F = <Level1 as Level>::Ext;
+    fn succeeds_for_every_matrix<L: Level>() {
         let arbitrary =
-            F::from_u64(0x9e37_79b9_7f4a_7c15).add(Level1::ext_i().mul(F::from_u64(41)));
+            L::Ext::from_u64(0x9e37_79b9_7f4a_7c15).add(L::ext_i().mul(L::Ext::from_u64(41)));
         let cases = [
-            ("1", F::one()),
-            ("-1", F::one().negate()),
-            ("0", F::zero()),
-            ("i", Level1::ext_i()),
-            ("-i", Level1::ext_i().negate()),
+            ("1", L::Ext::one()),
+            ("-1", L::Ext::one().negate()),
+            ("0", L::Ext::zero()),
+            ("i", L::ext_i()),
+            ("-i", L::ext_i().negate()),
             ("arbitrary", arbitrary),
             ("arbitrary squared", arbitrary.mul(arbitrary)),
         ];
         for (name, zeta) in cases {
-            assert!(!zeta.mul(zeta).same(F::from_u64(3).negate()), "{name}");
-            assert_eq!(failures(zeta), Vec::<u32>::new(), "zeta = {name}");
+            assert!(
+                !zeta.mul(zeta).same(L::Ext::from_u64(3).negate()),
+                "{} {name}",
+                L::NAME
+            );
+            assert_eq!(
+                failures(zeta),
+                Vec::<u32>::new(),
+                "{} zeta = {name}",
+                L::NAME
+            );
         }
+    }
+
+    /// The search does not fail for a `zeta` that is not a primitive fourth
+    /// root of unity, whatever the matrix: not for `1`, `−1` or `0`, and not
+    /// for two arbitrary elements; nor at the two primitive roots. Every one
+    /// of the `4^8` right halves is tried at each, at every level, so this
+    /// covers every matrix that is not symplectic and the all-zero matrix.
+    /// The function returns a matrix for all of them; it does not check its
+    /// inputs.
+    #[test]
+    fn the_search_succeeds_for_every_matrix_when_zeta_squared_is_not_minus_three() {
+        succeeds_for_every_matrix::<Level1>();
+        succeeds_for_every_matrix::<Level3>();
+        succeeds_for_every_matrix::<Level5>();
     }
 
     /// Named cases of the test above, through the public function: the

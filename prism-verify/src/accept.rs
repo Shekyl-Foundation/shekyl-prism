@@ -165,8 +165,9 @@ fn kernel_by_ladders<F: Field>(
 ///
 /// `None` when [`base_change_theta`] finds no usable shift. No signature
 /// reaches that: `zeta` is the Weil pairing of an order-four basis, so
-/// `zeta⁴ = 1`, and the search fails only when `zeta² = −3`. The 256
-/// matrices this can build are also each tried in the tests below.
+/// `zeta⁴ = 1`, and the search fails only when `zeta² = −3`. Separately,
+/// the tests below try each of the 256 matrices this can build at the
+/// roots of `−3`, and none fails there either.
 fn change<F: Field>(matrix: Mat4, m0: [[u8; 4]; 4], zeta: F) -> Option<[[F; 4]; 4]> {
     let rows = matrix.rows().map(|row| row.map(|v| v.to_le_bytes()[0] & 3));
     let result = core::array::from_fn(|i| {

@@ -502,8 +502,7 @@ algorithm is expected to improve on the state of the art only at NIST
 level I; that at higher levels its memory requirement offsets the
 asymptotic advantage; and that with high parallelization the van
 Oorschot–Wiener variant can recover it. It also treats quantum
-claw-finding. Only its abstract and introduction were read for this
-section.
+claw-finding. Only its abstract was read for this section.
 
 **The SQIsign response.** The SQIsign specification of 2026-09-01
 (version 3.0; its primes are the ones later papers call the round-3
@@ -529,12 +528,10 @@ level and asks for cryptanalysis of them.
   and anyone who computes it can sign. Corollary 1.2 is an algorithm for
   exactly that problem. No property of the salt, the challenge width,
   the encoding or the verifier bears on it.
-- Two of the three primes still appear in the round-3 specification, in
-  different places: `27·2^500 − 1`, the largest row here, is its NIST
-  level III prime, and `65·2^376 − 1`, the middle row here, is in its
-  list of more conservative alternatives for level I. `5·2^248 − 1`
-  appears in neither. This is a statement about which primes that
-  specification names, not a security level for a row of this
+- One of the three primes here, `27·2^500 − 1`, is also one of the
+  three in the specification's parameter sets; the other two rows are
+  not among them. That is a statement about which primes the
+  specification selected, not a security level for a row of this
   repository: the labels I, III and V here were never certified levels
   (§1), and this section does not assign new ones.
 - **The parameter question is open, pending a ruling.** Which primes

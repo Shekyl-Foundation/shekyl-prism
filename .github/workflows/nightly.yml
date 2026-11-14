@@ -132,6 +132,10 @@ jobs:
         run: python3 -m pip install --break-system-packages 'sympy==1.14.0'
       - name: 10_000 degrees per level, zero disagreements
         run: python3 scripts/differential_prime.py
+      # The doc comment of `nonvanishing` states when its search can fail,
+      # for every `zeta`. This is the computation behind that statement.
+      - name: The theta base-change search fails only where its comment says
+        run: python3 scripts/theta_base_search.py
 
   big-endian:
     name: big-endian
@@ -167,10 +171,10 @@ jobs:
         run: bash scripts/ci/diff_testdata.sh
 
   # Every mutant of a crate runs that crate's whole test suite, about half
-  # a minute for prism-verify since the acceptance path landed, and there
-  # are some 700 mutants: hours in one job. One job at a 90-minute limit
-  # was cancelled by that limit every night from 2026-11-11. The mutants
-  # are dealt out in order to eight jobs, each a fraction of its limit.
+  # a minute for prism-verify, and there are some 700 mutants: hours in
+  # one job, against a 90-minute limit. The mutants are dealt round-robin
+  # to eight jobs, so each gets its share of every file and runs for a
+  # fraction of its limit.
   mutants:
     name: mutants (${{ matrix.shard }}/8)
     runs-on: ubuntu-latest
@@ -196,7 +200,7 @@ jobs:
           SHARD: ${{ matrix.shard }}
         run: |
           set +e
-          cargo mutants -p prism-verify -p prism-field --no-shuffle --shard "${SHARD}/8" > mutants.txt
+          cargo mutants -p prism-verify -p prism-field --no-shuffle --shard "${SHARD}/8" --sharding round-robin > mutants.txt
           code=$?
           set -e
           {
@@ -239,8 +243,8 @@ jobs:
   report-red:
     name: report-red
     needs: [fuzz, differential-prime, big-endian, c-vectors-full, mutants, coverage]
-    # `failure()` is false for a job its own time limit cancelled, which is
-    # how two red nights in a row reported nothing. A cancelled job is red.
+    # `failure()` is false for a job its own time limit cancelled. A
+    # cancelled job is red and is reported.
     if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) && (github.event_name == 'schedule' || inputs.report) }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
