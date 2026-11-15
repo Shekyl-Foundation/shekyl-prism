@@ -16,7 +16,7 @@ use std::sync::OnceLock;
 use prism_field::{Field, ParameterSet, P248, P376, P500};
 
 use crate::basis::BasisHint;
-use crate::set::Set;
+use crate::set::CommittedSet;
 use crate::signature::{AffinePoint, Response};
 use crate::{ChallengeScalar, KeyIdentity, Salt};
 
@@ -32,7 +32,7 @@ const SAMPLE_MESSAGE: &[u8] = b"shekyl-prism";
 /// One pinned row: a C-generated key and the hint the C derived for it.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ReferenceKey {
-    pub set: Set,
+    pub set: CommittedSet,
     /// The public key: `A` in this set's canonical encoding.
     pub public_key: Vec<u8>,
     /// What `ec_curve_to_basis_2f_to_hint` returned for that key.
@@ -61,7 +61,7 @@ impl core::fmt::Display for VectorError {
 impl std::error::Error for VectorError {}
 
 /// The pinned row for a set.
-pub fn reference_key(set: Set) -> Result<&'static ReferenceKey, VectorError> {
+pub fn reference_key(set: CommittedSet) -> Result<&'static ReferenceKey, VectorError> {
     static KEYS: OnceLock<Result<Vec<ReferenceKey>, VectorError>> = OnceLock::new();
     KEYS.get_or_init(|| parse_rows(C_BASIS_HINTS))
         .as_ref()
@@ -81,7 +81,7 @@ fn parse_rows(text: &str) -> Result<Vec<ReferenceKey>, VectorError> {
 fn parse_row(line: &str) -> Result<ReferenceKey, VectorError> {
     let mut fields = line.split_whitespace();
     let mut next = || fields.next().ok_or(VectorError::Malformed);
-    let set = Set::from_committed_label(next()?).map_err(|_| VectorError::Malformed)?;
+    let set = CommittedSet::from_label(next()?).map_err(|_| VectorError::Malformed)?;
     let public_key = decode_hex(next()?)?;
     let hint = next()?
         .parse()
@@ -116,7 +116,7 @@ fn decode_hex(text: &str) -> Result<Vec<u8>, VectorError> {
 /// clock starts, then times [`crate::verify_set`].
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Prepared {
-    pub set: Set,
+    pub set: CommittedSet,
     pub public_key: Vec<u8>,
     pub message: &'static [u8],
     pub signature: Vec<u8>,
@@ -150,15 +150,15 @@ impl std::error::Error for PreparedError {
 }
 
 /// Build a [`Prepared`] for a set.
-pub fn prepared(set: Set) -> Result<Prepared, PreparedError> {
+pub fn prepared(set: CommittedSet) -> Result<Prepared, PreparedError> {
     match set {
-        Set::P248 => sample::<P248>(set),
-        Set::P376 => sample::<P376>(set),
-        Set::P500 => sample::<P500>(set),
+        CommittedSet::P248 => sample::<P248>(set),
+        CommittedSet::P376 => sample::<P376>(set),
+        CommittedSet::P500 => sample::<P500>(set),
     }
 }
 
-fn sample<L: ParameterSet>(set: Set) -> Result<Prepared, PreparedError> {
+fn sample<L: ParameterSet>(set: CommittedSet) -> Result<Prepared, PreparedError> {
     let key = reference_key(set).map_err(PreparedError::Vector)?;
     let id = KeyIdentity::<L>::decode(&key.public_key)
         .map_err(|_| PreparedError::Vector(VectorError::Malformed))?;
@@ -197,11 +197,11 @@ fn sample<L: ParameterSet>(set: Set) -> Result<Prepared, PreparedError> {
 
 /// An honest, committed §5 response for benchmarking the complete verifier.
 /// It is test material; the keys and signing seeds are public.
-pub fn honest(set: Set) -> Result<Prepared, VectorError> {
+pub fn honest(set: CommittedSet) -> Result<Prepared, VectorError> {
     let text = match set {
-        Set::P248 => include_str!("../testdata/s5_lvl1.txt"),
-        Set::P376 => include_str!("../testdata/s5_lvl3.txt"),
-        Set::P500 => include_str!("../testdata/s5_lvl5.txt"),
+        CommittedSet::P248 => include_str!("../testdata/s5_lvl1.txt"),
+        CommittedSet::P376 => include_str!("../testdata/s5_lvl3.txt"),
+        CommittedSet::P500 => include_str!("../testdata/s5_lvl5.txt"),
     };
     let field = |name: &str| {
         text.lines()

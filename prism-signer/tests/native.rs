@@ -4,7 +4,7 @@
 // BSD-3-Clause
 
 use prism_signer::{limits, SecretSeed, Signer};
-use prism_verify::{verify_set, Set, VerifyError};
+use prism_verify::{verify_set, CommittedSet, VerifyError};
 
 #[test]
 #[ignore = "requires the pinned native backend; set PRISM_SIGNER_BACKEND_DIR"]
@@ -13,9 +13,9 @@ fn deterministic_signing_and_message_binding_at_every_set() {
         std::env::var_os("PRISM_SIGNER_BACKEND_DIR").expect("set PRISM_SIGNER_BACKEND_DIR"),
     );
     for (set, name) in [
-        (Set::P248, "lvl1"),
-        (Set::P376, "lvl3"),
-        (Set::P500, "lvl5"),
+        (CommittedSet::P248, "lvl1"),
+        (CommittedSet::P376, "lvl3"),
+        (CommittedSet::P500, "lvl5"),
     ] {
         let signer = Signer::new(
             dir.join(format!("prism_signer_{name}")),
@@ -25,12 +25,15 @@ fn deterministic_signing_and_message_binding_at_every_set() {
         let key = signer.public_key().expect("keygen");
         let message = b"shekyl-prism-native-roundtrip\0binary";
         let first = signer.sign(message).expect("sign");
-        assert_eq!(verify_set(set, &key, message, &first), Ok(()));
+        assert_eq!(verify_set(set.set(), &key, message, &first), Ok(()));
         let again = signer.sign(message).expect("repeat sign");
         assert_eq!(first, again, "{set} must be deterministic");
-        assert!(verify_set(set, &key, b"different message", &first).is_err());
+        assert!(verify_set(set.set(), &key, b"different message", &first).is_err());
         let changed = signer.sign(b"a second message").expect("second message");
-        assert_eq!(verify_set(set, &key, b"a second message", &changed), Ok(()));
+        assert_eq!(
+            verify_set(set.set(), &key, b"a second message", &changed),
+            Ok(())
+        );
         assert_ne!(first, changed);
         // The salt of another valid signature under the same key: the
         // response is bound to its own salt and message. The transplanted
@@ -42,7 +45,7 @@ fn deterministic_signing_and_message_binding_at_every_set() {
         assert_ne!(transplanted, first, "{set} salts differ");
         assert!(
             matches!(
-                verify_set(set, &key, message, &transplanted),
+                verify_set(set.set(), &key, message, &transplanted),
                 Err(VerifyError::Composite | VerifyError::Image)
             ),
             "{set} transplanted salt"
@@ -51,7 +54,7 @@ fn deterministic_signing_and_message_binding_at_every_set() {
             .sign_with_randomness(message, &[0x37; limits::CALLER_RANDOMNESS_LEN])
             .expect("hedged sign");
         assert_ne!(first, hedge, "caller randomness changes the salt");
-        assert_eq!(verify_set(set, &key, message, &hedge), Ok(()));
+        assert_eq!(verify_set(set.set(), &key, message, &hedge), Ok(()));
         assert_eq!(
             hedge,
             signer

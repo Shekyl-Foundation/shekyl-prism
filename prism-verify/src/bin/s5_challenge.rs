@@ -11,7 +11,7 @@
 //! the verifier's own Baillie–PSW test. The model shells out to this so a
 //! negative's `s` is the verifier's `s`, not a second hash.
 
-use prism_verify::Set;
+use prism_verify::CommittedSet;
 use std::env;
 use std::process::ExitCode;
 
@@ -35,10 +35,10 @@ fn main() -> ExitCode {
         return ExitCode::from(2);
     }
     // The Sage model passes the `level` field of the vector it is checking.
-    match Set::from_committed_label(&set) {
-        Ok(Set::P248) => emit::<P248>(&coefficient, &message, &salt_hex),
-        Ok(Set::P376) => emit::<P376>(&coefficient, &message, &salt_hex),
-        Ok(Set::P500) => emit::<P500>(&coefficient, &message, &salt_hex),
+    match CommittedSet::from_label(&set) {
+        Ok(CommittedSet::P248) => emit::<P248>(&coefficient, &message, &salt_hex),
+        Ok(CommittedSet::P376) => emit::<P376>(&coefficient, &message, &salt_hex),
+        Ok(CommittedSet::P500) => emit::<P500>(&coefficient, &message, &salt_hex),
         Err(_) => {
             eprintln!("s5_challenge: the first argument is a vector's level field");
             ExitCode::from(2)

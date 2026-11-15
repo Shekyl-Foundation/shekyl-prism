@@ -365,7 +365,7 @@ pub(crate) fn check<L: ParameterSet>(
 mod tests {
     use super::*;
     use crate::{basis_hint, ChallengeScalar, KeyIdentity, Salt};
-    use prism_field::{P248, P376, P500};
+    use prism_field::{P248, P324, P376, P500};
     use prism_isogeny::{
         theta::{projectively_same, ThetaPoint},
         torsion::even_basis,
@@ -608,10 +608,10 @@ mod tests {
             // own two matrices.
             let random = if name.starts_with("s5_lvl") { 6 } else { 0 };
             let label = text.lines().find_map(|l| l.strip_prefix("level ")).unwrap();
-            match crate::Set::from_committed_label(label) {
-                Ok(crate::Set::P248) => kernels_agree::<P248>(&text, &name, random),
-                Ok(crate::Set::P376) => kernels_agree::<P376>(&text, &name, random),
-                Ok(crate::Set::P500) => kernels_agree::<P500>(&text, &name, random),
+            match crate::CommittedSet::from_label(label) {
+                Ok(crate::CommittedSet::P248) => kernels_agree::<P248>(&text, &name, random),
+                Ok(crate::CommittedSet::P376) => kernels_agree::<P376>(&text, &name, random),
+                Ok(crate::CommittedSet::P500) => kernels_agree::<P500>(&text, &name, random),
                 Err(_) => panic!("{name}: label {label}"),
             }
         }
@@ -709,6 +709,7 @@ mod tests {
     #[test]
     fn no_base_change_the_verifier_can_ask_for_is_refused() {
         every_reachable_base_change_exists::<P248>();
+        every_reachable_base_change_exists::<P324>();
         every_reachable_base_change_exists::<P376>();
         every_reachable_base_change_exists::<P500>();
     }

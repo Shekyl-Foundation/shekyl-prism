@@ -26,7 +26,7 @@ mod support;
 
 use prism_field::ops::{self, Counts, Slot};
 use prism_field::{ParameterSet, P248, P376, P500};
-use prism_verify::{verify, Set, Stage, VerifyError};
+use prism_verify::{verify, CommittedSet, Stage, VerifyError};
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
@@ -185,15 +185,15 @@ fn run() -> Result<(), String> {
         let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         let first = primary.contains(&path);
         let accepted = match set(&text) {
-            Set::P248 => accept::<P248>(&path, &text, first),
-            Set::P376 => accept::<P376>(&path, &text, first),
-            Set::P500 => accept::<P500>(&path, &text, first),
+            CommittedSet::P248 => accept::<P248>(&path, &text, first),
+            CommittedSet::P376 => accept::<P376>(&path, &text, first),
+            CommittedSet::P500 => accept::<P500>(&path, &text, first),
         }?;
         if first {
             match set(&text) {
-                Set::P248 => refuse::<P248>(&path, &text, accepted),
-                Set::P376 => refuse::<P376>(&path, &text, accepted),
-                Set::P500 => refuse::<P500>(&path, &text, accepted),
+                CommittedSet::P248 => refuse::<P248>(&path, &text, accepted),
+                CommittedSet::P376 => refuse::<P376>(&path, &text, accepted),
+                CommittedSet::P500 => refuse::<P500>(&path, &text, accepted),
             }?;
         }
     }

@@ -191,10 +191,10 @@ mod tests {
             let text = std::fs::read_to_string(p).unwrap();
             let rows: std::collections::HashMap<_, _> =
                 text.lines().filter_map(|s| s.split_once(' ')).collect();
-            match prism_verify::Set::from_committed_label(rows["level"]) {
-                Ok(prism_verify::Set::P248) => check::<P248>(&rows),
-                Ok(prism_verify::Set::P376) => check::<P376>(&rows),
-                Ok(prism_verify::Set::P500) => check::<P500>(&rows),
+            match prism_verify::CommittedSet::from_label(rows["level"]) {
+                Ok(prism_verify::CommittedSet::P248) => check::<P248>(&rows),
+                Ok(prism_verify::CommittedSet::P376) => check::<P376>(&rows),
+                Ok(prism_verify::CommittedSet::P500) => check::<P500>(&rows),
                 Err(_) => panic!("row"),
             }
         }

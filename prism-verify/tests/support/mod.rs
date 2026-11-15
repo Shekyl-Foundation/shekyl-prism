@@ -16,7 +16,7 @@ use prism_isogeny::{
     pairing::mul,
 };
 use prism_verify::{
-    signature::canonical_sign, AffinePoint, ChallengeScalar, KeyIdentity, Response, Set,
+    signature::canonical_sign, AffinePoint, ChallengeScalar, CommittedSet, KeyIdentity, Response,
     VerifyError,
 };
 use std::{
@@ -50,8 +50,8 @@ pub fn vector<L: ParameterSet>(text: &str) -> (Vec<u8>, Vec<u8>, Response<L>) {
     )
 }
 /// The set a vector file names.
-pub fn set(text: &str) -> Set {
-    Set::from_committed_label(field(text, "level ")).unwrap()
+pub fn set(text: &str) -> CommittedSet {
+    CommittedSet::from_label(field(text, "level ")).unwrap()
 }
 /// Every committed honest vector, sorted by path.
 pub fn files() -> Vec<PathBuf> {

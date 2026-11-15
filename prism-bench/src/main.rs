@@ -18,7 +18,7 @@ use std::process::ExitCode;
 use std::time::Instant;
 
 use prism_field::{Field, ParameterSet, FIELD_BACKEND, P248, P376, P500};
-use prism_verify::{reference::honest, verify_set, Set, VectorError, VerifyError};
+use prism_verify::{reference::honest, verify_set, CommittedSet, VectorError, VerifyError};
 
 /// Runs before the clock starts, to settle the frequency and the caches.
 const WARMUP: usize = 5;
@@ -31,7 +31,7 @@ fn main() -> ExitCode {
     println!("field-backend={FIELD_BACKEND}");
     println!("counter={}", counter_name());
     let mut refused = false;
-    for set in Set::ALL {
+    for set in CommittedSet::ALL {
         match measure(set) {
             Ok(timing) => println!(
                 "set={set} outcome=accepted samples={SAMPLES} median_ns={} spread_ns={} median_counter={} counter_spread={}",
@@ -43,14 +43,14 @@ fn main() -> ExitCode {
             }
         }
     }
-    for set in Set::ALL {
+    for set in CommittedSet::ALL {
         let Ok(sample) = honest(set) else {
             continue;
         };
         match set {
-            Set::P248 => field_operations::<P248>(set, &sample.public_key),
-            Set::P376 => field_operations::<P376>(set, &sample.public_key),
-            Set::P500 => field_operations::<P500>(set, &sample.public_key),
+            CommittedSet::P248 => field_operations::<P248>(set, &sample.public_key),
+            CommittedSet::P376 => field_operations::<P376>(set, &sample.public_key),
+            CommittedSet::P500 => field_operations::<P500>(set, &sample.public_key),
         }
     }
     if refused {
@@ -84,9 +84,16 @@ impl std::fmt::Display for BenchError {
     }
 }
 
-fn measure(set: Set) -> Result<Timing, BenchError> {
+fn measure(set: CommittedSet) -> Result<Timing, BenchError> {
     let sample = honest(set).map_err(BenchError::Prepare)?;
-    let run = || verify_set(set, &sample.public_key, sample.message, &sample.signature);
+    let run = || {
+        verify_set(
+            set.set(),
+            &sample.public_key,
+            sample.message,
+            &sample.signature,
+        )
+    };
     for _ in 0..WARMUP {
         expected(run())?;
     }
@@ -149,7 +156,7 @@ fn per_op<T: Copy>(start: T, batch: u32, step: impl Fn(T) -> T) -> (f64, f64) {
 
 /// Time one extension-field multiplication, squaring and inversion,
 /// starting from the sample key's coefficient.
-fn field_operations<L: ParameterSet>(set: Set, key: &[u8]) {
+fn field_operations<L: ParameterSet>(set: CommittedSet, key: &[u8]) {
     let Some(start) = L::ext_decode(key) else {
         println!("field set={set} refused=\"the sample key does not decode\"");
         return;

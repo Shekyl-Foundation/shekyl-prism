@@ -15,7 +15,7 @@
 //! name.
 use prism_compare::{archived_vectors, unsalted};
 use prism_field::{ParameterSet, P248, P376, P500};
-use prism_verify::Set;
+use prism_verify::CommittedSet;
 use std::collections::BTreeMap;
 
 fn earlier_primes<L: ParameterSet>(key: &[u8], message: &[u8], index: u16) -> Option<u32> {
@@ -34,10 +34,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let vectors = archived_vectors();
     let mut skipped = BTreeMap::new();
     for v in &vectors {
-        let primes = match Set::from_committed_label(&v.level) {
-            Ok(Set::P248) => earlier_primes::<P248>(&v.key, &v.message, v.index),
-            Ok(Set::P376) => earlier_primes::<P376>(&v.key, &v.message, v.index),
-            Ok(Set::P500) => earlier_primes::<P500>(&v.key, &v.message, v.index),
+        let primes = match CommittedSet::from_label(&v.level) {
+            Ok(CommittedSet::P248) => earlier_primes::<P248>(&v.key, &v.message, v.index),
+            Ok(CommittedSet::P376) => earlier_primes::<P376>(&v.key, &v.message, v.index),
+            Ok(CommittedSet::P500) => earlier_primes::<P500>(&v.key, &v.message, v.index),
             Err(_) => None,
         }
         .ok_or("an archived vector's carried index is not prime")?;

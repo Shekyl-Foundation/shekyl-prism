@@ -83,7 +83,7 @@ fn top_byte_mask(bits: u32) -> u8 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prism_field::{Field, P248, P376, P500};
+    use prism_field::{Field, P248, P324, P376, P500};
     #[test]
     fn salted_transcript_binds_message_and_all_salt_bytes_at_every_row() {
         fn check<L: ParameterSet>() {
@@ -113,6 +113,7 @@ mod tests {
             }
         }
         check::<P248>();
+        check::<P324>();
         check::<P376>();
         check::<P500>();
     }

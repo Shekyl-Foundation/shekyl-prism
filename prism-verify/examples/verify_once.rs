@@ -21,7 +21,7 @@
 mod support;
 
 use prism_field::{ParameterSet, P248, P376, P500};
-use prism_verify::{verify, Set};
+use prism_verify::{verify, CommittedSet};
 use std::hint::black_box;
 use std::process::ExitCode;
 use support::{set, vector};
@@ -51,9 +51,9 @@ fn main() -> ExitCode {
         }
     };
     let accepted = match set(&text) {
-        Set::P248 => run::<P248>(&text, check),
-        Set::P376 => run::<P376>(&text, check),
-        Set::P500 => run::<P500>(&text, check),
+        CommittedSet::P248 => run::<P248>(&text, check),
+        CommittedSet::P376 => run::<P376>(&text, check),
+        CommittedSet::P500 => run::<P500>(&text, check),
     };
     if accepted {
         ExitCode::SUCCESS

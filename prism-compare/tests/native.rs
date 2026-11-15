@@ -7,9 +7,9 @@
 use prism_compare::native::{self, Unsalted};
 use prism_field::{P248, P376, P500};
 use prism_signer::{limits, SecretSeed, Signer};
-use prism_verify::{Committed, Set};
+use prism_verify::{Committed, CommittedSet};
 
-fn agree<L: Committed>(dir: &std::path::Path, nist: Set, name: &str) {
+fn agree<L: Committed>(dir: &std::path::Path, nist: CommittedSet, name: &str) {
     let backend = dir.join(name);
     let seed = SecretSeed::from_bytes([0x42; limits::STREAM_LEN]);
     let signer = Signer::new(
@@ -85,7 +85,7 @@ fn research_signing_is_production_signing_at_full_width() {
     let dir = std::path::PathBuf::from(
         std::env::var_os("PRISM_SIGNER_BACKEND_DIR").expect("set PRISM_SIGNER_BACKEND_DIR"),
     );
-    agree::<P248>(&dir, Set::P248, "prism_signer_lvl1");
-    agree::<P376>(&dir, Set::P376, "prism_signer_lvl3");
-    agree::<P500>(&dir, Set::P500, "prism_signer_lvl5");
+    agree::<P248>(&dir, CommittedSet::P248, "prism_signer_lvl1");
+    agree::<P376>(&dir, CommittedSet::P376, "prism_signer_lvl3");
+    agree::<P500>(&dir, CommittedSet::P500, "prism_signer_lvl5");
 }

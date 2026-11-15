@@ -10,7 +10,7 @@ const CHALLENGE_BATCH: u64 = 512;
 
 use prism_field::{Salt, P248, P376, P500};
 use prism_signer::limits;
-use prism_verify::Set;
+use prism_verify::CommittedSet;
 use prism_verify::{ChallengeScalar, Committed, KeyIdentity};
 fn hex(s: &str) -> Option<Vec<u8>> {
     if !s.len().is_multiple_of(2) {
@@ -53,10 +53,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let seed: [u8; limits::STREAM_LEN] = bytes.try_into().map_err(|_| "seed length")?;
     let start = a[3].parse()?;
     // The row is read from committed data, so it is the committed label.
-    let ok = match Set::from_committed_label(&a[0]) {
-        Ok(Set::P248) => run::<P248>(&key, &seed, start),
-        Ok(Set::P376) => run::<P376>(&key, &seed, start),
-        Ok(Set::P500) => run::<P500>(&key, &seed, start),
+    let ok = match CommittedSet::from_label(&a[0]) {
+        Ok(CommittedSet::P248) => run::<P248>(&key, &seed, start),
+        Ok(CommittedSet::P376) => run::<P376>(&key, &seed, start),
+        Ok(CommittedSet::P500) => run::<P500>(&key, &seed, start),
         Err(_) => None,
     };
     ok.ok_or("label or key refused".into())
