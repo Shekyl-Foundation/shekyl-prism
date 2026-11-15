@@ -27,10 +27,10 @@ for path in paths:
 # The seeds are the identity pair at each set and claimed order, and one
 # generic pair per set; the fuzzer finds the degenerate pairs from there.
 # The widths are in the order of the target's table of sets: p248, p324,
-# p376, p500, each the whole bytes of an e-bit scalar.
+# p376, p500, p664, each the whole bytes of an e-bit scalar.
 directory = ROOT / "fuzz/corpus/weil_matches_affine"
 directory.mkdir(parents=True, exist_ok=True)
-for which, width in enumerate((31, 41, 47, 63)):
+for which, width in enumerate((31, 41, 47, 63, 83)):
     for order in range(3):
         one = (1).to_bytes(width, "little")
         zero = bytes(width)

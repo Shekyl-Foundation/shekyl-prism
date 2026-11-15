@@ -27,7 +27,7 @@
 //! the set and not a rule.
 
 use crate::curve_table::{CurveNumber, CurveTable};
-use prism_field::{ParameterSet, P324};
+use prism_field::{ParameterSet, P324, P664};
 
 /// One coefficient of a curve file that the verifier takes as a response
 /// curve: the permitted model of its class.
@@ -132,10 +132,35 @@ impl WithoutCorpus for P324 {
     };
 }
 
+impl WithoutCorpus for P664 {
+    const FIXTURES: SageFixtures = SageFixtures {
+        field_table: include_str!("../../prism-verify/testdata/p664_field.tsv"),
+        field_seed: u64::from_be_bytes(*b"PRISM664"),
+        curve_file: "p664_curves.tsv",
+        curve_table: include_str!("../../prism-verify/testdata/p664_curves.tsv"),
+        curves: 8,
+        challenge_table: include_str!("../../prism-verify/testdata/p664_challenge.tsv"),
+        square_branch_curve: CurveNumber::new(1),
+        other_branch_curve: CurveNumber::new(3),
+        model_curve: CurveNumber::new(3),
+        models: &[
+            Model {
+                curve: CurveNumber::new(3),
+                negated: false,
+            },
+            Model {
+                curve: CurveNumber::new(4),
+                negated: true,
+            },
+        ],
+        refusal_message: b"shekyl-prism-p664-refusals",
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use super::{curve_table, Model, WithoutCorpus};
-    use prism_field::P324;
+    use prism_field::{P324, P664};
 
     /// What every set's fixtures must satisfy, whatever its walk gave.
     fn the_fixtures_are_consistent<L: WithoutCorpus>() {
@@ -189,6 +214,7 @@ mod tests {
     #[test]
     fn the_fixtures_of_every_set_without_a_corpus_are_consistent() {
         the_fixtures_are_consistent::<P324>();
+        the_fixtures_are_consistent::<P664>();
     }
 
     #[test]

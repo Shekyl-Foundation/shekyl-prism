@@ -599,3 +599,13 @@ at_set!(
         prime_salt_under_models: &[16, 24],
     }
 );
+
+// At `p664` about one degree in 460 is prime.
+at_set!(
+    p664,
+    prism_field::P664,
+    Pins {
+        prime_salt_under_key: 520,
+        prime_salt_under_models: &[413, 78],
+    }
+);

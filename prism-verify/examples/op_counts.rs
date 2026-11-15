@@ -25,7 +25,7 @@
 mod support;
 
 use prism_field::ops::{self, Counts, Slot};
-use prism_field::{ParameterSet, P248, P324, P376, P500};
+use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
 use prism_fixtures::no_corpus::{curve_table, WithoutCorpus};
 use prism_verify::{verify, CommittedSet, Stage, VerifyError};
 use std::collections::BTreeSet;
@@ -236,7 +236,8 @@ fn run() -> Result<(), String> {
             }?;
         }
     }
-    refuse_without_a_corpus::<P324>()
+    refuse_without_a_corpus::<P324>()?;
+    refuse_without_a_corpus::<P664>()
 }
 fn main() -> std::process::ExitCode {
     match run() {

@@ -39,7 +39,7 @@ TESTDATA = ROOT / "prism-verify" / "testdata"
 # The sets that have no vectors, by name, with each exponent. The key of
 # each row is a curve of the set's Sage file. Everything else a set needs
 # here is computed from its name and exponent.
-WITHOUT_CORPUS = {"p324": 324}
+WITHOUT_CORPUS = {"p324": 324, "p664": 664}
 DOMAIN = b"shekyl-prism-challenge-v2"
 RATE = 136  # bytes, for a 256-bit capacity strength
 MASK = (1 << 64) - 1

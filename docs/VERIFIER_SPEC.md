@@ -10,23 +10,32 @@ preserve the derivations, investigations and questions that led here.
 
 ## Parameters and encoding
 
-| Parameter | `p248` | `p324` | `p376` | `p500` |
-| --- | --- | --- | --- | --- |
-| `p = f·2^e − 1` | `5·2^248−1` | `3·2^324−1` | `65·2^376−1` | `27·2^500−1` |
-| Rational torsion exponent `e` | 248 | 324 | 376 | 500 |
-| Long chain `e′ = e−2` | 246 | 322 | 374 | 498 |
-| Short chain `e′−1` | 245 | 321 | 373 | 497 |
-| Challenge width `e′−1` | 245 | 321 | 373 | 497 |
-| Free bits in odd `s` | 244 | 320 | 372 | 496 |
-| Degree `q` bit length | 491 | 643 | 747 | 995 |
-| Public-key bytes | 64 | 82 | 96 | 128 |
-| Salt bytes (`e` rounded up to a multiple of 128 bits) | 32 | 48 | 48 | 64 |
-| Search bound (the salt's bit length) | 256 | 384 | 384 | 512 |
-| Signature bytes | 352 | 458 | 528 | 704 |
+| Parameter | `p248` | `p324` | `p376` | `p500` | `p664` |
+| --- | --- | --- | --- | --- | --- |
+| `p = f·2^e − 1` | `5·2^248−1` | `3·2^324−1` | `65·2^376−1` | `27·2^500−1` | `17·2^664−1` |
+| Rational torsion exponent `e` | 248 | 324 | 376 | 500 | 664 |
+| Long chain `e′ = e−2` | 246 | 322 | 374 | 498 | 662 |
+| Short chain `e′−1` | 245 | 321 | 373 | 497 | 661 |
+| Challenge width `e′−1` | 245 | 321 | 373 | 497 | 661 |
+| Free bits in odd `s` | 244 | 320 | 372 | 496 | 660 |
+| Degree `q` bit length | 491 | 643 | 747 | 995 | 1,323 |
+| Width of the integers `q` is tested in, bits | 1,024 | 1,024 | 1,024 | 1,024 | 1,344 |
+| Public-key bytes | 64 | 82 | 96 | 128 | 168 |
+| Salt bytes (`e` rounded up to a multiple of 128 bits) | 32 | 48 | 48 | 64 | 96 |
+| Search bound (the salt's bit length) | 256 | 384 | 384 | 512 | 768 |
+| Signature bytes | 352 | 458 | 528 | 704 | 936 |
 
-`p324` is in the code on the verifier side only. No signer exists for it,
-so no signature has been accepted at it; see
+`p324` and `p664` are in the code on the verifier side only. No signer
+exists for either, so no signature has been accepted at them; see
 [PARAMETER_SETS.md](PARAMETER_SETS.md).
+
+The primality test of `q` runs on fixed-width integers whose width the
+set names. A set needs `2e − 4` bits: `q < 2^(2e−5)`, and the test forms
+that power of two and, in its Lucas half, `q + 1`, each of which can have
+its top bit at index `2e − 5`. The four sets up to `p500` keep the 1,024
+bits they were built with; `p664` needs 1,324 and has 1,344, the next
+multiple of 64. The verdict on an integer does not depend on the width
+it is held in.
 
 A parameter set is a prime and is named by it
 ([PARAMETER_SETS.md](PARAMETER_SETS.md)); the paper's Table 2 calls

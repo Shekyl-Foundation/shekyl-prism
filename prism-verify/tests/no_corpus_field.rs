@@ -312,3 +312,4 @@ macro_rules! at_set {
 }
 
 at_set!(p324, prism_field::P324);
+at_set!(p664, prism_field::P664);

@@ -91,8 +91,8 @@ premise and the protocol reduction still require independent review.
    A verification budget, adversarial-cost measurements and resource limits
    remain deployment decisions. This is not an idle-device latency bound.
 9. **Field sizes.** Ruled 2026-11-14: five parameter sets, named by
-   prime, with Shekyl on `p500`. Two of them, `p324` and `p664`, are not
-   built. See the next section and
+   prime, with Shekyl on `p500`. Two of them, `p324` and `p664`, are
+   built on the verifier side only and have no honest signature. See the next section and
    [PARAMETER_SETS.md](PARAMETER_SETS.md).
 
 ## Field sizes after ePrint 2026/1486
@@ -120,8 +120,8 @@ is [SECURITY_ARGUMENT.md](SECURITY_ARGUMENT.md) §9. In short:
 - **Ruled 2026-11-14.** The parameter sets are five primes, named by
   prime: `p248`, `p324`, `p376`, `p500`, `p664`. Shekyl uses `p500`. The
   category a prime is assessed at is documentation and is not in the
-  code. `p324` is built on the verifier side, with no honest signature;
-  `p664` is not built yet.
+  code. `p324` and `p664` are built on the verifier side, with no honest
+  signature.
 - **No security level is claimed for any set by this repository.** What
   each prime's source assesses it at is tabulated, with the source and
   its date, in [PARAMETER_SETS.md](PARAMETER_SETS.md).

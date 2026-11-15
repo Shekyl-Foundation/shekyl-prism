@@ -4,16 +4,27 @@
 # All rights reserved.
 # BSD-3-Clause
 
-# Peak heap and stack of one verification, per level, under Valgrind's Massif.
+# Peak heap and stack of one verification, per set, under Valgrind's Massif.
 #
 #   sh scripts/peak_heap.sh > peak-heap.txt
 #
-# For each of the six primary vectors it runs the `verify_once` example
-# three times: `load` (read and decode the vector, no verification) and
-# `verify` (the same, then one verification) with the heap alone, measured
-# to the byte, and `verify` once more with the stack included. A `PEAK`
-# line gives the three; `SITE` lines give what held the heap at its peak,
-# by the function that asked for it. Needs valgrind and python3.
+# Two kinds of verification are measured, each as a pair of runs of the
+# `verify_once` example whose difference is what the verification holds:
+#
+#   accept   for each of the six primary vectors: `load` (read and decode
+#            the vector, no verification) and `verify` (the same, then one
+#            verification that accepts).
+#   refuse   for the same six vectors and for each set that has no
+#            vectors: `build` (build the response the count records call
+#            identity-response-q-difference, no verification) and `refuse`
+#            (the same, then one verification, refused as Codomain after
+#            both chains). A set without vectors has no accepted
+#            verification to measure, so this is its only figure.
+#
+# Each pair is run with the heap alone, measured to the byte, and its
+# second run once more with the stack included. A `PEAK` line gives the
+# three; `SITE` lines give what held the heap at its peak, by the function
+# that asked for it. Needs valgrind and python3.
 set -eu
 cd "$(dirname "$0")/.."
 command -v valgrind >/dev/null || { echo 'valgrind is not installed' >&2; exit 2; }
@@ -24,17 +35,31 @@ trap 'rm -rf "$work"' EXIT
 echo "# Written by scripts/peak_heap.sh."
 echo "# $(valgrind --version); $(rustc --version); $(uname -srm)"
 echo "# source_commit=$(git rev-parse HEAD) source_dirty=$([ -n "$(git status --porcelain)" ] && echo true || echo false)"
+# kind, input, the run that does not verify, the run that does.
+cases=""
 for n in 1 1b 3 3b 5 5b; do
     vector=prism-verify/testdata/s5_lvl$n.txt
     test -f "$vector" || { echo "missing $vector" >&2; exit 1; }
-    valgrind -q --tool=massif --peak-inaccuracy=0.0 --massif-out-file="$work/load" "$bin" "$vector" load
-    valgrind -q --tool=massif --peak-inaccuracy=0.0 --massif-out-file="$work/verify" "$bin" "$vector" verify
-    valgrind -q --tool=massif --peak-inaccuracy=0.0 --stacks=yes --massif-out-file="$work/stack" "$bin" "$vector" verify
-    python3 - "s5_lvl$n.txt" "$work/load" "$work/verify" "$work/stack" <<'PY'
+    cases="$cases accept:$vector:load:verify"
+done
+for n in 1 1b 3 3b 5 5b; do
+    cases="$cases refuse:prism-verify/testdata/s5_lvl$n.txt:build:refuse"
+done
+for name in p324 p664; do
+    cases="$cases refuse:$name:build:refuse"
+done
+for case in $cases; do
+    kind=${case%%:*}; rest=${case#*:}
+    input=${rest%%:*}; rest=${rest#*:}
+    before=${rest%%:*}; after=${rest#*:}
+    valgrind -q --tool=massif --peak-inaccuracy=0.0 --massif-out-file="$work/load" "$bin" "$input" "$before"
+    valgrind -q --tool=massif --peak-inaccuracy=0.0 --massif-out-file="$work/verify" "$bin" "$input" "$after"
+    valgrind -q --tool=massif --peak-inaccuracy=0.0 --stacks=yes --massif-out-file="$work/stack" "$bin" "$input" "$after"
+    python3 - "$kind" "$(basename "$input")" "$work/load" "$work/verify" "$work/stack" <<'PY'
 import re
 import sys
 
-name, load, verify, stack = sys.argv[1:]
+kind, name, load, verify, stack = sys.argv[1:]
 
 
 def snapshots(path):
@@ -62,8 +87,11 @@ def peak(path):
 before, after = peak(load), peak(verify)
 # The stack is sampled, not tracked to its peak: the largest sample seen.
 deepest = max(field(s, "mem_stacks_B") for s in snapshots(stack))
-print(f"PEAK vector={name} load_heap_bytes={field(before, 'mem_heap_B')} "
-      f"verify_heap_bytes={field(after, 'mem_heap_B')} "
+# The accepted rows keep the field names their earlier records have.
+first, second = ("load", "verify") if kind == "accept" else ("build", "refuse")
+tag = f"vector={name}" if kind == "accept" else f"refusal={name}"
+print(f"PEAK {tag} {first}_heap_bytes={field(before, 'mem_heap_B')} "
+      f"{second}_heap_bytes={field(after, 'mem_heap_B')} "
       f"allocator_overhead_bytes={field(after, 'mem_heap_extra_B')} "
       f"largest_stack_sample_bytes={deepest}")
 # Each depth-1 node is an allocation site; name it by the first frame of
@@ -86,6 +114,6 @@ for line in after.splitlines():
 if size:
     sites[owner or "other"] = sites.get(owner or "other", 0) + size
 for owner, amount in sorted(sites.items(), key=lambda item: -item[1]):
-    print(f"SITE vector={name} bytes={amount} holder={owner}")
+    print(f"SITE {tag} bytes={amount} holder={owner}")
 PY
 done

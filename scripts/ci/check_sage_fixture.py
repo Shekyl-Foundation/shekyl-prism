@@ -25,12 +25,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "sage" / "no_corpus_fixture.sage"
 TESTDATA = ROOT / "prism-verify" / "testdata"
-# Every set whose files are committed. The script may name a set whose
-# files are not committed yet, and it is listed apart: together the two
-# lists are exactly the script's sets, so a set cannot be in the script
-# and in neither list.
-SETS = ("p324",)
-WRITTEN_BUT_NOT_COMMITTED = ("p664",)
+# Every set the script writes files for. A set the script names and this
+# does not, or the other way round, fails below.
+SETS = ("p324", "p664")
 KINDS = ("field", "curves")
 IMAGE = "sagemath/sagemath@sha256:4f5589eb6c565949a006f8665de2876b8414410daf5ac554f4434a15d4f3d528"
 
@@ -50,13 +47,8 @@ def main():
     digest = hashlib.sha256(SCRIPT.read_bytes()).hexdigest()
     if IMAGE not in source:
         raise SystemExit("the script no longer names the pinned Sage image")
-    known = sorted(SETS + WRITTEN_BUT_NOT_COMMITTED)
-    if sorted(sets_of_the_script(source)) != known or len(set(known)) != len(known):
-        raise SystemExit(f"the script writes {sets_of_the_script(source)} and this check knows {known}")
-    for name in WRITTEN_BUT_NOT_COMMITTED:
-        present = [kind for kind in KINDS if (TESTDATA / f"{name}_{kind}.tsv").is_file()]
-        if present:
-            raise SystemExit(f"{name} has committed files and is listed as having none")
+    if sets_of_the_script(source) != SETS:
+        raise SystemExit(f"the script writes {sets_of_the_script(source)} and this check holds {SETS}")
     for name in SETS:
         command = f"# Command: sage scripts/sage/{SCRIPT.name} {name} (from the repository root)"
         for kind in KINDS:

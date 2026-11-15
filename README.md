@@ -16,7 +16,7 @@ verifier at reduced challenge widths.
 
 | Crate | Role |
 | --- | --- |
-| `prism-field` | Four parameter sets (`p248`, `p324`, `p376`, `p500`), scalar `fp2` 0.6.0 backend |
+| `prism-field` | Five parameter sets (`p248`, `p324`, `p376`, `p500`, `p664`), scalar `fp2` 0.6.0 backend |
 | `prism-isogeny` | Montgomery and theta arithmetic, adapted chains and duals |
 | `prism-verify` | Canonical decoding, pairing, both chains and complete images |
 | `prism-signer` | Unix research API for an isolated deterministic C backend |
@@ -33,9 +33,8 @@ and is not a certified security level for this modified salted construction.
 Two of the three primes with vectors are from before the `p^(1/3+o(1))` isogeny
 algorithm of ePrint 2026/1486, which applies to PRISM key recovery and after
 which SQIsign moved to larger primes. Ruled 2026-11-14: the sets are the five
-primes of that table and Shekyl uses `p500`. `p324` is built on the verifier
-side only, with no signer and so no accepted signature; `p664` is still to
-be built ([SECURITY_ARGUMENT.md](docs/SECURITY_ARGUMENT.md) §9). The approved wire
+primes of that table and Shekyl uses `p500`. `p324` and `p664` are built on the
+verifier side only, with no signer and so no accepted signature ([SECURITY_ARGUMENT.md](docs/SECURITY_ARGUMENT.md) §9). The approved wire
 and signer contract is [SALT_PROTOCOL.md](docs/SALT_PROTOCOL.md); the
 unsalted implementation is preserved at `archive/unsalted-index-2026-11-12`.
 
