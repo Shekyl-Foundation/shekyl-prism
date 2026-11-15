@@ -8,13 +8,14 @@
 //!
 //! The input picks a set and a claimed order, then four scalars. The
 //! pair is `([a]P + [b]Q, [c]P + [d]Q)` on a committed signature's curve,
+//! or at `p324`, which has no signature, on a curve and basis Sage built,
 //! so short inputs give the degenerate pairs (a zero point, dependent
 //! points, points of low order) and long ones the generic pair.
 
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use prism_field::{Field, ParameterSet, P248, P376, P500};
+use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
 use prism_isogeny::jac::{add, Jac};
 use prism_isogeny::montgomery::Montgomery;
 use prism_isogeny::pairing::{mul, oracle, weil};
@@ -32,14 +33,49 @@ fn element<L: ParameterSet>(text: &str, name: &str) -> L::Ext {
     L::ext_decode(&bytes).expect("a committed element is canonical")
 }
 
-fn set<L: ParameterSet>(text: &str, order: u8, scalars: &[u8]) {
+/// The curve and basis of a committed signature.
+fn committed<L: ParameterSet>(text: &str, order: u8, scalars: &[u8]) {
     let at = |x, y| Jac {
         x: element::<L>(text, x),
         y: element::<L>(text, y),
         z: L::Ext::one(),
     };
     let curve = Montgomery::normalized(element::<L>(text, "E "));
-    let (p, q) = (at("Px ", "Py "), at("Qx ", "Qy "));
+    pair::<L>(curve, at("Px ", "Py "), at("Qx ", "Qy "), order, scalars);
+}
+
+/// The first curve of `p324_curves.tsv` and the order-`2^e` basis on it.
+fn sage_basis(order: u8, scalars: &[u8]) {
+    let table = include_str!("../../prism-verify/testdata/p324_curves.tsv");
+    let row = table
+        .lines()
+        .find(|line| line.starts_with("CURVE\t"))
+        .expect("the file has a curve");
+    let fields: Vec<&str> = row.split('\t').collect();
+    let decode = |hex: &str| {
+        let bytes: Vec<u8> = hex
+            .as_bytes()
+            .chunks_exact(2)
+            .map(|pair| u8::from_str_radix(core::str::from_utf8(pair).unwrap(), 16).unwrap())
+            .collect();
+        P324::ext_decode(&bytes).expect("a committed element is canonical")
+    };
+    let at = |x: usize| Jac {
+        x: decode(fields[x]),
+        y: decode(fields[x + 1]),
+        z: <P324 as ParameterSet>::Ext::one(),
+    };
+    let curve = Montgomery::normalized(decode(fields[2]));
+    pair::<P324>(curve, at(9), at(11), order, scalars);
+}
+
+fn pair<L: ParameterSet>(
+    curve: Montgomery<L::Ext>,
+    p: Jac<L::Ext>,
+    q: Jac<L::Ext>,
+    order: u8,
+    scalars: &[u8],
+) {
     let width = scalars.len().div_ceil(4).max(1);
     let mut parts = scalars.chunks(width);
     let mut next = || parts.next().unwrap_or(&[]);
@@ -70,21 +106,31 @@ fuzz_target!(|data: &[u8]| {
     if scalars.len() > 4 * 63 {
         return;
     }
-    match which % 3 {
-        0 => set::<P248>(
-            include_str!("../../prism-verify/testdata/s5_lvl1.txt"),
-            *order,
-            scalars,
-        ),
-        1 => set::<P376>(
-            include_str!("../../prism-verify/testdata/s5_lvl3.txt"),
-            *order,
-            scalars,
-        ),
-        _ => set::<P500>(
-            include_str!("../../prism-verify/testdata/s5_lvl5.txt"),
-            *order,
-            scalars,
-        ),
-    }
+    // One entry for each set. The input's first byte picks one; there is
+    // no arm that an unlisted set would fall into.
+    const SETS: [fn(u8, &[u8]); 4] = [
+        |order, scalars| {
+            committed::<P248>(
+                include_str!("../../prism-verify/testdata/s5_lvl1.txt"),
+                order,
+                scalars,
+            )
+        },
+        sage_basis,
+        |order, scalars| {
+            committed::<P376>(
+                include_str!("../../prism-verify/testdata/s5_lvl3.txt"),
+                order,
+                scalars,
+            )
+        },
+        |order, scalars| {
+            committed::<P500>(
+                include_str!("../../prism-verify/testdata/s5_lvl5.txt"),
+                order,
+                scalars,
+            )
+        },
+    ];
+    SETS[usize::from(*which) % SETS.len()](*order, scalars);
 });

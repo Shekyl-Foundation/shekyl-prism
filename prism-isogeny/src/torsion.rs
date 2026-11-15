@@ -383,9 +383,9 @@ pub fn double_times<L: ParameterSet>(
 
 #[cfg(test)]
 mod tests {
-    use super::even_basis;
+    use super::{even_basis, has_order_p_plus_one, mul_odd_then_double, odd_parts_generate};
     use crate::torsion::double_times;
-    use prism_field::{Field, ParameterSet, P248, P376, P500};
+    use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
 
     fn key<L: ParameterSet>(hex: &str) -> L::Ext {
         let bytes: Vec<u8> = (0..hex.len())
@@ -434,9 +434,63 @@ mod tests {
         assert!(super::starting_basis::<L>().is_some(), "{}", L::NAME);
     }
 
+    /// A point is full order only when no prime of `p + 1` can be divided
+    /// out of its order. On the starting curve, `R` of the basis has order
+    /// `p + 1`; `[q]R` for each odd prime `q` of the cofactor, and `[2]R`,
+    /// do not, and each must be reported as not full order. A set whose
+    /// list of odd primes were empty or short would pass `[q]R`.
+    fn only_the_full_point_is_full_order<L: ParameterSet>() {
+        let coefficient = L::Ext::zero();
+        let basis = super::starting_basis::<L>().expect(L::NAME);
+        for point in [basis.r, basis.t] {
+            assert!(has_order_p_plus_one::<L>(coefficient, point), "{}", L::NAME);
+            let doubled = mul_odd_then_double::<L>(coefficient, point, 1, 1).expect(L::NAME);
+            assert!(
+                !has_order_p_plus_one::<L>(coefficient, doubled),
+                "{}: [2]R passed for full order",
+                L::NAME
+            );
+            assert!(!L::ODD_PRIMES.is_empty(), "{}", L::NAME);
+            for &prime in L::ODD_PRIMES {
+                let reduced =
+                    mul_odd_then_double::<L>(coefficient, point, prime, 0).expect(L::NAME);
+                assert!(
+                    !has_order_p_plus_one::<L>(coefficient, reduced),
+                    "{}: [{prime}]R passed for full order",
+                    L::NAME
+                );
+            }
+        }
+        // The two points of the basis generate both parts of the torsion.
+        assert!(
+            odd_parts_generate::<L>(coefficient, basis.r, basis.t),
+            "{}",
+            L::NAME
+        );
+        // And a point against itself does not.
+        assert!(
+            !odd_parts_generate::<L>(coefficient, basis.r, basis.r),
+            "{}",
+            L::NAME
+        );
+    }
+
+    #[test]
+    fn a_point_missing_a_prime_of_the_cofactor_is_not_full_order_at_any_set() {
+        only_the_full_point_is_full_order::<P248>();
+        only_the_full_point_is_full_order::<P324>();
+        only_the_full_point_is_full_order::<P376>();
+        only_the_full_point_is_full_order::<P500>();
+    }
+
     #[test]
     fn the_starting_curve_has_a_basis_at_p248() {
         starting::<P248>();
+    }
+
+    #[test]
+    fn the_starting_curve_has_a_basis_at_p324() {
+        starting::<P324>();
     }
 
     #[test]

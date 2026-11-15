@@ -23,12 +23,14 @@ for path in paths:
         directory = ROOT / "fuzz/corpus" / target
         directory.mkdir(parents=True, exist_ok=True)
         (directory / path.stem).write_bytes(data)
-# weil_matches_affine reads a level byte, an order byte and four scalars.
-# The seeds are the identity pair at each level and claimed order, and one
-# generic pair per level; the fuzzer finds the degenerate pairs from there.
+# weil_matches_affine reads a set byte, an order byte and four scalars.
+# The seeds are the identity pair at each set and claimed order, and one
+# generic pair per set; the fuzzer finds the degenerate pairs from there.
+# The widths are in the order of the target's table of sets: p248, p324,
+# p376, p500, each the whole bytes of an e-bit scalar.
 directory = ROOT / "fuzz/corpus/weil_matches_affine"
 directory.mkdir(parents=True, exist_ok=True)
-for which, width in enumerate((31, 47, 63)):
+for which, width in enumerate((31, 41, 47, 63)):
     for order in range(3):
         one = (1).to_bytes(width, "little")
         zero = bytes(width)

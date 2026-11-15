@@ -447,7 +447,7 @@ mod tests {
         use super::super::{mul, oracle, weil};
         use crate::jac::{add, dbl_iter, Jac};
         use crate::montgomery::Montgomery;
-        use prism_field::{Field, ParameterSet, P248, P376, P500};
+        use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
 
         const VECTORS: [&str; 6] = [
             include_str!("../../prism-verify/testdata/s5_lvl1.txt"),
@@ -474,8 +474,11 @@ mod tests {
         type Point<L> = Jac<<L as ParameterSet>::Ext>;
         type Curve<L> = Montgomery<<L as ParameterSet>::Ext>;
 
+        /// A curve and a basis of its `2^e`-torsion.
+        type Basis<L> = (Curve<L>, Point<L>, Point<L>);
+
         /// The response curve and its two points, a basis of the `2^e`-torsion.
-        fn basis<L: ParameterSet>(text: &str) -> (Curve<L>, Point<L>, Point<L>) {
+        fn basis<L: ParameterSet>(text: &str) -> Basis<L> {
             let at = |x, y| Jac {
                 x: element::<L>(text, x),
                 y: element::<L>(text, y),
@@ -548,8 +551,8 @@ mod tests {
 
         /// `pairs` full-order independent pairs, which must have a value,
         /// then `pairs / 4` unconstrained pairs, which may be refused.
-        fn random<L: ParameterSet>(text: &str, seed: u64, pairs: u32) {
-            let (curve, p, q) = basis::<L>(text);
+        fn random<L: ParameterSet>(basis: Basis<L>, seed: u64, pairs: u32) {
+            let (curve, p, q) = basis;
             let mut stream = Stream(seed);
             for n in 0..pairs {
                 // Odd on the diagonal and even off it: determinant odd, so
@@ -579,8 +582,8 @@ mod tests {
 
         /// Inputs a forger would choose. Each must be treated alike by both
         /// loops; `values` counts those that have a pairing value at all.
-        fn adversarial<L: ParameterSet>(text: &str, seed: u64) -> u32 {
-            let (curve, p, q) = basis::<L>(text);
+        fn adversarial<L: ParameterSet>(basis: Basis<L>, seed: u64) -> u32 {
+            let (curve, p, q) = basis;
             let e = L::E;
             let negate = |point: Jac<L::Ext>| Jac {
                 y: point.y.negate(),
@@ -684,34 +687,76 @@ mod tests {
             values
         }
 
-        fn every_set(run: impl Fn(usize, &str)) {
-            for (n, text) in VECTORS.iter().enumerate() {
-                run(n, text);
+        /// The bases of `p324`, which has no signature: the curves and
+        /// order-`2^e` pairs Sage built for
+        /// `prism-verify/testdata/p324_curves.tsv`.
+        fn p324_bases() -> Vec<Basis<P324>> {
+            let table = include_str!("../../prism-verify/testdata/p324_curves.tsv");
+            let decode = |hex: &str| {
+                let bytes: Vec<u8> = hex
+                    .as_bytes()
+                    .chunks_exact(2)
+                    .map(|pair| {
+                        u8::from_str_radix(core::str::from_utf8(pair).unwrap(), 16).unwrap()
+                    })
+                    .collect();
+                P324::ext_decode(&bytes).expect("a committed element is canonical")
+            };
+            let found: Vec<Basis<P324>> = table
+                .lines()
+                .filter(|line| line.starts_with("CURVE\t"))
+                .map(|line| {
+                    let fields: Vec<&str> = line.split('\t').collect();
+                    let at = |x: usize| Jac {
+                        x: decode(fields[x]),
+                        y: decode(fields[x + 1]),
+                        z: <P324 as ParameterSet>::Ext::one(),
+                    };
+                    (Montgomery::normalized(decode(fields[2])), at(9), at(11))
+                })
+                .collect();
+            assert_eq!(found.len(), 8, "eight curves at p324");
+            found
+        }
+
+        /// Run `on` at every basis of every set, each with its own number.
+        /// The six committed vectors keep the numbers they always had; the
+        /// `p324` bases follow. Every set is named here: adding one means
+        /// adding its line, and none is reached by a default.
+        fn every_basis(
+            on248: impl Fn(u64, Basis<P248>),
+            on324: impl Fn(u64, Basis<P324>),
+            on376: impl Fn(u64, Basis<P376>),
+            on500: impl Fn(u64, Basis<P500>),
+        ) {
+            on248(0, basis::<P248>(VECTORS[0]));
+            on248(1, basis::<P248>(VECTORS[1]));
+            on376(2, basis::<P376>(VECTORS[2]));
+            on376(3, basis::<P376>(VECTORS[3]));
+            on500(4, basis::<P500>(VECTORS[4]));
+            on500(5, basis::<P500>(VECTORS[5]));
+            for (n, basis) in p324_bases().into_iter().take(2).enumerate() {
+                on324(6 + n as u64, basis);
             }
         }
 
         #[test]
         fn adversarial_inputs_are_refused_or_valued_alike() {
-            every_set(|n, text| {
-                let seed = 0x5052_4953_4d00_0000 + n as u64;
-                let values = match n / 2 {
-                    0 => adversarial::<P248>(text, seed),
-                    1 => adversarial::<P376>(text, seed),
-                    _ => adversarial::<P500>(text, seed),
-                };
-                // The honest basis has a value, so the set is not all
-                // refusals; most of the rest must be refused.
-                assert!(values >= 1, "vector {n}: the basis itself was refused");
-            });
+            // The honest basis has a value, so the set is not all refusals;
+            // most of the rest must be refused.
+            fn check<L: ParameterSet>(n: u64, basis: Basis<L>) {
+                let values = adversarial::<L>(basis, 0x5052_4953_4d00_0000 + n);
+                assert!(values >= 1, "basis {n}: the basis itself was refused");
+            }
+            every_basis(check::<P248>, check::<P324>, check::<P376>, check::<P500>);
         }
 
         #[test]
         fn a_sample_of_random_pairs_agrees() {
-            every_set(|n, text| match n / 2 {
-                0 => random::<P248>(text, 11 + n as u64, 8),
-                1 => random::<P376>(text, 11 + n as u64, 8),
-                _ => random::<P500>(text, 11 + n as u64, 8),
-            });
+            fn check<L: ParameterSet>(n: u64, basis: Basis<L>) {
+                random::<L>(basis, 11 + n, 8);
+            }
+            every_basis(check::<P248>, check::<P324>, check::<P376>, check::<P500>);
         }
 
         /// 1,000 full-order pairs and 250 unconstrained ones per set.
@@ -719,11 +764,10 @@ mod tests {
         #[test]
         #[ignore = "long: run in release with --ignored"]
         fn a_thousand_random_pairs_per_set_agree() {
-            every_set(|n, text| match n / 2 {
-                0 => random::<P248>(text, 1000 + n as u64, 500),
-                1 => random::<P376>(text, 1000 + n as u64, 500),
-                _ => random::<P500>(text, 1000 + n as u64, 500),
-            });
+            fn check<L: ParameterSet>(n: u64, basis: Basis<L>) {
+                random::<L>(basis, 1000 + n, 500);
+            }
+            every_basis(check::<P248>, check::<P324>, check::<P376>, check::<P500>);
         }
     }
 }
