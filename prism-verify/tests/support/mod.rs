@@ -9,6 +9,8 @@
 //! reporter (`examples/op_counts.rs`), so both see the same inputs under
 //! the same names. Every case is deterministic in the vector's text.
 
+pub mod identity;
+
 use prism_field::{Field, ParameterSet, Salt};
 use prism_isogeny::{
     jac::{add, dbl_iter, to_xz, Jac},
@@ -16,7 +18,7 @@ use prism_isogeny::{
     pairing::mul,
 };
 use prism_verify::{
-    signature::canonical_sign, AffinePoint, ChallengeScalar, KeyIdentity, Response, Set,
+    signature::canonical_sign, AffinePoint, ChallengeScalar, CommittedSet, KeyIdentity, Response,
     VerifyError,
 };
 use std::{
@@ -50,8 +52,8 @@ pub fn vector<L: ParameterSet>(text: &str) -> (Vec<u8>, Vec<u8>, Response<L>) {
     )
 }
 /// The set a vector file names.
-pub fn set(text: &str) -> Set {
-    Set::from_committed_label(field(text, "level ")).unwrap()
+pub fn set(text: &str) -> CommittedSet {
+    CommittedSet::from_label(field(text, "level ")).unwrap()
 }
 /// Every committed honest vector, sorted by path.
 pub fn files() -> Vec<PathBuf> {
@@ -330,6 +332,19 @@ pub fn negatives<L: ParameterSet>(text: &str) -> Vec<Case> {
         signature: other.encode(),
         allowed: &[VerifyError::Pairing],
     });
+    // The pairing check passed with no secret: the response curve of the
+    // honest signature taken as a key, and the verifier's own basis of it
+    // answered with a pair of inverse pairing. See `identity.rs`.
+    for form in identity::Form::ALL {
+        let built = identity::identity_response::<L>(r.curve, &msg, form);
+        cases.push(Case {
+            name: form.name().into(),
+            key: built.key,
+            message: msg.clone(),
+            signature: built.response.encode(),
+            allowed: form.allowed(),
+        });
+    }
     // The refusals that need no curve arithmetic to produce.
     let honest = r.encode();
     cases.push(Case {

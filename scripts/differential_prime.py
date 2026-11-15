@@ -30,8 +30,11 @@ KNOWN = (
     (4, 7, True),  # 79
 )
 
+# The chain exponent `e - 2` of each set, by the name the report prints.
+# The three sets with committed data keep the names their records use.
 LEVELS = (
     ("NIST-I", 246),
+    ("p324", 322),
     ("NIST-III", 374),
     ("NIST-V", 498),
 )

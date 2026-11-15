@@ -10,23 +10,27 @@ preserve the derivations, investigations and questions that led here.
 
 ## Parameters and encoding
 
-| Parameter | `p248` | `p376` | `p500` |
-| --- | --- | --- | --- |
-| `p = f·2^e − 1` | `5·2^248−1` | `65·2^376−1` | `27·2^500−1` |
-| Rational torsion exponent `e` | 248 | 376 | 500 |
-| Long chain `e′ = e−2` | 246 | 374 | 498 |
-| Short chain `e′−1` | 245 | 373 | 497 |
-| Challenge width `e′−1` | 245 | 373 | 497 |
-| Free bits in odd `s` | 244 | 372 | 496 |
-| Degree `q` bit length | 491 | 747 | 995 |
-| Public-key bytes | 64 | 96 | 128 |
-| Salt bytes (`e` rounded up to a multiple of 128 bits) | 32 | 48 | 64 |
-| Search bound (the salt's bit length) | 256 | 384 | 512 |
-| Signature bytes | 352 | 528 | 704 |
+| Parameter | `p248` | `p324` | `p376` | `p500` |
+| --- | --- | --- | --- | --- |
+| `p = f·2^e − 1` | `5·2^248−1` | `3·2^324−1` | `65·2^376−1` | `27·2^500−1` |
+| Rational torsion exponent `e` | 248 | 324 | 376 | 500 |
+| Long chain `e′ = e−2` | 246 | 322 | 374 | 498 |
+| Short chain `e′−1` | 245 | 321 | 373 | 497 |
+| Challenge width `e′−1` | 245 | 321 | 373 | 497 |
+| Free bits in odd `s` | 244 | 320 | 372 | 496 |
+| Degree `q` bit length | 491 | 643 | 747 | 995 |
+| Public-key bytes | 64 | 82 | 96 | 128 |
+| Salt bytes (`e` rounded up to a multiple of 128 bits) | 32 | 48 | 48 | 64 |
+| Search bound (the salt's bit length) | 256 | 384 | 384 | 512 |
+| Signature bytes | 352 | 458 | 528 | 704 |
+
+`p324` is in the code on the verifier side only. No signer exists for it,
+so no signature has been accepted at it; see
+[PARAMETER_SETS.md](PARAMETER_SETS.md).
 
 A parameter set is a prime and is named by it
-([PARAMETER_SETS.md](PARAMETER_SETS.md)); the paper's Table 2 calls these
-three NIST I, III and V, which does not certify a security level of this
+([PARAMETER_SETS.md](PARAMETER_SETS.md)); the paper's Table 2 calls
+`p248`, `p376` and `p500` NIST I, III and V, which does not certify a security level of this
 modified salted protocol. `CHAIN_STEPS` is `e′`; `E` is
 always the rational torsion exponent. `CHALLENGE_BITS` is the actual
 `e−3` width, including the forced odd bit. The historical `e−1` constant

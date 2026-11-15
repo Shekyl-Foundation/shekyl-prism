@@ -40,7 +40,9 @@ pub use identity::KeyIdentity;
 pub use prime::{challenge_degree, degree_is_prime, is_baillie_psw};
 pub use prism_field::Salt;
 pub use reference::{prepared, reference_key, Prepared, PreparedError, ReferenceKey, VectorError};
-pub use set::{verify_set, Committed, Set, UnknownCommittedLabel, UnknownSet};
+pub use set::{
+    verify_set, Committed, CommittedSet, NoCorpus, Set, UnknownCommittedLabel, UnknownSet,
+};
 pub use signature::{AffinePoint, Response};
 pub use stage::Stage;
 
@@ -296,7 +298,7 @@ mod tests {
     fn a_bad_sign_is_refused_before_the_challenge_is_hashed() {
         // The key's basis exists and the salt names a prime degree,
         // so the only failing check below `Composite` is the sign test.
-        let sample = prepared(Set::P248).expect("`p248` sample");
+        let sample = prepared(CommittedSet::P248).expect("`p248` sample");
         let mut response = Response::<P248>::decode(&sample.signature).expect("the sample decodes");
         response.p.y = response.p.y.negate();
         assert_eq!(
@@ -326,12 +328,12 @@ mod tests {
 
     #[test]
     fn the_derived_index_equals_the_c_hint() {
-        for set in Set::ALL {
+        for set in CommittedSet::ALL {
             let row = reference_key(set).unwrap_or_else(|err| panic!("{set}: {err}"));
             let derived = match set {
-                Set::P248 => derive_hint::<P248>(&row.public_key),
-                Set::P376 => derive_hint::<P376>(&row.public_key),
-                Set::P500 => derive_hint::<P500>(&row.public_key),
+                CommittedSet::P248 => derive_hint::<P248>(&row.public_key),
+                CommittedSet::P376 => derive_hint::<P376>(&row.public_key),
+                CommittedSet::P500 => derive_hint::<P500>(&row.public_key),
             };
             assert_eq!(derived, Ok(row.hint), "{set}");
             // The byte the C returned round-trips through the typed hint.
@@ -349,7 +351,11 @@ mod tests {
     fn the_pinned_hints_are_the_committed_bytes() {
         // The hint bytes `scripts/export_c_basis_hints.py` wrote from its
         // frozen seed. A regeneration that changes a byte updates this table.
-        for (set, byte) in [(Set::P248, 11u8), (Set::P376, 13), (Set::P500, 21)] {
+        for (set, byte) in [
+            (CommittedSet::P248, 11u8),
+            (CommittedSet::P376, 13),
+            (CommittedSet::P500, 21),
+        ] {
             let row = reference_key(set).unwrap_or_else(|err| panic!("{set}: {err}"));
             assert_eq!(row.hint.to_c_byte(), Some(byte), "{set}");
             assert!(row.hint.index() >= 1 && row.hint.index() <= C_HINT_MAX_INDEX);
@@ -358,12 +364,18 @@ mod tests {
 
     #[test]
     fn a_signature_round_trips_through_the_layout() {
-        for set in Set::ALL {
+        for set in CommittedSet::ALL {
             let sample = prepared(set).unwrap_or_else(|err| panic!("{set}: {err}"));
             let decoded = match set {
-                Set::P248 => Response::<P248>::decode(&sample.signature).map(|r| r.encode()),
-                Set::P376 => Response::<P376>::decode(&sample.signature).map(|r| r.encode()),
-                Set::P500 => Response::<P500>::decode(&sample.signature).map(|r| r.encode()),
+                CommittedSet::P248 => {
+                    Response::<P248>::decode(&sample.signature).map(|r| r.encode())
+                }
+                CommittedSet::P376 => {
+                    Response::<P376>::decode(&sample.signature).map(|r| r.encode())
+                }
+                CommittedSet::P500 => {
+                    Response::<P500>::decode(&sample.signature).map(|r| r.encode())
+                }
             };
             assert_eq!(decoded, Ok(sample.signature.clone()), "{set}");
         }
@@ -371,7 +383,7 @@ mod tests {
 
     #[test]
     fn a_carried_salt_reaches_the_real_relation_without_a_search() {
-        let sample = prepared(Set::P248).expect("sample");
+        let sample = prepared(CommittedSet::P248).expect("sample");
         assert_eq!(
             verify_set(
                 Set::P248,
@@ -400,32 +412,43 @@ mod tests {
 
     #[test]
     fn a_set_name_parses_or_is_its_own_error() {
-        for (name, label, set) in [
-            ("p248", P248::LABEL, Set::P248),
-            ("p376", P376::LABEL, Set::P376),
-            ("p500", P500::LABEL, Set::P500),
+        for (name, set) in [
+            ("p248", Set::P248),
+            ("p324", Set::P324),
+            ("p376", Set::P376),
+            ("p500", Set::P500),
         ] {
             assert_eq!(name.parse::<Set>(), Ok(set), "{name}");
             assert_eq!(set.to_string(), name);
-            assert_eq!(Set::from_committed_label(label), Ok(set), "{label}");
-            assert_eq!(set.committed_label(), label);
-            // The two ways in are kept apart: a name is not a label, and a
-            // label is not a name.
-            assert_eq!(label.parse::<Set>(), Err(UnknownSet), "{label}");
+            // A name is not a label.
             assert_eq!(
-                Set::from_committed_label(name),
+                CommittedSet::from_label(name),
                 Err(UnknownCommittedLabel),
                 "{name}"
             );
+        }
+        assert_eq!(Set::ALL.len(), 4);
+        for (label, committed, set) in [
+            (P248::LABEL, CommittedSet::P248, Set::P248),
+            (P376::LABEL, CommittedSet::P376, Set::P376),
+            (P500::LABEL, CommittedSet::P500, Set::P500),
+        ] {
+            assert_eq!(CommittedSet::from_label(label), Ok(committed), "{label}");
+            assert_eq!(committed.label(), label);
+            assert_eq!(committed.set(), set);
+            assert_eq!(set.committed(), Ok(committed));
+            assert_eq!(committed.to_string(), set.to_string());
+            // A label is not a name.
+            assert_eq!(label.parse::<Set>(), Err(UnknownSet), "{label}");
         }
         assert_eq!(
             (P248::LABEL, P376::LABEL, P500::LABEL),
             ("NIST-I", "NIST-III", "NIST-V")
         );
-        for text in ["", "248", "P248", "p324", "p664", "1", "I", "iv"] {
+        for text in ["", "248", "P248", "p664", "1", "I", "iv"] {
             assert_eq!(text.parse::<Set>(), Err(UnknownSet), "{text}");
             assert_eq!(
-                Set::from_committed_label(text),
+                CommittedSet::from_label(text),
                 Err(UnknownCommittedLabel),
                 "{text}"
             );
@@ -436,12 +459,43 @@ mod tests {
         // the other's.
         for set in Set::ALL {
             assert!(UnknownSet.to_string().contains(set.name()));
-            assert!(!UnknownSet.to_string().contains(set.committed_label()));
-            assert!(UnknownCommittedLabel
-                .to_string()
-                .contains(set.committed_label()));
             assert!(!UnknownCommittedLabel.to_string().contains(set.name()));
         }
+        for set in CommittedSet::ALL {
+            assert!(UnknownCommittedLabel.to_string().contains(set.label()));
+            assert!(!UnknownSet.to_string().contains(set.label()));
+        }
+        assert_eq!(
+            UnknownSet.to_string(),
+            "not the name of a parameter set: expected p248, p324, p376 or p500"
+        );
+    }
+
+    /// `p324` has no vectors, no records and no label. Asking for it as a
+    /// set with committed data is its own error, which names the set, and
+    /// every other set converts. The exhaustive match is the point: a set
+    /// added later must be placed on one side here before this compiles.
+    #[test]
+    fn a_set_without_a_corpus_says_so_and_is_given_no_label() {
+        for set in Set::ALL {
+            match set {
+                Set::P324 => {
+                    assert_eq!(set.committed(), Err(NoCorpus(set)));
+                    assert!(NoCorpus(set).to_string().contains("p324"));
+                }
+                Set::P248 | Set::P376 | Set::P500 => {
+                    assert_eq!(set.committed().map(CommittedSet::set), Ok(set));
+                }
+            }
+        }
+        // No committed label, in either spelling a guess might take.
+        for text in ["NIST-II", "p324", "P324"] {
+            assert_eq!(CommittedSet::from_label(text), Err(UnknownCommittedLabel));
+        }
+        assert_ne!(
+            NoCorpus(Set::P324).to_string(),
+            UnknownCommittedLabel.to_string()
+        );
     }
 
     #[test]

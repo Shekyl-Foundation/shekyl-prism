@@ -5,7 +5,7 @@
 
 //! Generate ephemeral research keys, sign, and verify. No secrets are printed.
 use prism_signer::{SecretSeed, Signer};
-use prism_verify::{verify_set, Set};
+use prism_verify::{verify_set, CommittedSet};
 use std::{path::PathBuf, time::Instant};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let dir = PathBuf::from(
@@ -14,9 +14,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .ok_or("usage: roundtrip <backend-directory>")?,
     );
     for (set, name) in [
-        (Set::P248, "lvl1"),
-        (Set::P376, "lvl3"),
-        (Set::P500, "lvl5"),
+        (CommittedSet::P248, "lvl1"),
+        (CommittedSet::P376, "lvl3"),
+        (CommittedSet::P500, "lvl5"),
     ] {
         let signer = Signer::new(
             dir.join(format!("prism_signer_{name}")),
@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let sig = signer.sign(b"shekyl-prism-roundtrip")?;
         let sign = before.elapsed();
         let before = Instant::now();
-        verify_set(set, &key, b"shekyl-prism-roundtrip", &sig)?;
+        verify_set(set.set(), &key, b"shekyl-prism-roundtrip", &sig)?;
         let verify = before.elapsed();
         println!("set={set} pk_bytes={} sig_bytes={} keygen_ms={} sign_including_keygen_ms={} verify_ms={} accepted=true",key.len(),sig.len(),keygen.as_millis(),sign.as_millis(),verify.as_millis());
     }

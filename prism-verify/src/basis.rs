@@ -180,7 +180,7 @@ fn montgomery_rhs<L: ParameterSet>(coefficient: L::Ext, x: L::Ext) -> L::Ext {
 #[cfg(test)]
 mod tests {
     use super::{basis_hint, montgomery_rhs, search_bound, BasisHint, C_HINT_MAX_INDEX};
-    use prism_field::{Field, ParameterSet, P248, P376, P500};
+    use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
 
     /// `x(P)` for an index, by the definition in `docs/VERIFIER_SPEC.md`:
     /// `−A/(1 + i·b)` for a square `A`, and `n·A` otherwise. The search
@@ -277,6 +277,7 @@ mod tests {
     #[test]
     fn the_derived_index_is_the_smallest_on_curve_index() {
         check_set::<P248>();
+        check_set::<P324>();
         check_set::<P376>();
         check_set::<P500>();
     }
@@ -288,6 +289,7 @@ mod tests {
             assert!(search_bound::<L>() > C_HINT_MAX_INDEX);
         }
         check::<P248>();
+        check::<P324>();
         check::<P376>();
         check::<P500>();
     }
@@ -311,7 +313,11 @@ mod tests {
         assert_eq!(BasisHint::from_c_byte(1), None);
         // An index past the ceiling has no byte: the C stores the signal and
         // its verifier re-searches, which is what this module always does.
-        for index in [C_HINT_MAX_INDEX + 1, search_bound::<P500>()] {
+        for index in [
+            C_HINT_MAX_INDEX + 1,
+            search_bound::<P324>(),
+            search_bound::<P500>(),
+        ] {
             let hint = BasisHint {
                 index,
                 coefficient_is_square: true,

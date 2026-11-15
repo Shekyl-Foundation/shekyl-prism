@@ -466,7 +466,7 @@ calculate best classical or quantum attack costs.
 | Challenge and concrete costs | Second-preimage and signer-collision work, memory, and other classical/quantum attacks for these rows | OPEN; §5 and §6 give the random-oracle estimates |
 | Formal reduction | Resource-bounded proof, including candidates, errors and QROM if claimed | OPEN; event decomposition and a mapped published bound only |
 | Implementation security | Review native secrets, timing, allocations, abnormal exits and compiler/backend pin | OPEN; no constant-time claim |
-| Field sizes | Parameter sets after ePrint 2026/1486 (§9) | RULED 2026-11-14: five sets, named by prime; Shekyl uses `p500`. OPEN: `p324` and `p664` are not built, and no argument here assigns a level to any set |
+| Field sizes | Parameter sets after ePrint 2026/1486 (§9) | RULED 2026-11-14: five sets, named by prime; Shekyl uses `p500`. OPEN: `p324` is built on the verifier side with no honest signature, `p664` is not built, and no argument here assigns a level to any set |
 | Independent approval | Named cryptographic reviewer, reviewed commit, findings and signed-off scope | PENDING; no independent cryptographic approval recorded |
 
 No external reviewer has been contacted by this work.
@@ -542,10 +542,15 @@ level and asks for cryptanalysis of them.
   authorization uses `p500`. The two primes from before the algorithm,
   `p248` and `p376`, are kept, so that later changes are still checked
   against the vectors that exist.
-- **What is built.** `p248`, `p376` and `p500`. `p324` and `p664` are not
-  in the code yet, and when they are there will be no honest signature at
-  either until a signer exists for them. Every size, timing and count in
-  this repository is for the three built sets.
+- **What is built.** `p248`, `p376` and `p500`, with vectors and the
+  research signer. `p324` on the verifier side only: its field, its
+  torsion and pairing code and every refusal reachable from public data
+  are tested, and there is no honest signature at it, so nothing shows
+  that the verifier accepts anything there
+  ([PARAMETER_SETS.md](PARAMETER_SETS.md)). `p664` is not in the code.
+  Every timing in this repository, and every operation count of an
+  accepted verification, is for the three sets with vectors; at `p324`
+  the only counts are of two refusals.
 
 **Another implementation of the §5 variant.** Ray, "ECLIPSE: Strongly
 Unforgeable Isogeny Signatures from the Prime-Degree Variant of PRISM",

@@ -120,7 +120,7 @@ pub fn base_change_theta<F: Field>(matrix: [[u8; 4]; 4], zeta: F) -> Option<[[F;
 #[cfg(test)]
 mod tests {
     use super::{base_change_theta, nonvanishing};
-    use prism_field::{Field, ParameterSet, P248, P376, P500};
+    use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
 
     fn digits<L: ParameterSet>(text: &str, negative: bool) -> L::Base {
         let mut bytes = vec![0u8; L::FP_LEN];
@@ -341,6 +341,7 @@ mod tests {
     #[test]
     fn the_search_succeeds_for_every_matrix_when_zeta_squared_is_not_minus_three() {
         succeeds_for_every_matrix::<P248>();
+        succeeds_for_every_matrix::<P324>();
         succeeds_for_every_matrix::<P376>();
         succeeds_for_every_matrix::<P500>();
     }
@@ -401,6 +402,7 @@ mod tests {
     #[test]
     fn the_search_fails_only_at_a_root_of_minus_three_and_then_returns_none() {
         fails_only_at_a_root_of_minus_three::<P248>();
+        fails_only_at_a_root_of_minus_three::<P324>();
         fails_only_at_a_root_of_minus_three::<P376>();
         fails_only_at_a_root_of_minus_three::<P500>();
     }

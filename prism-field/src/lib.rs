@@ -80,9 +80,8 @@ pub trait Field: Copy {
 ///
 /// This is the bit length of the public salt and the number of candidates
 /// each torsion search tries. A parameter set carries no security
-/// assessment; both widths are this rounding of its exponent. The two
-/// primes ruled but not yet built, `e = 324` and `e = 664`, round to 384
-/// and 768.
+/// assessment; both widths are this rounding of its exponent. The prime
+/// ruled but not yet built, `e = 664`, rounds to 768.
 ///
 /// Panics if the rounding does not fit in `u32`.
 pub const fn width_bits(e: u32) -> u32 {
@@ -109,6 +108,124 @@ const fn candidate_bound(bits: u32) -> u16 {
     }
 }
 
+/// The odd cofactor `f` of a prime `p = f·2^e − 1`, with its prime factors.
+///
+/// A parameter set states the primes of `f` beside `f`. The two are one
+/// value because the torsion code needs both and must not be handed a
+/// list that belongs to another cofactor: with a prime left out, a point
+/// of too small an order passes for full order.
+///
+/// The only way to make one is [`Cofactor::new`], which refuses anything
+/// but an odd `f > 1` with exactly its distinct prime factors, increasing,
+/// and no more of them than [`Cofactor::MAX_ODD_PRIMES`]. A set is built
+/// with it when the set is compiled, so a wrong list does not compile, and
+/// code that takes a `Cofactor` checks nothing again.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Cofactor {
+    value: u64,
+    odd_primes: &'static [u64],
+}
+
+/// Why a cofactor and a list of primes are not a [`Cofactor`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CofactorError {
+    /// `f` is zero or even. `p + 1 = f·2^e` has all its twos in `2^e`.
+    NotOdd,
+    /// No prime is listed. That is right only for `f = 1`, which no set
+    /// has, and an empty list would check no odd order at all.
+    NoPrimes,
+    /// More primes than [`Cofactor::MAX_ODD_PRIMES`]. The basis search
+    /// holds one projected pair of points for each, and the ones past its
+    /// buffer would go unchecked.
+    TooManyPrimes,
+    /// A listed number is not an odd prime.
+    NotAnOddPrime,
+    /// The list does not increase, so a prime is repeated or out of order.
+    NotIncreasing,
+    /// A listed prime does not divide `f`.
+    NotADivisor,
+    /// Dividing `f` by every listed prime as often as it goes does not
+    /// leave 1: a prime factor of `f` is missing.
+    PrimeMissing,
+}
+
+impl Cofactor {
+    /// The most distinct odd primes a cofactor may have. The basis search
+    /// holds one projected pair of points for each on its stack.
+    pub const MAX_ODD_PRIMES: usize = 4;
+
+    /// The cofactor `value` with `odd_primes` as its distinct prime
+    /// factors, or the first reason they are not that.
+    pub const fn new(value: u64, odd_primes: &'static [u64]) -> Result<Self, CofactorError> {
+        // Zero is even, so this refuses it too.
+        if value.is_multiple_of(2) {
+            return Err(CofactorError::NotOdd);
+        }
+        if odd_primes.is_empty() {
+            return Err(CofactorError::NoPrimes);
+        }
+        if odd_primes.len() > Self::MAX_ODD_PRIMES {
+            return Err(CofactorError::TooManyPrimes);
+        }
+        let mut rest = value;
+        let mut previous = 0;
+        let mut i = 0;
+        while i < odd_primes.len() {
+            let prime = odd_primes[i];
+            if !is_odd_prime(prime) {
+                return Err(CofactorError::NotAnOddPrime);
+            }
+            if prime <= previous {
+                return Err(CofactorError::NotIncreasing);
+            }
+            if !rest.is_multiple_of(prime) {
+                return Err(CofactorError::NotADivisor);
+            }
+            while rest.is_multiple_of(prime) {
+                rest /= prime;
+            }
+            previous = prime;
+            i += 1;
+        }
+        if rest != 1 {
+            return Err(CofactorError::PrimeMissing);
+        }
+        Ok(Self { value, odd_primes })
+    }
+
+    /// `f`.
+    pub const fn value(self) -> u64 {
+        self.value
+    }
+
+    /// The distinct primes dividing `f`, increasing. Never empty, and
+    /// never longer than [`Self::MAX_ODD_PRIMES`].
+    pub const fn odd_primes(self) -> &'static [u64] {
+        self.odd_primes
+    }
+
+    /// The bits of `f`, so `p` has `e` plus this many.
+    pub const fn bits(self) -> u32 {
+        u64::BITS - self.value.leading_zeros()
+    }
+}
+
+/// Trial division, which is enough for a factor of a 64-bit cofactor that
+/// is checked once, when a set is compiled.
+const fn is_odd_prime(candidate: u64) -> bool {
+    if candidate < 3 || candidate.is_multiple_of(2) {
+        return false;
+    }
+    let mut divisor = 3;
+    while divisor <= candidate / divisor {
+        if candidate.is_multiple_of(divisor) {
+            return false;
+        }
+        divisor += 2;
+    }
+    true
+}
+
 /// One parameter set: a prime `p = f·2^e − 1`, its two fields and the
 /// lengths its encodings use.
 pub trait ParameterSet: Copy + Clone + Eq + Send + Sync + 'static {
@@ -121,8 +238,8 @@ pub trait ParameterSet: Copy + Clone + Eq + Send + Sync + 'static {
     const NAME: &'static str;
     /// Valuation in `p = f·2^e − 1`.
     const E: u32;
-    /// The odd cofactor `f` in `p + 1 = f·2^e`.
-    const ODD: u64;
+    /// The odd cofactor `f` in `p + 1 = f·2^e`, with its prime factors.
+    const COFACTOR: Cofactor;
     /// Instantiated long-chain length `e′ = e − 2`. The short chain
     /// has length `CHAIN_STEPS − 1`; the rational torsion exponent is `E`.
     const CHAIN_STEPS: u32;
@@ -168,6 +285,7 @@ macro_rules! parameter_set {
         $modname:ident,
         $set:ident,
         f = $f:literal,
+        odd_primes = [$($odd_prime:literal),+ $(,)?],
         e = $e:literal,
         $fp:ident,
         $fp2:ident,
@@ -176,8 +294,16 @@ macro_rules! parameter_set {
         pub mod $modname {
             use super::ops::{tally, Kind, Op};
             use super::{
-                candidate_bound, define_fp2_from_type, define_fp_core, width_bits, Field,
-                ParameterSet, Salt,
+                candidate_bound, define_fp2_from_type, define_fp_core, width_bits, Cofactor,
+                Field, ParameterSet, Salt,
+            };
+
+            /// Checked here, when the set is compiled.
+            const COFACTOR: Cofactor = match Cofactor::new($f, &[$($odd_prime),+]) {
+                Ok(cofactor) => cofactor,
+                Err(_) => panic!(
+                    "f must be odd, and odd_primes exactly its distinct prime factors, increasing"
+                ),
             };
 
             /// [`width_bits`] of this set's exponent.
@@ -356,7 +482,7 @@ macro_rules! parameter_set {
                 type Ext = $fp2;
                 const NAME: &'static str = concat!("p", stringify!($e));
                 const E: u32 = $e;
-                const ODD: u64 = $f;
+                const COFACTOR: Cofactor = COFACTOR;
                 const CHAIN_STEPS: u32 = $e - 2;
                 const CHALLENGE_BITS: u32 = $e - 3;
                 const FP_LEN: usize = <$fp>::ENCODED_LENGTH;
@@ -407,6 +533,7 @@ parameter_set!(
     p248,
     P248,
     f = 5,
+    odd_primes = [5],
     e = 248,
     FpP248,
     Fp2P248,
@@ -419,9 +546,28 @@ parameter_set!(
 );
 
 parameter_set!(
+    p324,
+    P324,
+    f = 3,
+    odd_primes = [3],
+    e = 324,
+    FpP324,
+    Fp2P324,
+    [
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0x000000000000002Fu64,
+    ]
+);
+
+parameter_set!(
     p376,
     P376,
     f = 65,
+    odd_primes = [5, 13],
     e = 376,
     FpP376,
     Fp2P376,
@@ -439,6 +585,7 @@ parameter_set!(
     p500,
     P500,
     f = 27,
+    odd_primes = [3],
     e = 500,
     FpP500,
     Fp2P500,
@@ -459,7 +606,9 @@ pub const FIELD_BACKEND: &str = "scalar";
 
 #[cfg(test)]
 mod tests {
-    use super::{width_bits, Field, ParameterSet, Salt, P248, P376, P500};
+    use super::{
+        width_bits, Cofactor, CofactorError, Field, ParameterSet, Salt, P248, P324, P376, P500,
+    };
 
     fn hex(bytes: &[u8]) -> String {
         bytes.iter().map(|b| format!("{b:02x}")).collect()
@@ -513,16 +662,282 @@ mod tests {
         bytes
     }
 
+    /// Each listed prime is prime and odd, each divides `f`, and dividing
+    /// `f` by all of them repeatedly leaves 1. Written out here without the
+    /// constructor the macro checks with, so the two cannot share a mistake.
+    fn the_odd_primes_factor_the_cofactor<L: ParameterSet>() {
+        let (f, primes) = (L::COFACTOR.value(), L::COFACTOR.odd_primes());
+        let mut rest = f;
+        assert!(!primes.is_empty(), "{}", L::NAME);
+        assert!(primes.len() <= Cofactor::MAX_ODD_PRIMES, "{}", L::NAME);
+        for &prime in primes {
+            assert!(prime > 2 && prime % 2 == 1, "{} {prime} is odd", L::NAME);
+            assert!(
+                (2..prime).all(|d| prime % d != 0),
+                "{} {prime} is prime",
+                L::NAME
+            );
+            assert_eq!(f % prime, 0, "{} {prime} divides f", L::NAME);
+            while rest % prime == 0 {
+                rest /= prime;
+            }
+        }
+        assert_eq!(rest, 1, "{}: the primes account for all of f", L::NAME);
+        assert_eq!(Cofactor::new(f, primes), Ok(L::COFACTOR));
+    }
+
+    #[test]
+    fn every_set_states_the_primes_of_its_cofactor() {
+        the_odd_primes_factor_the_cofactor::<P248>();
+        the_odd_primes_factor_the_cofactor::<P324>();
+        the_odd_primes_factor_the_cofactor::<P376>();
+        the_odd_primes_factor_the_cofactor::<P500>();
+        let stated = |cofactor: Cofactor| (cofactor.value(), cofactor.odd_primes());
+        assert_eq!(stated(P248::COFACTOR), (5, &[5][..]));
+        assert_eq!(stated(P324::COFACTOR), (3, &[3][..]));
+        assert_eq!(stated(P376::COFACTOR), (65, &[5, 13][..]));
+        assert_eq!(stated(P500::COFACTOR), (27, &[3][..]));
+    }
+
+    /// A cofactor exists only with exactly its prime factors. Each refusal
+    /// has its own reason, and nothing here drops a prime and continues:
+    /// the torsion code takes a `Cofactor` and checks nothing again.
+    #[test]
+    fn a_cofactor_with_a_wrong_list_of_primes_cannot_be_built() {
+        use CofactorError::{
+            NoPrimes, NotADivisor, NotAnOddPrime, NotIncreasing, NotOdd, PrimeMissing,
+            TooManyPrimes,
+        };
+        let built = |value, primes: &'static [u64]| Cofactor::new(value, primes).map(|_| ());
+        for (value, primes) in [
+            (5, &[5][..]),
+            (3, &[3]),
+            (65, &[5, 13]),
+            (27, &[3]),
+            (3 * 5 * 7 * 11, &[3, 5, 7, 11]),
+        ] {
+            assert_eq!(built(value, primes), Ok(()), "{value} with {primes:?}");
+        }
+        for (value, primes, reason, why) in [
+            (0, &[3][..], NotOdd, "a zero cofactor"),
+            (30, &[3, 5], NotOdd, "an even cofactor"),
+            (6, &[2], NotOdd, "an even cofactor with its two"),
+            (3, &[], NoPrimes, "an empty list checks nothing"),
+            (65, &[], NoPrimes, "none listed"),
+            (1, &[], NoPrimes, "a cofactor of one"),
+            (
+                3 * 5 * 7 * 11 * 13,
+                &[3, 5, 7, 11, 13],
+                TooManyPrimes,
+                "a fifth prime is not dropped",
+            ),
+            (3, &[0], NotAnOddPrime, "zero is not a prime"),
+            (3, &[1], NotAnOddPrime, "one is not a prime"),
+            (15, &[2, 3, 5], NotAnOddPrime, "two is not an odd prime"),
+            (27, &[9], NotAnOddPrime, "nine is not a prime"),
+            (65, &[13, 5], NotIncreasing, "not increasing"),
+            (65, &[5, 5, 13], NotIncreasing, "repeated"),
+            (3, &[5], NotADivisor, "a prime that does not divide"),
+            (
+                27,
+                &[3, 5],
+                NotADivisor,
+                "a second prime that does not divide",
+            ),
+            (65, &[5], PrimeMissing, "a prime left out"),
+        ] {
+            assert_eq!(built(value, primes), Err(reason), "{why}");
+        }
+        assert_eq!(Cofactor::MAX_ODD_PRIMES, 4);
+    }
+
+    /// The width of `f` in bits, which with `e` is the width of `p`.
+    #[test]
+    fn the_bits_of_a_cofactor_are_its_width() {
+        let bits = |value, primes| Cofactor::new(value, primes).map(Cofactor::bits);
+        assert_eq!(bits(3, &[3]), Ok(2));
+        assert_eq!(bits(5, &[5]), Ok(3));
+        assert_eq!(bits(27, &[3]), Ok(5));
+        assert_eq!(bits(65, &[5, 13]), Ok(7));
+    }
+
+    /// Compare two little-endian byte strings of one length as integers.
+    fn below(left: &[u8], right: &[u8]) -> bool {
+        assert_eq!(left.len(), right.len());
+        left.iter().rev().lt(right.iter().rev())
+    }
+
+    /// The decoder takes exactly the integers below `p`, in exactly
+    /// `FP_LEN` bytes. Every expected verdict is the integer comparison
+    /// with `p`, where `p` is computed from `f` and `e`.
+    fn decoding_is_the_integer_order<L: ParameterSet>() {
+        let len = L::FP_LEN;
+        let mut modulus = modulus_minus_one(L::COFACTOR.value(), L::E, len);
+        let below_p = modulus.clone();
+        // p − 1, then p, then p + 1.
+        assert!(L::base_decode(&below_p).is_some(), "{}: p − 1", L::NAME);
+        modulus[0] += 1;
+        assert_eq!(modulus[0], 0xff, "p ends in all ones");
+        assert!(L::base_decode(&modulus).is_none(), "{}: p", L::NAME);
+        let above = {
+            // p + 1 = f·2^e: zero below bit e.
+            let mut bytes = vec![0u8; len];
+            let (byte, bit) = ((L::E / 8) as usize, L::E % 8);
+            for (offset, part) in (u128::from(L::COFACTOR.value()) << bit)
+                .to_le_bytes()
+                .iter()
+                .enumerate()
+            {
+                if *part != 0 {
+                    bytes[byte + offset] = *part;
+                }
+            }
+            bytes
+        };
+        assert!(L::base_decode(&above).is_none(), "{}: p + 1", L::NAME);
+
+        // The spare bits of the top byte: the bits of p stop inside it.
+        let bits = L::E + L::COFACTOR.bits();
+        let top_bits = bits - 8 * (len as u32 - 1);
+        assert!(
+            (1..=8).contains(&top_bits),
+            "{}: p fills FP_LEN bytes",
+            L::NAME
+        );
+        // All ones in the bits of p, 2^bits − 1, is above p.
+        let mut ones = vec![0xffu8; len];
+        ones[len - 1] = u8::MAX >> (8 - top_bits);
+        assert!(L::base_decode(&ones).is_none(), "{}: 2^bits − 1", L::NAME);
+
+        // Each bit of the top byte alone, and with every lower byte set.
+        // Some of these are below p and must decode; the rest must not.
+        let mut decoded = 0;
+        let mut refused = 0;
+        for bit in 0..8u8 {
+            for lower in [0x00u8, 0xff] {
+                let mut bytes = vec![lower; len];
+                bytes[len - 1] = 1 << bit;
+                let expect = below(&bytes, &modulus);
+                assert_eq!(
+                    L::base_decode(&bytes).is_some(),
+                    expect,
+                    "{}: top byte {:#04x}, lower bytes {lower:#04x}",
+                    L::NAME,
+                    1u8 << bit
+                );
+                decoded += usize::from(expect);
+                refused += usize::from(!expect);
+            }
+        }
+        assert!(
+            refused > 0,
+            "{}: no top-byte case is at or above p",
+            L::NAME
+        );
+        assert!(decoded > 0, "{}: no top-byte case is below p", L::NAME);
+        // Every value of the top byte with the lower bytes at their largest.
+        for top in 0..=u8::MAX {
+            let mut bytes = vec![0xffu8; len];
+            bytes[len - 1] = top;
+            assert_eq!(
+                L::base_decode(&bytes).is_some(),
+                below(&bytes, &modulus),
+                "{}: top byte {top:#04x} over all ones",
+                L::NAME
+            );
+        }
+
+        // A decoded value encodes to the bytes it came from.
+        let value = L::base_decode(&below_p).expect("p − 1");
+        assert_eq!(L::base_encode(value), below_p, "{}: round trip", L::NAME);
+        assert_eq!(L::base_encode(L::Base::one().negate()), below_p);
+
+        // Any other length is refused, whatever the bytes.
+        for wrong in [0, len - 1, len + 1, len + 7, 2 * len] {
+            assert!(
+                L::base_decode(&vec![0u8; wrong]).is_none(),
+                "{}: {wrong} bytes",
+                L::NAME
+            );
+        }
+
+        // The extension field decodes two such integers: one out of range
+        // in either half refuses the whole.
+        let mut pair = [below_p.clone(), below_p.clone()].concat();
+        let both = L::ext_decode(&pair).expect("both halves below p");
+        assert_eq!(
+            L::ext_encode(both),
+            pair,
+            "{}: extension round trip",
+            L::NAME
+        );
+        pair[..len].copy_from_slice(&modulus);
+        assert!(L::ext_decode(&pair).is_none(), "{}: re = p", L::NAME);
+        let pair = [below_p.clone(), modulus.clone()].concat();
+        assert!(L::ext_decode(&pair).is_none(), "{}: im = p", L::NAME);
+        for wrong in [2 * len - 1, 2 * len + 1, len] {
+            assert!(L::ext_decode(&vec![0u8; wrong]).is_none());
+        }
+    }
+
+    #[test]
+    fn the_decoder_accepts_exactly_the_integers_below_p() {
+        decoding_is_the_integer_order::<P248>();
+        decoding_is_the_integer_order::<P324>();
+        decoding_is_the_integer_order::<P376>();
+        decoding_is_the_integer_order::<P500>();
+    }
+
+    /// The sizes of `p324`, each computed here from `f = 3` and `e = 324`
+    /// and then compared with what the set says. Its field element is the
+    /// first that is not a whole number of 8-byte limbs.
+    #[test]
+    fn p324_has_the_sizes_its_prime_gives() {
+        let (f, e): (u64, u32) = (3, 324);
+        let bits = e + (64 - f.leading_zeros());
+        assert_eq!(bits, 326);
+        let field = bits.div_ceil(8) as usize;
+        assert_eq!(field, 41);
+        assert_ne!(field % 8, 0, "not a whole number of limbs");
+        assert_eq!(bits.div_ceil(64), 6, "six 64-bit limbs");
+        let salt = (e.div_ceil(128) * 128 / 8) as usize;
+        assert_eq!((P324::COFACTOR.value(), P324::E), (f, e));
+        assert_eq!(P324::NAME, "p324");
+        assert_eq!(P324::FP_LEN, field);
+        assert_eq!(P324::FP2_LEN, 2 * field);
+        assert_eq!(P324::PUBLIC_KEY_LEN, 82);
+        assert_eq!(P324::WIDTH_BITS, 384);
+        assert_eq!(P324::SALT_LEN, salt);
+        assert_eq!(P324::SALT_LEN, 48);
+        assert_eq!(P324::SEARCH_BOUND, 384);
+        assert_eq!(P324::SIGNATURE_ELEMENTS, 5);
+        assert_eq!(P324::SIGNATURE_LEN, 5 * 82 + 48);
+        assert_eq!(P324::SIGNATURE_LEN, 458);
+        assert_eq!(P324::CHAIN_STEPS, 322);
+        assert_eq!(P324::CHALLENGE_BITS, 321);
+        assert_eq!(P324::S_LEN, 41);
+        // The top byte of p − 1 is 0x2f: the top limb is 0x2f, with two
+        // spare bits in that byte.
+        let top = modulus_minus_one(f, e, field)[field - 1];
+        assert_eq!(top, 0x2f);
+        // p ≡ 7 (mod 8): p − 1 ends in ...110.
+        assert_eq!(modulus_minus_one(f, e, field)[0] & 7, 6);
+        // The same residue at every set, which the square roots rely on.
+        for (f, e, len) in [(5u64, 248u32, 32usize), (65, 376, 48), (27, 500, 64)] {
+            assert_eq!(modulus_minus_one(f, e, len)[0] & 7, 6);
+        }
+    }
+
     /// The name, the cofactor, the exponent and the limbs of a set agree:
     /// the field's `−1` is `f·2^e − 2`, computed from `f` and `e` without
     /// reading the limb literals.
     fn the_prime_is<L: ParameterSet>(name: &str, f: u64, e: u32) {
         assert_eq!(L::NAME, name);
-        assert_eq!((L::ODD, L::E), (f, e));
-        assert_eq!(L::ODD % 2, 1, "{name}: f is odd");
+        assert_eq!((L::COFACTOR.value(), L::E), (f, e));
+        assert_eq!(L::COFACTOR.value() % 2, 1, "{name}: f is odd");
         assert_eq!(
             L::base_encode(L::Base::one().negate()),
-            modulus_minus_one(L::ODD, L::E, L::FP_LEN),
+            modulus_minus_one(L::COFACTOR.value(), L::E, L::FP_LEN),
             "{name}: p + 1 = f·2^e"
         );
     }
@@ -530,12 +945,13 @@ mod tests {
     #[test]
     fn every_set_is_the_prime_its_name_and_cofactor_say() {
         the_prime_is::<P248>("p248", 5, 248);
+        the_prime_is::<P324>("p324", 3, 324);
         the_prime_is::<P376>("p376", 65, 376);
         the_prime_is::<P500>("p500", 27, 500);
     }
 
-    /// The committed sizes of the three built sets, and the widths of the
-    /// two ruled exponents that have no type yet. The sizes are the pin.
+    /// The sizes of the sets in the code, and the width of the ruled
+    /// exponent that has no type yet. The sizes are the pin.
     #[test]
     fn the_width_is_e_rounded_up_to_128_bits() {
         fn check<L: ParameterSet>(salt_bytes: usize, candidates: u16) {
@@ -547,10 +963,10 @@ mod tests {
             assert_eq!(width_bits(L::E), rounded);
         }
         check::<P248>(32, 256);
+        check::<P324>(48, 384);
         check::<P376>(48, 384);
         check::<P500>(64, 512);
-        // Ruled, not built. Salt bytes are the width over 8: 48 and 96.
-        assert_eq!(width_bits(324), 384);
+        // Ruled, not built. The salt is the width over 8: 96 bytes.
         assert_eq!(width_bits(664), 768);
     }
 
@@ -629,6 +1045,7 @@ mod tests {
             assert!(counter.as_bytes()[8..].iter().all(|byte| *byte == 0));
         }
         check::<P248>();
+        check::<P324>();
         check::<P376>();
         check::<P500>();
     }

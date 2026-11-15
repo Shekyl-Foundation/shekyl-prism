@@ -4,7 +4,7 @@
 // BSD-3-Clause
 
 //! Public challenge probe for the vector generator; no secret inputs.
-use prism_field::{ParameterSet, Salt, P248, P376, P500};
+use prism_field::{ParameterSet, Salt, P248, P324, P376, P500};
 use prism_verify::Set;
 use prism_verify::{ChallengeScalar, KeyIdentity};
 fn hex(s: &str) -> Option<Vec<u8>> {
@@ -34,11 +34,12 @@ fn emit<L: ParameterSet>(key: &str, salt: &str) -> Option<()> {
 fn main() -> std::process::ExitCode {
     let a: Vec<_> = std::env::args().skip(1).collect();
     if a.len() != 3 {
-        eprintln!("s5_vector <p248|p376|p500> <A-hex> <salt-hex>");
+        eprintln!("s5_vector <p248|p324|p376|p500> <A-hex> <salt-hex>");
         return std::process::ExitCode::from(2);
     }
     let ok = match a[0].parse::<Set>() {
         Ok(Set::P248) => emit::<P248>(&a[1], &a[2]),
+        Ok(Set::P324) => emit::<P324>(&a[1], &a[2]),
         Ok(Set::P376) => emit::<P376>(&a[1], &a[2]),
         Ok(Set::P500) => emit::<P500>(&a[1], &a[2]),
         Err(_) => None,

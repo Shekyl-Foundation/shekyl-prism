@@ -23,7 +23,8 @@ use std::path::{Path, PathBuf};
 
 use prism_field::{Field, ParameterSet, Salt, P248, P376, P500};
 use prism_verify::{
-    signature::canonical_sign, verify, ChallengeScalar, Committed, KeyIdentity, Response, Set,
+    signature::canonical_sign, verify, ChallengeScalar, Committed, CommittedSet, KeyIdentity,
+    Response,
 };
 use sha3::{
     digest::{core_api::CoreWrapper, ExtendableOutput, Update, XofReader},
@@ -279,11 +280,11 @@ fn stream(
 /// `scripts/export_s5_vectors.sh backend`. Never use the fixture exporter.
 pub struct Signer {
     backend: PathBuf,
-    set: Set,
+    set: CommittedSet,
     seed: SecretSeed,
 }
 impl Signer {
-    pub fn new(backend: impl AsRef<Path>, set: Set, seed: SecretSeed) -> Self {
+    pub fn new(backend: impl AsRef<Path>, set: CommittedSet, seed: SecretSeed) -> Self {
         Self {
             backend: backend.as_ref().to_path_buf(),
             set,
@@ -316,15 +317,15 @@ impl Signer {
     }
     fn session(&self) -> Result<Opened<'_>, Error> {
         match self.set {
-            Set::P248 => Ok(Opened::P248(Session::<P248>::open(
+            CommittedSet::P248 => Ok(Opened::P248(Session::<P248>::open(
                 &self.backend,
                 &self.seed,
             )?)),
-            Set::P376 => Ok(Opened::P376(Session::<P376>::open(
+            CommittedSet::P376 => Ok(Opened::P376(Session::<P376>::open(
                 &self.backend,
                 &self.seed,
             )?)),
-            Set::P500 => Ok(Opened::P500(Session::<P500>::open(
+            CommittedSet::P500 => Ok(Opened::P500(Session::<P500>::open(
                 &self.backend,
                 &self.seed,
             )?)),

@@ -6,7 +6,7 @@
 mod support;
 
 use prism_field::{ParameterSet, Salt, P248, P376, P500};
-use prism_verify::{verify, ChallengeScalar, KeyIdentity, Set};
+use prism_verify::{verify, ChallengeScalar, CommittedSet, KeyIdentity};
 use std::fs;
 use support::{files, negatives, primary, set, vector};
 
@@ -26,9 +26,9 @@ fn every_committed_honest_signature_is_accepted() {
         let text = fs::read_to_string(&path).unwrap();
         eprintln!("accept {}", path.display());
         match set(&text) {
-            Set::P248 => positive::<P248>(&text),
-            Set::P376 => positive::<P376>(&text),
-            Set::P500 => positive::<P500>(&text),
+            CommittedSet::P248 => positive::<P248>(&text),
+            CommittedSet::P376 => positive::<P376>(&text),
+            CommittedSet::P500 => positive::<P500>(&text),
         }
     }
 }
@@ -66,9 +66,9 @@ fn one_bit_salt_mutations_split_between_composite_and_prime() {
     for path in files() {
         let text = fs::read_to_string(&path).unwrap();
         let (row, (prime, composite)) = match set(&text) {
-            Set::P248 => (0, salt_flips::<P248>(&text)),
-            Set::P376 => (1, salt_flips::<P376>(&text)),
-            Set::P500 => (2, salt_flips::<P500>(&text)),
+            CommittedSet::P248 => (0, salt_flips::<P248>(&text)),
+            CommittedSet::P376 => (1, salt_flips::<P376>(&text)),
+            CommittedSet::P500 => (2, salt_flips::<P500>(&text)),
         };
         split[row].0 += prime;
         split[row].1 += composite;
@@ -85,9 +85,9 @@ fn malleability_and_message_mutations_are_refused() {
     for path in primary() {
         let text = fs::read_to_string(path).unwrap();
         match set(&text) {
-            Set::P248 => negative::<P248>(&text),
-            Set::P376 => negative::<P376>(&text),
-            Set::P500 => negative::<P500>(&text),
+            CommittedSet::P248 => negative::<P248>(&text),
+            CommittedSet::P376 => negative::<P376>(&text),
+            CommittedSet::P500 => negative::<P500>(&text),
         }
     }
 }

@@ -5,18 +5,18 @@
 
 //! Print the order-`2^e` basis Rust derives from `A`, for the C differential.
 //!
-//! `even_basis <p248|p376|p500> <A-hex>` prints four affine x-coordinates: `P`,
+//! `even_basis <p248|p324|p376|p500> <A-hex>` prints four affine x-coordinates: `P`,
 //! the cleared point `R`, `Q = difference(P, R)` (the field the verifier
 //! uses), and `[f]` of the difference of the uncleared points. The fourth
 //! value is the rejected variant: it equals `Q` on only about half of keys.
-//! `sample <p248|p376|p500> <count>` prints that many coefficients that have a
+//! `sample <p248|p324|p376|p500> <count>` prints that many coefficients that have a
 //! basis.
 
 use prism_verify::Set;
 use std::env;
 use std::process::ExitCode;
 
-use prism_field::{Field, ParameterSet, P248, P376, P500};
+use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
 use prism_isogeny::torsion::{even_basis, mul_odd_then_double};
 use prism_verify::basis::basis_hint;
 use prism_verify::Committed;
@@ -25,7 +25,9 @@ use sha3::{Digest, Sha3_256};
 fn main() -> ExitCode {
     let mut args = env::args().skip(1);
     let Some(command) = args.next() else {
-        eprintln!("usage: even_basis <p248|p376|p500> <A-hex> | sample <p248|p376|p500> <count>");
+        eprintln!(
+            "usage: even_basis <p248|p324|p376|p500> <A-hex> | sample <p248|p324|p376|p500> <count>"
+        );
         return ExitCode::from(2);
     };
     if command == "sample" {
@@ -36,9 +38,10 @@ fn main() -> ExitCode {
             return ExitCode::from(2);
         };
         return match set.parse::<Set>() {
-            Ok(Set::P248) => sample::<P248>(count),
-            Ok(Set::P376) => sample::<P376>(count),
-            Ok(Set::P500) => sample::<P500>(count),
+            Ok(Set::P248) => sample::<P248>(count, P248::LABEL),
+            Ok(Set::P324) => sample::<P324>(count, P324::NAME),
+            Ok(Set::P376) => sample::<P376>(count, P376::LABEL),
+            Ok(Set::P500) => sample::<P500>(count, P500::LABEL),
             Err(_) => ExitCode::from(2),
         };
     }
@@ -47,6 +50,7 @@ fn main() -> ExitCode {
     };
     match command.parse::<Set>() {
         Ok(Set::P248) => show::<P248>(&coefficient),
+        Ok(Set::P324) => show::<P324>(&coefficient),
         Ok(Set::P376) => show::<P376>(&coefficient),
         Ok(Set::P500) => show::<P500>(&coefficient),
         Err(_) => ExitCode::from(2),
@@ -71,7 +75,8 @@ fn show<L: ParameterSet>(hex: &str) -> ExitCode {
         eprintln!("no even basis");
         return ExitCode::FAILURE;
     };
-    let Some(rejected) = mul_odd_then_double::<L>(coefficient, even.full_difference, L::ODD, 0)
+    let Some(rejected) =
+        mul_odd_then_double::<L>(coefficient, even.full_difference, L::COFACTOR.value(), 0)
     else {
         eprintln!("no cleared image of the uncleared difference");
         return ExitCode::FAILURE;
@@ -86,7 +91,10 @@ fn show<L: ParameterSet>(hex: &str) -> ExitCode {
     ExitCode::SUCCESS
 }
 
-fn sample<L: Committed>(count: u32) -> ExitCode {
+/// `domain` separates the sample streams of the sets. A set with committed
+/// data passes its committed label, which is what its existing samples
+/// were drawn with; a set without passes its name.
+fn sample<L: ParameterSet>(count: u32, domain: &str) -> ExitCode {
     let mut produced = 0u32;
     let mut counter = 0u64;
     while produced < count {
@@ -96,7 +104,7 @@ fn sample<L: Committed>(count: u32) -> ExitCode {
         let mut block = 0u64;
         while filled < bytes.len() {
             let mut hasher = Sha3_256::new();
-            hasher.update(L::LABEL.as_bytes());
+            hasher.update(domain.as_bytes());
             hasher.update(counter.to_le_bytes());
             hasher.update(block.to_le_bytes());
             let digest = hasher.finalize();

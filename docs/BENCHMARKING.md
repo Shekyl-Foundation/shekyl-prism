@@ -104,12 +104,16 @@ sh scripts/op_counts.sh --check   # what CI runs, on x86_64 and aarch64
 
 - [benchmarks/op-counts.txt](benchmarks/op-counts.txt): per-stage counts
   for the six primary vectors, the total for each of the other 107, the
-  per-stage counts of the first negative of each refusal, and for each
-  primary vector its dearest refusal against its accepted cost.
+  per-stage counts of the first negative of each refusal, for each
+  primary vector its dearest refusal against its accepted cost, and the
+  per-stage counts of the two refusals at `p324`. There is no accepted
+  count at `p324`.
 - [benchmarks/negative-verdicts.tsv](benchmarks/negative-verdicts.tsv):
-  the verdict and total cost of each of the 2,712 negatives derived from
-  the six primary vectors. `Basis` has no vector: no key whose basis index
-  exceeds the search bound is known.
+  the verdict and total cost of each of the 2,724 negatives derived from
+  the six primary vectors, and of two refusals at `p324`, which has no
+  vector: a response built from a public key alone that passes the
+  pairing check, in two forms. `Basis` has no vector: no key whose basis
+  index exceeds the search bound is known.
 
 Each record states a digest of the sources it was counted from. The
 commit is the one that last changed the record. Counts are taken in the

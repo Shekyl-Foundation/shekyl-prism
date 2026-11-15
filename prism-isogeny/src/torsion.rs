@@ -16,7 +16,7 @@
 //! difference of the uncleared points is a different point on about half
 //! of keys, and it is not the C basis.
 
-use prism_field::{Field, ParameterSet};
+use prism_field::{Cofactor, Field, ParameterSet};
 
 use crate::jac::xdbl_iter;
 use crate::montgomery::{a24, ladder, Montgomery, Xz};
@@ -115,8 +115,9 @@ pub fn difference<L: ParameterSet>(
 
 fn clear_cofactor<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::Ext>) -> Option<Xz<L::Ext>> {
     let constant = a24(coefficient)?;
-    let width = usize::try_from(64 - L::ODD.leading_zeros()).unwrap_or(0);
-    let bits = (0..width).rev().map(|shift| (L::ODD >> shift) & 1 == 1);
+    let bits = (0..L::COFACTOR.bits())
+        .rev()
+        .map(|shift| (L::COFACTOR.value() >> shift) & 1 == 1);
     Some(ladder(constant, bits, point))
 }
 
@@ -173,30 +174,23 @@ fn same_x<F: Field>(left: Xz<F>, right: Xz<F>) -> bool {
     left.x.mul(right.z).same(right.x.mul(left.z))
 }
 
-/// The odd primes dividing `f`. `2` is not among them.
-pub fn odd_primes<L: ParameterSet>() -> &'static [u64] {
-    match L::ODD {
-        5 => &[5],
-        27 => &[3],
-        65 => &[5, 13],
-        _ => &[],
-    }
-}
-
 /// `[p+1]X = O`, and `[(p+1)/ℓ]X ≠ O` for `ℓ = 2` and every prime divisor of `f`.
 pub fn has_order_p_plus_one<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
+    let f = L::COFACTOR.value();
     let killed = |odd, doubles| {
         mul_odd_then_double::<L>(coefficient, point, odd, doubles).is_some_and(is_infinity)
     };
-    if !killed(L::ODD, L::E) {
+    if !killed(f, L::E) {
         return false;
     }
-    if killed(L::ODD, L::E - 1) {
+    if killed(f, L::E - 1) {
         return false;
     }
-    odd_primes::<L>()
+    // Every prime of `f`, and no other: that is what a `Cofactor` is.
+    L::COFACTOR
+        .odd_primes()
         .iter()
-        .all(|prime| !killed(L::ODD / prime, L::E))
+        .all(|&prime| !killed(f / prime, L::E))
 }
 
 /// `[2^{e−1}]` of two order-`2^e` points are distinct and nonzero.
@@ -231,49 +225,68 @@ fn prime_field_basis<L: ParameterSet>(
     })
 }
 
+/// The images of `R` and `T` in `E[q]`, for one odd prime `q` of `f`.
+///
+/// Held until every prime has been projected. Comparing inside the
+/// projection loop would run a cofactor with two primes in a different
+/// field-operation order.
+#[derive(Clone, Copy)]
+struct OddImage<F: Field> {
+    left: Xz<F>,
+    right: Xz<F>,
+    prime: u64,
+}
+
 /// The images of `R` and `T` in `E[f]` generate `E[f]`.
 ///
-/// `E[f]` for these three cofactors splits into prime-power factors. Two
-/// elements generate `(Z/p^k)^2` when their images generate `(Z/p)^2`, and
-/// two elements generate `(Z/q)^2` for a prime `q` when neither is a scalar
-/// multiple of the other. A scalar and its negative have the same
-/// x-coordinate, so the multiples checked run only up to `q/2`.
+/// `E[f]` splits into prime-power factors, one for each prime in
+/// [`Cofactor::odd_primes`]. Two elements generate `(Z/p^k)^2` when
+/// their images generate `(Z/p)^2`, and two elements generate `(Z/q)^2`
+/// for a prime `q` when neither is a scalar multiple of the other. A
+/// scalar and its negative have the same x-coordinate, so the multiples
+/// checked run only up to `q/2`.
 pub fn odd_parts_generate<L: ParameterSet>(
     coefficient: L::Ext,
     r: Xz<L::Ext>,
     t: Xz<L::Ext>,
 ) -> bool {
+    let primes = L::COFACTOR.odd_primes();
     let u = double_times::<L>(coefficient, r, L::E);
     let v = double_times::<L>(coefficient, t, L::E);
-    match L::ODD {
-        5 => prime_field_basis::<L>(coefficient, u, v, 5),
-        27 => {
-            let Some(u3) = mul_odd_then_double::<L>(coefficient, u, 9, 0) else {
-                return false;
-            };
-            let Some(v3) = mul_odd_then_double::<L>(coefficient, v, 9, 0) else {
-                return false;
-            };
-            prime_field_basis::<L>(coefficient, u3, v3, 3)
-        }
-        65 => {
-            let Some(u5) = mul_odd_then_double::<L>(coefficient, u, 13, 0) else {
-                return false;
-            };
-            let Some(v5) = mul_odd_then_double::<L>(coefficient, v, 13, 0) else {
-                return false;
-            };
-            let Some(u13) = mul_odd_then_double::<L>(coefficient, u, 5, 0) else {
-                return false;
-            };
-            let Some(v13) = mul_odd_then_double::<L>(coefficient, v, 5, 0) else {
-                return false;
-            };
-            prime_field_basis::<L>(coefficient, u5, v5, 5)
-                && prime_field_basis::<L>(coefficient, u13, v13, 13)
-        }
-        _ => false,
+    // The image of each point in `E[q]`, for each prime `q` of `f`:
+    // multiplying by `f/q` kills the other primes and leaves order `q`.
+    // Every projection that succeeds is made before any is compared. A
+    // projection that fails refuses immediately.
+    //
+    // One slot for each prime a cofactor can have. A `Cofactor` never has
+    // more, so indexing by position reaches every prime, and a list too
+    // long to hold cannot be built to get here.
+    let mut images: [Option<OddImage<L::Ext>>; Cofactor::MAX_ODD_PRIMES] =
+        [None; Cofactor::MAX_ODD_PRIMES];
+    for (index, &prime) in primes.iter().enumerate() {
+        let rest = L::COFACTOR.value() / prime;
+        let project = |point| {
+            if rest == 1 {
+                Some(point)
+            } else {
+                mul_odd_then_double::<L>(coefficient, point, rest, 0)
+            }
+        };
+        let Some(left) = project(u) else {
+            return false;
+        };
+        let Some(right) = project(v) else {
+            return false;
+        };
+        images[index] = Some(OddImage { left, right, prime });
     }
+    // The prefix of `primes.len()` slots was filled above. A hole refuses:
+    // it is not a prime that was checked.
+    images[..primes.len()].iter().all(|image| {
+        image.as_ref().is_some_and(|image| {
+            prime_field_basis::<L>(coefficient, image.left, image.right, image.prime)
+        })
+    })
 }
 
 /// `(R, T)` a basis of `E[p+1]`.
@@ -396,9 +409,9 @@ pub fn double_times<L: ParameterSet>(
 
 #[cfg(test)]
 mod tests {
-    use super::even_basis;
+    use super::{even_basis, has_order_p_plus_one, mul_odd_then_double, odd_parts_generate};
     use crate::torsion::double_times;
-    use prism_field::{Field, ParameterSet, P248, P376, P500};
+    use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
 
     fn key<L: ParameterSet>(hex: &str) -> L::Ext {
         let bytes: Vec<u8> = (0..hex.len())
@@ -447,9 +460,63 @@ mod tests {
         assert!(super::starting_basis::<L>().is_some(), "{}", L::NAME);
     }
 
+    /// A point is full order only when no prime of `p + 1` can be divided
+    /// out of its order. On the starting curve, `R` of the basis has order
+    /// `p + 1`; `[q]R` for each odd prime `q` of the cofactor, and `[2]R`,
+    /// do not, and each must be reported as not full order. A set whose
+    /// list of odd primes were empty or short would pass `[q]R`.
+    fn only_the_full_point_is_full_order<L: ParameterSet>() {
+        let coefficient = L::Ext::zero();
+        let basis = super::starting_basis::<L>().expect(L::NAME);
+        for point in [basis.r, basis.t] {
+            assert!(has_order_p_plus_one::<L>(coefficient, point), "{}", L::NAME);
+            let doubled = mul_odd_then_double::<L>(coefficient, point, 1, 1).expect(L::NAME);
+            assert!(
+                !has_order_p_plus_one::<L>(coefficient, doubled),
+                "{}: [2]R passed for full order",
+                L::NAME
+            );
+            assert!(!L::COFACTOR.odd_primes().is_empty(), "{}", L::NAME);
+            for &prime in L::COFACTOR.odd_primes() {
+                let reduced =
+                    mul_odd_then_double::<L>(coefficient, point, prime, 0).expect(L::NAME);
+                assert!(
+                    !has_order_p_plus_one::<L>(coefficient, reduced),
+                    "{}: [{prime}]R passed for full order",
+                    L::NAME
+                );
+            }
+        }
+        // The two points of the basis generate both parts of the torsion.
+        assert!(
+            odd_parts_generate::<L>(coefficient, basis.r, basis.t),
+            "{}",
+            L::NAME
+        );
+        // And a point against itself does not.
+        assert!(
+            !odd_parts_generate::<L>(coefficient, basis.r, basis.r),
+            "{}",
+            L::NAME
+        );
+    }
+
+    #[test]
+    fn a_point_missing_a_prime_of_the_cofactor_is_not_full_order_at_any_set() {
+        only_the_full_point_is_full_order::<P248>();
+        only_the_full_point_is_full_order::<P324>();
+        only_the_full_point_is_full_order::<P376>();
+        only_the_full_point_is_full_order::<P500>();
+    }
+
     #[test]
     fn the_starting_curve_has_a_basis_at_p248() {
         starting::<P248>();
+    }
+
+    #[test]
+    fn the_starting_curve_has_a_basis_at_p324() {
+        starting::<P324>();
     }
 
     #[test]

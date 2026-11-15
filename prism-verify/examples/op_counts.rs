@@ -21,15 +21,22 @@
 //! (`ext_*`) or made directly in the base field (`base_*`). Hashing and the
 //! Baillie–PSW test do not use the field and are not in this metric.
 
+// Shared with the tests, which use other parts of it.
+#[path = "../tests/support/curve_table.rs"]
+#[allow(dead_code)]
+mod curve_table;
+#[path = "../tests/support/p324_refusal.rs"]
+mod p324_refusal;
 #[path = "../tests/support/mod.rs"]
 mod support;
 
 use prism_field::ops::{self, Counts, Slot};
-use prism_field::{ParameterSet, P248, P376, P500};
-use prism_verify::{verify, Set, Stage, VerifyError};
+use prism_field::{ParameterSet, P248, P324, P376, P500};
+use prism_verify::{verify, CommittedSet, Stage, VerifyError};
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
+use support::identity::{identity_response, Form};
 use support::{files, negatives, primary, set, vector};
 
 fn fields(counts: Slot) -> String {
@@ -108,17 +115,7 @@ fn refuse<L: ParameterSet>(path: &Path, text: &str, accepted: Slot) -> Result<()
             other => return Err(format!("{} {}: {other:?}", name(path), case.name)),
         };
         let sum = total(&table);
-        println!(
-            "VERDICT\t{}\t{}\t{}\t{error:?}\t{}\t{}\t{}\t{}\t{}",
-            L::NAME,
-            name(path),
-            case.name,
-            sum.ext.mul,
-            sum.ext.square,
-            sum.ext.inv,
-            sum.ext.sqrt,
-            sum.ext.is_square
-        );
+        println!("{}", verdict_row::<L>(&name(path), &case.name, error, sum));
         if seen.insert(error) {
             let kind = format!(
                 "refuse set={} vector={} case={} error={error:?}",
@@ -176,6 +173,50 @@ fn refuse<L: ParameterSet>(path: &Path, text: &str, accepted: Slot) -> Result<()
     );
     Ok(())
 }
+/// `p324` has no honest vector, so no accepted count and no negatives
+/// derived from one. What can be counted is the refusal of a response
+/// built from a public key alone that passes the pairing check
+/// (`tests/support/identity.rs`): the key is the model curve of the Sage
+/// file, under [`p324_refusal::MESSAGE`]. The form refused as
+/// `Codomain` is the first measured cost of the chain work at this prime.
+/// It is the cost of a refusal, not of a verification that accepts.
+fn refuse_at_p324() -> Result<(), String> {
+    use curve_table::p324::{table, FILE, MODEL_CURVE};
+    let coefficient = table().curve(MODEL_CURVE).coefficient.decode::<P324>();
+    let message = p324_refusal::MESSAGE;
+    let vector = format!("{FILE}:{MODEL_CURVE}");
+    for form in Form::ALL {
+        let built = identity_response::<P324>(coefficient, message, form);
+        let (verdict, table) = counted::<P324>(&built.key, message, &built.response.encode());
+        let error = match verdict {
+            Err(e) if form.allowed().contains(&e) => e,
+            other => return Err(format!("{vector} {}: {other:?}", form.name())),
+        };
+        println!(
+            "{}",
+            verdict_row::<P324>(&vector, form.name(), error, total(&table))
+        );
+        let kind = format!(
+            "refuse set={} vector={vector} case={} error={error:?}",
+            P324::NAME,
+            form.name()
+        );
+        stages(&kind, &table);
+    }
+    Ok(())
+}
+/// One row of `negative-verdicts.tsv`: a refusal and its total cost.
+fn verdict_row<L: ParameterSet>(vector: &str, case: &str, error: VerifyError, sum: Slot) -> String {
+    format!(
+        "VERDICT\t{}\t{vector}\t{case}\t{error:?}\t{}\t{}\t{}\t{}\t{}",
+        L::NAME,
+        sum.ext.mul,
+        sum.ext.square,
+        sum.ext.inv,
+        sum.ext.sqrt,
+        sum.ext.is_square
+    )
+}
 fn run() -> Result<(), String> {
     if !ops::ENABLED {
         return Err("built without counting: pass --features prism-field/op-count".into());
@@ -185,19 +226,19 @@ fn run() -> Result<(), String> {
         let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         let first = primary.contains(&path);
         let accepted = match set(&text) {
-            Set::P248 => accept::<P248>(&path, &text, first),
-            Set::P376 => accept::<P376>(&path, &text, first),
-            Set::P500 => accept::<P500>(&path, &text, first),
+            CommittedSet::P248 => accept::<P248>(&path, &text, first),
+            CommittedSet::P376 => accept::<P376>(&path, &text, first),
+            CommittedSet::P500 => accept::<P500>(&path, &text, first),
         }?;
         if first {
             match set(&text) {
-                Set::P248 => refuse::<P248>(&path, &text, accepted),
-                Set::P376 => refuse::<P376>(&path, &text, accepted),
-                Set::P500 => refuse::<P500>(&path, &text, accepted),
+                CommittedSet::P248 => refuse::<P248>(&path, &text, accepted),
+                CommittedSet::P376 => refuse::<P376>(&path, &text, accepted),
+                CommittedSet::P500 => refuse::<P500>(&path, &text, accepted),
             }?;
         }
     }
-    Ok(())
+    refuse_at_p324()
 }
 fn main() -> std::process::ExitCode {
     match run() {

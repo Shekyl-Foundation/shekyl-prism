@@ -23,7 +23,7 @@ use prism_compare::{
 };
 use prism_field::{P248, P376, P500};
 use prism_signer::{limits, SecretSeed};
-use prism_verify::{Committed, Set};
+use prism_verify::{Committed, CommittedSet, Set};
 use sha3::{
     digest::{ExtendableOutput, Update, XofReader},
     Shake256,
@@ -133,9 +133,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let key = a.get(4).map(|k| k.parse()).transpose()?;
     let dir = std::path::PathBuf::from(&a[0]);
     let (first, count) = (a[2].parse()?, a[3].parse()?);
-    match a[1].parse::<Set>()? {
-        Set::P248 => run::<P248>(&dir, "prism_signer_lvl1", first, count, key),
-        Set::P376 => run::<P376>(&dir, "prism_signer_lvl3", first, count, key),
-        Set::P500 => run::<P500>(&dir, "prism_signer_lvl5", first, count, key),
+    // The signer exists only for sets with committed seed streams, so a
+    // set without a corpus is refused here by name.
+    match a[1].parse::<Set>()?.committed()? {
+        CommittedSet::P248 => run::<P248>(&dir, "prism_signer_lvl1", first, count, key),
+        CommittedSet::P376 => run::<P376>(&dir, "prism_signer_lvl3", first, count, key),
+        CommittedSet::P500 => run::<P500>(&dir, "prism_signer_lvl5", first, count, key),
     }
 }
