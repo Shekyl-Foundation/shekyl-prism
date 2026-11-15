@@ -173,8 +173,32 @@ fn same_x<F: Field>(left: Xz<F>, right: Xz<F>) -> bool {
     left.x.mul(right.z).same(right.x.mul(left.z))
 }
 
+/// `L::ODD_PRIMES` when this search can check every prime in it.
+///
+/// `None` when the list is empty, longer than [`MAX_ODD_PRIMES`], or
+/// contains anything other than an odd divisor of `f`. Primality of each
+/// entry is the parameter set's compile-time check. A caller that skipped
+/// the tail, or an empty list, would report a point of too small an order
+/// as full order.
+fn odd_primes_to_check<L: ParameterSet>() -> Option<&'static [u64]> {
+    primes_held(L::ODD, L::ODD_PRIMES).then_some(L::ODD_PRIMES)
+}
+
+/// Whether `primes` is a list this search can check against `odd`.
+fn primes_held(odd: u64, primes: &[u64]) -> bool {
+    odd != 0
+        && !primes.is_empty()
+        && primes.len() <= MAX_ODD_PRIMES
+        && primes
+            .iter()
+            .all(|&prime| prime > 1 && prime % 2 == 1 && odd.is_multiple_of(prime))
+}
+
 /// `[p+1]X = O`, and `[(p+1)/ℓ]X ≠ O` for `ℓ = 2` and every prime divisor of `f`.
 pub fn has_order_p_plus_one<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
+    let Some(primes) = odd_primes_to_check::<L>() else {
+        return false;
+    };
     let killed = |odd, doubles| {
         mul_odd_then_double::<L>(coefficient, point, odd, doubles).is_some_and(is_infinity)
     };
@@ -184,9 +208,7 @@ pub fn has_order_p_plus_one<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::E
     if killed(L::ODD, L::E - 1) {
         return false;
     }
-    L::ODD_PRIMES
-        .iter()
-        .all(|prime| !killed(L::ODD / prime, L::E))
+    primes.iter().all(|&prime| !killed(L::ODD / prime, L::E))
 }
 
 /// `[2^{e−1}]` of two order-`2^e` points are distinct and nonzero.
@@ -221,26 +243,44 @@ fn prime_field_basis<L: ParameterSet>(
     })
 }
 
+/// The images of `R` and `T` in `E[q]`, for one odd prime `q` of `f`.
+///
+/// Held until every prime has been projected. Comparing inside the
+/// projection loop would run a cofactor with two primes in a different
+/// field-operation order.
+#[derive(Clone, Copy)]
+struct OddImage<F: Field> {
+    left: Xz<F>,
+    right: Xz<F>,
+    prime: u64,
+}
+
 /// The images of `R` and `T` in `E[f]` generate `E[f]`.
 ///
 /// `E[f]` splits into prime-power factors, one for each prime in
-/// [`ParameterSet::ODD_PRIMES`]. Two
-/// elements generate `(Z/p^k)^2` when their images generate `(Z/p)^2`, and
-/// two elements generate `(Z/q)^2` for a prime `q` when neither is a scalar
-/// multiple of the other. A scalar and its negative have the same
-/// x-coordinate, so the multiples checked run only up to `q/2`.
+/// [`ParameterSet::ODD_PRIMES`]. Two elements generate `(Z/p^k)^2` when
+/// their images generate `(Z/p)^2`, and two elements generate `(Z/q)^2`
+/// for a prime `q` when neither is a scalar multiple of the other. A
+/// scalar and its negative have the same x-coordinate, so the multiples
+/// checked run only up to `q/2`.
 pub fn odd_parts_generate<L: ParameterSet>(
     coefficient: L::Ext,
     r: Xz<L::Ext>,
     t: Xz<L::Ext>,
 ) -> bool {
+    // A list this search cannot hold refuses before any field operation.
+    // The alternative is to ignore a prime and report that the points generate.
+    let Some(primes) = odd_primes_to_check::<L>() else {
+        return false;
+    };
     let u = double_times::<L>(coefficient, r, L::E);
     let v = double_times::<L>(coefficient, t, L::E);
     // The image of each point in `E[q]`, for each prime `q` of `f`:
     // multiplying by `f/q` kills the other primes and leaves order `q`.
-    // Every projection is made before any is compared.
-    let mut projected = [None; MAX_ODD_PRIMES];
-    for (slot, &prime) in projected.iter_mut().zip(L::ODD_PRIMES) {
+    // Every projection that succeeds is made before any is compared. A
+    // projection that fails refuses immediately.
+    let mut images: [Option<OddImage<L::Ext>>; MAX_ODD_PRIMES] = [None; MAX_ODD_PRIMES];
+    for (index, &prime) in primes.iter().enumerate() {
         let rest = L::ODD / prime;
         let project = |point| {
             if rest == 1 {
@@ -255,12 +295,15 @@ pub fn odd_parts_generate<L: ParameterSet>(
         let Some(right) = project(v) else {
             return false;
         };
-        *slot = Some((left, right, prime));
+        images[index] = Some(OddImage { left, right, prime });
     }
-    projected
-        .iter()
-        .flatten()
-        .all(|&(left, right, prime)| prime_field_basis::<L>(coefficient, left, right, prime))
+    // `primes.len()` is at most [`MAX_ODD_PRIMES`], and that prefix was
+    // filled above. A hole refuses: it is not a prime that was checked.
+    images[..primes.len()].iter().all(|image| {
+        image.as_ref().is_some_and(|image| {
+            prime_field_basis::<L>(coefficient, image.left, image.right, image.prime)
+        })
+    })
 }
 
 /// `(R, T)` a basis of `E[p+1]`.
@@ -481,6 +524,32 @@ mod tests {
         only_the_full_point_is_full_order::<P324>();
         only_the_full_point_is_full_order::<P376>();
         only_the_full_point_is_full_order::<P500>();
+    }
+
+    /// The gate in front of both order checks. A list that fails it is
+    /// refused whole. Nothing here drops a prime and continues.
+    #[test]
+    fn a_prime_list_the_search_cannot_hold_is_refused() {
+        let held = super::primes_held;
+        assert!(held(5, &[5]));
+        assert!(held(3, &[3]));
+        assert!(held(65, &[5, 13]));
+        assert!(held(27, &[3]));
+        assert!(held(3 * 5 * 7 * 11, &[3, 5, 7, 11]), "four primes fit");
+        assert!(!held(3, &[]), "an empty list checks nothing");
+        assert!(
+            !held(3 * 5 * 7 * 11 * 13, &[3, 5, 7, 11, 13]),
+            "a fifth prime is not dropped"
+        );
+        assert!(!held(0, &[3]), "a zero cofactor");
+        assert!(!held(3, &[0]), "zero is not a prime");
+        assert!(!held(3, &[1]), "one is not a prime");
+        assert!(!held(6, &[2]), "two is not an odd prime");
+        assert!(!held(3, &[5]), "a prime that does not divide");
+        assert_eq!(super::odd_primes_to_check::<P248>(), Some(&[5][..]));
+        assert_eq!(super::odd_primes_to_check::<P324>(), Some(&[3][..]));
+        assert_eq!(super::odd_primes_to_check::<P376>(), Some(&[5, 13][..]));
+        assert_eq!(super::odd_primes_to_check::<P500>(), Some(&[3][..]));
     }
 
     #[test]

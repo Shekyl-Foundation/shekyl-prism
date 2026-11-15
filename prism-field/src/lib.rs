@@ -108,8 +108,9 @@ const fn candidate_bound(bits: u32) -> u16 {
     }
 }
 
-/// The most distinct odd primes a cofactor `f` may have. The torsion code
-/// holds one projected pair of points for each on its stack.
+/// The most distinct odd primes a cofactor `f` may have. The torsion
+/// search holds one projected pair of points for each on its stack, and
+/// refuses a longer list rather than ignoring the primes past the buffer.
 pub const MAX_ODD_PRIMES: usize = 4;
 
 /// Whether `primes` is the list of the distinct prime factors of `f`: each
@@ -611,9 +612,11 @@ mod tests {
     #[test]
     fn every_set_states_the_primes_of_its_cofactor() {
         the_odd_primes_factor_the_cofactor::<P248>();
+        the_odd_primes_factor_the_cofactor::<P324>();
         the_odd_primes_factor_the_cofactor::<P376>();
         the_odd_primes_factor_the_cofactor::<P500>();
         assert_eq!(P248::ODD_PRIMES, &[5]);
+        assert_eq!(P324::ODD_PRIMES, &[3]);
         assert_eq!(P376::ODD_PRIMES, &[5, 13]);
         assert_eq!(P500::ODD_PRIMES, &[3]);
     }
