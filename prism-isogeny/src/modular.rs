@@ -309,7 +309,7 @@ pub fn challenge_matrices<L: ParameterSet>(s: Residue<L>) -> Option<(Mat4<L>, Ma
 #[cfg(test)]
 mod tests {
     use super::{challenge_matrices, is_symplectic, Residue};
-    use prism_field::{ParameterSet, P248, P376, P500};
+    use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
 
     fn matrix<L: ParameterSet>(text: &str, key: &str) -> [[Residue<L>; 4]; 4] {
         let at = text.find(&format!("\"{key}\"")).expect(key);
@@ -349,6 +349,16 @@ mod tests {
         assert_eq!(phi.row, matrix(text, "Mphi"));
         assert_eq!(m1.row, matrix(text, "M1"));
         assert_eq!(m2.row, matrix(text, "M2"));
+        the_matrix_identities_hold::<L>(s);
+    }
+
+    /// What the three matrices of a challenge scalar satisfy, whatever the
+    /// scalar: `M1` and `M2` are symplectic, and each one's kernel half is
+    /// the image of the other's complement under `Φ` or `−Φ̂`. None of this
+    /// needs a known answer, so it is also the check at a set that has no
+    /// model file.
+    fn the_matrix_identities_hold<L: ParameterSet>(s: Residue<L>) {
+        let (phi, m1, m2) = challenge_matrices(s).expect("matrices");
         assert!(is_symplectic(m1), "M1");
         assert!(is_symplectic(m2), "M2");
         let kernel = |matrix: super::Mat4<L>, cols: [usize; 2]| {
@@ -393,5 +403,240 @@ mod tests {
         agrees::<P376>(include_str!("../testdata/s5_model/s5_lvl3b_matrices.json"));
         agrees::<P500>(include_str!("../testdata/s5_model/s5_lvl5_matrices.json"));
         agrees::<P500>(include_str!("../testdata/s5_model/s5_lvl5b_matrices.json"));
+    }
+
+    /// An integer modulo `2^e`, as little-endian bytes: a second
+    /// implementation of the arithmetic, in base 256 with no limbs, to
+    /// hold the limb code against. It shares nothing with [`Residue`] but
+    /// the exponent.
+    #[derive(Clone, Debug, PartialEq)]
+    struct Bytes(Vec<u8>);
+
+    impl Bytes {
+        fn reduced<L: ParameterSet>(mut bytes: Vec<u8>) -> Self {
+            let len = (L::E as usize).div_ceil(8);
+            bytes.resize(len, 0);
+            let spare = 8 * len as u32 - L::E;
+            if spare > 0 {
+                bytes[len - 1] &= u8::MAX >> spare;
+            }
+            Self(bytes)
+        }
+
+        fn add<L: ParameterSet>(&self, rhs: &Self) -> Self {
+            let mut carry = 0u16;
+            let sum = self
+                .0
+                .iter()
+                .zip(&rhs.0)
+                .map(|(a, b)| {
+                    carry += u16::from(*a) + u16::from(*b);
+                    let byte = carry as u8;
+                    carry >>= 8;
+                    byte
+                })
+                .collect();
+            Self::reduced::<L>(sum)
+        }
+
+        fn multiply<L: ParameterSet>(&self, rhs: &Self) -> Self {
+            let len = self.0.len();
+            let mut wide = vec![0u32; 2 * len];
+            for (i, a) in self.0.iter().enumerate() {
+                for (j, b) in rhs.0.iter().enumerate() {
+                    wide[i + j] += u32::from(*a) * u32::from(*b);
+                }
+                // Propagate after every row, so no cell overflows.
+                for k in i..2 * len - 1 {
+                    wide[k + 1] += wide[k] >> 8;
+                    wide[k] &= 0xff;
+                }
+            }
+            Self::reduced::<L>(wide[..len].iter().map(|byte| *byte as u8).collect())
+        }
+    }
+
+    fn residue<L: ParameterSet>(bytes: &Bytes) -> Residue<L> {
+        Residue::from_le_bytes(&bytes.0)
+    }
+
+    fn bytes<L: ParameterSet>(residue: Residue<L>) -> Bytes {
+        Bytes(residue.to_le_bytes())
+    }
+
+    /// `2^bit` modulo `2^e`, which is zero from `bit = e` on.
+    fn power_of_two<L: ParameterSet>(bit: u32) -> Bytes {
+        let mut out = vec![0u8; (bit as usize) / 8 + 1];
+        out[(bit / 8) as usize] = 1 << (bit % 8);
+        Bytes::reduced::<L>(out)
+    }
+
+    fn minus_one<L: ParameterSet>() -> Bytes {
+        Bytes::reduced::<L>(vec![0xff; (L::E as usize).div_ceil(8)])
+    }
+
+    /// SplitMix64, for operands that fill every limb.
+    struct Stream(u64);
+
+    impl Stream {
+        fn next(&mut self) -> u64 {
+            self.0 = self.0.wrapping_add(0x9E37_79B9_7F4A_7C15);
+            let mut z = self.0;
+            z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+            z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+            z ^ (z >> 31)
+        }
+
+        fn value<L: ParameterSet>(&mut self) -> Bytes {
+            let len = (L::E as usize).div_ceil(8);
+            let mut out = Vec::with_capacity(len + 8);
+            while out.len() < len {
+                out.extend_from_slice(&self.next().to_le_bytes());
+            }
+            Bytes::reduced::<L>(out)
+        }
+    }
+
+    /// The limb arithmetic against the byte arithmetic, at one set: values
+    /// worked out by hand at the edges of the width, and random operands
+    /// that fill every limb.
+    fn the_limb_arithmetic_is_arithmetic_modulo_two_to_the_e<L: ParameterSet>(seed: u64) {
+        let e = L::E;
+        let one = power_of_two::<L>(0);
+        let zero = Bytes::reduced::<L>(Vec::new());
+        // `2^(e−1) · 2 = 2^e = 0`, and the top bit itself survives.
+        let top = power_of_two::<L>(e - 1);
+        assert_ne!(top, zero);
+        assert_eq!(power_of_two::<L>(e), zero, "{}: 2^e is zero", L::NAME);
+        let two = power_of_two::<L>(1);
+        assert_eq!(bytes(residue::<L>(&top).multiply(residue(&two))), zero);
+        // Powers of two that meet at the top bit, and one past it.
+        for low in [1, 63, 64, 65, e / 2, e - 65, e - 64, e - 2] {
+            let (left, right) = (power_of_two::<L>(low), power_of_two::<L>(e - 1 - low));
+            assert_eq!(
+                bytes(residue::<L>(&left).multiply(residue(&right))),
+                top,
+                "{}: 2^{low} · 2^{}",
+                L::NAME,
+                e - 1 - low
+            );
+            let past = power_of_two::<L>(e - low);
+            assert_eq!(
+                bytes(residue::<L>(&left).multiply(residue(&past))),
+                zero,
+                "{}: 2^{low} · 2^{} is 2^e",
+                L::NAME,
+                e - low
+            );
+        }
+        // `(−1)² = 1`, `−(−1) = 1`, `−1 + 1 = 0`: carries through every limb.
+        let m1 = minus_one::<L>();
+        assert_eq!(bytes(residue::<L>(&m1).multiply(residue(&m1))), one);
+        assert_eq!(bytes(residue::<L>(&m1).negate()), one);
+        assert_eq!(bytes(residue::<L>(&m1).add(residue(&one))), zero);
+        assert_eq!(bytes(Residue::<L>::one().negate()), m1);
+        // The inverse of 3 modulo `2^e`, for an even `e`, is
+        // `(2^(e+1) + 1)/3`: in binary `1010…1011`, so `0xab` and then
+        // `0xaa` all the way up, cut off at bit `e`. Written here from that
+        // closed form, not computed by either arithmetic. Every set's `e`
+        // is even.
+        assert_eq!(e % 2, 0, "{}: the closed form is for an even e", L::NAME);
+        let three = Bytes::reduced::<L>(vec![3]);
+        let third = {
+            let mut out = vec![0xaa; (e as usize).div_ceil(8)];
+            out[0] = 0xab;
+            Bytes::reduced::<L>(out)
+        };
+        assert_eq!(
+            three.multiply::<L>(&third),
+            one,
+            "{}: the closed form",
+            L::NAME
+        );
+        assert_eq!(
+            bytes(residue::<L>(&three).inv().expect("three is odd")),
+            third,
+            "{}: 1/3",
+            L::NAME
+        );
+        assert!(residue::<L>(&two).inv().is_none(), "an even residue");
+        // Random operands that fill every limb, and their inverses.
+        let mut stream = Stream(seed);
+        for round in 0..200 {
+            let (a, b) = (stream.value::<L>(), stream.value::<L>());
+            let (ra, rb) = (residue::<L>(&a), residue::<L>(&b));
+            assert_eq!(bytes(ra), a, "{}: the bytes round trip", L::NAME);
+            assert_eq!(
+                bytes(ra.multiply(rb)),
+                a.multiply::<L>(&b),
+                "{} round {round}",
+                L::NAME
+            );
+            assert_eq!(
+                bytes(ra.add(rb)),
+                a.add::<L>(&b),
+                "{} round {round}",
+                L::NAME
+            );
+            assert_eq!(
+                bytes(ra.sub(rb)),
+                a.add::<L>(&bytes(rb.negate())),
+                "{} round {round}",
+                L::NAME
+            );
+            assert_eq!(bytes(ra.add(ra.negate())), zero);
+            let mut odd = a.clone();
+            odd.0[0] |= 1;
+            let inverse = residue::<L>(&odd).inv().expect("odd");
+            assert_eq!(
+                odd.multiply::<L>(&bytes(inverse)),
+                one,
+                "{} round {round}: the inverse, checked by the byte product",
+                L::NAME
+            );
+        }
+    }
+
+    #[test]
+    fn the_limb_arithmetic_is_arithmetic_modulo_two_to_the_e_at_every_set() {
+        the_limb_arithmetic_is_arithmetic_modulo_two_to_the_e::<P248>(0x5052_4953_4d02_4800);
+        the_limb_arithmetic_is_arithmetic_modulo_two_to_the_e::<P324>(0x5052_4953_4d03_2400);
+        the_limb_arithmetic_is_arithmetic_modulo_two_to_the_e::<P376>(0x5052_4953_4d03_7600);
+        the_limb_arithmetic_is_arithmetic_modulo_two_to_the_e::<P500>(0x5052_4953_4d05_0000);
+        the_limb_arithmetic_is_arithmetic_modulo_two_to_the_e::<P664>(0x5052_4953_4d06_6400);
+    }
+
+    /// The two sets with no model file have no known-answer matrices. The
+    /// identities the matrices satisfy need none: they are checked here
+    /// for scalars at the edges of the width and for random odd ones.
+    fn the_matrices_of_any_odd_scalar_satisfy_their_identities<L: ParameterSet>(seed: u64) {
+        let e = L::E;
+        let mut scalars = vec![
+            power_of_two::<L>(0),
+            Bytes::reduced::<L>(vec![3]),
+            minus_one::<L>(),
+            power_of_two::<L>(e - 1).add::<L>(&power_of_two::<L>(0)),
+            power_of_two::<L>(e / 2).add::<L>(&minus_one::<L>()),
+        ];
+        let mut stream = Stream(seed);
+        for _ in 0..20 {
+            let mut odd = stream.value::<L>();
+            odd.0[0] |= 1;
+            scalars.push(odd);
+        }
+        for scalar in scalars {
+            the_matrix_identities_hold::<L>(residue(&scalar));
+        }
+        // An even scalar has no inverse, and so no matrices.
+        assert!(challenge_matrices(residue::<L>(&power_of_two::<L>(1))).is_none());
+    }
+
+    #[test]
+    fn the_matrix_identities_hold_at_every_set() {
+        the_matrices_of_any_odd_scalar_satisfy_their_identities::<P248>(0x5052_4953_4d4d_0248);
+        the_matrices_of_any_odd_scalar_satisfy_their_identities::<P324>(0x5052_4953_4d4d_0324);
+        the_matrices_of_any_odd_scalar_satisfy_their_identities::<P376>(0x5052_4953_4d4d_0376);
+        the_matrices_of_any_odd_scalar_satisfy_their_identities::<P500>(0x5052_4953_4d4d_0500);
+        the_matrices_of_any_odd_scalar_satisfy_their_identities::<P664>(0x5052_4953_4d4d_0664);
     }
 }
