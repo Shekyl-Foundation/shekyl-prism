@@ -31,11 +31,14 @@ counts=docs/benchmarks/op-counts.txt
 verdicts=docs/benchmarks/negative-verdicts.tsv
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-# The counted sources: the three crates of the verifier and what pins their
-# dependencies. Tracked files and new files not yet added, never ignored
-# ones, so the digest is the same before and after `git add`.
+# The counted sources: the three crates of the verifier, what pins their
+# dependencies, and the fixtures crate, which names the curve and the
+# message the p324 rows are counted on. Tracked files and new files not
+# yet added, never ignored ones, so the digest is the same before and
+# after `git add`.
 git ls-files -co --exclude-standard -- \
     Cargo.toml Cargo.lock rust-toolchain.toml prism-field prism-isogeny prism-verify \
+    prism-fixtures \
     | LC_ALL=C sort > "$work/files"
 test -s "$work/files"
 digest=$(xargs sha256sum < "$work/files" | sha256sum | cut -d' ' -f1)

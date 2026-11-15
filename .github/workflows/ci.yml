@@ -85,6 +85,15 @@ jobs:
         run: python3 scripts/ci/check_research_boundary.py
       - name: The operation counter is in no default build
         run: python3 scripts/ci/check_op_count_isolation.py
+      # The crate that reads committed test files is a dev-dependency of
+      # the two crates whose tests read it, and a normal dependency of the
+      # fuzz workspace alone. The self-test plants each breach in a copy of
+      # the manifests first, so a check that had gone blind fails here
+      # instead of passing.
+      - name: The fixtures crate is in no shipped build
+        run: |
+          python3 scripts/ci/check_fixtures_isolation.py --selftest
+          python3 scripts/ci/check_fixtures_isolation.py
       # The script reads the parameter sets out of the field crate's source.
       # Nothing else runs it, so a change to how the sets are declared
       # would break it unseen.

@@ -21,12 +21,6 @@
 //! (`ext_*`) or made directly in the base field (`base_*`). Hashing and the
 //! Baillie–PSW test do not use the field and are not in this metric.
 
-// Shared with the tests, which use other parts of it.
-#[path = "../tests/support/curve_table.rs"]
-#[allow(dead_code)]
-mod curve_table;
-#[path = "../tests/support/p324_refusal.rs"]
-mod p324_refusal;
 #[path = "../tests/support/mod.rs"]
 mod support;
 
@@ -177,14 +171,17 @@ fn refuse<L: ParameterSet>(path: &Path, text: &str, accepted: Slot) -> Result<()
 /// derived from one. What can be counted is the refusal of a response
 /// built from a public key alone that passes the pairing check
 /// (`tests/support/identity.rs`): the key is the model curve of the Sage
-/// file, under [`p324_refusal::MESSAGE`]. The form refused as
+/// file, under its refusal message (`prism_fixtures::p324`). The form refused as
 /// `Codomain` is the first measured cost of the chain work at this prime.
 /// It is the cost of a refusal, not of a verification that accepts.
 fn refuse_at_p324() -> Result<(), String> {
-    use curve_table::p324::{table, FILE, MODEL_CURVE};
-    let coefficient = table().curve(MODEL_CURVE).coefficient.decode::<P324>();
-    let message = p324_refusal::MESSAGE;
-    let vector = format!("{FILE}:{MODEL_CURVE}");
+    use prism_fixtures::p324::{curve_table, CURVE_FILE, MODEL_CURVE, REFUSAL_MESSAGE};
+    let coefficient = curve_table()
+        .curve(MODEL_CURVE)
+        .coefficient
+        .decode::<P324>();
+    let message = REFUSAL_MESSAGE;
+    let vector = format!("{CURVE_FILE}:{MODEL_CURVE}");
     for form in Form::ALL {
         let built = identity_response::<P324>(coefficient, message, form);
         let (verdict, table) = counted::<P324>(&built.key, message, &built.response.encode());

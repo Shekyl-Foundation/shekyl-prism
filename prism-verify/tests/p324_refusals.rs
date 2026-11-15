@@ -27,19 +27,15 @@
 //! codomains must agree first, and no response known to be buildable from
 //! public data gets them to).
 
-// Shared with other tests, which use other parts of it.
-#[path = "support/curve_table.rs"]
-#[allow(dead_code)]
-mod curve_table;
 #[path = "support/identity.rs"]
 mod identity;
-#[path = "support/p324_refusal.rs"]
-mod p324_refusal;
 
-use curve_table::p324::{MODEL_CURVE, NEGATED_MODEL_CURVE, SQUARE_BRANCH_CURVE};
-use curve_table::{CurveNumber, CurveRow};
 use identity::{first_prime_salt_counter, identity_response, salt_of, Form};
 use prism_field::{Field, ParameterSet, Salt, P248, P324, P376, P500};
+use prism_fixtures::curve_table::{CurveNumber, CurveRow};
+use prism_fixtures::p324::{
+    self, MODEL_CURVE, NEGATED_MODEL_CURVE, REFUSAL_MESSAGE as MESSAGE, SQUARE_BRANCH_CURVE,
+};
 use prism_isogeny::jac::{dbl_iter, Jac};
 use prism_isogeny::montgomery::Montgomery;
 use prism_verify::signature::canonical_sign;
@@ -51,8 +47,6 @@ use prism_verify::{
 type Set = P324;
 type Ext = <Set as ParameterSet>::Ext;
 type SaltOf = <Set as ParameterSet>::Salt;
-
-const MESSAGE: &[u8] = p324_refusal::MESSAGE;
 
 /// The first salt counter of prime degree under [`MESSAGE`], for each
 /// curve used as a key. Pinned: a change to the hash, the projection or
@@ -70,8 +64,8 @@ const COMPOSITE_SALTS_VERIFIED: u64 = 8;
 /// The field elements of a signature: a curve and four coordinates.
 const SIGNATURE_ELEMENTS: usize = (Set::SIGNATURE_LEN - Set::SALT_LEN) / Set::FP_LEN;
 
-fn curve(number: CurveNumber) -> CurveRow<'static> {
-    curve_table::p324::table().curve(number)
+fn curve(number: CurveNumber) -> CurveRow {
+    p324::curve_table().curve(number)
 }
 
 fn coefficient(number: CurveNumber) -> Ext {
@@ -80,7 +74,7 @@ fn coefficient(number: CurveNumber) -> Ext {
 
 /// The key every test here verifies under, unless it says otherwise.
 fn key() -> Vec<u8> {
-    curve(SQUARE_BRANCH_CURVE).coefficient.bytes()
+    curve(SQUARE_BRANCH_CURVE).coefficient.bytes().to_vec()
 }
 
 /// A response whose curve and points are a real curve and a real basis of
@@ -265,7 +259,7 @@ fn the_wrong_sign_of_y_is_refused_as_sign() {
 #[test]
 fn a_curve_that_is_not_the_permitted_model_is_refused_as_model() {
     let mut past_model = Vec::new();
-    for row in curve_table::p324::table().rows() {
+    for row in p324::curve_table().rows() {
         for negated in [false, true] {
             let mut response = unrelated(SaltOf::zero());
             let coefficient = row.coefficient.decode::<Set>();
