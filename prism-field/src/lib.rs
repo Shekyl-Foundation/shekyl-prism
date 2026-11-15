@@ -231,7 +231,7 @@ const fn is_odd_prime(candidate: u64) -> bool {
 
 /// One parameter set: a prime `p = f·2^e − 1`, its two fields and the
 /// lengths its encodings use.
-pub trait ParameterSet: Copy + Clone + Eq + Send + Sync + 'static {
+pub trait ParameterSet: Copy + Clone + Eq + core::fmt::Debug + Send + Sync + 'static {
     type Base: Field;
     type Ext: Field;
     /// The set's name, `p` and then `e`: `p248`, `p376`, `p500`.
@@ -246,6 +246,9 @@ pub trait ParameterSet: Copy + Clone + Eq + Send + Sync + 'static {
     /// The width of the integers the challenge degree's primality test
     /// runs on at this set. See [`width`].
     type Degree: DegreeWidth;
+    /// The limbs of an integer modulo `2^e` at this set, which is what the
+    /// entries of the verifier's matrices are.
+    type TorsionLimbs: Limbs;
     /// Instantiated long-chain length `e′ = e − 2`. The short chain
     /// has length `CHAIN_STEPS − 1`; the rational torsion exponent is `E`.
     const CHAIN_STEPS: u32;
@@ -301,7 +304,7 @@ macro_rules! parameter_set {
             use super::ops::{tally, Kind, Op};
             use super::{
                 candidate_bound, define_fp2_from_type, define_fp_core,
-                width::{degree_limbs, DegreeLimbs},
+                width::{degree_limbs, torsion_limbs, DegreeLimbs},
                 width_bits, Cofactor, Field, ParameterSet, Salt,
             };
 
@@ -492,6 +495,7 @@ macro_rules! parameter_set {
                 const COFACTOR: Cofactor = COFACTOR;
                 // A limb count that is not a width fails here.
                 type Degree = DegreeLimbs<{ degree_limbs($e) }>;
+                type TorsionLimbs = [u64; torsion_limbs($e)];
                 const CHAIN_STEPS: u32 = $e - 2;
                 const CHALLENGE_BITS: u32 = $e - 3;
                 const FP_LEN: usize = <$fp>::ENCODED_LENGTH;

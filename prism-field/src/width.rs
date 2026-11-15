@@ -12,6 +12,11 @@
 //! width and a set whose degree does not fit a width that exists does not
 //! compile.
 //!
+//! The entries of the verifier's matrices are integers modulo `2^e`, and
+//! they are sized the same way: [`ParameterSet::TorsionLimbs`] is the limb
+//! array of one at that set.
+//!
+//! [`ParameterSet::TorsionLimbs`]: crate::ParameterSet::TorsionLimbs
 //! [`ParameterSet::Degree`]: crate::ParameterSet::Degree
 
 use core::fmt::Debug;
@@ -114,9 +119,32 @@ pub const fn degree_limbs(e: u32) -> usize {
     }
 }
 
+/// The limb count of a residue modulo `2^e` for every set with `e` up to
+/// 512: 512 bits.
+///
+/// The verifier's matrices have entries modulo `2^e`. They were built on
+/// eight limbs when the widest exponent was 500, and the four sets below
+/// `p664` keep eight. As with [`FLOOR_DEGREE_LIMBS`], narrowing them is a
+/// later change.
+pub const FLOOR_TORSION_LIMBS: usize = 8;
+
+/// The limbs of a residue modulo `2^e`: enough for `e` bits, and not below
+/// [`FLOOR_TORSION_LIMBS`].
+pub const fn torsion_limbs(e: u32) -> usize {
+    let needed = (e as usize).div_ceil(LIMB_BITS);
+    if needed < FLOOR_TORSION_LIMBS {
+        FLOOR_TORSION_LIMBS
+    } else {
+        needed
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{degree_bits, degree_limbs, DegreeLimbs, DegreeWidth, Limbs, FLOOR_DEGREE_LIMBS};
+    use super::{
+        degree_bits, degree_limbs, torsion_limbs, DegreeLimbs, DegreeWidth, Limbs,
+        FLOOR_DEGREE_LIMBS, FLOOR_TORSION_LIMBS,
+    };
 
     #[test]
     fn a_width_is_its_limbs_and_its_scratch_arrays() {
@@ -155,5 +183,20 @@ mod tests {
         // The floor ends where the need passes it.
         assert_eq!(degree_limbs(514), FLOOR_DEGREE_LIMBS);
         assert_eq!(degree_limbs(515), FLOOR_DEGREE_LIMBS + 1);
+    }
+
+    /// Eight limbs hold `e` up to 512, which is every set below `p664`.
+    /// `p664` needs eleven: ten limbs are 640 bits, 24 short.
+    #[test]
+    fn the_limbs_of_a_residue_hold_the_exponent() {
+        for (e, limbs) in [(248, 8), (324, 8), (376, 8), (500, 8), (664, 11)] {
+            assert_eq!(torsion_limbs(e), limbs, "e = {e}");
+            assert!(e as usize <= 64 * limbs);
+        }
+        // Ten limbs hold 640 bits and no more.
+        assert_eq!(torsion_limbs(640), 10);
+        assert_eq!(torsion_limbs(641), 11);
+        assert_eq!(torsion_limbs(512), FLOOR_TORSION_LIMBS);
+        assert_eq!(torsion_limbs(513), FLOOR_TORSION_LIMBS + 1);
     }
 }
