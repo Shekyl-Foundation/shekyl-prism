@@ -25,11 +25,12 @@
 mod support;
 
 use prism_field::ops::{self, Counts, Slot};
-use prism_field::{ParameterSet, P248, P376, P500};
+use prism_field::{ParameterSet, P248, P324, P376, P500};
 use prism_verify::{verify, CommittedSet, Stage, VerifyError};
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
+use support::identity::{identity_response, Form};
 use support::{files, negatives, primary, set, vector};
 
 fn fields(counts: Slot) -> String {
@@ -176,6 +177,64 @@ fn refuse<L: ParameterSet>(path: &Path, text: &str, accepted: Slot) -> Result<()
     );
     Ok(())
 }
+/// `p324` has no honest vector, so no accepted count and no negatives
+/// derived from one. What can be counted is the refusal of a response
+/// built from a public key alone that passes the pairing check
+/// (`tests/support/identity.rs`): the key is the seventh curve of the Sage
+/// file. The form refused as `Codomain` is the first measured cost of the
+/// chain work at this prime. It is the cost of a refusal, not of a
+/// verification that accepts.
+fn refuse_at_p324() -> Result<(), String> {
+    const FILE: &str = "p324_curves.tsv";
+    const CURVE: usize = 7;
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("testdata")
+        .join(FILE);
+    let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    let row = text
+        .lines()
+        .filter(|line| line.starts_with("CURVE\t"))
+        .nth(CURVE - 1)
+        .ok_or("the Sage file has no seventh curve")?;
+    let hex = row
+        .split('\t')
+        .nth(2)
+        .ok_or("a CURVE row has no coefficient")?;
+    let bytes: Vec<u8> = (0..hex.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&hex[i..i + 2], 16))
+        .collect::<Result<_, _>>()
+        .map_err(|e| e.to_string())?;
+    let coefficient = P324::ext_decode(&bytes).ok_or("the coefficient is not canonical")?;
+    let message = b"shekyl-prism-p324-refusals";
+    for form in Form::ALL {
+        let (key, response, _) = identity_response::<P324>(coefficient, message, form);
+        let (verdict, table) = counted::<P324>(&key, message, &response.encode());
+        let error = match verdict {
+            Err(e) if form.refusal().contains(&e) => e,
+            other => return Err(format!("{FILE} curve {CURVE} {}: {other:?}", form.name())),
+        };
+        let sum = total(&table);
+        let vector = format!("{FILE}:{CURVE}");
+        println!(
+            "VERDICT\t{}\t{vector}\t{}\t{error:?}\t{}\t{}\t{}\t{}\t{}",
+            P324::NAME,
+            form.name(),
+            sum.ext.mul,
+            sum.ext.square,
+            sum.ext.inv,
+            sum.ext.sqrt,
+            sum.ext.is_square
+        );
+        let kind = format!(
+            "refuse set={} vector={vector} case={} error={error:?}",
+            P324::NAME,
+            form.name()
+        );
+        stages(&kind, &table);
+    }
+    Ok(())
+}
 fn run() -> Result<(), String> {
     if !ops::ENABLED {
         return Err("built without counting: pass --features prism-field/op-count".into());
@@ -197,7 +256,7 @@ fn run() -> Result<(), String> {
             }?;
         }
     }
-    Ok(())
+    refuse_at_p324()
 }
 fn main() -> std::process::ExitCode {
     match run() {

@@ -1,4 +1,4 @@
-# Sources: sha256 ad78fd28222a44f73954dfb3943678f1c1ad1fd829b8193e7dab87a4b31bb5c5
+# Sources: sha256 137029d91d142ddbbfd6ef4da2987efc8360898e79764458221f3081c54c2f78
 set	vector	case	verdict	ext_mul	ext_square	ext_inv	ext_sqrt	ext_is_square
 p248	s5_lvl1.txt	both-y-negated	Sign	0	1	0	0	0
 p248	s5_lvl1.txt	q-negated	Pairing	33982	17569	13	6	4
@@ -321,6 +321,8 @@ p248	s5_lvl1.txt	curve-root-nine-halves	Model	0	2	0	0	0
 p248	s5_lvl1.txt	other-prime-salt	Image	134543	90266	69	6	4
 p248	s5_lvl1.txt	other-message	Image	133943	90056	69	6	4
 p248	s5_lvl1.txt	other-key	Pairing	33879	17535	14	6	4
+p248	s5_lvl1.txt	identity-response-q-negated	Kernel	55978	33903	24	6	4
+p248	s5_lvl1.txt	identity-response-q-difference	Codomain	131785	88042	68	6	4
 p248	s5_lvl1.txt	signature-one-byte-short	Length	0	0	0	0	0
 p248	s5_lvl1.txt	curve-bytes-all-ones	Canonical	0	1	0	0	0
 p248	s5_lvl1.txt	key-zero	Origin	0	0	0	0	0
@@ -645,6 +647,8 @@ p248	s5_lvl1b.txt	curve-root-nine-halves	Model	0	2	0	0	0
 p248	s5_lvl1b.txt	other-prime-salt	Image	133504	89902	69	6	4
 p248	s5_lvl1b.txt	other-message	Image	133394	89866	69	6	4
 p248	s5_lvl1b.txt	other-key	Pairing	33879	17535	14	6	4
+p248	s5_lvl1b.txt	identity-response-q-negated	Kernel	56400	34059	25	6	4
+p248	s5_lvl1b.txt	identity-response-q-difference	Codomain	131748	88032	69	6	4
 p248	s5_lvl1b.txt	signature-one-byte-short	Length	0	0	0	0	0
 p248	s5_lvl1b.txt	curve-bytes-all-ones	Canonical	0	1	0	0	0
 p248	s5_lvl1b.txt	key-zero	Origin	0	0	0	0	0
@@ -1097,6 +1101,8 @@ p376	s5_lvl3.txt	curve-root-nine-halves	Model	0	2	0	0	0
 p376	s5_lvl3.txt	other-prime-salt	Image	208445	142154	74	6	6
 p376	s5_lvl3.txt	other-message	Image	207572	141848	74	6	6
 p376	s5_lvl3.txt	other-key	Pairing	51008	26463	14	6	4
+p376	s5_lvl3.txt	identity-response-q-negated	Kernel	84558	51353	25	6	6
+p376	s5_lvl3.txt	identity-response-q-difference	Codomain	203177	138384	73	6	6
 p376	s5_lvl3.txt	signature-one-byte-short	Length	0	0	0	0	0
 p376	s5_lvl3.txt	curve-bytes-all-ones	Canonical	0	1	0	0	0
 p376	s5_lvl3.txt	key-zero	Origin	0	0	0	0	0
@@ -1549,6 +1555,8 @@ p376	s5_lvl3b.txt	curve-root-nine-halves	Model	0	2	0	0	0
 p376	s5_lvl3b.txt	other-prime-salt	Image	205453	141095	73	6	4
 p376	s5_lvl3b.txt	other-message	Image	207009	141647	73	6	4
 p376	s5_lvl3b.txt	other-key	Pairing	51008	26463	14	6	4
+p376	s5_lvl3b.txt	identity-response-q-negated	Kernel	84670	51393	24	6	10
+p376	s5_lvl3b.txt	identity-response-q-difference	Codomain	203408	138470	72	6	10
 p376	s5_lvl3b.txt	signature-one-byte-short	Length	0	0	0	0	0
 p376	s5_lvl3b.txt	curve-bytes-all-ones	Canonical	0	1	0	0	0
 p376	s5_lvl3b.txt	key-zero	Origin	0	0	0	0	0
@@ -2129,6 +2137,8 @@ p500	s5_lvl5.txt	curve-root-nine-halves	Model	0	2	0	0	0
 p500	s5_lvl5.txt	other-prime-salt	Image	281741	194406	74	6	4
 p500	s5_lvl5.txt	other-message	Image	280985	194130	74	6	4
 p500	s5_lvl5.txt	other-key	Pairing	68822	35575	14	6	12
+p500	s5_lvl5.txt	identity-response-q-negated	Kernel	112573	68469	24	6	10
+p500	s5_lvl5.txt	identity-response-q-difference	Codomain	275656	189692	72	6	10
 p500	s5_lvl5.txt	signature-one-byte-short	Length	0	0	0	0	0
 p500	s5_lvl5.txt	curve-bytes-all-ones	Canonical	0	1	0	0	0
 p500	s5_lvl5.txt	key-zero	Origin	0	0	0	0	0
@@ -2709,6 +2719,10 @@ p500	s5_lvl5b.txt	curve-root-nine-halves	Model	0	2	0	0	0
 p500	s5_lvl5b.txt	other-prime-salt	Image	280564	193980	73	6	4
 p500	s5_lvl5b.txt	other-message	Image	278537	193260	73	6	4
 p500	s5_lvl5b.txt	other-key	Pairing	68822	35575	14	6	12
+p500	s5_lvl5b.txt	identity-response-q-negated	Kernel	113372	68753	25	6	4
+p500	s5_lvl5b.txt	identity-response-q-difference	Codomain	276455	189976	73	6	4
 p500	s5_lvl5b.txt	signature-one-byte-short	Length	0	0	0	0	0
 p500	s5_lvl5b.txt	curve-bytes-all-ones	Canonical	0	1	0	0	0
 p500	s5_lvl5b.txt	key-zero	Origin	0	0	0	0	0
+p324	p324_curves.tsv:7	identity-response-q-negated	Kernel	74510	44923	24	6	4
+p324	p324_curves.tsv:7	identity-response-q-difference	Codomain	176662	118716	72	6	4

@@ -9,6 +9,8 @@
 //! reporter (`examples/op_counts.rs`), so both see the same inputs under
 //! the same names. Every case is deterministic in the vector's text.
 
+pub mod identity;
+
 use prism_field::{Field, ParameterSet, Salt};
 use prism_isogeny::{
     jac::{add, dbl_iter, to_xz, Jac},
@@ -330,6 +332,19 @@ pub fn negatives<L: ParameterSet>(text: &str) -> Vec<Case> {
         signature: other.encode(),
         allowed: &[VerifyError::Pairing],
     });
+    // The pairing check passed with no secret: the response curve of the
+    // honest signature taken as a key, and the verifier's own basis of it
+    // answered with a pair of inverse pairing. See `identity.rs`.
+    for form in identity::Form::ALL {
+        let (key, response, _) = identity::identity_response::<L>(r.curve, &msg, form);
+        cases.push(Case {
+            name: form.name().into(),
+            key,
+            message: msg.clone(),
+            signature: response.encode(),
+            allowed: form.refusal(),
+        });
+    }
     // The refusals that need no curve arithmetic to produce.
     let honest = r.encode();
     cases.push(Case {

@@ -14,11 +14,21 @@
 //! points that are off their curve, of too small an order, dependent, or
 //! a perfectly good basis that has nothing to do with the key.
 //!
+//! The pairing check is also passed from public data, with no secret: a
+//! key's own curve as the response curve, and a pair of points whose
+//! pairing is the inverse of the key basis's (`support/identity.rs`). Such
+//! a response has no isogeny behind it, and the verifier refuses it in the
+//! chain work that follows.
+//!
 //! Reached: `Length`, `Canonical`, `Origin`, `Singular`, `Sign`, `Model`,
-//! `Composite`, `Kernel`, `Pairing`. Not reached: `Basis` (it needs a key
-//! with no basis index inside the bound, which nobody knows how to find),
-//! and `Codomain` and `Image` (they lie past the pairing check, which only
-//! a response bound to the key by the secret isogeny passes).
+//! `Composite`, `Kernel` (before the pairing and after it), `Pairing`,
+//! `Codomain`. Not reached: `Basis` (it needs a key with no basis index
+//! inside the bound, which nobody knows how to find) and `Image` (the
+//! codomains must agree first, and no response known to be buildable from
+//! public data gets them to).
+
+#[path = "support/identity.rs"]
+mod identity;
 
 use prism_field::{Field, ParameterSet, Salt, P324};
 use prism_isogeny::jac::{dbl_iter, Jac};
@@ -338,7 +348,8 @@ fn response_points_that_are_not_a_basis_are_refused_as_kernel() {
 
 /// A real curve with a real basis of its `2^e`-torsion, a prime degree,
 /// every public check passed, and no relation to the key: refused at the
-/// pairing. This is as far as anything gets at `p324` without the secret.
+/// pairing. A response on the key's own curve gets further; see
+/// `the_pairing_is_passed_from_public_data_and_the_chains_refuse`.
 #[test]
 fn a_valid_basis_unrelated_to_the_key_is_refused_at_the_pairing() {
     let good = unrelated(prime_salt());
@@ -362,5 +373,79 @@ fn a_valid_basis_unrelated_to_the_key_is_refused_at_the_pairing() {
     assert_eq!(
         verify::<Set>(&key(), b"another message", &good.encode()),
         Err(VerifyError::Composite)
+    );
+}
+
+/// The pairing check is passed with no secret, and what follows it runs at
+/// `p324`.
+///
+/// The key is the seventh curve of the file (and, as a second key, the
+/// negated fifth: the two coefficients of the file that are a permitted
+/// response model). The response is on the key's own curve. Its points
+/// are the verifier's own basis `(P, Q)` of that key, answered as a pair
+/// whose pairing is the inverse of `e(P, Q)`, which is all the pairing
+/// check asks. The salt is the first counter with a prime degree.
+///
+/// - `(P, −Q)` passes the pairing and is refused as `Kernel`.
+/// - `(P, P − Q)` passes the pairing and is refused as `Codomain`. To
+///   return that, the verifier has built the kernel, run both theta
+///   chains and compared the codomains. The operation counts of this
+///   case are in `docs/benchmarks/op-counts.txt`.
+/// - With the second point negated again, each is refused as `Pairing`:
+///   the two verdicts above are not reached by a response that fails it.
+///
+/// This shows that the kernel construction, both chains and the codomain
+/// comparison run at `p324` and refuse a response with no isogeny behind
+/// it. It does not show acceptance: nothing here is accepted, and no
+/// honest signature exists at this prime.
+///
+/// The fixture file's own pair for a curve is `(P, ±(P − Q))`, so the
+/// second form is, up to that sign, the file's points under their own
+/// curve as key.
+#[test]
+fn the_pairing_is_passed_from_public_data_and_the_chains_refuse() {
+    use identity::{identity_response, Form};
+    let coefficients = [
+        (Field::negate(element(rows()[4][2])), 16),
+        (element(rows()[6][2]), 24),
+    ];
+    // The verdict of each form, pinned here by the name it has in the
+    // records, and not read from the helper.
+    let verdicts = [
+        ("identity-response-q-negated", VerifyError::Kernel),
+        ("identity-response-q-difference", VerifyError::Codomain),
+    ];
+    for (coefficient, pinned) in coefficients {
+        for (form, (name, refusal)) in Form::ALL.into_iter().zip(verdicts) {
+            assert_eq!(form.name(), name);
+            assert_eq!(form.refusal(), [refusal], "{name}");
+            let (key, response, counter) = identity_response::<Set>(coefficient, MESSAGE, form);
+            // Pinned, as `PRIME_SALT_COUNTER` is.
+            assert_eq!(counter, pinned);
+            assert!(Field::same(response.curve, coefficient));
+            assert!(canonical_sign::<Set>(response.p.y));
+            assert_eq!(
+                verify::<Set>(&key, MESSAGE, &response.encode()),
+                Err(refusal),
+                "{name}"
+            );
+            let mut failing = response;
+            failing.q.y = Field::negate(failing.q.y);
+            assert_eq!(
+                verify::<Set>(&key, MESSAGE, &failing.encode()),
+                Err(VerifyError::Pairing),
+                "{name} with the second point negated"
+            );
+        }
+    }
+    // The file's own points for the seventh curve, under that curve as
+    // key, are the second form up to the sign of the second point.
+    let (key, built, _) =
+        identity_response::<Set>(element(rows()[6][2]), MESSAGE, Form::Difference);
+    let file = unrelated(built.salt);
+    assert!(Field::same(file.p.x, built.p.x) && Field::same(file.q.x, built.q.x));
+    assert_eq!(
+        verify::<Set>(&key, MESSAGE, &file.encode()),
+        Err(VerifyError::Codomain)
     );
 }
