@@ -16,6 +16,8 @@
 
 use libfuzzer_sys::fuzz_target;
 use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
+use prism_fixtures::curve_table::Point;
+use prism_fixtures::no_corpus::{curve_table, WithoutCorpus};
 use prism_isogeny::jac::{add, Jac};
 use prism_isogeny::montgomery::Montgomery;
 use prism_isogeny::pairing::{mul, oracle, weil};
@@ -44,21 +46,21 @@ fn committed<L: ParameterSet>(text: &str, order: u8, scalars: &[u8]) {
     pair::<L>(curve, at("Px ", "Py "), at("Qx ", "Qy "), order, scalars);
 }
 
-/// The square-branch curve of `p324_curves.tsv` and the order-`2^e`
-/// basis Sage built on it. `P` and `Q` are the columns of those names.
-fn sage_basis(order: u8, scalars: &[u8]) {
-    use prism_fixtures::{curve_table::Point, p324};
-    let row = p324::curve_table().curve(p324::SQUARE_BRANCH_CURVE);
+/// At a set without a corpus: the square-branch curve of its Sage curve
+/// file and the order-`2^e` basis Sage built on it. `P` and `Q` are the
+/// columns of those names.
+fn sage_basis<L: WithoutCorpus>(order: u8, scalars: &[u8]) {
+    let row = curve_table::<L>().curve(L::FIXTURES.square_branch_curve);
     let point = |point: &Point| {
-        let (x, y) = point.decode::<P324>();
+        let (x, y) = point.decode::<L>();
         Jac {
             x,
             y,
-            z: <P324 as ParameterSet>::Ext::one(),
+            z: L::Ext::one(),
         }
     };
-    let curve = Montgomery::normalized(row.coefficient.decode::<P324>());
-    pair::<P324>(curve, point(&row.p), point(&row.q), order, scalars);
+    let curve = Montgomery::normalized(row.coefficient.decode::<L>());
+    pair::<L>(curve, point(&row.p), point(&row.q), order, scalars);
 }
 
 fn pair<L: ParameterSet>(
@@ -108,7 +110,7 @@ fuzz_target!(|data: &[u8]| {
                 scalars,
             )
         },
-        sage_basis,
+        sage_basis::<P324>,
         |order, scalars| {
             committed::<P376>(
                 include_str!("../../prism-verify/testdata/s5_lvl3.txt"),

@@ -14,7 +14,7 @@ text of FIPS 202 and SP 800-185: its own Keccak-f[1600], its own cSHAKE
 padding, no library hash for the result.
 
     challenge_scalar.py --check    what CI runs
-    challenge_scalar.py --write    rewrite the p324 file
+    challenge_scalar.py --write    rewrite the file of every set below
 
 `--check` does three things, in this order, and stops at the first that
 fails:
@@ -24,10 +24,11 @@ fails:
 2. the scalar here equals the `s` of every committed vector, at the three
    sets that have vectors, so the cSHAKE framing and the projection are
    the verifier's;
-3. `prism-verify/testdata/p324_challenge.tsv` is what this script writes.
+3. `prism-verify/testdata/<set>_challenge.tsv` is what this script writes,
+   for each set that has no vectors.
 
-Only then does the file mean anything at `p324`, which has no vectors: a
-Rust test compares the verifier's scalar with each row of it.
+Only then does such a file mean anything at its set: a Rust test compares
+the verifier's scalar with each row of it.
 """
 import hashlib
 import sys
@@ -35,8 +36,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 TESTDATA = ROOT / "prism-verify" / "testdata"
-OUT = TESTDATA / "p324_challenge.tsv"
-CURVES = TESTDATA / "p324_curves.tsv"
+# The sets that have no vectors, by name, with each exponent. The key of
+# each row is a curve of the set's Sage file. Everything else a set needs
+# here is computed from its name and exponent.
+WITHOUT_CORPUS = {"p324": 324}
 DOMAIN = b"shekyl-prism-challenge-v2"
 RATE = 136  # bytes, for a 256-bit capacity strength
 MASK = (1 << 64) - 1
@@ -170,43 +173,52 @@ def check_vectors():
     return seen
 
 
-E_324 = 324
-SALT_324 = 48
+def salt_len(e):
+    """`e` rounded up to a multiple of 128 bits, in bytes."""
+    return -(-e // 128) * 128 // 8
 
 
-def p324_rows():
-    """Fixed inputs at p324: each curve of the Sage file as the key, with a
-    spread of salts and messages."""
-    keys = [line.split("\t")[2] for line in CURVES.read_text().splitlines() if line.startswith("CURVE\t")]
-    if len(keys) != 8:
-        raise SystemExit("expected eight curves in p324_curves.tsv")
+def scalar_len(e):
+    return (e - 3 + 7) // 8
+
+
+def without_corpus_rows(name, e):
+    """Fixed inputs at a set without vectors: each curve of its Sage file
+    as the key, with a spread of salts and messages."""
+    curves = TESTDATA / f"{name}_curves.tsv"
+    keys = [line.split("\t")[2] for line in curves.read_text().splitlines() if line.startswith("CURVE\t")]
+    if not keys:
+        raise SystemExit(f"no curves in {curves.name}")
+    salt = salt_len(e)
     salts = [
-        bytes(SALT_324),
-        bytes([0xFF]) * SALT_324,
-        bytes(range(SALT_324)),
-        (1).to_bytes(8, "little") + bytes(SALT_324 - 8),
+        bytes(salt),
+        bytes([0xFF]) * salt,
+        bytes(range(salt)),
+        (1).to_bytes(8, "little") + bytes(salt - 8),
     ]
-    messages = [b"", b"shekyl-prism-p324", b"binary\x00message", bytes(range(256)) * 2]
+    messages = [b"", f"shekyl-prism-{name}".encode(), b"binary\x00message", bytes(range(256)) * 2]
+    bits = e - 3
     lines = []
     for index, key in enumerate(keys):
-        salt = salts[index % len(salts)]
+        chosen = salts[index % len(salts)]
         for message in (messages[index % len(messages)], messages[(index + 1) % len(messages)]):
-            scalar = challenge(E_324, bytes.fromhex(key), salt, message)
-            if len(scalar) != 41 or scalar[0] & 1 != 1 or scalar[-1] >> 1:
-                raise SystemExit("a p324 scalar is not odd and 321 bits wide")
-            lines.append("\t".join([key, salt.hex(), message.hex() or "-", scalar.hex()]))
+            scalar = challenge(e, bytes.fromhex(key), chosen, message)
+            spare = 8 * len(scalar) - bits
+            if len(scalar) != scalar_len(e) or scalar[0] & 1 != 1 or scalar[-1] >> (8 - spare):
+                raise SystemExit(f"a {name} scalar is not odd and {bits} bits wide")
+            lines.append("\t".join([key, chosen.hex(), message.hex() or "-", scalar.hex()]))
     return lines
 
 
-def p324_text():
+def without_corpus_text(name, e):
     header = [
-        "# Challenge scalars at p324, from scripts/challenge_scalar.py. Do not edit.",
+        f"# Challenge scalars at {name}, from scripts/challenge_scalar.py. Do not edit.",
         "# cSHAKE256(pk || salt || message), customization shekyl-prism-challenge-v2,",
-        "# 321 bits little-endian with the lowest bit forced to one.",
+        f"# {e - 3} bits little-endian with the lowest bit forced to one.",
         "# The script is anchored first on the s of all 113 committed vectors.",
-        "# key\tsalt\tmessage (hex, '-' for empty)\tscalar (41 bytes, little-endian)",
+        f"# key\tsalt\tmessage (hex, '-' for empty)\tscalar ({scalar_len(e)} bytes, little-endian)",
     ]
-    return "\n".join(header + p324_rows()) + "\n"
+    return "\n".join(header + without_corpus_rows(name, e)) + "\n"
 
 
 def main():
@@ -214,16 +226,22 @@ def main():
         raise SystemExit("usage: challenge_scalar.py --check | --write")
     check_keccak()
     seen = check_vectors()
-    text = p324_text()
+    texts = {name: without_corpus_text(name, e) for name, e in WITHOUT_CORPUS.items()}
     if sys.argv[1] == "--write":
-        OUT.write_text(text)
-        print(f"wrote {OUT.name}")
+        for name, text in texts.items():
+            out = TESTDATA / f"{name}_challenge.tsv"
+            out.write_text(text)
+            print(f"wrote {out.name}")
         return
-    if not OUT.is_file() or OUT.read_text() != text:
-        raise SystemExit(f"{OUT.name} is not what this script writes; run --write and commit it")
+    current = []
+    for name, text in texts.items():
+        out = TESTDATA / f"{name}_challenge.tsv"
+        if not out.is_file() or out.read_text() != text:
+            raise SystemExit(f"{out.name} is not what this script writes; run --write and commit it")
+        current.append(f"{out.name} is current ({len(text.splitlines()) - 5} rows)")
     counts = ", ".join(f"{label} {count}" for label, count in seen.items())
     print(f"SHAKE256 agrees with hashlib; the scalar agrees with all 113 vectors ({counts}); "
-          f"{OUT.name} is current ({len(text.splitlines()) - 5} rows)")
+          + "; ".join(current))
 
 
 if __name__ == "__main__":

@@ -1,8 +1,8 @@
 # Field arithmetic for p324: p = 3*2^324 - 1.
-# Written by scripts/sage/p324_fixture.sage. Do not edit.
+# Written by scripts/sage/no_corpus_fixture.sage. Do not edit.
 # Image: sagemath/sagemath@sha256:4f5589eb6c565949a006f8665de2876b8414410daf5ac554f4434a15d4f3d528
-# Command: sage scripts/sage/p324_fixture.sage (from the repository root)
-# Script sha256 when run: 6165adc11003eb0dbf2b2137a977fff20931e395419e50bc096762bad40e3e22
+# Command: sage scripts/sage/no_corpus_fixture.sage p324 (from the repository root)
+# Script sha256 when run: 4953549640afa2c7d111fd9f5df9f2b6f306bd912b6e93657d87bfed31c5e9fd
 # Generator: SplitMix64, seed 0x505249534d333234; field elements are little-endian, re then im.
 # BASE a b add sub mul square(a) inv(a) is_square(a) sqrt_of_square(a)
 # EXT  x y add sub mul square(x) inv(x) is_square(x) sqrt_of_square(x)

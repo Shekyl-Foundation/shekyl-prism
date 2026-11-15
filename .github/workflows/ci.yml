@@ -100,14 +100,15 @@ jobs:
       - name: The integer bounds of every parameter set hold
         run: python3 scripts/security_parameters.py
       # An independent script computes the challenge scalar: it reproduces
-      # the s of every committed vector before its p324 values count.
+      # the s of every committed vector before its values for a set
+      # without vectors count.
       - name: The challenge scalar agrees with an independent script
         run: python3 scripts/challenge_scalar.py --check
       # CI has no Sage and cannot run the script. This holds that the header
       # of each committed Sage file records the digest of the committed
       # script and the pinned image, so the script cannot change without a
       # new run. The Rust tests then read the files.
-      - name: The p324 Sage files record the committed script and the pinned image
+      - name: The Sage files record the committed script and the pinned image
         run: python3 scripts/ci/check_sage_fixture.py
       # The affine oracles are for the fuzz crate alone. The self-test plants
       # each breach in a copy of the manifests first, so a check that had

@@ -3,23 +3,30 @@
 # All rights reserved.
 # BSD-3-Clause
 #
-# Sage values for the parameter set p324, p = 3*2^324 - 1, which has no
-# signer and so no vectors. Two files are written:
+# Sage values for a parameter set that has no signer and so no vectors.
+# The set is named on the command line. Two files are written for it:
 #
-#   prism-verify/testdata/p324_field.tsv    field arithmetic in F_p and F_p^2
-#   prism-verify/testdata/p324_curves.tsv   supersingular curves, points of
-#                                           known order, a 2^e basis, pairings
+#   prism-verify/testdata/<set>_field.tsv    field arithmetic in F_p, F_p^2
+#   prism-verify/testdata/<set>_curves.tsv   supersingular curves, points of
+#                                            known order, a 2^e basis, pairings
 #
 # Run from the repository root in the pinned image, with the Theta_dim4
 # submodule checked out (the pairing is that library's weil_pairing_pari,
 # the function scripts/sage/weil_pairing.sage uses):
 #
-#   docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace \
+#   docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD:/workspace" -w /workspace \
 #     sagemath/sagemath@sha256:4f5589eb6c565949a006f8665de2876b8414410daf5ac554f4434a15d4f3d528 \
-#     sage scripts/sage/p324_fixture.sage
+#     sage scripts/sage/no_corpus_fixture.sage p324
 #
-# Nothing here reads a parameter from a table keyed by a label. f, e and the
-# search bound are stated below and the prime is computed from them.
+# Every set goes through the same code. What a set states is in SETS below:
+# its cofactor and exponent. Everything else is computed from those: the
+# prime, the search bound, the lengths, the edge values, the seed. Nothing
+# is read from a table keyed by a label.
+#
+# The header of each file records the SHA-256 of this script, and
+# scripts/ci/check_sage_fixture.py holds the committed files to it. An edit
+# here therefore means running every set again. A run is deterministic:
+# both generators are seeded from the set's name.
 #
 # What is independent of the Rust code and what mirrors it:
 #   - Field results: Sage's own arithmetic. Independent.
@@ -44,18 +51,44 @@ from sage.all import EllipticCurve, GF, ZZ, set_random_seed
 from sage.groups.generic import order_from_multiple
 from pkg.utilities.discrete_log import weil_pairing_pari
 
-F_COFACTOR = 3
-E_EXPONENT = 324
-SEARCH_BOUND = 384
+# name: (f, e), for p = f * 2^e - 1.
+SETS = {
+    "p324": (3, 324),
+    "p664": (17, 664),
+}
+
+if len(sys.argv) != 2 or sys.argv[1] not in SETS:
+    raise SystemExit("usage: sage scripts/sage/no_corpus_fixture.sage <" + "|".join(SETS) + ">")
+NAME = sys.argv[1]
+F_COFACTOR, E_EXPONENT = SETS[NAME]
+assert NAME == "p%d" % E_EXPONENT
+
+# The curve walk: this many 2-isogeny steps from A = 0, and every
+# WALK_STRIDE-th curve of it is written. Which of those curves are on
+# which branch of the basis search, and which are a permitted response
+# model, is an accident of each set's walk; the fixtures crate records it
+# for each set and the tests hold it.
+WALK_STEPS = 40
+WALK_STRIDE = 5
+
+# `e` rounded up to a multiple of 128: the verifier's search bound.
+SEARCH_BOUND = -(-E_EXPONENT // 128) * 128
 P = F_COFACTOR * 2**E_EXPONENT - 1
-FP_LEN = (int(P).bit_length() + 7) // 8
-TOP_MASK = (1 << (int(P).bit_length() - 8 * (FP_LEN - 1))) - 1
+P_BITS = int(P).bit_length()
+FP_LEN = (P_BITS + 7) // 8
+TOP_MASK = (1 << (P_BITS - 8 * (FP_LEN - 1))) - 1
 RANDOM_ROWS = 10000
-SEED = 0x5052_4953_4D33_3234  # "PRISM324"
+# "PRISM" and the exponent in ASCII, as one big-endian integer: for p324,
+# 0x5052_4953_4D33_3234.
+SEED = int.from_bytes(b"PRISM" + str(E_EXPONENT).encode(), "big")
+assert SEED < 2**64
 
 assert ZZ(P).is_prime()
-assert int(P).bit_length() == 326 and FP_LEN == 41 and TOP_MASK == 0x3F
 assert P % 8 == 7
+# The curve file has one column for the point missing the cofactor's
+# prime. A cofactor with more than one prime would need a column for
+# each, and no set without a corpus has one.
+assert ZZ(F_COFACTOR).is_prime() and F_COFACTOR % 2 == 1
 
 Fp = GF(P)
 Fp2 = GF(P**2, name="i", modulus=ZZ["x"]("x^2+1"))
@@ -150,14 +183,19 @@ OPS = ["add", "sub", "mul", "square", "inv", "is_square", "sqrt_of_square"]
 
 def field_file():
     lines = []
-    edge = [0, 1, 2, 3, P - 1, P - 2, (P - 1) // 2, (P + 1) // 2, 2**320, 2**324 - 1, 2**325]
+    # Small values, the top of the field, the two middles, a power of two
+    # sixteen below 2^e, the last value below 2^e, and the top bit of p.
+    edge = [
+        0, 1, 2, 3, P - 1, P - 2, (P - 1) // 2, (P + 1) // 2,
+        2 ** (E_EXPONENT - 4), 2**E_EXPONENT - 1, 2 ** (P_BITS - 1),
+    ]
     for a in edge:
         for b in edge:
             row = base_row(a, b)
             lines.append(
                 "BASE\t" + enc(a).hex() + "\t" + enc(b).hex() + "\t" + "\t".join(row[op].hex() for op in OPS)
             )
-    small = [0, 1, P - 1, (P - 1) // 2, 2**325]
+    small = [0, 1, P - 1, (P - 1) // 2, 2 ** (P_BITS - 1)]
     ext_edge = [Fp2(re) + I * Fp2(im) for re in small for im in small]
     for x in ext_edge[::3]:
         for y in ext_edge[::4]:
@@ -246,11 +284,10 @@ def curves_file():
     set_random_seed(SEED)
     order = P + 1
     factorization = ZZ(order).factor()
-    assert list(factorization) == [(2, E_EXPONENT), (3, 1)]
+    assert list(factorization) == [(2, E_EXPONENT), (F_COFACTOR, 1)]
     kept = 0
-    for step, A in enumerate(walk(stream, 40), start=1):
-        # Every fifth curve of the walk, eight curves in all.
-        if step % 5:
+    for step, A in enumerate(walk(stream, WALK_STEPS), start=1):
+        if step % WALK_STRIDE:
             continue
         E = EllipticCurve(Fp2, [0, A, 0, 1, 0])
         assert E.is_supersingular()
@@ -262,11 +299,11 @@ def curves_file():
                 continue
             if order_from_multiple(R, order, factorization=factorization) == order:
                 break
-        no3, no2 = 3 * R, 2 * R
-        assert order_from_multiple(no3, order, factorization=factorization) == order // 3
+        no_f, no2 = F_COFACTOR * R, 2 * R
+        assert order_from_multiple(no_f, order, factorization=factorization) == order // F_COFACTOR
         assert order_from_multiple(no2, order, factorization=factorization) == order // 2
-        only3 = (2**E_EXPONENT) * R
-        assert order_from_multiple(only3, order, factorization=factorization) == 3
+        only_f = (2**E_EXPONENT) * R
+        assert order_from_multiple(only_f, order, factorization=factorization) == F_COFACTOR
         index, square = basis_index(A)
         xp = abscissa(A, index, square)
         xq = -xp - A
@@ -288,9 +325,9 @@ def curves_file():
                     str(index),
                     "1" if square else "0",
                     enc2(R[0]).hex(),
-                    enc2(no3[0]).hex(),
+                    enc2(no_f[0]).hex(),
                     enc2(no2[0]).hex(),
-                    enc2(only3[0]).hex(),
+                    enc2(only_f[0]).hex(),
                     enc2(Pe[0]).hex(),
                     enc2(Pe[1]).hex(),
                     enc2(Qe[0]).hex(),
@@ -299,19 +336,19 @@ def curves_file():
                 ]
             )
         )
-    assert kept == 8
+    assert kept == WALK_STEPS // WALK_STRIDE
     return lines
 
 
 def header(what, columns):
     # Sage runs a preparsed copy of this file, so `__file__` is not it.
-    script = ROOT / "scripts" / "sage" / "p324_fixture.sage"
+    script = ROOT / "scripts" / "sage" / "no_corpus_fixture.sage"
     digest = hashlib.sha256(script.read_bytes()).hexdigest()
     return [
-        f"# {what} for p324: p = {F_COFACTOR}*2^{E_EXPONENT} - 1.",
-        "# Written by scripts/sage/p324_fixture.sage. Do not edit.",
+        f"# {what} for {NAME}: p = {F_COFACTOR}*2^{E_EXPONENT} - 1.",
+        "# Written by scripts/sage/no_corpus_fixture.sage. Do not edit.",
         "# Image: sagemath/sagemath@sha256:4f5589eb6c565949a006f8665de2876b8414410daf5ac554f4434a15d4f3d528",
-        "# Command: sage scripts/sage/p324_fixture.sage (from the repository root)",
+        f"# Command: sage scripts/sage/no_corpus_fixture.sage {NAME} (from the repository root)",
         f"# Script sha256 when run: {digest}",
         f"# Generator: SplitMix64, seed 0x{SEED:016x}; field elements are little-endian, re then im.",
     ] + ["# " + line for line in columns]
@@ -330,20 +367,20 @@ def main():
             "Each random row draws a, b, then re(x), im(x), re(y), im(y) from the generator.",
         ],
     ) + field_file()
-    (out / "p324_field.tsv").write_text("\n".join(field) + "\n")
+    (out / f"{NAME}_field.tsv").write_text("\n".join(field) + "\n")
     curves = header(
         "Supersingular curves and points",
         [
-            "CURVE n A index square x(R) x([3]R) x([2]R) x([2^e]R) x(P) y(P) x(Q) y(Q) e(P,Q)",
+            f"CURVE n A index square x(R) x([{F_COFACTOR}]R) x([2]R) x([2^e]R) x(P) y(P) x(Q) y(Q) e(P,Q)",
             "A is a Montgomery coefficient on a 2-isogeny walk from A = 0.",
-            "R has order p + 1, so [3]R, [2]R and [2^e]R have orders (p+1)/3, (p+1)/2 and 3.",
-            "index, square: the verifier's basis index search, bound 384, written again in Sage.",
-            "P, Q: [3] of the points with abscissas x_index and -x_index - A; both of order 2^e.",
+            f"R has order p + 1, so [{F_COFACTOR}]R, [2]R and [2^e]R have orders (p+1)/{F_COFACTOR}, (p+1)/2 and {F_COFACTOR}.",
+            f"index, square: the verifier's basis index search, bound {SEARCH_BOUND}, written again in Sage.",
+            f"P, Q: [{F_COFACTOR}] of the points with abscissas x_index and -x_index - A; both of order 2^e.",
             "e(P,Q): weil_pairing_pari(P, Q, 2^e) of the Theta_dim4 library.",
         ],
     ) + curves_file()
-    (out / "p324_curves.tsv").write_text("\n".join(curves) + "\n")
-    print(f"wrote p324_field.tsv ({len(field)} lines) and p324_curves.tsv ({len(curves)} lines)")
+    (out / f"{NAME}_curves.tsv").write_text("\n".join(curves) + "\n")
+    print(f"wrote {NAME}_field.tsv ({len(field)} lines) and {NAME}_curves.tsv ({len(curves)} lines)")
 
 
 main()

@@ -448,7 +448,8 @@ mod tests {
         use crate::jac::{add, dbl_iter, Jac};
         use crate::montgomery::Montgomery;
         use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
-        use prism_fixtures::{curve_table, p324};
+        use prism_fixtures::curve_table::Point as FixturePoint;
+        use prism_fixtures::no_corpus::{curve_table, WithoutCorpus};
 
         const VECTORS: [&str; 6] = [
             include_str!("../../prism-verify/testdata/s5_lvl1.txt"),
@@ -688,34 +689,38 @@ mod tests {
             values
         }
 
-        /// The `p324` curves this differential runs, with the order-`2^e`
-        /// pair Sage built on each: one curve from each branch of the basis
-        /// search, the same count as the two committed vectors of each
-        /// other set. The Weil value on all eight curves is checked
-        /// against Sage in `p324_curves`.
+        /// The curves this differential runs at a set without a corpus,
+        /// with the order-`2^e` pair Sage built on each: one curve from each
+        /// branch of the basis search, the same count as the two committed
+        /// vectors of each other set. The Weil value on every curve of the
+        /// file is checked against Sage in `prism-verify`'s `no_corpus`
+        /// tests.
         ///
         /// `P` and `Q` are read by column name, so a reordered file still
         /// hands both loops the basis.
-        fn p324_bases() -> Vec<Basis<P324>> {
-            let table = p324::curve_table();
-            let point = |point: &curve_table::Point| {
-                let (x, y) = point.decode::<P324>();
+        fn sage_bases<L: WithoutCorpus>() -> Vec<Basis<L>> {
+            let table = curve_table::<L>();
+            let point = |point: &FixturePoint| {
+                let (x, y) = point.decode::<L>();
                 Jac {
                     x,
                     y,
-                    z: <P324 as ParameterSet>::Ext::one(),
+                    z: L::Ext::one(),
                 }
             };
-            p324::BRANCH_CURVES
+            L::FIXTURES
+                .branch_curves()
                 .into_iter()
                 .map(|(number, square)| {
                     let row = table.curve(number);
                     assert_eq!(
-                        row.coefficient_is_square, square,
-                        "curve {number} changed branch"
+                        row.coefficient_is_square,
+                        square,
+                        "{} curve {number} changed branch",
+                        L::NAME
                     );
                     (
-                        Montgomery::normalized(row.coefficient.decode::<P324>()),
+                        Montgomery::normalized(row.coefficient.decode::<L>()),
                         point(&row.p),
                         point(&row.q),
                     )
@@ -723,8 +728,8 @@ mod tests {
                 .collect()
         }
 
-        /// Run `on` at one basis per committed vector, and at the `p324`
-        /// curves of [`p324_bases`]. The six committed
+        /// Run `on` at one basis per committed vector, and at the curves of
+        /// [`sage_bases`] for each set without a corpus. The six committed
         /// vectors keep the numbers they always had. Every set is named
         /// here: adding one means adding its line, and none is reached by
         /// a default.
@@ -740,7 +745,7 @@ mod tests {
             on376(3, basis::<P376>(VECTORS[3]));
             on500(4, basis::<P500>(VECTORS[4]));
             on500(5, basis::<P500>(VECTORS[5]));
-            for (number, basis) in (VECTORS.len() as u64..).zip(p324_bases()) {
+            for (number, basis) in (VECTORS.len() as u64..).zip(sage_bases::<P324>()) {
                 on324(number, basis);
             }
         }
