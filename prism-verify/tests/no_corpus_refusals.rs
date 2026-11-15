@@ -601,10 +601,12 @@ at_set!(
     }
 );
 
-// At `p664` about one degree in 170 is prime: 59 of 10,000 in a run of
-// the primality differential. A degree `2^k − s²` with `k` odd is never
-// divisible by 3, so it is prime more often than an odd integer of its
-// size, of which about one in 460 is.
+// At `p664` about one degree in 200 to 250 is prime; the heuristic for
+// `q = 2^k − s²` with `k` odd predicts one in 248 (a constant of about
+// 3.70 over `ln q`). Three samples: 59 of 10,000 and 18 of 4,000 in runs
+// of the primality differential, and 89 of 20,000 in an independent
+// simulation. Such a degree is never divisible by 3, so it is prime more
+// often than an odd integer of its size.
 at_set!(
     p664,
     prism_field::P664,

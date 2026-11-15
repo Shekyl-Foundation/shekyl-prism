@@ -639,4 +639,77 @@ mod tests {
         the_matrices_of_any_odd_scalar_satisfy_their_identities::<P500>(0x5052_4953_4d4d_0500);
         the_matrices_of_any_odd_scalar_satisfy_their_identities::<P664>(0x5052_4953_4d4d_0664);
     }
+
+    /// Known answers from outside this crate: products, inverses and the
+    /// powers the matrices are built from, computed by
+    /// `scripts/residue_known_answers.py` with Python's integers. CI holds
+    /// the file to the script.
+    const KNOWN_ANSWERS: &str = include_str!("../testdata/residue_known_answers.tsv");
+
+    fn hex(text: &str) -> Vec<u8> {
+        prism_fixtures::hex::decode(text).expect("hex")
+    }
+
+    /// Every row of the file for one set. Returns how many products and
+    /// how many inverses were held, so the caller can require both.
+    fn the_known_answers_hold<L: ParameterSet>() -> (usize, usize) {
+        let value = |text: &str| {
+            let bytes = hex(text);
+            assert_eq!(bytes.len(), (L::E as usize).div_ceil(8), "{}", L::NAME);
+            Residue::<L>::from_le_bytes(&bytes)
+        };
+        let (mut products, mut inverses) = (0, 0);
+        for line in KNOWN_ANSWERS.lines().filter(|line| !line.starts_with('#')) {
+            let fields: Vec<&str> = line.split('\t').collect();
+            if fields[1] != L::NAME {
+                continue;
+            }
+            match (fields[0], fields.len()) {
+                ("MUL", 5) => {
+                    let (a, b, product) = (value(fields[2]), value(fields[3]), value(fields[4]));
+                    assert_eq!(a.multiply(b), product, "{} product {products}", L::NAME);
+                    assert_eq!(b.multiply(a), product, "{} product {products}", L::NAME);
+                    // The file's bytes are the residue's bytes: nothing
+                    // was cut off on the way in.
+                    assert_eq!(a.to_le_bytes(), hex(fields[2]));
+                    products += 1;
+                }
+                ("INV", 6) => {
+                    let (s, t) = (value(fields[2]), value(fields[3]));
+                    let (s2, t2) = (value(fields[4]), value(fields[5]));
+                    assert_eq!(s.inv(), Some(t), "{} inverse {inverses}", L::NAME);
+                    assert_eq!(t.inv(), Some(s), "{} inverse {inverses}", L::NAME);
+                    assert_eq!(s.multiply(t), Residue::one());
+                    assert_eq!(s.multiply(s), s2);
+                    assert_eq!(t.multiply(t), t2);
+                    // The matrices of this scalar have those values where
+                    // their definition puts them, and satisfy their
+                    // identities.
+                    let (_, m1, m2) = challenge_matrices(s).expect("an odd scalar");
+                    assert_eq!(m1.row[1][1], t2, "M1 holds t²");
+                    assert_eq!(m1.row[3][3], s2, "M1 holds s²");
+                    assert_eq!(m1.row[2][0], t.negate(), "M1 holds −t");
+                    assert_eq!(m1.row[0][2], s, "M1 holds s");
+                    assert_eq!(m2.row[1][3], t, "M2 holds t");
+                    assert_eq!(m2.row[3][1], s.negate(), "M2 holds −s");
+                    the_matrix_identities_hold::<L>(s);
+                    inverses += 1;
+                }
+                other => panic!("a row of kind {other:?}"),
+            }
+        }
+        (products, inverses)
+    }
+
+    #[test]
+    fn the_known_answers_from_python_hold_at_every_set() {
+        // Two boundaries at the four sets below 512 bits, three at `p664`:
+        // six products and three scalars for each, on top of three and
+        // four, and eight random rows of each kind.
+        assert_eq!(the_known_answers_hold::<P248>(), (23, 18));
+        assert_eq!(the_known_answers_hold::<P324>(), (23, 18));
+        assert_eq!(the_known_answers_hold::<P376>(), (23, 18));
+        assert_eq!(the_known_answers_hold::<P500>(), (23, 18));
+        assert_eq!(the_known_answers_hold::<P664>(), (29, 21));
+    }
 }

@@ -104,6 +104,10 @@ jobs:
       # without vectors count.
       - name: The challenge scalar agrees with an independent script
         run: python3 scripts/challenge_scalar.py --check
+      # Known answers for arithmetic modulo 2^e, from Python's integers.
+      # The Rust tests read the file; this holds the file to the script.
+      - name: The residue known answers are what the script writes
+        run: python3 scripts/residue_known_answers.py --check
       # CI has no Sage and cannot run the script. This holds that the header
       # of each committed Sage file records the digest of the committed
       # script and the pinned image, so the script cannot change without a
