@@ -1116,6 +1116,41 @@ mod narrow {
         assert!(!is_baillie_psw::<OneLimb>(&[0xff; 9]));
     }
 
+    /// A prime that fits the 21-limb width and not the 16-limb one:
+    /// `2^1279 − 1`, a Mersenne prime. The challenge degree of `p664` has
+    /// 1,323 bits, so this is the size the wide width exists for, and the
+    /// one place in this crate where a "prime" verdict above 1,024 bits is
+    /// held against a number known to be prime from outside it. The
+    /// 16-limb width refuses the integer as too wide; it does not judge
+    /// its low limbs.
+    #[test]
+    fn a_mersenne_prime_above_the_narrower_width_passes_at_the_wider() {
+        use prism_field::DegreeLimbs;
+        const EXPONENT: usize = 1279;
+        let mut mersenne = vec![0xffu8; EXPONENT.div_ceil(8)];
+        *mersenne.last_mut().expect("nonempty") = u8::MAX >> (8 - EXPONENT % 8);
+        const {
+            assert!(EXPONENT > <DegreeLimbs<16> as DegreeWidth>::BITS);
+            assert!(EXPONENT < <DegreeLimbs<21> as DegreeWidth>::BITS);
+        }
+        assert!(is_baillie_psw::<DegreeLimbs<21>>(&mersenne));
+        assert!(!is_baillie_psw::<DegreeLimbs<16>>(&mersenne));
+        // Its odd neighbours below are composite: 2^1279 − 3 and −5.
+        for below in [2u8, 4] {
+            let mut neighbour = mersenne.clone();
+            neighbour[0] -= below;
+            assert!(
+                !is_baillie_psw::<DegreeLimbs<21>>(&neighbour),
+                "2^1279 − {}",
+                below + 1
+            );
+        }
+        // 2^1277 − 1 has a prime exponent and is composite.
+        let mut composite = vec![0xffu8; 1277usize.div_ceil(8)];
+        *composite.last_mut().expect("nonempty") = u8::MAX >> (8 - 1277 % 8);
+        assert!(!is_baillie_psw::<DegreeLimbs<21>>(&composite));
+    }
+
     /// The same integer has one verdict at every width that holds it.
     #[test]
     fn a_verdict_does_not_depend_on_the_width() {
