@@ -528,6 +528,10 @@ mod tests {
     #[test]
     fn the_starting_curve_has_a_basis_at_p500() {
         starting::<P500>();
+    }
+
+    #[test]
+    fn the_starting_curve_has_a_basis_at_p664() {
         starting::<P664>();
     }
 
