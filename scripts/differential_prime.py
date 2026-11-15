@@ -30,13 +30,16 @@ KNOWN = (
     (4, 7, True),  # 79
 )
 
-# The chain exponent `e - 2` of each set, by the name the report prints.
-# The three sets with committed data keep the names their records use.
+# The chain exponent `e - 2` of each set: the name the report prints, the
+# name `degree_check` takes, and the exponent. The set name selects the
+# width of the integers the Rust test runs on, which is the width the
+# verifier uses for that set. The three sets with committed data keep the
+# report names their records use.
 LEVELS = (
-    ("NIST-I", 246),
-    ("p324", 322),
-    ("NIST-III", 374),
-    ("NIST-V", 498),
+    ("NIST-I", "p248", 246),
+    ("p324", "p324", 322),
+    ("NIST-III", "p376", 374),
+    ("NIST-V", "p500", 498),
 )
 
 COUNT = 10_000
@@ -115,14 +118,18 @@ def verdict_word(prime: bool) -> str:
 
 
 def check_known(sympy_isprime) -> list[str]:
-    lines = []
     for exponent, scalar, prime in KNOWN:
         q = degree(exponent, scalar)
         if sympy_isprime(q) != prime:
             raise SystemExit(f"sympy disagrees with the known table at e={exponent} s={scalar}")
-        lines.append(f"{exponent} {scalar.to_bytes(1, 'little').hex()}")
+    # The whole table at every set, so at every width.
+    cases = [(set_name, known) for _name, set_name, _exponent in LEVELS for known in KNOWN]
+    lines = [
+        f"{set_name} {exponent} {scalar.to_bytes(1, 'little').hex()}"
+        for set_name, (exponent, scalar, _prime) in cases
+    ]
     rust = rust_verdicts(lines)
-    for line, (_, _, prime) in zip(rust, KNOWN, strict=True):
+    for line, (_set_name, (_, _, prime)) in zip(rust, cases, strict=True):
         if not line.endswith(" " + verdict_word(prime)):
             raise SystemExit(f"degree-check disagrees with the known table: {line}")
     return rust
@@ -132,17 +139,17 @@ def check_random(sympy_isprime, count: int, seed: bytes) -> None:
     rng = random.Random(seed)
     lines = []
     degrees = []
-    for _name, exponent in LEVELS:
+    for _name, set_name, exponent in LEVELS:
         for _ in range(count):
             raw = scalar_bytes(rng, exponent)
             scalar = int.from_bytes(raw, "little")
-            lines.append(f"{exponent} {raw.hex()}")
+            lines.append(f"{set_name} {exponent} {raw.hex()}")
             degrees.append(degree(exponent, scalar))
     rust = rust_verdicts(lines)
     mismatches = 0
-    per_level = {name: {"prime": 0, "composite": 0} for name, _ in LEVELS}
+    per_level = {name: {"prime": 0, "composite": 0} for name, _, _ in LEVELS}
     shown = 0
-    for (name, _exponent), q, line in zip(
+    for (name, _set_name, _exponent), q, line in zip(
         (level for level in LEVELS for _ in range(count)),
         degrees,
         rust,

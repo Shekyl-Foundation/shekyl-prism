@@ -31,6 +31,9 @@ use fp2::define_fp2_from_type;
 use fp2::define_fp_core;
 
 pub mod ops;
+pub mod width;
+
+pub use width::{DegreeLimbs, DegreeWidth, Limbs};
 
 /// The bytes of one set's public salt.
 ///
@@ -240,6 +243,9 @@ pub trait ParameterSet: Copy + Clone + Eq + Send + Sync + 'static {
     const E: u32;
     /// The odd cofactor `f` in `p + 1 = f·2^e`, with its prime factors.
     const COFACTOR: Cofactor;
+    /// The width of the integers the challenge degree's primality test
+    /// runs on at this set. See [`width`].
+    type Degree: DegreeWidth;
     /// Instantiated long-chain length `e′ = e − 2`. The short chain
     /// has length `CHAIN_STEPS − 1`; the rational torsion exponent is `E`.
     const CHAIN_STEPS: u32;
@@ -294,8 +300,9 @@ macro_rules! parameter_set {
         pub mod $modname {
             use super::ops::{tally, Kind, Op};
             use super::{
-                candidate_bound, define_fp2_from_type, define_fp_core, width_bits, Cofactor,
-                Field, ParameterSet, Salt,
+                candidate_bound, define_fp2_from_type, define_fp_core,
+                width::{degree_limbs, DegreeLimbs},
+                width_bits, Cofactor, Field, ParameterSet, Salt,
             };
 
             /// Checked here, when the set is compiled.
@@ -483,6 +490,8 @@ macro_rules! parameter_set {
                 const NAME: &'static str = concat!("p", stringify!($e));
                 const E: u32 = $e;
                 const COFACTOR: Cofactor = COFACTOR;
+                // A limb count that is not a width fails here.
+                type Degree = DegreeLimbs<{ degree_limbs($e) }>;
                 const CHAIN_STEPS: u32 = $e - 2;
                 const CHALLENGE_BITS: u32 = $e - 3;
                 const FP_LEN: usize = <$fp>::ENCODED_LENGTH;

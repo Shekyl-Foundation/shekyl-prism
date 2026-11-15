@@ -500,18 +500,24 @@ mod tests {
 
     #[test]
     fn two_thousand_forty_seven_is_not_a_prime() {
-        assert!(!is_baillie_psw(&2047u32.to_le_bytes()[..2]));
-        assert!(is_baillie_psw(&1019u32.to_le_bytes()[..2]));
-        assert!(!is_baillie_psw(&[1]));
-        assert!(!is_baillie_psw(&[91]));
-        assert!(!is_baillie_psw(&[49, 2]));
+        let is_prime = is_baillie_psw::<<P248 as ParameterSet>::Degree>;
+        assert!(!is_prime(&2047u32.to_le_bytes()[..2]));
+        assert!(is_prime(&1019u32.to_le_bytes()[..2]));
+        assert!(!is_prime(&[1]));
+        assert!(!is_prime(&[91]));
+        assert!(!is_prime(&[49, 2]));
     }
 
     #[test]
     fn the_three_field_primes_pass_baillie_psw() {
-        assert!(is_baillie_psw(&prime_bytes(5, P248::E)));
-        assert!(is_baillie_psw(&prime_bytes(65, P376::E)));
-        assert!(is_baillie_psw(&prime_bytes(27, P500::E)));
+        // Each at its own set's width, which holds `p` with room: the
+        // width is for a degree of about twice the bits.
+        fn passes<L: ParameterSet>(cofactor: u128) -> bool {
+            is_baillie_psw::<L::Degree>(&prime_bytes(cofactor, L::E))
+        }
+        assert!(passes::<P248>(5));
+        assert!(passes::<P376>(65));
+        assert!(passes::<P500>(27));
     }
 
     /// `cofactor·2^shift − 1`, little-endian.

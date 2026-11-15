@@ -104,7 +104,10 @@ fn prime_collision(t: &Template) -> Result<Collision, &'static str> {
             }
             Some(Seen::Composite) => {}
             Some(&Seen::Once(first)) => {
-                if prism_verify::degree_is_prime(L::E - 2, &t.scalar(value)) {
+                if prism_verify::degree_is_prime::<<L as ParameterSet>::Degree>(
+                    L::E - 2,
+                    &t.scalar(value),
+                ) {
                     return Ok(Collision {
                         first,
                         second: counter,
