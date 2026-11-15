@@ -5,7 +5,7 @@
 
 //! `square` is `mul` by itself, in both fields at every set.
 
-use prism_field::{Field, ParameterSet, P248, P376, P500};
+use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
 
 /// xorshift64*: a fixed stream, so a failure names its sample.
 struct Stream(u64);
@@ -81,6 +81,7 @@ fn set<L: ParameterSet>(seed: u64) {
 #[test]
 fn square_equals_mul_by_itself() {
     set::<P248>(0x5348_454b_594c_0001);
+    set::<P324>(0x5348_454b_594c_0324);
     set::<P376>(0x5348_454b_594c_0003);
     set::<P500>(0x5348_454b_594c_0005);
 }

@@ -80,9 +80,8 @@ pub trait Field: Copy {
 ///
 /// This is the bit length of the public salt and the number of candidates
 /// each torsion search tries. A parameter set carries no security
-/// assessment; both widths are this rounding of its exponent. The two
-/// primes ruled but not yet built, `e = 324` and `e = 664`, round to 384
-/// and 768.
+/// assessment; both widths are this rounding of its exponent. The prime
+/// ruled but not yet built, `e = 664`, rounds to 768.
 ///
 /// Panics if the rounding does not fit in `u32`.
 pub const fn width_bits(e: u32) -> u32 {
@@ -473,6 +472,24 @@ parameter_set!(
 );
 
 parameter_set!(
+    p324,
+    P324,
+    f = 3,
+    odd_primes = [3],
+    e = 324,
+    FpP324,
+    Fp2P324,
+    [
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0x000000000000002Fu64,
+    ]
+);
+
+parameter_set!(
     p376,
     P376,
     f = 65,
@@ -515,7 +532,7 @@ pub const FIELD_BACKEND: &str = "scalar";
 
 #[cfg(test)]
 mod tests {
-    use super::{width_bits, Field, ParameterSet, Salt, P248, P376, P500};
+    use super::{width_bits, Field, ParameterSet, Salt, P248, P324, P376, P500};
 
     fn hex(bytes: &[u8]) -> String {
         bytes.iter().map(|b| format!("{b:02x}")).collect()
@@ -618,6 +635,169 @@ mod tests {
         assert!(!ok(3 * 5 * 7 * 11 * 13, &[3, 5, 7, 11, 13]), "too many");
     }
 
+    /// Compare two little-endian byte strings of one length as integers.
+    fn below(left: &[u8], right: &[u8]) -> bool {
+        assert_eq!(left.len(), right.len());
+        left.iter().rev().lt(right.iter().rev())
+    }
+
+    /// The decoder takes exactly the integers below `p`, in exactly
+    /// `FP_LEN` bytes. Every expected verdict is the integer comparison
+    /// with `p`, where `p` is computed from `f` and `e`.
+    fn decoding_is_the_integer_order<L: ParameterSet>() {
+        let len = L::FP_LEN;
+        let mut modulus = modulus_minus_one(L::ODD, L::E, len);
+        let below_p = modulus.clone();
+        // p − 1, then p, then p + 1.
+        assert!(L::base_decode(&below_p).is_some(), "{}: p − 1", L::NAME);
+        modulus[0] += 1;
+        assert_eq!(modulus[0], 0xff, "p ends in all ones");
+        assert!(L::base_decode(&modulus).is_none(), "{}: p", L::NAME);
+        let above = {
+            // p + 1 = f·2^e: zero below bit e.
+            let mut bytes = vec![0u8; len];
+            let (byte, bit) = ((L::E / 8) as usize, L::E % 8);
+            for (offset, part) in (u128::from(L::ODD) << bit).to_le_bytes().iter().enumerate() {
+                if *part != 0 {
+                    bytes[byte + offset] = *part;
+                }
+            }
+            bytes
+        };
+        assert!(L::base_decode(&above).is_none(), "{}: p + 1", L::NAME);
+
+        // The spare bits of the top byte: the bits of p stop inside it.
+        let bits = L::E + (64 - L::ODD.leading_zeros());
+        let top_bits = bits - 8 * (len as u32 - 1);
+        assert!(
+            (1..=8).contains(&top_bits),
+            "{}: p fills FP_LEN bytes",
+            L::NAME
+        );
+        // All ones in the bits of p, 2^bits − 1, is above p.
+        let mut ones = vec![0xffu8; len];
+        ones[len - 1] = u8::MAX >> (8 - top_bits);
+        assert!(L::base_decode(&ones).is_none(), "{}: 2^bits − 1", L::NAME);
+
+        // Each bit of the top byte alone, and with every lower byte set.
+        // Some of these are below p and must decode; the rest must not.
+        let mut decoded = 0;
+        let mut refused = 0;
+        for bit in 0..8u8 {
+            for lower in [0x00u8, 0xff] {
+                let mut bytes = vec![lower; len];
+                bytes[len - 1] = 1 << bit;
+                let expect = below(&bytes, &modulus);
+                assert_eq!(
+                    L::base_decode(&bytes).is_some(),
+                    expect,
+                    "{}: top byte {:#04x}, lower bytes {lower:#04x}",
+                    L::NAME,
+                    1u8 << bit
+                );
+                decoded += usize::from(expect);
+                refused += usize::from(!expect);
+            }
+        }
+        assert!(
+            refused > 0,
+            "{}: no top-byte case is at or above p",
+            L::NAME
+        );
+        assert!(decoded > 0, "{}: no top-byte case is below p", L::NAME);
+        // Every value of the top byte with the lower bytes at their largest.
+        for top in 0..=u8::MAX {
+            let mut bytes = vec![0xffu8; len];
+            bytes[len - 1] = top;
+            assert_eq!(
+                L::base_decode(&bytes).is_some(),
+                below(&bytes, &modulus),
+                "{}: top byte {top:#04x} over all ones",
+                L::NAME
+            );
+        }
+
+        // A decoded value encodes to the bytes it came from.
+        let value = L::base_decode(&below_p).expect("p − 1");
+        assert_eq!(L::base_encode(value), below_p, "{}: round trip", L::NAME);
+        assert_eq!(L::base_encode(L::Base::one().negate()), below_p);
+
+        // Any other length is refused, whatever the bytes.
+        for wrong in [0, len - 1, len + 1, len + 7, 2 * len] {
+            assert!(
+                L::base_decode(&vec![0u8; wrong]).is_none(),
+                "{}: {wrong} bytes",
+                L::NAME
+            );
+        }
+
+        // The extension field decodes two such integers: one out of range
+        // in either half refuses the whole.
+        let mut pair = [below_p.clone(), below_p.clone()].concat();
+        let both = L::ext_decode(&pair).expect("both halves below p");
+        assert_eq!(
+            L::ext_encode(both),
+            pair,
+            "{}: extension round trip",
+            L::NAME
+        );
+        pair[..len].copy_from_slice(&modulus);
+        assert!(L::ext_decode(&pair).is_none(), "{}: re = p", L::NAME);
+        let pair = [below_p.clone(), modulus.clone()].concat();
+        assert!(L::ext_decode(&pair).is_none(), "{}: im = p", L::NAME);
+        for wrong in [2 * len - 1, 2 * len + 1, len] {
+            assert!(L::ext_decode(&vec![0u8; wrong]).is_none());
+        }
+    }
+
+    #[test]
+    fn the_decoder_accepts_exactly_the_integers_below_p() {
+        decoding_is_the_integer_order::<P248>();
+        decoding_is_the_integer_order::<P324>();
+        decoding_is_the_integer_order::<P376>();
+        decoding_is_the_integer_order::<P500>();
+    }
+
+    /// The sizes of `p324`, each computed here from `f = 3` and `e = 324`
+    /// and then compared with what the set says. Its field element is the
+    /// first that is not a whole number of 8-byte limbs.
+    #[test]
+    fn p324_has_the_sizes_its_prime_gives() {
+        let (f, e): (u64, u32) = (3, 324);
+        let bits = e + (64 - f.leading_zeros());
+        assert_eq!(bits, 326);
+        let field = bits.div_ceil(8) as usize;
+        assert_eq!(field, 41);
+        assert_ne!(field % 8, 0, "not a whole number of limbs");
+        assert_eq!(bits.div_ceil(64), 6, "six 64-bit limbs");
+        let salt = (e.div_ceil(128) * 128 / 8) as usize;
+        assert_eq!((P324::ODD, P324::E), (f, e));
+        assert_eq!(P324::NAME, "p324");
+        assert_eq!(P324::FP_LEN, field);
+        assert_eq!(P324::FP2_LEN, 2 * field);
+        assert_eq!(P324::PUBLIC_KEY_LEN, 82);
+        assert_eq!(P324::WIDTH_BITS, 384);
+        assert_eq!(P324::SALT_LEN, salt);
+        assert_eq!(P324::SALT_LEN, 48);
+        assert_eq!(P324::SEARCH_BOUND, 384);
+        assert_eq!(P324::SIGNATURE_ELEMENTS, 5);
+        assert_eq!(P324::SIGNATURE_LEN, 5 * 82 + 48);
+        assert_eq!(P324::SIGNATURE_LEN, 458);
+        assert_eq!(P324::CHAIN_STEPS, 322);
+        assert_eq!(P324::CHALLENGE_BITS, 321);
+        assert_eq!(P324::S_LEN, 41);
+        // The top byte of p − 1 is 0x2f: the top limb is 0x2f, with two
+        // spare bits in that byte.
+        let top = modulus_minus_one(f, e, field)[field - 1];
+        assert_eq!(top, 0x2f);
+        // p ≡ 7 (mod 8): p − 1 ends in ...110.
+        assert_eq!(modulus_minus_one(f, e, field)[0] & 7, 6);
+        // The same residue at every set, which the square roots rely on.
+        for (f, e, len) in [(5u64, 248u32, 32usize), (65, 376, 48), (27, 500, 64)] {
+            assert_eq!(modulus_minus_one(f, e, len)[0] & 7, 6);
+        }
+    }
+
     /// The name, the cofactor, the exponent and the limbs of a set agree:
     /// the field's `−1` is `f·2^e − 2`, computed from `f` and `e` without
     /// reading the limb literals.
@@ -635,12 +815,13 @@ mod tests {
     #[test]
     fn every_set_is_the_prime_its_name_and_cofactor_say() {
         the_prime_is::<P248>("p248", 5, 248);
+        the_prime_is::<P324>("p324", 3, 324);
         the_prime_is::<P376>("p376", 65, 376);
         the_prime_is::<P500>("p500", 27, 500);
     }
 
-    /// The committed sizes of the three built sets, and the widths of the
-    /// two ruled exponents that have no type yet. The sizes are the pin.
+    /// The sizes of the sets in the code, and the width of the ruled
+    /// exponent that has no type yet. The sizes are the pin.
     #[test]
     fn the_width_is_e_rounded_up_to_128_bits() {
         fn check<L: ParameterSet>(salt_bytes: usize, candidates: u16) {
@@ -652,10 +833,10 @@ mod tests {
             assert_eq!(width_bits(L::E), rounded);
         }
         check::<P248>(32, 256);
+        check::<P324>(48, 384);
         check::<P376>(48, 384);
         check::<P500>(64, 512);
-        // Ruled, not built. Salt bytes are the width over 8: 48 and 96.
-        assert_eq!(width_bits(324), 384);
+        // Ruled, not built. The salt is the width over 8: 96 bytes.
         assert_eq!(width_bits(664), 768);
     }
 
@@ -734,6 +915,7 @@ mod tests {
             assert!(counter.as_bytes()[8..].iter().all(|byte| *byte == 0));
         }
         check::<P248>();
+        check::<P324>();
         check::<P376>();
         check::<P500>();
     }
