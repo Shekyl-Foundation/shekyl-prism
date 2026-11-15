@@ -448,14 +448,7 @@ mod tests {
         use crate::jac::{add, dbl_iter, Jac};
         use crate::montgomery::Montgomery;
         use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
-
-        // `include!` is relative to this file. `#[path]` would be relative
-        // to the nested module directory, and would not reach the fixture.
-        // The file is shared and this module uses part of it.
-        #[allow(dead_code)]
-        mod curve_table {
-            include!("../../prism-verify/tests/support/curve_table.rs");
-        }
+        use prism_fixtures::{curve_table, p324};
 
         const VECTORS: [&str; 6] = [
             include_str!("../../prism-verify/testdata/s5_lvl1.txt"),
@@ -704,7 +697,7 @@ mod tests {
         /// `P` and `Q` are read by column name, so a reordered file still
         /// hands both loops the basis.
         fn p324_bases() -> Vec<Basis<P324>> {
-            let table = curve_table::p324::table();
+            let table = p324::curve_table();
             let point = |point: curve_table::Point<'_>| {
                 let (x, y) = point.decode::<P324>();
                 Jac {
@@ -713,7 +706,7 @@ mod tests {
                     z: <P324 as ParameterSet>::Ext::one(),
                 }
             };
-            curve_table::p324::BRANCH_CURVES
+            p324::BRANCH_CURVES
                 .into_iter()
                 .map(|(number, square)| {
                     let row = table.curve(number);

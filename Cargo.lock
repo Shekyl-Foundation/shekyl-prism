@@ -100,10 +100,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "prism-fixtures"
+version = "0.1.0"
+dependencies = [
+ "prism-field",
+]
+
+[[package]]
 name = "prism-isogeny"
 version = "0.1.0"
 dependencies = [
  "prism-field",
+ "prism-fixtures",
 ]
 
 [[package]]
@@ -121,6 +129,7 @@ name = "prism-verify"
 version = "0.1.0"
 dependencies = [
  "prism-field",
+ "prism-fixtures",
  "prism-isogeny",
  "sha3",
 ]

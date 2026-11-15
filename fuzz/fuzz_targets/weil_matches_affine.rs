@@ -20,11 +20,6 @@ use prism_isogeny::jac::{add, Jac};
 use prism_isogeny::montgomery::Montgomery;
 use prism_isogeny::pairing::{mul, oracle, weil};
 
-// The file is shared and this target uses part of it.
-#[path = "../../prism-verify/tests/support/curve_table.rs"]
-#[allow(dead_code)]
-mod curve_table;
-
 fn element<L: ParameterSet>(text: &str, name: &str) -> L::Ext {
     let hex = text
         .lines()
@@ -52,8 +47,8 @@ fn committed<L: ParameterSet>(text: &str, order: u8, scalars: &[u8]) {
 /// The square-branch curve of `p324_curves.tsv` and the order-`2^e`
 /// basis Sage built on it. `P` and `Q` are the columns of those names.
 fn sage_basis(order: u8, scalars: &[u8]) {
-    use curve_table::{p324, Point};
-    let row = p324::table().curve(p324::SQUARE_BRANCH_CURVE);
+    use prism_fixtures::{curve_table::Point, p324};
+    let row = p324::curve_table().curve(p324::SQUARE_BRANCH_CURVE);
     let point = |point: Point<'_>| {
         let (x, y) = point.decode::<P324>();
         Jac {

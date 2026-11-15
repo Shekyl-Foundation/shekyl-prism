@@ -17,5 +17,8 @@ oracle = []
 [dependencies]
 prism-field = { workspace = true }
 
+[dev-dependencies]
+prism-fixtures = { workspace = true }
+
 [lints]
 workspace = true

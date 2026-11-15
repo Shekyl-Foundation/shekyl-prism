@@ -3,23 +3,19 @@
 // All rights reserved.
 // BSD-3-Clause
 
-// A Sage curve file, read by column name into typed values.
-//
-// `scripts/sage/p324_fixture.sage` writes one `CURVE` row for each curve,
-// under a header comment that names the columns. That header is the
-// schema. A reader asks for a column by name, so reordering the columns
-// does not move a value onto a different name. A missing name, a repeated
-// name, a row whose width is not the header's, a field that is not hex
-// where hex is due, or a repeated curve, refuses the file.
-//
-// This file is shared by inclusion: the tests of `prism-verify` and its
-// count reporter take it with `#[path]`, the pairing tests of
-// `prism-isogeny` with `include!`, and so does the fuzz crate. It
-// therefore uses nothing but `prism_field`, which every one of them has
-// under that name, and its comments are `//` because an inner doc comment
-// is not legal in the middle of the module that includes it. No includer
-// uses every item, so each allows dead code on its `mod` line.
+//! A Sage curve file, read by column name into typed values.
+//!
+//! `scripts/sage/p324_fixture.sage` writes one `CURVE` row for each curve,
+//! under a header comment that names the columns. That header is the
+//! schema. A reader asks for a column by name, so reordering the columns
+//! does not move a value onto a different name. A missing name, a repeated
+//! name, a row whose width is not the header's, a field that is not hex
+//! where hex is due, or a repeated curve, refuses the file.
+//!
+//! Nothing here is particular to one prime. The file of each prime, and
+//! the curves of it that tests name, are in that prime's module.
 
+use crate::hex;
 use prism_field::ParameterSet;
 
 /// The first field of every data row.
@@ -135,22 +131,16 @@ impl Layout {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CurveNumber(u8);
 
+impl CurveNumber {
+    pub const fn new(number: u8) -> Self {
+        Self(number)
+    }
+}
+
 impl core::fmt::Display for CurveNumber {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         self.0.fmt(f)
     }
-}
-
-/// The bytes a string of hex digits spells, in either case. `None` for
-/// half a byte or for anything that is not a hex digit.
-pub fn hex(text: &str) -> Option<Vec<u8>> {
-    let nibble = |digit: u8| char::from(digit).to_digit(16);
-    let byte = |pair: &[u8]| u8::try_from(nibble(pair[0])? << 4 | nibble(pair[1])?).ok();
-    let pairs = text.as_bytes().chunks_exact(2);
-    if !pairs.remainder().is_empty() {
-        return None;
-    }
-    pairs.map(byte).collect()
 }
 
 /// One element of `F_p²` as the file has it: hex, real part first.
@@ -163,12 +153,12 @@ pub struct Element<'a>(&'a str);
 
 impl<'a> Element<'a> {
     fn new(text: &'a str) -> Option<Self> {
-        hex(text).map(|_| Self(text))
+        hex::decode(text).map(|_| Self(text))
     }
 
     /// The bytes the hex spells, which for a coefficient is a public key.
     pub fn bytes(self) -> Vec<u8> {
-        hex(self.0).expect("checked to be hex when it was read")
+        hex::decode(self.0).expect("checked to be hex when it was read")
     }
 
     /// The element at the set `L`. The file is committed and written by
@@ -312,53 +302,9 @@ impl<'a> CurveTable<'a> {
     }
 }
 
-/// The curve file at `p324`, and the curves of it that tests name.
-///
-/// A curve is named here by what it is used for. What makes it fit for
-/// that use is a property of its coefficient, held by a test and not by
-/// this constant: `p324_curves` holds the branch of each, and
-/// `p324_refusals` holds which coefficients the model check passes.
-pub mod p324 {
-    use super::{CurveNumber, CurveTable};
-
-    /// The file's name, as the count records cite it.
-    pub const FILE: &str = "p324_curves.tsv";
-
-    const TABLE: &str = include_str!("../../testdata/p324_curves.tsv");
-
-    /// How many curves the Sage script walks to.
-    pub const CURVES: usize = 8;
-
-    /// A curve whose coefficient is a square, so the basis search takes
-    /// its square branch.
-    pub const SQUARE_BRANCH_CURVE: CurveNumber = CurveNumber(1);
-
-    /// A curve off the square branch whose coefficient is the permitted
-    /// model of its class, so the verifier takes it as a response curve.
-    pub const MODEL_CURVE: CurveNumber = CurveNumber(7);
-
-    /// A curve whose negated coefficient is the permitted model of its
-    /// class. With [`MODEL_CURVE`] it is all the file has of those.
-    pub const NEGATED_MODEL_CURVE: CurveNumber = CurveNumber(5);
-
-    /// One curve from each branch of the basis search, with whether its
-    /// coefficient is a square.
-    pub const BRANCH_CURVES: [(CurveNumber, bool); 2] =
-        [(SQUARE_BRANCH_CURVE, true), (MODEL_CURVE, false)];
-
-    /// The committed file. It is the Sage script's output, so a file this
-    /// does not read, or one with another number of curves, is a broken
-    /// fixture.
-    pub fn table() -> CurveTable<'static> {
-        let table = CurveTable::parse(TABLE).unwrap_or_else(|reason| panic!("{FILE}: {reason}"));
-        assert_eq!(table.rows().len(), CURVES, "{FILE}");
-        table
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{hex, p324, Column, CurveNumber, CurveTable, Element, Layout};
+    use super::{Column, CurveNumber, CurveTable, Element, Layout};
 
     /// One row's fields in the order of [`Column::ALL`], with a different
     /// value in every hex column.
@@ -399,14 +345,10 @@ mod tests {
     }
 
     #[test]
-    fn hex_is_read_in_either_case_and_only_in_whole_bytes() {
-        assert_eq!(hex("00ff10aB"), Some(vec![0x00, 0xff, 0x10, 0xab]));
-        assert_eq!(hex(""), Some(Vec::new()));
-        assert_eq!(hex("abc"), None, "half a byte");
-        assert_eq!(hex("0g"), None, "not a hex digit");
-        assert_eq!(hex("+1"), None, "a sign is not a hex digit");
+    fn an_element_is_whole_bytes_of_hex() {
         assert_eq!(Element::new("0a").map(Element::bytes), Some(vec![0x0a]));
-        assert_eq!(Element::new("0"), None);
+        assert_eq!(Element::new("0"), None, "half a byte");
+        assert_eq!(Element::new("zz"), None, "not hex");
     }
 
     #[test]
@@ -440,26 +382,7 @@ mod tests {
     }
 
     #[test]
-    fn the_committed_file_is_read_and_has_the_named_curves() {
-        let table = p324::table();
-        let numbers: Vec<String> = table
-            .rows()
-            .iter()
-            .map(|row| row.number.to_string())
-            .collect();
-        assert_eq!(numbers, ["1", "2", "3", "4", "5", "6", "7", "8"]);
-        for (number, square) in p324::BRANCH_CURVES {
-            assert_eq!(
-                table.curve(number).coefficient_is_square,
-                square,
-                "{number}"
-            );
-        }
-        assert_eq!(
-            table.curve(p324::NEGATED_MODEL_CURVE).number.to_string(),
-            "5"
-        );
-        // The schema is the header the committed file has.
-        Layout::read(&format!("# {}\n", header())).expect("the schema names itself");
+    fn the_schema_names_itself() {
+        Layout::read(&format!("# {}\n", header())).expect("a header of every column name");
     }
 }

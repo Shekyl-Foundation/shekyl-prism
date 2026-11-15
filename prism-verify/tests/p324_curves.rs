@@ -15,12 +15,9 @@
 //! tests reach everything the verifier does with a public key and with
 //! points, and nothing that needs an accepted response.
 
-// Shared with other tests, which use other parts of it.
-#[path = "support/curve_table.rs"]
-#[allow(dead_code)]
-mod curve_table;
-
 use prism_field::{Field, ParameterSet, Salt, P324};
+use prism_fixtures::curve_table::{CurveNumber, Point};
+use prism_fixtures::p324;
 use prism_isogeny::jac::Jac;
 use prism_isogeny::montgomery::{Montgomery, Xz};
 use prism_isogeny::pairing::weil;
@@ -32,7 +29,7 @@ type Ext = <Set as ParameterSet>::Ext;
 
 /// One row of the file, at this set.
 struct Curve {
-    number: curve_table::CurveNumber,
+    number: CurveNumber,
     coefficient: Ext,
     key: Vec<u8>,
     index: u16,
@@ -49,7 +46,7 @@ struct Curve {
 }
 
 fn curves() -> Vec<Curve> {
-    let point = |point: curve_table::Point<'_>| {
+    let point = |point: Point<'_>| {
         let (x, y) = point.decode::<Set>();
         Jac {
             x,
@@ -57,7 +54,7 @@ fn curves() -> Vec<Curve> {
             z: <Ext as Field>::one(),
         }
     };
-    curve_table::p324::table()
+    p324::curve_table()
         .rows()
         .iter()
         .map(|row| Curve {
@@ -81,7 +78,7 @@ fn curves() -> Vec<Curve> {
 const MESSAGES_PER_KEY: usize = 2;
 
 fn hex(text: &str) -> Vec<u8> {
-    curve_table::hex(text).expect("hex")
+    prism_fixtures::hex::decode(text).expect("hex")
 }
 
 fn same(left: Ext, right: Ext) -> bool {
@@ -133,9 +130,9 @@ fn the_basis_index_is_the_one_the_search_in_sage_finds() {
     }
     // Both branches of the search are exercised by the file.
     assert!(
-        squares > 0 && squares < curve_table::p324::CURVES,
+        squares > 0 && squares < p324::CURVES,
         "{squares} of {} on the square branch",
-        curve_table::p324::CURVES
+        p324::CURVES
     );
 }
 
@@ -228,7 +225,7 @@ fn the_challenge_scalar_is_the_one_an_independent_script_computes() {
     }
     assert_eq!(
         rows,
-        MESSAGES_PER_KEY * curve_table::p324::CURVES,
+        MESSAGES_PER_KEY * p324::CURVES,
         "every curve as a key, each under the same number of messages"
     );
 }
