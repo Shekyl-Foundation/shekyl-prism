@@ -27,14 +27,19 @@
 //! codomains must agree first, and no response known to be buildable from
 //! public data gets them to).
 
+// Shared with other tests, which use other parts of it.
 #[path = "support/curve_table.rs"]
+#[allow(dead_code)]
 mod curve_table;
 #[path = "support/identity.rs"]
 mod identity;
 #[path = "support/p324_refusal.rs"]
 mod p324_refusal;
 
-use prism_field::{Field, ParameterSet, Salt, P324};
+use curve_table::p324::{MODEL_CURVE, NEGATED_MODEL_CURVE, SQUARE_BRANCH_CURVE};
+use curve_table::{CurveNumber, CurveRow};
+use identity::{first_prime_salt_counter, identity_response, salt_of, Form};
+use prism_field::{Field, ParameterSet, Salt, P248, P324, P376, P500};
 use prism_isogeny::jac::{dbl_iter, Jac};
 use prism_isogeny::montgomery::Montgomery;
 use prism_verify::signature::canonical_sign;
@@ -47,34 +52,35 @@ type Set = P324;
 type Ext = <Set as ParameterSet>::Ext;
 type SaltOf = <Set as ParameterSet>::Salt;
 
-const TABLE: &str = include_str!("../testdata/p324_curves.tsv");
 const MESSAGE: &[u8] = p324_refusal::MESSAGE;
 
-fn hex(text: &str) -> Vec<u8> {
-    (0..text.len())
-        .step_by(2)
-        .map(|i| u8::from_str_radix(&text[i..i + 2], 16).expect("hex"))
-        .collect()
+/// The first salt counter of prime degree under [`MESSAGE`], for each
+/// curve used as a key. Pinned: a change to the hash, the projection or
+/// the primality test moves these numbers. About one degree in ninety is
+/// prime at this size.
+const PRIME_SALT_UNDER_SQUARE_BRANCH_CURVE: u64 = 183;
+const PRIME_SALT_UNDER_MODEL_CURVE: u64 = 24;
+const PRIME_SALT_UNDER_NEGATED_MODEL_CURVE: u64 = 16;
+
+/// How many of the composite salts below the first prime one are run
+/// through the whole verifier. The rest are held composite by the
+/// primality test alone.
+const COMPOSITE_SALTS_VERIFIED: u64 = 8;
+
+/// The field elements of a signature: a curve and four coordinates.
+const SIGNATURE_ELEMENTS: usize = (Set::SIGNATURE_LEN - Set::SALT_LEN) / Set::FP_LEN;
+
+fn curve(number: CurveNumber) -> CurveRow<'static> {
+    curve_table::p324::table().curve(number)
 }
 
-fn element(text: &str) -> Ext {
-    Set::ext_decode(&hex(text)).expect("a canonical element")
+fn coefficient(number: CurveNumber) -> Ext {
+    curve(number).coefficient.decode::<Set>()
 }
 
-fn curves() -> Vec<curve_table::CurveRow<'static>> {
-    curve_table::parse(TABLE).expect("the p324 curve file")
-}
-
-fn curve(number: &str) -> curve_table::CurveRow<'static> {
-    curves()
-        .into_iter()
-        .find(|row| row.number == number)
-        .unwrap_or_else(|| panic!("curve {number}"))
-}
-
-/// The key every test here verifies under: curve 1 of the file.
+/// The key every test here verifies under, unless it says otherwise.
 fn key() -> Vec<u8> {
-    hex(curve("1").coefficient)
+    curve(SQUARE_BRANCH_CURVE).coefficient.bytes()
 }
 
 /// A response whose curve and points are a real curve and a real basis of
@@ -82,28 +88,26 @@ fn key() -> Vec<u8> {
 /// another one of the file, so it has nothing to do with the key.
 ///
 /// Which curves of the file are the permitted model of their class is a
-/// property of each coefficient. [`p324_refusal::CURVE`] is one; the test
-/// below that counts them holds this choice in place.
+/// property of each coefficient. [`MODEL_CURVE`] is one; the test below
+/// that counts them holds this choice in place.
 fn unrelated(salt: SaltOf) -> Response<Set> {
-    let row = curve(p324_refusal::CURVE);
+    let row = curve(MODEL_CURVE);
     // The file gives the points with whichever square root Sage took for
     // each `y`. The verifier wants `y(P)` of the canonical sign, and `−P`
     // is as good a basis point as `P`.
-    let y = element(row.p_y);
+    let (x, y) = row.p.decode::<Set>();
+    let (q_x, q_y) = row.q.decode::<Set>();
     let response = Response::<Set> {
-        curve: element(row.coefficient),
+        curve: row.coefficient.decode::<Set>(),
         p: AffinePoint {
-            x: element(row.p_x),
+            x,
             y: if canonical_sign::<Set>(y) {
                 y
             } else {
                 Field::negate(y)
             },
         },
-        q: AffinePoint {
-            x: element(row.q_x),
-            y: element(row.q_y),
-        },
+        q: AffinePoint { x: q_x, y: q_y },
         salt,
     };
     assert!(canonical_sign::<Set>(response.p.y));
@@ -114,27 +118,13 @@ fn refused(signature: &[u8]) -> Result<(), VerifyError> {
     verify::<Set>(&key(), MESSAGE, signature)
 }
 
-/// The first salt counter whose challenge degree is prime under the key
-/// and message of this file. About one degree in ninety is prime at this
-/// size, so the search is short.
+/// The first salt whose challenge degree is prime under [`key`] and
+/// [`MESSAGE`].
 fn prime_salt() -> SaltOf {
-    let key = key();
-    let identity = KeyIdentity::<Set>::decode(&key).expect("a key");
-    let found = (0..5000u64).find_map(|counter| {
-        let salt = SaltOf::from_counter(counter).expect("a counter salt");
-        ChallengeScalar::derive(&identity, MESSAGE, salt)
-            .degree_is_prime::<Set>()
-            .then_some((counter, salt))
-    });
-    let (counter, salt) = found.expect("a prime degree within 5,000 salts");
-    // Pinned: a change to the hash, the projection or the primality test
-    // moves this number.
-    assert_eq!(counter, PRIME_SALT_COUNTER);
-    salt
+    let counter = first_prime_salt_counter::<Set>(&key(), MESSAGE);
+    assert_eq!(counter, PRIME_SALT_UNDER_SQUARE_BRANCH_CURVE);
+    salt_of::<Set>(counter)
 }
-
-/// See [`prime_salt`].
-const PRIME_SALT_COUNTER: u64 = 183;
 
 /// The affine point of a Jacobian one, with `y` given the canonical sign.
 /// Negating a point keeps its order and its curve.
@@ -156,16 +146,31 @@ fn affine(point: Jac<Ext>) -> AffinePoint<Set> {
 #[test]
 fn a_wrong_length_is_refused_as_length() {
     let good = unrelated(SaltOf::zero()).encode();
-    assert_eq!(good.len(), 458);
-    assert_eq!(key().len(), 82);
-    for length in [0, 81, 83, 64, 96, 128] {
+    assert_eq!(good.len(), Set::SIGNATURE_LEN);
+    assert_eq!(key().len(), Set::PUBLIC_KEY_LEN);
+    // Empty, one byte either side, and the lengths of the other sets.
+    for length in [
+        0,
+        Set::PUBLIC_KEY_LEN - 1,
+        Set::PUBLIC_KEY_LEN + 1,
+        P248::PUBLIC_KEY_LEN,
+        P376::PUBLIC_KEY_LEN,
+        P500::PUBLIC_KEY_LEN,
+    ] {
         assert_eq!(
             verify::<Set>(&vec![1u8; length], MESSAGE, &good),
             Err(VerifyError::Length),
             "a key of {length} bytes"
         );
     }
-    for length in [0, 457, 459, 352, 528, 704] {
+    for length in [
+        0,
+        Set::SIGNATURE_LEN - 1,
+        Set::SIGNATURE_LEN + 1,
+        P248::SIGNATURE_LEN,
+        P376::SIGNATURE_LEN,
+        P500::SIGNATURE_LEN,
+    ] {
         assert_eq!(
             refused(&vec![1u8; length]),
             Err(VerifyError::Length),
@@ -174,7 +179,11 @@ fn a_wrong_length_is_refused_as_length() {
     }
     // Both lengths are checked before either is decoded.
     assert_eq!(
-        verify::<Set>(&[0u8; 82], MESSAGE, &[0u8; 457]),
+        verify::<Set>(
+            &[0u8; Set::PUBLIC_KEY_LEN],
+            MESSAGE,
+            &[0u8; Set::SIGNATURE_LEN - 1]
+        ),
         Err(VerifyError::Length)
     );
     // The same key and signature under another set are that set's wrong
@@ -194,7 +203,7 @@ fn a_field_element_at_or_above_p_is_refused_as_canonical() {
     // The key: each half in turn set to all ones, which is above p.
     for half in 0..2 {
         let mut bytes = key();
-        bytes[41 * half..41 * (half + 1)].fill(0xff);
+        bytes[Set::FP_LEN * half..Set::FP_LEN * (half + 1)].fill(0xff);
         assert_eq!(
             verify::<Set>(&bytes, MESSAGE, &good),
             Err(VerifyError::Canonical),
@@ -202,9 +211,9 @@ fn a_field_element_at_or_above_p_is_refused_as_canonical() {
         );
     }
     // The signature: each of its ten field elements in turn.
-    for index in 0..10 {
+    for index in 0..SIGNATURE_ELEMENTS {
         let mut bytes = good.clone();
-        bytes[41 * index..41 * (index + 1)].fill(0xff);
+        bytes[Set::FP_LEN * index..Set::FP_LEN * (index + 1)].fill(0xff);
         assert_eq!(
             refused(&bytes),
             Err(VerifyError::Canonical),
@@ -226,7 +235,7 @@ fn a_field_element_at_or_above_p_is_refused_as_canonical() {
 fn the_two_forbidden_keys_are_refused() {
     let good = unrelated(SaltOf::zero()).encode();
     assert_eq!(
-        verify::<Set>(&[0u8; 82], MESSAGE, &good),
+        verify::<Set>(&[0u8; Set::PUBLIC_KEY_LEN], MESSAGE, &good),
         Err(VerifyError::Origin)
     );
     // The two square roots of 4.
@@ -251,14 +260,15 @@ fn the_wrong_sign_of_y_is_refused_as_sign() {
 /// Of the two coefficients `A` and `−A` of each curve of the file, at most
 /// one is the permitted model, and for most curves neither is: the least
 /// coefficient of the class is some other Montgomery model. Exactly two of
-/// the sixteen pass, which is what makes curve 7 usable above.
+/// the sixteen pass: [`NEGATED_MODEL_CURVE`] negated and [`MODEL_CURVE`]
+/// itself, which is what makes the latter usable above.
 #[test]
 fn a_curve_that_is_not_the_permitted_model_is_refused_as_model() {
     let mut past_model = Vec::new();
-    for row in curves() {
+    for row in curve_table::p324::table().rows() {
         for negated in [false, true] {
             let mut response = unrelated(SaltOf::zero());
-            let coefficient = element(row.coefficient);
+            let coefficient = row.coefficient.decode::<Set>();
             response.curve = if negated {
                 Field::negate(coefficient)
             } else {
@@ -271,8 +281,10 @@ fn a_curve_that_is_not_the_permitted_model_is_refused_as_model() {
             }
         }
     }
-    // Curve 5 negated, and curve 7 itself: the two permitted models.
-    assert_eq!(past_model, vec![("5", true), ("7", false)]);
+    assert_eq!(
+        past_model,
+        vec![(NEGATED_MODEL_CURVE, true), (MODEL_CURVE, false)]
+    );
     // The starting curve and a singular curve are never a response curve.
     let mut response = unrelated(SaltOf::zero());
     response.curve = <Ext as Field>::zero();
@@ -286,10 +298,10 @@ fn a_composite_challenge_degree_is_refused_as_composite() {
     let key = key();
     let identity = KeyIdentity::<Set>::decode(&key).expect("a key");
     let mut composite = 0;
-    for counter in 0..PRIME_SALT_COUNTER {
-        let salt = SaltOf::from_counter(counter).expect("a counter salt");
+    for counter in 0..PRIME_SALT_UNDER_SQUARE_BRANCH_CURVE {
+        let salt = salt_of::<Set>(counter);
         assert!(!ChallengeScalar::derive(&identity, MESSAGE, salt).degree_is_prime::<Set>());
-        if counter < 8 {
+        if counter < COMPOSITE_SALTS_VERIFIED {
             assert_eq!(
                 refused(&unrelated(salt).encode()),
                 Err(VerifyError::Composite),
@@ -298,7 +310,7 @@ fn a_composite_challenge_degree_is_refused_as_composite() {
         }
         composite += 1;
     }
-    assert_eq!(composite, PRIME_SALT_COUNTER);
+    assert_eq!(composite, PRIME_SALT_UNDER_SQUARE_BRANCH_CURVE);
 }
 
 /// With a prime degree the verifier goes on to the response points. A
@@ -387,9 +399,9 @@ fn a_valid_basis_unrelated_to_the_key_is_refused_at_the_pairing() {
 /// The pairing check is passed with no secret, and what follows it runs at
 /// `p324`.
 ///
-/// The key is curve 7 of the file (and, as a second key, the negation of
-/// curve 5: the two coefficients of the file that are a permitted response
-/// model). The response is on the key's own curve. Its points
+/// The key is [`MODEL_CURVE`] of the file (and, as a second key, the
+/// negation of [`NEGATED_MODEL_CURVE`]: the two coefficients of the file
+/// that are a permitted response model). The response is on the key's own curve. Its points
 /// are the verifier's own basis `(P, Q)` of that key, answered as a pair
 /// whose pairing is the inverse of `e(P, Q)`, which is all the pairing
 /// check asks. The salt is the first counter with a prime degree.
@@ -412,10 +424,12 @@ fn a_valid_basis_unrelated_to_the_key_is_refused_at_the_pairing() {
 /// curve as key.
 #[test]
 fn the_pairing_is_passed_from_public_data_and_the_chains_refuse() {
-    use identity::{identity_response, Form};
-    let coefficients = [
-        (Field::negate(element(curve("5").coefficient)), 16),
-        (element(curve(p324_refusal::CURVE).coefficient), 24),
+    let keys = [
+        (
+            Field::negate(coefficient(NEGATED_MODEL_CURVE)),
+            PRIME_SALT_UNDER_NEGATED_MODEL_CURVE,
+        ),
+        (coefficient(MODEL_CURVE), PRIME_SALT_UNDER_MODEL_CURVE),
     ];
     // The verdict of each form, pinned here by the name it has in the
     // records, and not read from the helper.
@@ -423,40 +437,39 @@ fn the_pairing_is_passed_from_public_data_and_the_chains_refuse() {
         ("identity-response-q-negated", VerifyError::Kernel),
         ("identity-response-q-difference", VerifyError::Codomain),
     ];
-    for (coefficient, pinned) in coefficients {
+    for (coefficient, prime_salt_counter) in keys {
         for (form, (name, refusal)) in Form::ALL.into_iter().zip(verdicts) {
             assert_eq!(form.name(), name);
-            assert_eq!(form.refusal(), [refusal], "{name}");
-            let (key, response, counter) = identity_response::<Set>(coefficient, MESSAGE, form);
-            // Pinned, as `PRIME_SALT_COUNTER` is.
-            assert_eq!(counter, pinned);
-            assert!(Field::same(response.curve, coefficient));
-            assert!(canonical_sign::<Set>(response.p.y));
+            assert_eq!(form.allowed(), [refusal], "{name}");
+            let built = identity_response::<Set>(coefficient, MESSAGE, form);
             assert_eq!(
-                verify::<Set>(&key, MESSAGE, &response.encode()),
+                first_prime_salt_counter::<Set>(&built.key, MESSAGE),
+                prime_salt_counter
+            );
+            assert_eq!(built.response.salt, salt_of::<Set>(prime_salt_counter));
+            assert!(Field::same(built.response.curve, coefficient));
+            assert!(canonical_sign::<Set>(built.response.p.y));
+            assert_eq!(
+                verify::<Set>(&built.key, MESSAGE, &built.response.encode()),
                 Err(refusal),
                 "{name}"
             );
-            let mut failing = response;
+            let mut failing = built.response;
             failing.q.y = Field::negate(failing.q.y);
             assert_eq!(
-                verify::<Set>(&key, MESSAGE, &failing.encode()),
+                verify::<Set>(&built.key, MESSAGE, &failing.encode()),
                 Err(VerifyError::Pairing),
                 "{name} with the second point negated"
             );
         }
     }
-    // The file's own points for curve 7, under that curve as
+    // The file's own points for the model curve, under that curve as
     // key, are the second form up to the sign of the second point.
-    let (key, built, _) = identity_response::<Set>(
-        element(curve(p324_refusal::CURVE).coefficient),
-        MESSAGE,
-        Form::Difference,
-    );
-    let file = unrelated(built.salt);
-    assert!(Field::same(file.p.x, built.p.x) && Field::same(file.q.x, built.q.x));
+    let built = identity_response::<Set>(coefficient(MODEL_CURVE), MESSAGE, Form::Difference);
+    let file = unrelated(built.response.salt);
+    assert!(Field::same(file.p.x, built.response.p.x) && Field::same(file.q.x, built.response.q.x));
     assert_eq!(
-        verify::<Set>(&key, MESSAGE, &file.encode()),
+        verify::<Set>(&built.key, MESSAGE, &file.encode()),
         Err(VerifyError::Codomain)
     );
 }

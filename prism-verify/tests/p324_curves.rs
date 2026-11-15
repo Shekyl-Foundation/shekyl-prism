@@ -15,7 +15,9 @@
 //! tests reach everything the verifier does with a public key and with
 //! points, and nothing that needs an accepted response.
 
+// Shared with other tests, which use other parts of it.
 #[path = "support/curve_table.rs"]
+#[allow(dead_code)]
 mod curve_table;
 
 use prism_field::{Field, ParameterSet, Salt, P324};
@@ -28,23 +30,9 @@ use prism_verify::{basis_hint, ChallengeScalar, KeyIdentity};
 type Set = P324;
 type Ext = <Set as ParameterSet>::Ext;
 
-const TABLE: &str = include_str!("../testdata/p324_curves.tsv");
-
-fn hex(text: &str) -> Vec<u8> {
-    assert_eq!(text.len() % 2, 0, "odd hex length");
-    (0..text.len())
-        .step_by(2)
-        .map(|i| u8::from_str_radix(&text[i..i + 2], 16).expect("hex"))
-        .collect()
-}
-
-fn element(text: &str) -> Ext {
-    Set::ext_decode(&hex(text)).expect("a canonical element")
-}
-
-/// One row of the file.
+/// One row of the file, at this set.
 struct Curve {
-    number: String,
+    number: curve_table::CurveNumber,
     coefficient: Ext,
     key: Vec<u8>,
     index: u16,
@@ -61,31 +49,39 @@ struct Curve {
 }
 
 fn curves() -> Vec<Curve> {
-    let rows = curve_table::parse(TABLE).expect("the p324 curve file");
-    assert_eq!(rows.len(), 8, "eight curves");
-    rows.into_iter()
-        .map(|row| {
-            let point = |x: &str, y: &str| Jac {
-                x: element(x),
-                y: element(y),
-                z: <Ext as Field>::one(),
-            };
-            Curve {
-                number: row.number.to_string(),
-                coefficient: element(row.coefficient),
-                key: hex(row.coefficient),
-                index: row.index,
-                coefficient_is_square: row.coefficient_is_square,
-                full: element(row.order_full_x),
-                without_three: element(row.order_without_three_x),
-                without_a_two: element(row.order_without_two_x),
-                order_three: element(row.order_three_x),
-                p: point(row.p_x, row.p_y),
-                q: point(row.q_x, row.q_y),
-                pairing: element(row.pairing),
-            }
+    let point = |point: curve_table::Point<'_>| {
+        let (x, y) = point.decode::<Set>();
+        Jac {
+            x,
+            y,
+            z: <Ext as Field>::one(),
+        }
+    };
+    curve_table::p324::table()
+        .rows()
+        .iter()
+        .map(|row| Curve {
+            number: row.number,
+            coefficient: row.coefficient.decode::<Set>(),
+            key: row.coefficient.bytes(),
+            index: row.index,
+            coefficient_is_square: row.coefficient_is_square,
+            full: row.order_full_x.decode::<Set>(),
+            without_three: row.order_without_three_x.decode::<Set>(),
+            without_a_two: row.order_without_two_x.decode::<Set>(),
+            order_three: row.order_three_x.decode::<Set>(),
+            p: point(row.p),
+            q: point(row.q),
+            pairing: row.pairing.decode::<Set>(),
         })
         .collect()
+}
+
+/// How many messages `scripts/challenge_scalar.py` hashes under each key.
+const MESSAGES_PER_KEY: usize = 2;
+
+fn hex(text: &str) -> Vec<u8> {
+    curve_table::hex(text).expect("hex")
 }
 
 fn same(left: Ext, right: Ext) -> bool {
@@ -137,8 +133,9 @@ fn the_basis_index_is_the_one_the_search_in_sage_finds() {
     }
     // Both branches of the search are exercised by the file.
     assert!(
-        squares > 0 && squares < 8,
-        "{squares} of 8 on the square branch"
+        squares > 0 && squares < curve_table::p324::CURVES,
+        "{squares} of {} on the square branch",
+        curve_table::p324::CURVES
     );
 }
 
@@ -216,12 +213,22 @@ fn the_challenge_scalar_is_the_one_an_independent_script_computes() {
         let scalar = ChallengeScalar::derive(&identity, &message, salt);
         let bytes = scalar.as_bytes();
         assert_eq!(bytes, hex(fields[3]), "row {rows}");
-        // 321 bits: 41 bytes with one bit in the last, and odd.
+        // 321 bits, in whole bytes with the spare bits of the last clear,
+        // and odd.
         assert_eq!(Set::CHALLENGE_BITS, 321);
-        assert_eq!(bytes.len(), 41);
+        assert_eq!(bytes.len(), Set::CHALLENGE_BITS.div_ceil(8) as usize);
         assert_eq!(bytes[0] & 1, 1, "row {rows}: odd");
-        assert_eq!(bytes[40] >> 1, 0, "row {rows}: 321 bits");
+        let top = bytes.last().expect("a scalar is not empty");
+        assert_eq!(
+            top >> (Set::CHALLENGE_BITS % 8),
+            0,
+            "row {rows}: no bit above the width"
+        );
         rows += 1;
     }
-    assert_eq!(rows, 16, "eight keys, two messages each");
+    assert_eq!(
+        rows,
+        MESSAGES_PER_KEY * curve_table::p324::CURVES,
+        "every curve as a key, each under the same number of messages"
+    );
 }

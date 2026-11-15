@@ -21,7 +21,9 @@
 //! (`ext_*`) or made directly in the base field (`base_*`). Hashing and the
 //! Baillie–PSW test do not use the field and are not in this metric.
 
+// Shared with the tests, which use other parts of it.
 #[path = "../tests/support/curve_table.rs"]
+#[allow(dead_code)]
 mod curve_table;
 #[path = "../tests/support/p324_refusal.rs"]
 mod p324_refusal;
@@ -113,17 +115,7 @@ fn refuse<L: ParameterSet>(path: &Path, text: &str, accepted: Slot) -> Result<()
             other => return Err(format!("{} {}: {other:?}", name(path), case.name)),
         };
         let sum = total(&table);
-        println!(
-            "VERDICT\t{}\t{}\t{}\t{error:?}\t{}\t{}\t{}\t{}\t{}",
-            L::NAME,
-            name(path),
-            case.name,
-            sum.ext.mul,
-            sum.ext.square,
-            sum.ext.inv,
-            sum.ext.sqrt,
-            sum.ext.is_square
-        );
+        println!("{}", verdict_row::<L>(&name(path), &case.name, error, sum));
         if seen.insert(error) {
             let kind = format!(
                 "refuse set={} vector={} case={} error={error:?}",
@@ -184,53 +176,25 @@ fn refuse<L: ParameterSet>(path: &Path, text: &str, accepted: Slot) -> Result<()
 /// `p324` has no honest vector, so no accepted count and no negatives
 /// derived from one. What can be counted is the refusal of a response
 /// built from a public key alone that passes the pairing check
-/// (`tests/support/identity.rs`): the key is [`p324_refusal::CURVE`] of
-/// the Sage file, under [`p324_refusal::MESSAGE`]. The form refused as
+/// (`tests/support/identity.rs`): the key is the model curve of the Sage
+/// file, under [`p324_refusal::MESSAGE`]. The form refused as
 /// `Codomain` is the first measured cost of the chain work at this prime.
 /// It is the cost of a refusal, not of a verification that accepts.
 fn refuse_at_p324() -> Result<(), String> {
-    const FILE: &str = "p324_curves.tsv";
-    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("testdata")
-        .join(FILE);
-    let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
-    let curve_number = p324_refusal::CURVE;
-    let row = curve_table::parse(&text)
-        .map_err(|reason| format!("{FILE}: {reason}"))?
-        .into_iter()
-        .find(|row| row.number == curve_number)
-        .ok_or_else(|| format!("{FILE} has no curve {curve_number}"))?;
-    let hex = row.coefficient;
-    let bytes: Vec<u8> = (0..hex.len())
-        .step_by(2)
-        .map(|i| u8::from_str_radix(&hex[i..i + 2], 16))
-        .collect::<Result<_, _>>()
-        .map_err(|e| e.to_string())?;
-    let coefficient = P324::ext_decode(&bytes).ok_or("the coefficient is not canonical")?;
+    use curve_table::p324::{table, FILE, MODEL_CURVE};
+    let coefficient = table().curve(MODEL_CURVE).coefficient.decode::<P324>();
     let message = p324_refusal::MESSAGE;
+    let vector = format!("{FILE}:{MODEL_CURVE}");
     for form in Form::ALL {
-        let (key, response, _) = identity_response::<P324>(coefficient, message, form);
-        let (verdict, table) = counted::<P324>(&key, message, &response.encode());
+        let built = identity_response::<P324>(coefficient, message, form);
+        let (verdict, table) = counted::<P324>(&built.key, message, &built.response.encode());
         let error = match verdict {
-            Err(e) if form.refusal().contains(&e) => e,
-            other => {
-                return Err(format!(
-                    "{FILE} curve {curve_number} {}: {other:?}",
-                    form.name()
-                ))
-            }
+            Err(e) if form.allowed().contains(&e) => e,
+            other => return Err(format!("{vector} {}: {other:?}", form.name())),
         };
-        let sum = total(&table);
-        let vector = format!("{FILE}:{curve_number}");
         println!(
-            "VERDICT\t{}\t{vector}\t{}\t{error:?}\t{}\t{}\t{}\t{}\t{}",
-            P324::NAME,
-            form.name(),
-            sum.ext.mul,
-            sum.ext.square,
-            sum.ext.inv,
-            sum.ext.sqrt,
-            sum.ext.is_square
+            "{}",
+            verdict_row::<P324>(&vector, form.name(), error, total(&table))
         );
         let kind = format!(
             "refuse set={} vector={vector} case={} error={error:?}",
@@ -240,6 +204,18 @@ fn refuse_at_p324() -> Result<(), String> {
         stages(&kind, &table);
     }
     Ok(())
+}
+/// One row of `negative-verdicts.tsv`: a refusal and its total cost.
+fn verdict_row<L: ParameterSet>(vector: &str, case: &str, error: VerifyError, sum: Slot) -> String {
+    format!(
+        "VERDICT\t{}\t{vector}\t{case}\t{error:?}\t{}\t{}\t{}\t{}\t{}",
+        L::NAME,
+        sum.ext.mul,
+        sum.ext.square,
+        sum.ext.inv,
+        sum.ext.sqrt,
+        sum.ext.is_square
+    )
 }
 fn run() -> Result<(), String> {
     if !ops::ENABLED {

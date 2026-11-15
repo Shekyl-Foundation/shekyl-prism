@@ -20,7 +20,9 @@ use prism_isogeny::jac::{add, Jac};
 use prism_isogeny::montgomery::Montgomery;
 use prism_isogeny::pairing::{mul, oracle, weil};
 
+// The file is shared and this target uses part of it.
 #[path = "../../prism-verify/tests/support/curve_table.rs"]
+#[allow(dead_code)]
 mod curve_table;
 
 fn element<L: ParameterSet>(text: &str, name: &str) -> L::Ext {
@@ -47,33 +49,21 @@ fn committed<L: ParameterSet>(text: &str, order: u8, scalars: &[u8]) {
     pair::<L>(curve, at("Px ", "Py "), at("Qx ", "Qy "), order, scalars);
 }
 
-/// Curve 1 of `p324_curves.tsv` and the order-`2^e` basis on it.
-/// `P` and `Q` are the columns of those names.
+/// The square-branch curve of `p324_curves.tsv` and the order-`2^e`
+/// basis Sage built on it. `P` and `Q` are the columns of those names.
 fn sage_basis(order: u8, scalars: &[u8]) {
-    let table = include_str!("../../prism-verify/testdata/p324_curves.tsv");
-    let rows = curve_table::parse(table).expect("the p324 curve file");
-    let row = rows.iter().find(|row| row.number == "1").expect("curve 1");
-    let decode = |hex: &str| {
-        let bytes: Vec<u8> = hex
-            .as_bytes()
-            .chunks_exact(2)
-            .map(|pair| u8::from_str_radix(core::str::from_utf8(pair).unwrap(), 16).unwrap())
-            .collect();
-        P324::ext_decode(&bytes).expect("a committed element is canonical")
+    use curve_table::{p324, Point};
+    let row = p324::table().curve(p324::SQUARE_BRANCH_CURVE);
+    let point = |point: Point<'_>| {
+        let (x, y) = point.decode::<P324>();
+        Jac {
+            x,
+            y,
+            z: <P324 as ParameterSet>::Ext::one(),
+        }
     };
-    let at = |x: &str, y: &str| Jac {
-        x: decode(x),
-        y: decode(y),
-        z: <P324 as ParameterSet>::Ext::one(),
-    };
-    let curve = Montgomery::normalized(decode(row.coefficient));
-    pair::<P324>(
-        curve,
-        at(row.p_x, row.p_y),
-        at(row.q_x, row.q_y),
-        order,
-        scalars,
-    );
+    let curve = Montgomery::normalized(row.coefficient.decode::<P324>());
+    pair::<P324>(curve, point(row.p), point(row.q), order, scalars);
 }
 
 fn pair<L: ParameterSet>(

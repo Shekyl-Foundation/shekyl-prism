@@ -336,13 +336,13 @@ pub fn negatives<L: ParameterSet>(text: &str) -> Vec<Case> {
     // honest signature taken as a key, and the verifier's own basis of it
     // answered with a pair of inverse pairing. See `identity.rs`.
     for form in identity::Form::ALL {
-        let (key, response, _) = identity::identity_response::<L>(r.curve, &msg, form);
+        let built = identity::identity_response::<L>(r.curve, &msg, form);
         cases.push(Case {
             name: form.name().into(),
-            key,
+            key: built.key,
             message: msg.clone(),
-            signature: response.encode(),
-            allowed: form.refusal(),
+            signature: built.response.encode(),
+            allowed: form.allowed(),
         });
     }
     // The refusals that need no curve arithmetic to produce.

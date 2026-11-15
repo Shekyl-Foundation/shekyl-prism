@@ -451,6 +451,8 @@ mod tests {
 
         // `include!` is relative to this file. `#[path]` would be relative
         // to the nested module directory, and would not reach the fixture.
+        // The file is shared and this module uses part of it.
+        #[allow(dead_code)]
         mod curve_table {
             include!("../../prism-verify/tests/support/curve_table.rs");
         }
@@ -693,57 +695,43 @@ mod tests {
             values
         }
 
-        /// Curves of `p324_curves.tsv` this differential runs. Two, the same
-        /// count as the two committed vectors of each other set. Curve 1 is
-        /// on the square branch of the basis search; curve 7 is off it, and
-        /// it is the curve the refusal tests use. The Weil value on all
-        /// eight curves is checked against Sage in `p324_curves`.
-        const P324_CURVES: [&str; 2] = ["1", "7"];
-
-        /// The named `p324` curves and the order-`2^e` pairs Sage built.
+        /// The `p324` curves this differential runs, with the order-`2^e`
+        /// pair Sage built on each: one curve from each branch of the basis
+        /// search, the same count as the two committed vectors of each
+        /// other set. The Weil value on all eight curves is checked
+        /// against Sage in `p324_curves`.
+        ///
         /// `P` and `Q` are read by column name, so a reordered file still
         /// hands both loops the basis.
         fn p324_bases() -> Vec<Basis<P324>> {
-            let table = include_str!("../../prism-verify/testdata/p324_curves.tsv");
-            let rows = curve_table::parse(table).expect("the p324 curve file");
-            let decode = |hex: &str| {
-                let bytes: Vec<u8> = hex
-                    .as_bytes()
-                    .chunks_exact(2)
-                    .map(|pair| {
-                        u8::from_str_radix(core::str::from_utf8(pair).unwrap(), 16).unwrap()
-                    })
-                    .collect();
-                P324::ext_decode(&bytes).expect("a committed element is canonical")
+            let table = curve_table::p324::table();
+            let point = |point: curve_table::Point<'_>| {
+                let (x, y) = point.decode::<P324>();
+                Jac {
+                    x,
+                    y,
+                    z: <P324 as ParameterSet>::Ext::one(),
+                }
             };
-            let point = |x: &str, y: &str| Jac {
-                x: decode(x),
-                y: decode(y),
-                z: <P324 as ParameterSet>::Ext::one(),
-            };
-            P324_CURVES
+            curve_table::p324::BRANCH_CURVES
                 .into_iter()
-                .map(|number| {
-                    let row = rows
-                        .iter()
-                        .find(|row| row.number == number)
-                        .unwrap_or_else(|| panic!("curve {number}"));
+                .map(|(number, square)| {
+                    let row = table.curve(number);
                     assert_eq!(
-                        row.coefficient_is_square,
-                        number == "1",
+                        row.coefficient_is_square, square,
                         "curve {number} changed branch"
                     );
                     (
-                        Montgomery::normalized(decode(row.coefficient)),
-                        point(row.p_x, row.p_y),
-                        point(row.q_x, row.q_y),
+                        Montgomery::normalized(row.coefficient.decode::<P324>()),
+                        point(row.p),
+                        point(row.q),
                     )
                 })
                 .collect()
         }
 
-        /// Run `on` at one basis per committed vector, and at the two
-        /// `p324` curves named by [`P324_CURVES`]. The six committed
+        /// Run `on` at one basis per committed vector, and at the `p324`
+        /// curves of [`p324_bases`]. The six committed
         /// vectors keep the numbers they always had. Every set is named
         /// here: adding one means adding its line, and none is reached by
         /// a default.
@@ -759,8 +747,8 @@ mod tests {
             on376(3, basis::<P376>(VECTORS[3]));
             on500(4, basis::<P500>(VECTORS[4]));
             on500(5, basis::<P500>(VECTORS[5]));
-            for (n, basis) in p324_bases().into_iter().enumerate() {
-                on324(6 + n as u64, basis);
+            for (number, basis) in (VECTORS.len() as u64..).zip(p324_bases()) {
+                on324(number, basis);
             }
         }
 

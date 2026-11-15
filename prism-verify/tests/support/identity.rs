@@ -47,9 +47,10 @@ impl Form {
         }
     }
 
-    /// The refusal this form meets, at every set and on every curve tried.
+    /// The one refusal this form may meet, as a case of the negatives
+    /// lists what it allows. It is the same at every set and curve tried.
     /// Both lie past the pairing check.
-    pub fn refusal(self) -> &'static [VerifyError] {
+    pub fn allowed(self) -> &'static [VerifyError] {
         match self {
             Self::NegatedQ => &[VerifyError::Kernel],
             Self::Difference => &[VerifyError::Codomain],
@@ -57,9 +58,38 @@ impl Form {
     }
 }
 
-/// The key, the response on the key's own curve in the given form, and the
-/// counter of the salt: the first counter whose challenge degree is prime
-/// under this key and message.
+/// How many salt counters a search for a prime degree tries. About one
+/// degree in a hundred is prime at these sizes, so a search that reaches
+/// this has found a broken hash or a broken primality test.
+const SALT_COUNTERS: u64 = 65_536;
+
+/// The first salt counter whose challenge degree is prime under `key` and
+/// `message`. Anyone can run this search: it needs the key, not a secret.
+pub fn first_prime_salt_counter<L: ParameterSet>(key: &[u8], message: &[u8]) -> u64 {
+    let identity = KeyIdentity::<L>::decode(key).expect("a key");
+    (0..SALT_COUNTERS)
+        .find(|&counter| {
+            ChallengeScalar::derive(&identity, message, salt_of::<L>(counter))
+                .degree_is_prime::<L>()
+        })
+        .unwrap_or_else(|| panic!("no prime degree within {SALT_COUNTERS} salts"))
+}
+
+/// The salt that encodes `counter`.
+pub fn salt_of<L: ParameterSet>(counter: u64) -> L::Salt {
+    L::Salt::from_counter(counter).expect("a counter fits every salt")
+}
+
+/// A response that passes the pairing check, built from a key alone.
+pub struct IdentityResponse<L: ParameterSet> {
+    /// The public key: the encoding of the coefficient.
+    pub key: Vec<u8>,
+    /// On the key's own curve, with the salt of
+    /// [`first_prime_salt_counter`].
+    pub response: Response<L>,
+}
+
+/// The response of the given form under `coefficient` as a key.
 ///
 /// `coefficient` must be a curve the verifier takes both as a key and as a
 /// response curve: not the starting curve, not singular, the permitted
@@ -70,7 +100,7 @@ pub fn identity_response<L: ParameterSet>(
     coefficient: L::Ext,
     message: &[u8],
     form: Form,
-) -> (Vec<u8>, Response<L>, u64) {
+) -> IdentityResponse<L> {
     let key = L::ext_encode(coefficient);
     let hint = basis_hint::<L>(coefficient).expect("a basis index inside the bound");
     let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
@@ -108,20 +138,14 @@ pub fn identity_response<L: ParameterSet>(
         p.y = p.y.negate();
         q.y = q.y.negate();
     }
-    let identity = KeyIdentity::<L>::decode(&key).expect("a key");
-    let (counter, salt) = (0u64..65_536)
-        .find_map(|counter| {
-            let salt = L::Salt::from_counter(counter).expect("a counter salt");
-            ChallengeScalar::derive(&identity, message, salt)
-                .degree_is_prime::<L>()
-                .then_some((counter, salt))
-        })
-        .expect("a prime degree within 65,536 salts");
-    let response = Response {
-        curve: coefficient,
-        p,
-        q,
-        salt,
-    };
-    (key, response, counter)
+    let salt = salt_of::<L>(first_prime_salt_counter::<L>(&key, message));
+    IdentityResponse {
+        key,
+        response: Response {
+            curve: coefficient,
+            p,
+            q,
+            salt,
+        },
+    }
 }
