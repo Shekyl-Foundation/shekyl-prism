@@ -75,7 +75,8 @@ fn show<L: ParameterSet>(hex: &str) -> ExitCode {
         eprintln!("no even basis");
         return ExitCode::FAILURE;
     };
-    let Some(rejected) = mul_odd_then_double::<L>(coefficient, even.full_difference, L::ODD, 0)
+    let Some(rejected) =
+        mul_odd_then_double::<L>(coefficient, even.full_difference, L::COFACTOR.value(), 0)
     else {
         eprintln!("no cleared image of the uncleared difference");
         return ExitCode::FAILURE;

@@ -87,7 +87,7 @@ impl Stream {
 /// `p = f·2^e − 1` has `e` bits plus the bits of `f`, since `f·2^e` is not
 /// a power of two for an odd `f > 1`.
 fn bits_of_p() -> u32 {
-    Set::E + (64 - Set::ODD.leading_zeros())
+    Set::E + Set::COFACTOR.bits()
 }
 
 fn ext(re: Base, im: Base) -> Ext {

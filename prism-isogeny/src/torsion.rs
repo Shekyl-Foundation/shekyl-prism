@@ -16,7 +16,7 @@
 //! difference of the uncleared points is a different point on about half
 //! of keys, and it is not the C basis.
 
-use prism_field::{Field, ParameterSet, MAX_ODD_PRIMES};
+use prism_field::{Cofactor, Field, ParameterSet};
 
 use crate::jac::xdbl_iter;
 use crate::montgomery::{a24, ladder, Montgomery, Xz};
@@ -115,8 +115,9 @@ pub fn difference<L: ParameterSet>(
 
 fn clear_cofactor<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::Ext>) -> Option<Xz<L::Ext>> {
     let constant = a24(coefficient)?;
-    let width = usize::try_from(64 - L::ODD.leading_zeros()).unwrap_or(0);
-    let bits = (0..width).rev().map(|shift| (L::ODD >> shift) & 1 == 1);
+    let bits = (0..L::COFACTOR.bits())
+        .rev()
+        .map(|shift| (L::COFACTOR.value() >> shift) & 1 == 1);
     Some(ladder(constant, bits, point))
 }
 
@@ -173,42 +174,23 @@ fn same_x<F: Field>(left: Xz<F>, right: Xz<F>) -> bool {
     left.x.mul(right.z).same(right.x.mul(left.z))
 }
 
-/// `L::ODD_PRIMES` when this search can check every prime in it.
-///
-/// `None` when the list is empty, longer than [`MAX_ODD_PRIMES`], or
-/// contains anything other than an odd divisor of `f`. Primality of each
-/// entry is the parameter set's compile-time check. A caller that skipped
-/// the tail, or an empty list, would report a point of too small an order
-/// as full order.
-fn odd_primes_to_check<L: ParameterSet>() -> Option<&'static [u64]> {
-    primes_held(L::ODD, L::ODD_PRIMES).then_some(L::ODD_PRIMES)
-}
-
-/// Whether `primes` is a list this search can check against `odd`.
-fn primes_held(odd: u64, primes: &[u64]) -> bool {
-    odd != 0
-        && !primes.is_empty()
-        && primes.len() <= MAX_ODD_PRIMES
-        && primes
-            .iter()
-            .all(|&prime| prime > 1 && prime % 2 == 1 && odd.is_multiple_of(prime))
-}
-
 /// `[p+1]X = O`, and `[(p+1)/ℓ]X ≠ O` for `ℓ = 2` and every prime divisor of `f`.
 pub fn has_order_p_plus_one<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
-    let Some(primes) = odd_primes_to_check::<L>() else {
-        return false;
-    };
+    let f = L::COFACTOR.value();
     let killed = |odd, doubles| {
         mul_odd_then_double::<L>(coefficient, point, odd, doubles).is_some_and(is_infinity)
     };
-    if !killed(L::ODD, L::E) {
+    if !killed(f, L::E) {
         return false;
     }
-    if killed(L::ODD, L::E - 1) {
+    if killed(f, L::E - 1) {
         return false;
     }
-    primes.iter().all(|&prime| !killed(L::ODD / prime, L::E))
+    // Every prime of `f`, and no other: that is what a `Cofactor` is.
+    L::COFACTOR
+        .odd_primes()
+        .iter()
+        .all(|&prime| !killed(f / prime, L::E))
 }
 
 /// `[2^{e−1}]` of two order-`2^e` points are distinct and nonzero.
@@ -258,7 +240,7 @@ struct OddImage<F: Field> {
 /// The images of `R` and `T` in `E[f]` generate `E[f]`.
 ///
 /// `E[f]` splits into prime-power factors, one for each prime in
-/// [`ParameterSet::ODD_PRIMES`]. Two elements generate `(Z/p^k)^2` when
+/// [`Cofactor::odd_primes`]. Two elements generate `(Z/p^k)^2` when
 /// their images generate `(Z/p)^2`, and two elements generate `(Z/q)^2`
 /// for a prime `q` when neither is a scalar multiple of the other. A
 /// scalar and its negative have the same x-coordinate, so the multiples
@@ -268,20 +250,21 @@ pub fn odd_parts_generate<L: ParameterSet>(
     r: Xz<L::Ext>,
     t: Xz<L::Ext>,
 ) -> bool {
-    // A list this search cannot hold refuses before any field operation.
-    // The alternative is to ignore a prime and report that the points generate.
-    let Some(primes) = odd_primes_to_check::<L>() else {
-        return false;
-    };
+    let primes = L::COFACTOR.odd_primes();
     let u = double_times::<L>(coefficient, r, L::E);
     let v = double_times::<L>(coefficient, t, L::E);
     // The image of each point in `E[q]`, for each prime `q` of `f`:
     // multiplying by `f/q` kills the other primes and leaves order `q`.
     // Every projection that succeeds is made before any is compared. A
     // projection that fails refuses immediately.
-    let mut images: [Option<OddImage<L::Ext>>; MAX_ODD_PRIMES] = [None; MAX_ODD_PRIMES];
+    //
+    // One slot for each prime a cofactor can have. A `Cofactor` never has
+    // more, so indexing by position reaches every prime, and a list too
+    // long to hold cannot be built to get here.
+    let mut images: [Option<OddImage<L::Ext>>; Cofactor::MAX_ODD_PRIMES] =
+        [None; Cofactor::MAX_ODD_PRIMES];
     for (index, &prime) in primes.iter().enumerate() {
-        let rest = L::ODD / prime;
+        let rest = L::COFACTOR.value() / prime;
         let project = |point| {
             if rest == 1 {
                 Some(point)
@@ -297,8 +280,8 @@ pub fn odd_parts_generate<L: ParameterSet>(
         };
         images[index] = Some(OddImage { left, right, prime });
     }
-    // `primes.len()` is at most [`MAX_ODD_PRIMES`], and that prefix was
-    // filled above. A hole refuses: it is not a prime that was checked.
+    // The prefix of `primes.len()` slots was filled above. A hole refuses:
+    // it is not a prime that was checked.
     images[..primes.len()].iter().all(|image| {
         image.as_ref().is_some_and(|image| {
             prime_field_basis::<L>(coefficient, image.left, image.right, image.prime)
@@ -493,8 +476,8 @@ mod tests {
                 "{}: [2]R passed for full order",
                 L::NAME
             );
-            assert!(!L::ODD_PRIMES.is_empty(), "{}", L::NAME);
-            for &prime in L::ODD_PRIMES {
+            assert!(!L::COFACTOR.odd_primes().is_empty(), "{}", L::NAME);
+            for &prime in L::COFACTOR.odd_primes() {
                 let reduced =
                     mul_odd_then_double::<L>(coefficient, point, prime, 0).expect(L::NAME);
                 assert!(
@@ -524,32 +507,6 @@ mod tests {
         only_the_full_point_is_full_order::<P324>();
         only_the_full_point_is_full_order::<P376>();
         only_the_full_point_is_full_order::<P500>();
-    }
-
-    /// The gate in front of both order checks. A list that fails it is
-    /// refused whole. Nothing here drops a prime and continues.
-    #[test]
-    fn a_prime_list_the_search_cannot_hold_is_refused() {
-        let held = super::primes_held;
-        assert!(held(5, &[5]));
-        assert!(held(3, &[3]));
-        assert!(held(65, &[5, 13]));
-        assert!(held(27, &[3]));
-        assert!(held(3 * 5 * 7 * 11, &[3, 5, 7, 11]), "four primes fit");
-        assert!(!held(3, &[]), "an empty list checks nothing");
-        assert!(
-            !held(3 * 5 * 7 * 11 * 13, &[3, 5, 7, 11, 13]),
-            "a fifth prime is not dropped"
-        );
-        assert!(!held(0, &[3]), "a zero cofactor");
-        assert!(!held(3, &[0]), "zero is not a prime");
-        assert!(!held(3, &[1]), "one is not a prime");
-        assert!(!held(6, &[2]), "two is not an odd prime");
-        assert!(!held(3, &[5]), "a prime that does not divide");
-        assert_eq!(super::odd_primes_to_check::<P248>(), Some(&[5][..]));
-        assert_eq!(super::odd_primes_to_check::<P324>(), Some(&[3][..]));
-        assert_eq!(super::odd_primes_to_check::<P376>(), Some(&[5, 13][..]));
-        assert_eq!(super::odd_primes_to_check::<P500>(), Some(&[3][..]));
     }
 
     #[test]
