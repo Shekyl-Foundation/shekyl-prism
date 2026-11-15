@@ -728,33 +728,30 @@ mod tests {
                 .collect()
         }
 
-        /// Run `on` at one basis per committed vector, and at the curves of
-        /// [`sage_bases`] for each set without a corpus. The six committed
+        /// Run `$check` at one basis per committed vector, and at the curves
+        /// of [`sage_bases`] for each set without a corpus. The six committed
         /// vectors keep the numbers they always had. Every set is named
         /// here: adding one means adding its line, and none is reached by
-        /// a default.
-        fn every_basis(
-            on248: impl Fn(u64, Basis<P248>),
-            on324: impl Fn(u64, Basis<P324>),
-            on376: impl Fn(u64, Basis<P376>),
-            on500: impl Fn(u64, Basis<P500>),
-            on664: impl Fn(u64, Basis<P664>),
-        ) {
-            on248(0, basis::<P248>(VECTORS[0]));
-            on248(1, basis::<P248>(VECTORS[1]));
-            on376(2, basis::<P376>(VECTORS[2]));
-            on376(3, basis::<P376>(VECTORS[3]));
-            on500(4, basis::<P500>(VECTORS[4]));
-            on500(5, basis::<P500>(VECTORS[5]));
-            // The sets without a corpus follow, each basis with the next
-            // number, so no two bases share one.
-            let mut numbers = VECTORS.len() as u64..;
-            for (basis, number) in sage_bases::<P324>().into_iter().zip(&mut numbers) {
-                on324(number, basis);
-            }
-            for (basis, number) in sage_bases::<P664>().into_iter().zip(&mut numbers) {
-                on664(number, basis);
-            }
+        /// a default. `$check` is one generic function; the macro is what
+        /// lets each basis keep its own type.
+        macro_rules! every_basis {
+            ($check:ident) => {{
+                $check::<P248>(0, basis::<P248>(VECTORS[0]));
+                $check::<P248>(1, basis::<P248>(VECTORS[1]));
+                $check::<P376>(2, basis::<P376>(VECTORS[2]));
+                $check::<P376>(3, basis::<P376>(VECTORS[3]));
+                $check::<P500>(4, basis::<P500>(VECTORS[4]));
+                $check::<P500>(5, basis::<P500>(VECTORS[5]));
+                // The sets without a corpus follow, each basis with the next
+                // number, so no two bases share one.
+                let mut numbers = VECTORS.len() as u64..;
+                for (basis, number) in sage_bases::<P324>().into_iter().zip(&mut numbers) {
+                    $check::<P324>(number, basis);
+                }
+                for (basis, number) in sage_bases::<P664>().into_iter().zip(&mut numbers) {
+                    $check::<P664>(number, basis);
+                }
+            }};
         }
 
         #[test]
@@ -765,13 +762,7 @@ mod tests {
                 let values = adversarial::<L>(basis, 0x5052_4953_4d00_0000 + n);
                 assert!(values >= 1, "basis {n}: the basis itself was refused");
             }
-            every_basis(
-                check::<P248>,
-                check::<P324>,
-                check::<P376>,
-                check::<P500>,
-                check::<P664>,
-            );
+            every_basis!(check);
         }
 
         #[test]
@@ -779,13 +770,7 @@ mod tests {
             fn check<L: ParameterSet>(n: u64, basis: Basis<L>) {
                 random::<L>(basis, 11 + n, 8);
             }
-            every_basis(
-                check::<P248>,
-                check::<P324>,
-                check::<P376>,
-                check::<P500>,
-                check::<P664>,
-            );
+            every_basis!(check);
         }
 
         /// 1,000 full-order pairs and 250 unconstrained ones per set.
@@ -796,13 +781,7 @@ mod tests {
             fn check<L: ParameterSet>(n: u64, basis: Basis<L>) {
                 random::<L>(basis, 1000 + n, 500);
             }
-            every_basis(
-                check::<P248>,
-                check::<P324>,
-                check::<P376>,
-                check::<P500>,
-                check::<P664>,
-            );
+            every_basis!(check);
         }
     }
 }
