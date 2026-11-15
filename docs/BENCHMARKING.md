@@ -244,7 +244,8 @@ additions, subtractions, base-field work and everything outside the field.
 `sh scripts/peak_heap.sh` runs the `verify_once` example under Valgrind's
 Massif on the six primary vectors: once decoding the vector only, once
 verifying it, with the heap measured to the byte, and once more with the
-stack sampled. On the x86_64 development machine, at `db84af6` and, with
+stack sampled. (The script also measures a refusal at every set;
+that is the next subsection.) On the x86_64 development machine, at `db84af6` and, with
 the script and example copied in, at `c9df786`; record in
 [benchmarks/peak_heap_x86_64_2026-11-14.txt](benchmarks/peak_heap_x86_64_2026-11-14.txt).
 The two vectors of a level give the same bytes for each of the three
@@ -274,6 +275,42 @@ did, so the net addition from the chains is 119,040 bytes beside the
 tables' 190,464. Both are still held when the second chain is at its
 largest. The largest part was there before and is the chains' own, and
 the tables are the smallest.
+
+#### The same for a refusal, at all five sets
+
+`p324` and `p664` have no accepted verification to measure. What can be
+measured at them is the refusal the count records call
+`identity-response-q-difference`: a response built from a public key
+alone that passes the pairing check, runs both chains and is refused as
+`Codomain`. `verify_once` builds it (`build`) and verifies it
+(`refuse`), and the script measures that pair the same way. So that the
+figure has something beside it, the same refusal is measured at the six
+primary vectors, under each signature's response curve as the key. At
+`33af013`, on the x86_64 development machine; record in
+[benchmarks/peak_heap_x86_64_2026-11-15.txt](benchmarks/peak_heap_x86_64_2026-11-15.txt).
+
+Table: peak heap of one `Codomain` refusal, in bytes. It is a refusal, not an accepted verification.
+
+| | `p248` | `p324` | `p376` | `p500` | `p664` |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| peak heap | 1,107,210 | 2,857,683 | 2,995,710 | 4,441,774 | 10,511,473 |
+| allocated under `DualChain::new` | 663,616 | 1,986,688 | 1,986,688 | 2,646,144 | 7,248,000 |
+| allocated under `invert_coords` | 250,112 | 491,904 | 571,776 | 1,016,320 | 1,859,264 |
+| allocated under `Doublings::new` | 190,464 | 377,856 | 433,152 | 774,144 | 1,402,368 |
+| heap held before verifying | 3,195 | 13,697 | 4,367 | 5,535 | 24,797 |
+| largest stack sample | 90,512 | 131,928 | 133,624 | 174,888 | 237,608 |
+
+At the three sets with vectors the refusal's peak is the accepted
+verification's to the byte, and under the same three holders: both
+reach their peak in the chain work they share. The
+accepted figures at this commit are the ones of the table above (the
+stack samples differ by a few kilobytes between runs). `p664` holds
+about 10.5 MB, 2.4 times `p500`: the chains are a third longer and each
+field element is 84 bytes in eleven limbs where `p500`'s is 64 in eight.
+Four at once would be about 42 MB by the same arithmetic as below, which
+is again not a measurement. The heap held before verifying is larger at
+the two sets without vectors because the example reads the Sage curve
+file there, not because the response is larger.
 
 All of this is held in vectors owned by values local to one call of
 `verify`, so it is freed when the call returns and nothing is shared
