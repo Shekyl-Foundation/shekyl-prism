@@ -120,7 +120,7 @@ pub fn base_change_theta<F: Field>(matrix: [[u8; 4]; 4], zeta: F) -> Option<[[F;
 #[cfg(test)]
 mod tests {
     use super::{base_change_theta, nonvanishing};
-    use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
+    use prism_field::{Field, ParameterSet, P248, P324, P376, P500, P664};
 
     fn digits<L: ParameterSet>(text: &str, negative: bool) -> L::Base {
         let mut bytes = vec![0u8; L::FP_LEN];
@@ -344,6 +344,7 @@ mod tests {
         succeeds_for_every_matrix::<P324>();
         succeeds_for_every_matrix::<P376>();
         succeeds_for_every_matrix::<P500>();
+        succeeds_for_every_matrix::<P664>();
     }
 
     /// Named cases of the test above, through the public function: the
@@ -405,5 +406,6 @@ mod tests {
         fails_only_at_a_root_of_minus_three::<P324>();
         fails_only_at_a_root_of_minus_three::<P376>();
         fails_only_at_a_root_of_minus_three::<P500>();
+        fails_only_at_a_root_of_minus_three::<P664>();
     }
 }

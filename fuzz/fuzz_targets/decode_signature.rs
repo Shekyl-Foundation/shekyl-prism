@@ -8,7 +8,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use prism_field::{P248, P324, P376, P500};
+use prism_field::{P248, P324, P376, P500, P664};
 use prism_verify::Response;
 
 fuzz_target!(|data: &[u8]| {
@@ -16,4 +16,5 @@ fuzz_target!(|data: &[u8]| {
     let _ = Response::<P324>::decode(data);
     let _ = Response::<P376>::decode(data);
     let _ = Response::<P500>::decode(data);
+    let _ = Response::<P664>::decode(data);
 });

@@ -36,7 +36,7 @@
 mod identity;
 
 use identity::{first_prime_salt_counter, identity_response, salt_of, Form};
-use prism_field::{Field, ParameterSet, Salt, P248, P324, P376, P500};
+use prism_field::{Field, ParameterSet, Salt, P248, P324, P376, P500, P664};
 use prism_fixtures::curve_table::{CurveNumber, CurveRow};
 use prism_fixtures::no_corpus::{curve_table, Model, WithoutCorpus};
 use prism_isogeny::jac::{dbl_iter, Jac};
@@ -526,6 +526,7 @@ fn other_sets<L: ParameterSet>() -> Vec<OtherSet> {
         entry::<P324>(AnySet::P324),
         entry::<P376>(AnySet::P376),
         entry::<P500>(AnySet::P500),
+        entry::<P664>(AnySet::P664),
     ];
     assert_eq!(all.len(), AnySet::ALL.len());
     all.into_iter()

@@ -29,7 +29,7 @@
 use core::fmt;
 use core::str::FromStr;
 
-use prism_field::{ParameterSet, P248, P324, P376, P500};
+use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
 
 use crate::{verify, VerifyError};
 
@@ -63,11 +63,12 @@ pub enum Set {
     P324,
     P376,
     P500,
+    P664,
 }
 
 impl Set {
     /// Every set, by increasing prime.
-    pub const ALL: [Self; 4] = [Self::P248, Self::P324, Self::P376, Self::P500];
+    pub const ALL: [Self; 5] = [Self::P248, Self::P324, Self::P376, Self::P500, Self::P664];
 
     /// The set's name: [`ParameterSet::NAME`].
     pub fn name(self) -> &'static str {
@@ -76,6 +77,7 @@ impl Set {
             Self::P324 => P324::NAME,
             Self::P376 => P376::NAME,
             Self::P500 => P500::NAME,
+            Self::P664 => P664::NAME,
         }
     }
 
@@ -87,6 +89,7 @@ impl Set {
             Self::P324 => Err(NoCorpus(self)),
             Self::P376 => Ok(CommittedSet::P376),
             Self::P500 => Ok(CommittedSet::P500),
+            Self::P664 => Err(NoCorpus(self)),
         }
     }
 
@@ -97,6 +100,7 @@ impl Set {
             Self::P324 => P324::SALT_LEN,
             Self::P376 => P376::SALT_LEN,
             Self::P500 => P500::SALT_LEN,
+            Self::P664 => P664::SALT_LEN,
         }
     }
 }
@@ -242,5 +246,6 @@ pub fn verify_set(
         Set::P324 => verify::<P324>(public_key, message, signature),
         Set::P376 => verify::<P376>(public_key, message, signature),
         Set::P500 => verify::<P500>(public_key, message, signature),
+        Set::P664 => verify::<P664>(public_key, message, signature),
     }
 }

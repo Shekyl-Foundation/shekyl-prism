@@ -16,7 +16,7 @@ use prism_verify::Set;
 use std::env;
 use std::process::ExitCode;
 
-use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
+use prism_field::{Field, ParameterSet, P248, P324, P376, P500, P664};
 use prism_isogeny::torsion::{even_basis, mul_odd_then_double};
 use prism_verify::basis::basis_hint;
 use prism_verify::Committed;
@@ -42,6 +42,7 @@ fn main() -> ExitCode {
             Ok(Set::P324) => sample::<P324>(count, P324::NAME),
             Ok(Set::P376) => sample::<P376>(count, P376::LABEL),
             Ok(Set::P500) => sample::<P500>(count, P500::LABEL),
+            Ok(Set::P664) => sample::<P664>(count, P664::NAME),
             Err(_) => ExitCode::from(2),
         };
     }
@@ -53,6 +54,7 @@ fn main() -> ExitCode {
         Ok(Set::P324) => show::<P324>(&coefficient),
         Ok(Set::P376) => show::<P376>(&coefficient),
         Ok(Set::P500) => show::<P500>(&coefficient),
+        Ok(Set::P664) => show::<P664>(&coefficient),
         Err(_) => ExitCode::from(2),
     }
 }

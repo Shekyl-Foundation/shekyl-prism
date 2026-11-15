@@ -369,7 +369,7 @@ pub(crate) fn check<L: ParameterSet>(
 mod tests {
     use super::*;
     use crate::{basis_hint, ChallengeScalar, KeyIdentity, Salt};
-    use prism_field::{P248, P324, P376, P500};
+    use prism_field::{P248, P324, P376, P500, P664};
     use prism_isogeny::{
         theta::{projectively_same, ThetaPoint},
         torsion::even_basis,
@@ -716,5 +716,6 @@ mod tests {
         every_reachable_base_change_exists::<P324>();
         every_reachable_base_change_exists::<P376>();
         every_reachable_base_change_exists::<P500>();
+        every_reachable_base_change_exists::<P664>();
     }
 }

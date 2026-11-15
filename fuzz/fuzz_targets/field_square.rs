@@ -12,7 +12,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
+use prism_field::{Field, ParameterSet, P248, P324, P376, P500, P664};
 
 fn set<L: ParameterSet>(data: &[u8]) {
     for chunk in data.chunks_exact(L::FP2_LEN) {
@@ -34,4 +34,5 @@ fuzz_target!(|data: &[u8]| {
     set::<P324>(data);
     set::<P376>(data);
     set::<P500>(data);
+    set::<P664>(data);
 });

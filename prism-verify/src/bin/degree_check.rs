@@ -16,7 +16,7 @@
 use std::io::{self, BufRead, Write};
 use std::process::ExitCode;
 
-use prism_field::{ParameterSet, P248, P324, P376, P500};
+use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
 use prism_verify::{degree_is_prime, Set};
 
 fn main() -> ExitCode {
@@ -78,6 +78,7 @@ fn judge(line: &str) -> Result<&'static str, String> {
         Set::P324 => at::<P324>(exponent, &scalar),
         Set::P376 => at::<P376>(exponent, &scalar),
         Set::P500 => at::<P500>(exponent, &scalar),
+        Set::P664 => at::<P664>(exponent, &scalar),
     };
     let verdict = if prime { "prime" } else { "composite" };
     Ok(verdict)
