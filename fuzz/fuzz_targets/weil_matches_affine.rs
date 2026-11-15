@@ -20,6 +20,9 @@ use prism_isogeny::jac::{add, Jac};
 use prism_isogeny::montgomery::Montgomery;
 use prism_isogeny::pairing::{mul, oracle, weil};
 
+#[path = "../../prism-verify/tests/support/curve_table.rs"]
+mod curve_table;
+
 fn element<L: ParameterSet>(text: &str, name: &str) -> L::Ext {
     let hex = text
         .lines()
@@ -44,14 +47,12 @@ fn committed<L: ParameterSet>(text: &str, order: u8, scalars: &[u8]) {
     pair::<L>(curve, at("Px ", "Py "), at("Qx ", "Qy "), order, scalars);
 }
 
-/// The first curve of `p324_curves.tsv` and the order-`2^e` basis on it.
+/// Curve 1 of `p324_curves.tsv` and the order-`2^e` basis on it.
+/// `P` and `Q` are the columns of those names.
 fn sage_basis(order: u8, scalars: &[u8]) {
     let table = include_str!("../../prism-verify/testdata/p324_curves.tsv");
-    let row = table
-        .lines()
-        .find(|line| line.starts_with("CURVE\t"))
-        .expect("the file has a curve");
-    let fields: Vec<&str> = row.split('\t').collect();
+    let rows = curve_table::parse(table).expect("the p324 curve file");
+    let row = rows.iter().find(|row| row.number == "1").expect("curve 1");
     let decode = |hex: &str| {
         let bytes: Vec<u8> = hex
             .as_bytes()
@@ -60,13 +61,19 @@ fn sage_basis(order: u8, scalars: &[u8]) {
             .collect();
         P324::ext_decode(&bytes).expect("a committed element is canonical")
     };
-    let at = |x: usize| Jac {
-        x: decode(fields[x]),
-        y: decode(fields[x + 1]),
+    let at = |x: &str, y: &str| Jac {
+        x: decode(x),
+        y: decode(y),
         z: <P324 as ParameterSet>::Ext::one(),
     };
-    let curve = Montgomery::normalized(decode(fields[2]));
-    pair::<P324>(curve, at(9), at(11), order, scalars);
+    let curve = Montgomery::normalized(decode(row.coefficient));
+    pair::<P324>(
+        curve,
+        at(row.p_x, row.p_y),
+        at(row.q_x, row.q_y),
+        order,
+        scalars,
+    );
 }
 
 fn pair<L: ParameterSet>(

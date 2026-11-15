@@ -449,6 +449,12 @@ mod tests {
         use crate::montgomery::Montgomery;
         use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
 
+        // `include!` is relative to this file. `#[path]` would be relative
+        // to the nested module directory, and would not reach the fixture.
+        mod curve_table {
+            include!("../../prism-verify/tests/support/curve_table.rs");
+        }
+
         const VECTORS: [&str; 6] = [
             include_str!("../../prism-verify/testdata/s5_lvl1.txt"),
             include_str!("../../prism-verify/testdata/s5_lvl1b.txt"),
@@ -687,11 +693,19 @@ mod tests {
             values
         }
 
-        /// The bases of `p324`, which has no signature: the curves and
-        /// order-`2^e` pairs Sage built for
-        /// `prism-verify/testdata/p324_curves.tsv`.
+        /// Curves of `p324_curves.tsv` this differential runs. Two, the same
+        /// count as the two committed vectors of each other set. Curve 1 is
+        /// on the square branch of the basis search; curve 7 is off it, and
+        /// it is the curve the refusal tests use. The Weil value on all
+        /// eight curves is checked against Sage in `p324_curves`.
+        const P324_CURVES: [&str; 2] = ["1", "7"];
+
+        /// The named `p324` curves and the order-`2^e` pairs Sage built.
+        /// `P` and `Q` are read by column name, so a reordered file still
+        /// hands both loops the basis.
         fn p324_bases() -> Vec<Basis<P324>> {
             let table = include_str!("../../prism-verify/testdata/p324_curves.tsv");
+            let rows = curve_table::parse(table).expect("the p324 curve file");
             let decode = |hex: &str| {
                 let bytes: Vec<u8> = hex
                     .as_bytes()
@@ -702,27 +716,37 @@ mod tests {
                     .collect();
                 P324::ext_decode(&bytes).expect("a committed element is canonical")
             };
-            let found: Vec<Basis<P324>> = table
-                .lines()
-                .filter(|line| line.starts_with("CURVE\t"))
-                .map(|line| {
-                    let fields: Vec<&str> = line.split('\t').collect();
-                    let at = |x: usize| Jac {
-                        x: decode(fields[x]),
-                        y: decode(fields[x + 1]),
-                        z: <P324 as ParameterSet>::Ext::one(),
-                    };
-                    (Montgomery::normalized(decode(fields[2])), at(9), at(11))
+            let point = |x: &str, y: &str| Jac {
+                x: decode(x),
+                y: decode(y),
+                z: <P324 as ParameterSet>::Ext::one(),
+            };
+            P324_CURVES
+                .into_iter()
+                .map(|number| {
+                    let row = rows
+                        .iter()
+                        .find(|row| row.number == number)
+                        .unwrap_or_else(|| panic!("curve {number}"));
+                    assert_eq!(
+                        row.coefficient_is_square,
+                        number == "1",
+                        "curve {number} changed branch"
+                    );
+                    (
+                        Montgomery::normalized(decode(row.coefficient)),
+                        point(row.p_x, row.p_y),
+                        point(row.q_x, row.q_y),
+                    )
                 })
-                .collect();
-            assert_eq!(found.len(), 8, "eight curves at p324");
-            found
+                .collect()
         }
 
-        /// Run `on` at every basis of every set, each with its own number.
-        /// The six committed vectors keep the numbers they always had; the
-        /// `p324` bases follow. Every set is named here: adding one means
-        /// adding its line, and none is reached by a default.
+        /// Run `on` at one basis per committed vector, and at the two
+        /// `p324` curves named by [`P324_CURVES`]. The six committed
+        /// vectors keep the numbers they always had. Every set is named
+        /// here: adding one means adding its line, and none is reached by
+        /// a default.
         fn every_basis(
             on248: impl Fn(u64, Basis<P248>),
             on324: impl Fn(u64, Basis<P324>),
@@ -735,7 +759,7 @@ mod tests {
             on376(3, basis::<P376>(VECTORS[3]));
             on500(4, basis::<P500>(VECTORS[4]));
             on500(5, basis::<P500>(VECTORS[5]));
-            for (n, basis) in p324_bases().into_iter().take(2).enumerate() {
+            for (n, basis) in p324_bases().into_iter().enumerate() {
                 on324(6 + n as u64, basis);
             }
         }

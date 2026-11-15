@@ -27,8 +27,12 @@
 //! codomains must agree first, and no response known to be buildable from
 //! public data gets them to).
 
+#[path = "support/curve_table.rs"]
+mod curve_table;
 #[path = "support/identity.rs"]
 mod identity;
+#[path = "support/p324_refusal.rs"]
+mod p324_refusal;
 
 use prism_field::{Field, ParameterSet, Salt, P324};
 use prism_isogeny::jac::{dbl_iter, Jac};
@@ -44,7 +48,7 @@ type Ext = <Set as ParameterSet>::Ext;
 type SaltOf = <Set as ParameterSet>::Salt;
 
 const TABLE: &str = include_str!("../testdata/p324_curves.tsv");
-const MESSAGE: &[u8] = b"shekyl-prism-p324-refusals";
+const MESSAGE: &[u8] = p324_refusal::MESSAGE;
 
 fn hex(text: &str) -> Vec<u8> {
     (0..text.len())
@@ -57,17 +61,20 @@ fn element(text: &str) -> Ext {
     Set::ext_decode(&hex(text)).expect("a canonical element")
 }
 
-fn rows() -> Vec<Vec<&'static str>> {
-    TABLE
-        .lines()
-        .filter(|line| line.starts_with("CURVE\t"))
-        .map(|line| line.split('\t').collect())
-        .collect()
+fn curves() -> Vec<curve_table::CurveRow<'static>> {
+    curve_table::parse(TABLE).expect("the p324 curve file")
 }
 
-/// The key every test here verifies under: the first curve of the file.
+fn curve(number: &str) -> curve_table::CurveRow<'static> {
+    curves()
+        .into_iter()
+        .find(|row| row.number == number)
+        .unwrap_or_else(|| panic!("curve {number}"))
+}
+
+/// The key every test here verifies under: curve 1 of the file.
 fn key() -> Vec<u8> {
-    hex(rows()[0][2])
+    hex(curve("1").coefficient)
 }
 
 /// A response whose curve and points are a real curve and a real basis of
@@ -75,18 +82,18 @@ fn key() -> Vec<u8> {
 /// another one of the file, so it has nothing to do with the key.
 ///
 /// Which curves of the file are the permitted model of their class is a
-/// property of each coefficient. The seventh is; the test below that
-/// counts them holds this choice in place.
+/// property of each coefficient. [`p324_refusal::CURVE`] is one; the test
+/// below that counts them holds this choice in place.
 fn unrelated(salt: SaltOf) -> Response<Set> {
-    let row = &rows()[6];
+    let row = curve(p324_refusal::CURVE);
     // The file gives the points with whichever square root Sage took for
     // each `y`. The verifier wants `y(P)` of the canonical sign, and `−P`
     // is as good a basis point as `P`.
-    let y = element(row[10]);
+    let y = element(row.p_y);
     let response = Response::<Set> {
-        curve: element(row[2]),
+        curve: element(row.coefficient),
         p: AffinePoint {
-            x: element(row[9]),
+            x: element(row.p_x),
             y: if canonical_sign::<Set>(y) {
                 y
             } else {
@@ -94,8 +101,8 @@ fn unrelated(salt: SaltOf) -> Response<Set> {
             },
         },
         q: AffinePoint {
-            x: element(row[11]),
-            y: element(row[12]),
+            x: element(row.q_x),
+            y: element(row.q_y),
         },
         salt,
     };
@@ -244,14 +251,14 @@ fn the_wrong_sign_of_y_is_refused_as_sign() {
 /// Of the two coefficients `A` and `−A` of each curve of the file, at most
 /// one is the permitted model, and for most curves neither is: the least
 /// coefficient of the class is some other Montgomery model. Exactly two of
-/// the sixteen pass, which is what makes the seventh curve usable above.
+/// the sixteen pass, which is what makes curve 7 usable above.
 #[test]
 fn a_curve_that_is_not_the_permitted_model_is_refused_as_model() {
     let mut past_model = Vec::new();
-    for (number, row) in rows().iter().enumerate() {
+    for row in curves() {
         for negated in [false, true] {
             let mut response = unrelated(SaltOf::zero());
-            let coefficient = element(row[2]);
+            let coefficient = element(row.coefficient);
             response.curve = if negated {
                 Field::negate(coefficient)
             } else {
@@ -259,12 +266,13 @@ fn a_curve_that_is_not_the_permitted_model_is_refused_as_model() {
             };
             match refused(&response.encode()) {
                 Err(VerifyError::Model) => {}
-                Err(VerifyError::Composite) => past_model.push((number, negated)),
-                other => panic!("curve {number}, negated {negated}: {other:?}"),
+                Err(VerifyError::Composite) => past_model.push((row.number, negated)),
+                other => panic!("curve {}, negated {negated}: {other:?}", row.number),
             }
         }
     }
-    assert_eq!(past_model, vec![(4, true), (6, false)]);
+    // Curve 5 negated, and curve 7 itself: the two permitted models.
+    assert_eq!(past_model, vec![("5", true), ("7", false)]);
     // The starting curve and a singular curve are never a response curve.
     let mut response = unrelated(SaltOf::zero());
     response.curve = <Ext as Field>::zero();
@@ -379,9 +387,9 @@ fn a_valid_basis_unrelated_to_the_key_is_refused_at_the_pairing() {
 /// The pairing check is passed with no secret, and what follows it runs at
 /// `p324`.
 ///
-/// The key is the seventh curve of the file (and, as a second key, the
-/// negated fifth: the two coefficients of the file that are a permitted
-/// response model). The response is on the key's own curve. Its points
+/// The key is curve 7 of the file (and, as a second key, the negation of
+/// curve 5: the two coefficients of the file that are a permitted response
+/// model). The response is on the key's own curve. Its points
 /// are the verifier's own basis `(P, Q)` of that key, answered as a pair
 /// whose pairing is the inverse of `e(P, Q)`, which is all the pairing
 /// check asks. The salt is the first counter with a prime degree.
@@ -406,8 +414,8 @@ fn a_valid_basis_unrelated_to_the_key_is_refused_at_the_pairing() {
 fn the_pairing_is_passed_from_public_data_and_the_chains_refuse() {
     use identity::{identity_response, Form};
     let coefficients = [
-        (Field::negate(element(rows()[4][2])), 16),
-        (element(rows()[6][2]), 24),
+        (Field::negate(element(curve("5").coefficient)), 16),
+        (element(curve(p324_refusal::CURVE).coefficient), 24),
     ];
     // The verdict of each form, pinned here by the name it has in the
     // records, and not read from the helper.
@@ -438,10 +446,13 @@ fn the_pairing_is_passed_from_public_data_and_the_chains_refuse() {
             );
         }
     }
-    // The file's own points for the seventh curve, under that curve as
+    // The file's own points for curve 7, under that curve as
     // key, are the second form up to the sign of the second point.
-    let (key, built, _) =
-        identity_response::<Set>(element(rows()[6][2]), MESSAGE, Form::Difference);
+    let (key, built, _) = identity_response::<Set>(
+        element(curve(p324_refusal::CURVE).coefficient),
+        MESSAGE,
+        Form::Difference,
+    );
     let file = unrelated(built.salt);
     assert!(Field::same(file.p.x, built.p.x) && Field::same(file.q.x, built.q.x));
     assert_eq!(

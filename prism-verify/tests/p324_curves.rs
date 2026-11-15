@@ -15,6 +15,9 @@
 //! tests reach everything the verifier does with a public key and with
 //! points, and nothing that needs an accepted response.
 
+#[path = "support/curve_table.rs"]
+mod curve_table;
+
 use prism_field::{Field, ParameterSet, Salt, P324};
 use prism_isogeny::jac::Jac;
 use prism_isogeny::montgomery::{Montgomery, Xz};
@@ -58,40 +61,31 @@ struct Curve {
 }
 
 fn curves() -> Vec<Curve> {
-    let found: Vec<Curve> = TABLE
-        .lines()
-        .filter(|line| !line.starts_with('#'))
-        .map(|line| {
-            let fields: Vec<&str> = line.split('\t').collect();
-            assert_eq!(fields.len(), 14, "a CURVE row has fourteen fields");
-            assert_eq!(fields[0], "CURVE");
+    let rows = curve_table::parse(TABLE).expect("the p324 curve file");
+    assert_eq!(rows.len(), 8, "eight curves");
+    rows.into_iter()
+        .map(|row| {
             let point = |x: &str, y: &str| Jac {
                 x: element(x),
                 y: element(y),
                 z: <Ext as Field>::one(),
             };
             Curve {
-                number: fields[1].to_string(),
-                coefficient: element(fields[2]),
-                key: hex(fields[2]),
-                index: fields[3].parse().expect("an index"),
-                coefficient_is_square: match fields[4] {
-                    "1" => true,
-                    "0" => false,
-                    other => panic!("square flag {other}"),
-                },
-                full: element(fields[5]),
-                without_three: element(fields[6]),
-                without_a_two: element(fields[7]),
-                order_three: element(fields[8]),
-                p: point(fields[9], fields[10]),
-                q: point(fields[11], fields[12]),
-                pairing: element(fields[13]),
+                number: row.number.to_string(),
+                coefficient: element(row.coefficient),
+                key: hex(row.coefficient),
+                index: row.index,
+                coefficient_is_square: row.coefficient_is_square,
+                full: element(row.order_full_x),
+                without_three: element(row.order_without_three_x),
+                without_a_two: element(row.order_without_two_x),
+                order_three: element(row.order_three_x),
+                p: point(row.p_x, row.p_y),
+                q: point(row.q_x, row.q_y),
+                pairing: element(row.pairing),
             }
         })
-        .collect();
-    assert_eq!(found.len(), 8, "eight curves");
-    found
+        .collect()
 }
 
 fn same(left: Ext, right: Ext) -> bool {
