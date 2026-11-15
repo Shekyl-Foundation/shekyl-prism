@@ -111,7 +111,7 @@ is [SECURITY_ARGUMENT.md](SECURITY_ARGUMENT.md) §9. In short:
   2026/1821 analyses the same tradeoff and finds the algorithm an
   improvement, over the memory ranges it considers practical, only at
   level I.
-- **Two of this repository's three built fields are pre-attack ones**:
+- **Two of the three fields that have vectors are pre-attack ones**:
   `5·2^248 − 1` and `65·2^376 − 1`. The third, `27·2^500 − 1`, is also
   one of the SQIsign 3.0 primes.
 - **The attack applies to key recovery.** A PRISM secret key is knowledge
@@ -120,13 +120,14 @@ is [SECURITY_ARGUMENT.md](SECURITY_ARGUMENT.md) §9. In short:
 - **Ruled 2026-11-14.** The parameter sets are five primes, named by
   prime: `p248`, `p324`, `p376`, `p500`, `p664`. Shekyl uses `p500`. The
   category a prime is assessed at is documentation and is not in the
-  code. `p324` and `p664` are not built yet.
+  code. `p324` is built on the verifier side, with no honest signature;
+  `p664` is not built yet.
 - **No security level is claimed for any set by this repository.** What
   each prime's source assesses it at is tabulated, with the source and
   its date, in [PARAMETER_SETS.md](PARAMETER_SETS.md).
 
 A reviewer of this repository should treat every size, timing and
-operation count in it as belonging to the three built sets. Records from
+operation count in it as belonging to the three sets with vectors. Records from
 before 2026-11-14 name them I, III and V; those are names, not levels.
 
 ## How to review reproducibly

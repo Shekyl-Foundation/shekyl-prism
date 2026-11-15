@@ -20,29 +20,59 @@ not coded. The levels collide; the math does not."
 
 ## The sets
 
-Five primes are ruled. Three are implemented. Sizes are in bytes.
+Five primes are ruled. Four are in the code: three with vectors and a
+signer, and `p324` on the verifier side only. Sizes are in bytes.
 
 | Set | Prime | `e` | `f` | Field element | Public key | Signature | Salt | In the code |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | `p248` | `5·2^248 − 1` | 248 | 5 | 32 | 64 | 352 | 32 | yes |
-| `p324` | `3·2^324 − 1` | 324 | 3 | | | | 48 | no |
+| `p324` | `3·2^324 − 1` | 324 | 3 | 41 | 82 | 458 | 48 | yes, verifier side; accept path unproven (O14) |
 | `p376` | `65·2^376 − 1` | 376 | 65 | 48 | 96 | 528 | 48 | yes |
 | `p500` | `27·2^500 − 1` | 500 | 27 | 64 | 128 | 704 | 64 | yes |
 | `p664` | `17·2^664 − 1` | 664 | 17 | | | | 96 | no |
 
 - A public key is one element of `F_{p²}`, two field elements. A
   signature is five elements of `F_{p²}` and the salt.
-- The salt is `e` rounded up to a multiple of 128 bits. The three
-  implemented sets already had those lengths; the rule is what fixes the
-  two that are not built yet (ruled 2026-11-14). `width_bits` is that
-  rounding, and a test pins 384 and 768 for `e = 324` and `e = 664`.
-- The sizes of `p324` and `p664` are left blank until those sets are in
-  the code and a test pins them.
-- The search bound is the same rounding, counted in candidates: 256, 384
-  and 512 for the three built sets, 384 and 768 for the two that are not.
+- The salt is `e` rounded up to a multiple of 128 bits. The three sets
+  with vectors already had those lengths; the rule is what fixes `p324`
+  and `p664` (ruled 2026-11-14). `width_bits` is that rounding, and a
+  test pins 768 for `e = 664`.
+- Every size in a filled row is pinned by a test in `prism-field`. The
+  sizes of `p664` are left blank until that set is in the code.
+- A `p324` field element is 41 bytes, the first that is not a whole
+  number of 8-byte limbs; its top byte is at most `0x2f`.
+- The search bound is the same rounding, counted in candidates: 256, 384,
+  384 and 512 for the four sets in the code, and 768 for `p664`.
   The public-key search is the one search with a failure estimate, and
   that estimate lives on `prism_verify::search_bound`. The rational basis
   and the starting basis share the limit and have no estimate.
+
+## What is and is not shown at `p324`
+
+There is no signer at `p324`, so there is no honest signature, no vector
+and no committed label for it. **Nothing shows that `verify` accepts
+anything at `p324`.** That is ledger obligation O14, and it stays open
+until a signer exists for this prime.
+
+What is checked, without a signature:
+
+- field arithmetic in `F_p` and `F_{p²}` against Sage, on edge values and
+  on 10,000 random rows;
+- decoding: exactly the integers below `p`, in exactly 41 bytes;
+- on eight supersingular curves from Sage: which points are of full
+  order, the basis index, the `2^e` basis and its Weil pairing;
+- the pairing against the affine loop it replaced;
+- the challenge scalar against an independent script, and the primality
+  test at this size against `sympy`;
+- every refusal that can be reached from public data: `Length`,
+  `Canonical`, `Origin`, `Singular`, `Sign`, `Model`, `Composite`,
+  `Kernel` and `Pairing`.
+
+Not reached: `Basis`, `Codomain`, `Image`, and acceptance. The two theta
+chains, the gluing and the image comparison run only after the pairing
+check, which only a response made with the secret key passes, so at
+`p324` that code is exercised by nothing but its set-independent unit
+tests.
 
 ## What each prime is currently assessed at
 
@@ -85,5 +115,7 @@ on, file names carry `lvl1`, and the research signer absorbs the string
 into the streams its public test seeds expand to. The string is not a
 constant of the prime. `Committed` in `prism-verify` is implemented for
 the three sets that have a corpus, and `Committed::LABEL` is the string.
-A prime with no corpus does not implement it. No vector, fixture or
+A prime with no corpus, such as `p324`, does not implement it, and the
+run-time value `CommittedSet` cannot be such a set: asking for its label
+is the error `NoCorpus`, not a placeholder. No vector, fixture or
 record file was renamed or edited when the sets were renamed.
