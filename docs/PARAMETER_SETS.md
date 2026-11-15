@@ -66,13 +66,27 @@ What is checked, without a signature:
   test at this size against `sympy`;
 - every refusal that can be reached from public data: `Length`,
   `Canonical`, `Origin`, `Singular`, `Sign`, `Model`, `Composite`,
-  `Kernel` and `Pairing`.
+  `Kernel`, `Pairing` and `Codomain`.
 
-Not reached: `Basis`, `Codomain`, `Image`, and acceptance. The two theta
-chains, the gluing and the image comparison run only after the pairing
-check, which only a response made with the secret key passes, so at
-`p324` that code is exercised by nothing but its set-independent unit
-tests.
+The pairing check does not need the secret key. It asks only that the
+pairing of the response points be the inverse of the pairing of the
+key's basis, and anyone can meet that: take the key's own curve as the
+response curve and answer with the verifier's own basis `(P, Q)` as
+`(P, −Q)` or as `(P, P − Q)`. Neither has an isogeny behind it. The
+first is refused as `Kernel` in the first chain. The second is refused
+as `Codomain`, and to return that the verifier has built the kernel,
+run both theta chains and compared the codomains. So that code runs at
+`p324`, on a response it must refuse, and refuses it. The field
+operations of both refusals are in
+[benchmarks/op-counts.txt](benchmarks/op-counts.txt): 295,378 extension
+multiplications and squarings and 72 inversions for the `Codomain` case.
+That is the cost of a refusal, not of an accepted verification, which
+does not exist at this prime. The same two responses are in the
+negatives of the three sets with vectors, with the same two verdicts.
+
+Not reached: `Basis`, `Image`, and acceptance. `Image` is compared only
+after the codomains agree, and no response buildable from public data is
+known to get them to.
 
 ## What each prime is currently assessed at
 

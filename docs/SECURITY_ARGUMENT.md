@@ -548,8 +548,9 @@ level and asks for cryptanalysis of them.
   are tested, and there is no honest signature at it, so nothing shows
   that the verifier accepts anything there
   ([PARAMETER_SETS.md](PARAMETER_SETS.md)). `p664` is not in the code.
-  Every timing and operation count in this repository is for the three
-  sets with vectors.
+  Every timing in this repository, and every operation count of an
+  accepted verification, is for the three sets with vectors; at `p324`
+  the only counts are of two refusals.
 
 **Another implementation of the §5 variant.** Ray, "ECLIPSE: Strongly
 Unforgeable Isogeny Signatures from the Prime-Degree Variant of PRISM",
