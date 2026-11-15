@@ -106,13 +106,13 @@ sh scripts/op_counts.sh --check   # what CI runs, on x86_64 and aarch64
   for the six primary vectors, the total for each of the other 107, the
   per-stage counts of the first negative of each refusal, for each
   primary vector its dearest refusal against its accepted cost, and the
-  per-stage counts of the two refusals at `p324`. There is no accepted
-  count at `p324`.
+  per-stage counts of the two refusals at each of `p324` and `p664`.
+  There is no accepted count at either.
 - [benchmarks/negative-verdicts.tsv](benchmarks/negative-verdicts.tsv):
   the verdict and total cost of each of the 2,724 negatives derived from
-  the six primary vectors, and of two refusals at `p324`, which has no
-  vector: a response built from a public key alone that passes the
-  pairing check, in two forms. `Basis` has no vector: no key whose basis
+  the six primary vectors, and of two refusals at each of `p324` and
+  `p664`, which have no vector: a response built from a public key alone
+  that passes the pairing check, in two forms. `Basis` has no vector: no key whose basis
   index exceeds the search bound is known.
 
 Each record states a digest of the sources it was counted from. The

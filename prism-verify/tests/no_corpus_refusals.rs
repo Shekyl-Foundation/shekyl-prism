@@ -590,7 +590,8 @@ macro_rules! at_set {
     };
 }
 
-// At `p324` about one degree in ninety is prime.
+// At `p324` about one degree in a hundred is prime: 93 and 79 of 10,000
+// in two runs of the primality differential.
 at_set!(
     p324,
     prism_field::P324,
@@ -600,7 +601,10 @@ at_set!(
     }
 );
 
-// At `p664` about one degree in 460 is prime.
+// At `p664` about one degree in 170 is prime: 59 of 10,000 in a run of
+// the primality differential. A degree `2^k − s²` with `k` odd is never
+// divisible by 3, so it is prime more often than an odd integer of its
+// size, of which about one in 460 is.
 at_set!(
     p664,
     prism_field::P664,
