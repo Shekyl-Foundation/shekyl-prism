@@ -66,14 +66,39 @@ pub trait DegreeWidth: Copy + Eq + Debug + 'static {
     );
 }
 
-/// The width of `LIMBS` limbs. It is a [`DegreeWidth`] only for the limb
-/// counts listed below, so naming another is a compile error at the set
-/// that names it.
+/// The width of `LIMBS` limbs.
+///
+/// [`DegreeWidth`] is implemented for the limb counts named below and for
+/// no other count, so naming another does not compile. [`SetDegree`] is
+/// the subset a parameter set may name.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DegreeLimbs<const LIMBS: usize>;
 
+/// Limb count of the 64-bit width.
+///
+/// The carry out of the top limb is checked here, against a `u64`. A
+/// parameter set does not name this width.
+pub const DEGREE_LIMBS_64: usize = 1;
+
+/// Limb count of the 128-bit width.
+///
+/// The widest width a `u128` can check exactly. A parameter set does not
+/// name this width.
+pub const DEGREE_LIMBS_128: usize = 2;
+
+/// Limb count of the 1,024-bit width.
+///
+/// Every set whose degree fits in 1,024 bits names this width. The four
+/// sets below `p664` were built on it before the width was a property of
+/// the set, and they keep it.
+pub const DEGREE_LIMBS_1024: usize = 16;
+
+/// Limb count of the 1,344-bit width. The width `p664` names: its degree
+/// needs 1,324 bits, and twenty limbs are 1,280.
+pub const DEGREE_LIMBS_1344: usize = 21;
+
 macro_rules! degree_width {
-    ($($limbs:literal),+ $(,)?) => {
+    ($($limbs:ident),+ $(,)?) => {
         $(
             impl DegreeWidth for DegreeLimbs<$limbs> {
                 type Limbs = [u64; $limbs];
@@ -84,15 +109,30 @@ macro_rules! degree_width {
     };
 }
 
-// 1,024 bits and 1,344 bits.
-degree_width!(16, 21);
+degree_width!(
+    DEGREE_LIMBS_64,
+    DEGREE_LIMBS_128,
+    DEGREE_LIMBS_1024,
+    DEGREE_LIMBS_1344,
+);
 
-/// The limb count every set with `e` up to 514 uses: 1,024 bits.
+/// A [`DegreeWidth`] a parameter set may name.
 ///
-/// The four sets below `p664` were built on 1,024-bit integers before the
-/// width was a property of the set, and they keep them. Narrowing each to
-/// what [`degree_bits`] asks for is a later change.
-pub const FLOOR_DEGREE_LIMBS: usize = 16;
+/// The 64-bit and 128-bit widths exist so the carry out of the top limb
+/// can be checked. A set does not name them. Adding a wider set means
+/// naming its limb count, implementing [`DegreeWidth`] for it, and
+/// implementing this trait for it.
+pub trait SetDegree: DegreeWidth {}
+
+impl SetDegree for DegreeLimbs<DEGREE_LIMBS_1024> {}
+impl SetDegree for DegreeLimbs<DEGREE_LIMBS_1344> {}
+
+/// The limb count every set with `e` up to 514 uses: [`DEGREE_LIMBS_1024`].
+///
+/// Narrowing each set to what [`degree_bits`] asks for is a later change.
+/// Until then a set whose degree fits in 1,024 bits names that width, and
+/// [`degree_limbs`] does not return a count below this one.
+pub const FLOOR_DEGREE_LIMBS: usize = DEGREE_LIMBS_1024;
 
 /// The bits an integer needs to hold every value the primality test of a
 /// set with exponent `e` forms: `2e − 4`.
@@ -143,7 +183,8 @@ pub const fn torsion_limbs(e: u32) -> usize {
 mod tests {
     use super::{
         degree_bits, degree_limbs, torsion_limbs, DegreeLimbs, DegreeWidth, Limbs,
-        FLOOR_DEGREE_LIMBS, FLOOR_TORSION_LIMBS,
+        DEGREE_LIMBS_1024, DEGREE_LIMBS_128, DEGREE_LIMBS_1344, DEGREE_LIMBS_64,
+        FLOOR_DEGREE_LIMBS, FLOOR_TORSION_LIMBS, LIMB_BITS,
     };
 
     #[test]
@@ -153,14 +194,27 @@ mod tests {
             assert_eq!(<W::Limbs as Limbs>::COUNT, limbs);
             assert_eq!(<W::Product as Limbs>::COUNT, 2 * limbs);
             assert_eq!(<W::Reduction as Limbs>::COUNT, limbs + 2);
-            assert_eq!(W::BITS, 64 * limbs);
+            assert_eq!(W::BITS, LIMB_BITS * limbs);
             assert!(<W::Limbs as Limbs>::ZERO
                 .as_ref()
                 .iter()
                 .all(|limb| *limb == 0));
         }
-        check::<DegreeLimbs<16>>(16);
-        check::<DegreeLimbs<21>>(21);
+        check::<DegreeLimbs<DEGREE_LIMBS_64>>(DEGREE_LIMBS_64);
+        check::<DegreeLimbs<DEGREE_LIMBS_128>>(DEGREE_LIMBS_128);
+        check::<DegreeLimbs<DEGREE_LIMBS_1024>>(DEGREE_LIMBS_1024);
+        check::<DegreeLimbs<DEGREE_LIMBS_1344>>(DEGREE_LIMBS_1344);
+    }
+
+    /// Each constant is the bit width its name claims, and the floor is
+    /// the 1,024-bit width.
+    #[test]
+    fn a_width_constant_is_the_bit_width_it_names() {
+        assert_eq!(DEGREE_LIMBS_64 * LIMB_BITS, 64);
+        assert_eq!(DEGREE_LIMBS_128 * LIMB_BITS, 128);
+        assert_eq!(DEGREE_LIMBS_1024 * LIMB_BITS, 1024);
+        assert_eq!(DEGREE_LIMBS_1344 * LIMB_BITS, 1344);
+        assert_eq!(FLOOR_DEGREE_LIMBS, DEGREE_LIMBS_1024);
     }
 
     /// The four sets built before `p664` stay on 1,024 bits, and each fits
@@ -169,17 +223,20 @@ mod tests {
     #[test]
     fn the_limbs_of_a_set_hold_its_degree() {
         for (e, bits, limbs) in [
-            (248, 492, 16),
-            (324, 644, 16),
-            (376, 748, 16),
-            (500, 996, 16),
-            (664, 1324, 21),
+            (248, 492, DEGREE_LIMBS_1024),
+            (324, 644, DEGREE_LIMBS_1024),
+            (376, 748, DEGREE_LIMBS_1024),
+            (500, 996, DEGREE_LIMBS_1024),
+            (664, 1324, DEGREE_LIMBS_1344),
         ] {
             assert_eq!(degree_bits(e), bits, "e = {e}");
             assert_eq!(degree_limbs(e), limbs, "e = {e}");
-            assert!(bits <= 64 * limbs);
+            assert!(bits <= LIMB_BITS * limbs);
         }
-        assert!(degree_bits(664) > 64 * 20, "twenty limbs do not hold p664");
+        assert!(
+            degree_bits(664) > LIMB_BITS * (DEGREE_LIMBS_1344 - 1),
+            "one limb under p664's width does not hold its degree"
+        );
         // The floor ends where the need passes it.
         assert_eq!(degree_limbs(514), FLOOR_DEGREE_LIMBS);
         assert_eq!(degree_limbs(515), FLOOR_DEGREE_LIMBS + 1);

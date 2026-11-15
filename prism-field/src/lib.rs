@@ -33,7 +33,7 @@ use fp2::define_fp_core;
 pub mod ops;
 pub mod width;
 
-pub use width::{DegreeLimbs, DegreeWidth, Limbs};
+pub use width::{DegreeLimbs, DegreeWidth, Limbs, SetDegree};
 
 /// The bytes of one set's public salt.
 ///
@@ -83,8 +83,8 @@ pub trait Field: Copy {
 ///
 /// This is the bit length of the public salt and the number of candidates
 /// each torsion search tries. A parameter set carries no security
-/// assessment; both widths are this rounding of its exponent. The prime
-/// ruled but not yet built, `e = 664`, rounds to 768.
+/// assessment; both widths are this rounding of its exponent. `e = 664`
+/// rounds to 768.
 ///
 /// Panics if the rounding does not fit in `u32`.
 pub const fn width_bits(e: u32) -> u32 {
@@ -244,8 +244,10 @@ pub trait ParameterSet: Copy + Clone + Eq + core::fmt::Debug + Send + Sync + 'st
     /// The odd cofactor `f` in `p + 1 = f·2^e`, with its prime factors.
     const COFACTOR: Cofactor;
     /// The width of the integers the challenge degree's primality test
-    /// runs on at this set. See [`width`].
-    type Degree: DegreeWidth;
+    /// runs on at this set. A [`SetDegree`]: the 1,024-bit or 1,344-bit
+    /// width, not a width that exists only so a carry can be checked.
+    /// See [`width`].
+    type Degree: SetDegree;
     /// The limbs of an integer modulo `2^e` at this set, which is what the
     /// entries of the verifier's matrices are.
     type TorsionLimbs: Limbs;
@@ -304,7 +306,7 @@ macro_rules! parameter_set {
             use super::ops::{tally, Kind, Op};
             use super::{
                 candidate_bound, define_fp2_from_type, define_fp_core,
-                width::{degree_limbs, torsion_limbs, DegreeLimbs},
+                width::{degree_bits, degree_limbs, torsion_limbs, DegreeLimbs, DegreeWidth},
                 width_bits, Cofactor, Field, ParameterSet, Salt,
             };
 
@@ -357,6 +359,13 @@ macro_rules! parameter_set {
             const _: () = assert!(
                 $e > 64,
                 "a set needs e > 64: one challenge byte, and a prime above 2^64"
+            );
+            // The width the set names holds every value its primality test
+            // forms. A count that is not a `SetDegree` fails on the
+            // associated type below, before this comparison.
+            const _: () = assert!(
+                degree_bits($e) <= <DegreeLimbs<{ degree_limbs($e) }> as DegreeWidth>::BITS,
+                "the set's width holds every value its primality test forms"
             );
 
             define_fp_core!(
