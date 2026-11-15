@@ -1,6 +1,6 @@
 # Parameter sets
 
-Status: current as of 2026-11-14. Ruled by Rick on 2026-11-14.
+Status: current as of 2026-11-15. Ruled by Rick on 2026-11-14.
 
 A parameter set is a prime `p = f·2^e − 1`. There is one algorithm, and
 each set is that algorithm over one prime. A set is named by its exponent:
@@ -61,7 +61,9 @@ What is checked, without a signature:
 - decoding: exactly the integers below `p`, in exactly 41 bytes;
 - on eight supersingular curves from Sage: which points are of full
   order, the basis index, the `2^e` basis and its Weil pairing;
-- the pairing against the affine loop it replaced;
+- the pairing against the affine loop it replaced, on two of those
+  curves, one from each branch of the basis search (curve 1 on the
+  square branch, curve 7 off it);
 - the challenge scalar against an independent script, and the primality
   test at this size against `sympy`;
 - every refusal that can be reached from public data: `Length`,
