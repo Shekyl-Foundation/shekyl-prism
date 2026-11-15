@@ -54,7 +54,7 @@ pub const REFUSAL_MESSAGE: &[u8] = b"shekyl-prism-p324-refusals";
 /// The committed curve file. It is the Sage script's output, so a file
 /// this does not read, or one with another number of curves, is a broken
 /// fixture.
-pub fn curve_table() -> CurveTable<'static> {
+pub fn curve_table() -> CurveTable {
     let table =
         CurveTable::parse(CURVE_TABLE).unwrap_or_else(|reason| panic!("{CURVE_FILE}: {reason}"));
     assert_eq!(table.rows().len(), CURVES, "{CURVE_FILE}");
@@ -82,6 +82,12 @@ mod tests {
                 "curve {number}"
             );
         }
-        assert_eq!(table.curve(NEGATED_MODEL_CURVE).number, NEGATED_MODEL_CURVE);
+        assert!(
+            table
+                .rows()
+                .iter()
+                .any(|row| row.number == NEGATED_MODEL_CURVE),
+            "{NEGATED_MODEL_CURVE} is not in the file"
+        );
     }
 }

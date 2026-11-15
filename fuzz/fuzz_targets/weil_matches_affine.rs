@@ -49,7 +49,7 @@ fn committed<L: ParameterSet>(text: &str, order: u8, scalars: &[u8]) {
 fn sage_basis(order: u8, scalars: &[u8]) {
     use prism_fixtures::{curve_table::Point, p324};
     let row = p324::curve_table().curve(p324::SQUARE_BRANCH_CURVE);
-    let point = |point: Point<'_>| {
+    let point = |point: &Point| {
         let (x, y) = point.decode::<P324>();
         Jac {
             x,
@@ -58,7 +58,7 @@ fn sage_basis(order: u8, scalars: &[u8]) {
         }
     };
     let curve = Montgomery::normalized(row.coefficient.decode::<P324>());
-    pair::<P324>(curve, point(row.p), point(row.q), order, scalars);
+    pair::<P324>(curve, point(&row.p), point(&row.q), order, scalars);
 }
 
 fn pair<L: ParameterSet>(

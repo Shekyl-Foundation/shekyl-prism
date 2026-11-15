@@ -46,7 +46,7 @@ struct Curve {
 }
 
 fn curves() -> Vec<Curve> {
-    let point = |point: Point<'_>| {
+    let point = |point: &Point| {
         let (x, y) = point.decode::<Set>();
         Jac {
             x,
@@ -60,15 +60,15 @@ fn curves() -> Vec<Curve> {
         .map(|row| Curve {
             number: row.number,
             coefficient: row.coefficient.decode::<Set>(),
-            key: row.coefficient.bytes(),
+            key: row.coefficient.bytes().to_vec(),
             index: row.index,
             coefficient_is_square: row.coefficient_is_square,
             full: row.order_full_x.decode::<Set>(),
             without_three: row.order_without_three_x.decode::<Set>(),
             without_a_two: row.order_without_two_x.decode::<Set>(),
             order_three: row.order_three_x.decode::<Set>(),
-            p: point(row.p),
-            q: point(row.q),
+            p: point(&row.p),
+            q: point(&row.q),
             pairing: row.pairing.decode::<Set>(),
         })
         .collect()

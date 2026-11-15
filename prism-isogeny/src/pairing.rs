@@ -698,7 +698,7 @@ mod tests {
         /// hands both loops the basis.
         fn p324_bases() -> Vec<Basis<P324>> {
             let table = p324::curve_table();
-            let point = |point: curve_table::Point<'_>| {
+            let point = |point: &curve_table::Point| {
                 let (x, y) = point.decode::<P324>();
                 Jac {
                     x,
@@ -716,8 +716,8 @@ mod tests {
                     );
                     (
                         Montgomery::normalized(row.coefficient.decode::<P324>()),
-                        point(row.p),
-                        point(row.q),
+                        point(&row.p),
+                        point(&row.q),
                     )
                 })
                 .collect()

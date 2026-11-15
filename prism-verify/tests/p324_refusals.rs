@@ -64,7 +64,7 @@ const COMPOSITE_SALTS_VERIFIED: u64 = 8;
 /// The field elements of a signature: a curve and four coordinates.
 const SIGNATURE_ELEMENTS: usize = (Set::SIGNATURE_LEN - Set::SALT_LEN) / Set::FP_LEN;
 
-fn curve(number: CurveNumber) -> CurveRow<'static> {
+fn curve(number: CurveNumber) -> CurveRow {
     p324::curve_table().curve(number)
 }
 
@@ -74,7 +74,7 @@ fn coefficient(number: CurveNumber) -> Ext {
 
 /// The key every test here verifies under, unless it says otherwise.
 fn key() -> Vec<u8> {
-    curve(SQUARE_BRANCH_CURVE).coefficient.bytes()
+    curve(SQUARE_BRANCH_CURVE).coefficient.bytes().to_vec()
 }
 
 /// A response whose curve and points are a real curve and a real basis of
