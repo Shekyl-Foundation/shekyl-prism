@@ -85,6 +85,10 @@ jobs:
         run: python3 scripts/ci/check_research_boundary.py
       - name: The operation counter is in no default build
         run: python3 scripts/ci/check_op_count_isolation.py
+      # The crate that reads committed test files may be a dev-dependency
+      # and nothing more.
+      - name: The fixtures crate is in no shipped build
+        run: python3 scripts/ci/check_fixtures_isolation.py
       # The script reads the parameter sets out of the field crate's source.
       # Nothing else runs it, so a change to how the sets are declared
       # would break it unseen.

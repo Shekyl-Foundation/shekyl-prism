@@ -29,6 +29,7 @@ REQUIRED = (
     "prism-verify/src/lib.rs",
     "prism-verify/src/bin/degree_check.rs",
     "prism-bench/src/main.rs",
+    "prism-fixtures/src/lib.rs",
     "scripts/check_c_reference.py",
     "scripts/export_c_basis_hints.py",
     "scripts/differential_prime.py",
