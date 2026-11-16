@@ -1,6 +1,6 @@
 [package]
-name = "prism-fixtures"
-description = "Committed PRISM test fixtures, read into typed values"
+name = "prism-vectors"
+description = "Committed PRISM test vectors and the readers for them: a public crate that depends on prism-field alone"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

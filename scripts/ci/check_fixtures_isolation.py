@@ -4,7 +4,7 @@
 # All rights reserved.
 # BSD-3-Clause
 
-"""`prism-fixtures` is in no shipped build.
+"""`prism-vectors` is in no shipped build.
 
 The crate reads committed test files. A shipped crate may name it only as
 a dev-dependency, and only the crates whose tests read it do. The fuzz
@@ -33,9 +33,9 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PACKAGE = "prism-fixtures"
+PACKAGE = "prism-vectors"
 ONLY_DEPENDENCY = "prism-field"
-OWN = "prism-fixtures/Cargo.toml"
+OWN = "prism-vectors/Cargo.toml"
 DEV_USERS = ("prism-isogeny/Cargo.toml", "prism-verify/Cargo.toml")
 NORMAL_USER = "fuzz/Cargo.toml"
 # Kinds that put the crate into a build of the package itself.
@@ -196,18 +196,18 @@ def selftest():
             "prism-verify/Cargo.toml": real["prism-verify/Cargo.toml"].replace(
                 "[dependencies]\n",
                 '[dependencies]\n'
-                'fixtures = { package = "prism-fixtures", workspace = true }\n',
+                'fixtures = { package = "prism-vectors", workspace = true }\n',
                 1,
             ),
         },
         "a target table pulls the crate into a normal build": {
             "prism-signer/Cargo.toml": real["prism-signer/Cargo.toml"]
             + "\n[target.'cfg(unix)'.dependencies]\n"
-            + 'prism-fixtures = { workspace = true }\n',
+            + 'prism-vectors = { workspace = true }\n',
         },
         "a user drops the dev-dependency": {
             "prism-isogeny/Cargo.toml": real["prism-isogeny/Cargo.toml"].replace(
-                "prism-fixtures = { workspace = true }\n",
+                "prism-vectors = { workspace = true }\n",
                 "",
                 1,
             ),
@@ -220,13 +220,13 @@ def selftest():
         },
         "the fuzz crate drops the crate": {
             NORMAL_USER: real[NORMAL_USER].replace(
-                'prism-fixtures = { version = "0.1.0", path = "../prism-fixtures" }\n',
+                'prism-vectors = { version = "0.1.0", path = "../prism-vectors" }\n',
                 "",
                 1,
             ),
         },
         "the crate leaves the workspace": {
-            "Cargo.toml": real["Cargo.toml"].replace('    "prism-fixtures",\n', "", 1),
+            "Cargo.toml": real["Cargo.toml"].replace('    "prism-vectors",\n', "", 1),
         },
     }
     for case, change in planted.items():

@@ -33,6 +33,7 @@ use prism_field::{ParameterSet, P324, P664};
 /// curve: the permitted model of its class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Model {
+    /// The curve of the file whose coefficient this is about.
     pub curve: CurveNumber,
     /// Whether it is the negation of the file's coefficient that is
     /// permitted, and not the coefficient itself.
@@ -88,6 +89,7 @@ impl SageFixtures {
 
 /// A parameter set with no committed vectors, and so with Sage fixtures.
 pub trait WithoutCorpus: ParameterSet {
+    /// The set's committed files and what the tests may assume of them.
     const FIXTURES: SageFixtures;
 }
 

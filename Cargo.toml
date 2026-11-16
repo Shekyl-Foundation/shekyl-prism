@@ -7,7 +7,7 @@ members = [
     "prism-bench",
     "prism-signer",
     "prism-compare",
-    "prism-fixtures",
+    "prism-vectors",
 ]
 
 [workspace.package]
@@ -24,7 +24,7 @@ prism-field = { version = "0.1.0", path = "prism-field" }
 prism-isogeny = { version = "0.1.0", path = "prism-isogeny" }
 prism-verify = { version = "0.1.0", path = "prism-verify" }
 prism-signer = { version = "0.1.0", path = "prism-signer" }
-prism-fixtures = { version = "0.1.0", path = "prism-fixtures" }
+prism-vectors = { version = "0.1.0", path = "prism-vectors" }
 
 # Library members inherit this. prism-bench cannot: Cargo rejects a member
 # that both inherits and overrides, and its counter has no safe form.

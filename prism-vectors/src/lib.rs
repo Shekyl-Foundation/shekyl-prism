@@ -21,6 +21,7 @@
 //! crates whose tests use it, and a dependency of the fuzz crate.
 
 #![forbid(unsafe_code)]
+#![deny(missing_docs)]
 
 pub mod curve_table;
 pub mod hex;

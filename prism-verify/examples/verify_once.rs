@@ -36,7 +36,7 @@
 mod support;
 
 use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
-use prism_fixtures::no_corpus::{curve_table, WithoutCorpus};
+use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
 use prism_verify::{verify, CommittedSet, Set, VerifyError};
 use std::hint::black_box;
 use std::process::ExitCode;

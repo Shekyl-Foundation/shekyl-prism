@@ -38,7 +38,7 @@ trap 'rm -rf "$work"' EXIT
 # after `git add`.
 git ls-files -co --exclude-standard -- \
     Cargo.toml Cargo.lock rust-toolchain.toml prism-field prism-isogeny prism-verify \
-    prism-fixtures \
+    prism-vectors \
     | LC_ALL=C sort > "$work/files"
 test -s "$work/files"
 digest=$(xargs sha256sum < "$work/files" | sha256sum | cut -d' ' -f1)

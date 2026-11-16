@@ -16,11 +16,11 @@
 
 use libfuzzer_sys::fuzz_target;
 use prism_field::{Field, ParameterSet, P248, P324, P376, P500, P664};
-use prism_fixtures::curve_table::Point;
-use prism_fixtures::no_corpus::{curve_table, WithoutCorpus};
 use prism_isogeny::jac::{add, Jac};
 use prism_isogeny::montgomery::Montgomery;
 use prism_isogeny::pairing::{mul, oracle, weil};
+use prism_vectors::curve_table::Point;
+use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
 
 fn element<L: ParameterSet>(text: &str, name: &str) -> L::Ext {
     let hex = text

@@ -187,6 +187,7 @@ impl Layout {
 pub struct CurveNumber(u8);
 
 impl CurveNumber {
+    /// The curve the file numbers `number`.
     pub const fn new(number: u8) -> Self {
         Self(number)
     }
@@ -226,7 +227,9 @@ impl Element {
 /// A point as the file has it: two elements.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Point {
+    /// The abscissa.
     pub x: Element,
+    /// The ordinate.
     pub y: Element,
 }
 
@@ -343,6 +346,7 @@ impl CurveTable {
         Ok(Self(rows))
     }
 
+    /// Every curve of the file, in file order.
     pub fn rows(&self) -> &[CurveRow] {
         &self.0
     }

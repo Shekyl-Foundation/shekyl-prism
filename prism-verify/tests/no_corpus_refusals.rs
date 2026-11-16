@@ -37,10 +37,10 @@ mod identity;
 
 use identity::{first_prime_salt_counter, identity_response, salt_of, Form};
 use prism_field::{Field, ParameterSet, Salt, P248, P324, P376, P500, P664};
-use prism_fixtures::curve_table::{CurveNumber, CurveRow};
-use prism_fixtures::no_corpus::{curve_table, Model, WithoutCorpus};
 use prism_isogeny::jac::{dbl_iter, Jac};
 use prism_isogeny::montgomery::Montgomery;
+use prism_vectors::curve_table::{CurveNumber, CurveRow};
+use prism_vectors::no_corpus::{curve_table, Model, WithoutCorpus};
 use prism_verify::signature::canonical_sign;
 use prism_verify::{
     verify, verify_set, AffinePoint, ChallengeScalar, KeyIdentity, Response, Set as AnySet,

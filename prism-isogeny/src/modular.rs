@@ -647,7 +647,7 @@ mod tests {
     const KNOWN_ANSWERS: &str = include_str!("../testdata/residue_known_answers.tsv");
 
     fn hex(text: &str) -> Vec<u8> {
-        prism_fixtures::hex::decode(text).expect("hex")
+        prism_vectors::hex::decode(text).expect("hex")
     }
 
     /// Every row of the file for one set. Returns how many products and

@@ -448,8 +448,8 @@ mod tests {
         use crate::jac::{add, dbl_iter, Jac};
         use crate::montgomery::Montgomery;
         use prism_field::{Field, ParameterSet, P248, P324, P376, P500, P664};
-        use prism_fixtures::curve_table::Point as FixturePoint;
-        use prism_fixtures::no_corpus::{curve_table, WithoutCorpus};
+        use prism_vectors::curve_table::Point as FixturePoint;
+        use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
 
         const VECTORS: [&str; 6] = [
             include_str!("../../prism-verify/testdata/s5_lvl1.txt"),

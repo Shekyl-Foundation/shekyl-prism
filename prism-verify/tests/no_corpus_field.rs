@@ -24,7 +24,7 @@
 //! all of them, in a module of its own at the end of this file.
 
 use prism_field::{Field, ParameterSet};
-use prism_fixtures::no_corpus::WithoutCorpus;
+use prism_vectors::no_corpus::WithoutCorpus;
 use sha3::{Digest, Sha3_256};
 
 /// The operations of one row, in the order the file writes them.
@@ -47,7 +47,7 @@ const EXT_EDGE_ROWS: usize = 9 * 7;
 const RANDOM_ROWS: usize = 10_000;
 
 fn hex(text: &str) -> Vec<u8> {
-    prism_fixtures::hex::decode(text).expect("hex")
+    prism_vectors::hex::decode(text).expect("hex")
 }
 
 /// The generator of the script: SplitMix64.
