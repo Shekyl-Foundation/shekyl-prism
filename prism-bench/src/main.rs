@@ -16,8 +16,11 @@
 //!   every set. `error=Codomain` runs both chains, so it is nearly all of
 //!   the work of an accepted verification; `error=Kernel` stops at the
 //!   start of the chain work. Neither is an accepted verification;
-//! - `search set=…`: the search for the salt of that refused response, the
-//!   work of whoever sends it.
+//! - `search set=…`: what the search for the salt of that refused response
+//!   costs whoever sends it, per salt tried, with the salts whose challenge
+//!   degree is composite kept apart from the prime ones. A prime one costs
+//!   several composite ones, so one figure per attempt would depend on how
+//!   many attempts a search happened to need.
 //!
 //! Every timed call's result is compared with the pinned one, warm-ups
 //! included. A row is printed only if all of them agreed. Otherwise a line
@@ -90,17 +93,11 @@ fn main() -> ExitCode {
         }
     }
     for set in Set::ALL {
-        match refusal(set, VerifyError::Codomain) {
-            Ok(row) => match at_set!(set, salt_search(row)) {
-                Ok(timing) => println!(
-                    "search set={set} outcome=prime-salt counters={} {timing}",
-                    row.salt_counter + 1
-                ),
-                Err(err) => {
-                    failed = true;
-                    println!("search set={set} found=\"{err}\"");
-                }
-            },
+        let cost = refusal(set, VerifyError::Codomain)
+            .map_err(BenchError::Prepare)
+            .and_then(|row| at_set!(set, salt_attempts(row)));
+        match cost {
+            Ok(cost) => println!("search set={set} {cost}"),
             Err(err) => {
                 failed = true;
                 println!("search set={set} found=\"{err}\"");
@@ -149,8 +146,8 @@ enum BenchError {
     /// A timed verification did not end as pinned. This is what it
     /// returned.
     Verdict(Result<(), VerifyError>),
-    /// The salt search did not end at the committed counter. This is the
-    /// first counter of prime degree it found, if any.
+    /// The salt search's first prime degree was not at the committed
+    /// counter. This is the first one it found in its window, if any.
     Search(Option<u64>),
 }
 
@@ -161,7 +158,7 @@ impl fmt::Display for BenchError {
             Self::Verdict(Ok(())) => f.write_str("accepted"),
             Self::Verdict(Err(err)) => write!(f, "{err}"),
             Self::Search(Some(counter)) => write!(f, "first prime degree at counter {counter}"),
-            Self::Search(None) => f.write_str("no prime degree up to the committed counter"),
+            Self::Search(None) => f.write_str("no prime degree in the window"),
         }
     }
 }
@@ -225,22 +222,86 @@ fn refused(set: Set, error: VerifyError) -> Result<Timing, BenchError> {
     .map_err(BenchError::Verdict)
 }
 
-/// What the sender of a refused response does to find its salt: derive the
-/// challenge and test its degree, counter by counter from zero, up to the
-/// first prime one. It needs the key and the message, and no secret.
+/// The salt counters one pass of [`salt_attempts`] tries, from zero. Every
+/// committed counter is below it, and it holds several prime degrees at
+/// every set.
+const SEARCH_WINDOW: u64 = 1024;
+
+/// What one tried salt costs the sender of a refused response, by whether
+/// its challenge degree turned out prime.
+struct SearchCost {
+    /// Salts of the window whose degree is composite, and prime.
+    composite: u64,
+    prime: u64,
+    /// The first counter of prime degree: the committed row's.
+    first_prime: u64,
+    /// Median over the passes of the mean time of one attempt of each kind.
+    composite_ns: u128,
+    prime_ns: u128,
+}
+
+impl fmt::Display for SearchCost {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "window={SEARCH_WINDOW} composite={} prime={} first_prime={} samples={SAMPLES} \
+             composite_ns_per_attempt={} prime_ns_per_attempt={}",
+            self.composite, self.prime, self.first_prime, self.composite_ns, self.prime_ns
+        )
+    }
+}
+
+/// What the sender of a refused response does to find its salt, one salt
+/// at a time: derive the challenge and test its degree. It needs the key
+/// and the message, and no secret.
 ///
-/// The count of attempts is the committed row's, and differs from key to
-/// key; `median_ns` over `counters` is the cost of one attempt.
-fn salt_search<L: ParameterSet>(row: &Refusal) -> Result<Timing, BenchError> {
-    let first_prime = || {
-        let identity = KeyIdentity::<L>::decode(&row.public_key).ok()?;
-        (0..=row.salt_counter).find(|&counter| {
-            L::Salt::from_counter(counter).is_some_and(|salt| {
+/// Each pass tries every counter of the window and times each attempt on
+/// its own, so the composite and the prime ones are summed apart. Every
+/// pass, warm-ups included, is held to the committed row: its first prime
+/// degree must be at the committed counter.
+fn salt_attempts<L: ParameterSet>(row: &Refusal) -> Result<SearchCost, BenchError> {
+    let identity =
+        KeyIdentity::<L>::decode(&row.public_key).map_err(|err| BenchError::Verdict(Err(err)))?;
+    let mut composite_means = Vec::with_capacity(SAMPLES);
+    let mut prime_means = Vec::with_capacity(SAMPLES);
+    let mut counts = (0, 0);
+    for pass in 0..WARMUP + SAMPLES {
+        let (mut composite, mut prime) = (0u64, 0u64);
+        let (mut composite_ns, mut prime_ns) = (0u128, 0u128);
+        let mut first_prime = None;
+        for counter in 0..SEARCH_WINDOW {
+            let start = Instant::now();
+            let is_prime = L::Salt::from_counter(counter).is_some_and(|salt| {
                 ChallengeScalar::derive(&identity, &row.message, salt).degree_is_prime::<L>()
-            })
-        })
-    };
-    measure(&Some(row.salt_counter), first_prime).map_err(BenchError::Search)
+            });
+            let elapsed = start.elapsed().as_nanos();
+            if is_prime {
+                first_prime.get_or_insert(counter);
+                prime += 1;
+                prime_ns += elapsed;
+            } else {
+                composite += 1;
+                composite_ns += elapsed;
+            }
+        }
+        if first_prime != Some(row.salt_counter) || composite == 0 {
+            return Err(BenchError::Search(first_prime));
+        }
+        if pass >= WARMUP {
+            composite_means.push(composite_ns / u128::from(composite));
+            prime_means.push(prime_ns / u128::from(prime));
+            counts = (composite, prime);
+        }
+    }
+    let (composite_ns, _) = median_spread(&mut composite_means);
+    let (prime_ns, _) = median_spread(&mut prime_means);
+    Ok(SearchCost {
+        composite: counts.0,
+        prime: counts.1,
+        first_prime: row.salt_counter,
+        composite_ns,
+        prime_ns,
+    })
 }
 
 /// The element the field timings of a set start from: the key of the
