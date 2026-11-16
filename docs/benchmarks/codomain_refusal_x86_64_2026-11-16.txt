@@ -1,172 +1,177 @@
-# The refusal after the pairing check, at all five sets. x86_64 development workstation (11th Gen Intel Core i9-11950H, 16 threads), shared with other work.
-# commit 351deb45d33838449ba3d863d2a1b123f2b3ff11, rustc 1.94.0 (4a4ef493e 2026-03-02), Linux 6.12.113 x86_64
-# command: cargo run --release --locked -p prism-bench; three runs, 2026-11-16 02:23Z to 02:26Z.
-# The load average is read before and after each run. It was 2.6 to 4.8 from other work on the machine; the run medians differ by up to 8%.
+# The refusal after the pairing check, at all five sets. x86_64 development workstation, 16 threads, shared with other work.
+# commit 43d6e3ee4206c898705d85e4a982b901cd95bcbd, rustc 1.94.0 (4a4ef493e 2026-03-02), Linux 6.12.113 x86_64
+# command: cargo run --release --locked -p prism-bench; three runs, 2026-11-16 02:50Z to 02:54Z.
+# The load average is read before and after each run. Runs 1 and 2 ran at load 2.4 to 3.0. Another job started during run 3 (load 16.5 at its end) and that run's figures are about twice the others'. It is kept: the summary is the median of three, so it takes the larger of runs 1 and 2 at every row.
 # The counter is rdtsc.
-# Rows with outcome=refused are refusals, not accepted verifications. Rows that begin "search" are the sender's salt search for the Codomain row's input.
+# Rows with outcome=refused are refusals, not accepted verifications. Rows that begin "search" are the sender's cost of one tried salt for the Codomain row's input, composite and prime degrees apart.
 RUN 1
 # conditions before
-time=2026-11-16T02:23:46Z
-loadavg=4.80 7.07 6.78 1/2571 355147
-source_commit=351deb45d33838449ba3d863d2a1b123f2b3ff11
+time=2026-11-16T02:50:09Z
+loadavg=3.01 7.76 6.78 2/2569 487831
+source_commit=43d6e3ee4206c898705d85e4a982b901cd95bcbd
 # cargo run --release --locked -p prism-bench
 field-backend=scalar
 counter=rdtsc
-set=p248 outcome=accepted samples=31 median_ns=11194300 spread_ns=1019420 median_counter=29230958 counter_spread=2661956
-set=p376 outcome=accepted samples=31 median_ns=31840663 spread_ns=8516306 median_counter=83143374 counter_spread=22238892
-set=p500 outcome=accepted samples=31 median_ns=71330705 spread_ns=4021087 median_counter=186260926 counter_spread=10499836
-set=p248 outcome=refused error=Codomain samples=31 median_ns=10937255 spread_ns=2107904 median_counter=28559690 counter_spread=5504154
-set=p248 outcome=refused error=Kernel samples=31 median_ns=5543483 spread_ns=1032458 median_counter=14475358 counter_spread=2696024
-set=p324 outcome=refused error=Codomain samples=31 median_ns=26222327 spread_ns=2663935 median_counter=68472638 counter_spread=6957314
-set=p324 outcome=refused error=Kernel samples=31 median_ns=11327808 spread_ns=2010505 median_counter=29579502 counter_spread=5249982
-set=p376 outcome=refused error=Codomain samples=31 median_ns=30339526 spread_ns=5259652 median_counter=79223652 counter_spread=13734536
-set=p376 outcome=refused error=Kernel samples=31 median_ns=13587380 spread_ns=573481 median_counter=35480276 counter_spread=1497548
-set=p500 outcome=refused error=Codomain samples=31 median_ns=68055391 spread_ns=6500297 median_counter=177708352 counter_spread=16972846
-set=p500 outcome=refused error=Kernel samples=31 median_ns=28217896 spread_ns=1017722 median_counter=73683354 counter_spread=2657506
-set=p664 outcome=refused error=Codomain samples=31 median_ns=158399698 spread_ns=4506471 median_counter=413618408 counter_spread=11767684
-set=p664 outcome=refused error=Kernel samples=31 median_ns=65417466 spread_ns=2030891 median_counter=170820066 counter_spread=5307504
-search set=p248 outcome=prime-salt counters=589 samples=31 median_ns=82714831 spread_ns=7411984 median_counter=215987428 counter_spread=19354064
-search set=p324 outcome=prime-salt counters=25 samples=31 median_ns=7374163 spread_ns=539791 median_counter=19255652 counter_spread=1409492
-search set=p376 outcome=prime-salt counters=173 samples=31 median_ns=36339824 spread_ns=3467541 median_counter=94892072 counter_spread=9054344
-search set=p500 outcome=prime-salt counters=191 samples=31 median_ns=53322003 spread_ns=10159310 median_counter=139235996 counter_spread=26528254
-search set=p664 outcome=prime-salt counters=414 samples=31 median_ns=256357517 spread_ns=15902434 median_counter=669406676 counter_spread=41525808
-field set=p248 op=mul batch=10000 samples=31 ns_per_op=40.9 counter_per_op=106.9
-field set=p248 op=square batch=10000 samples=31 ns_per_op=29.6 counter_per_op=77.2
-field set=p248 op=inv batch=200 samples=31 ns_per_op=1619.3 counter_per_op=4228.5
-field set=p324 op=mul batch=10000 samples=31 ns_per_op=80.6 counter_per_op=210.4
-field set=p324 op=square batch=10000 samples=31 ns_per_op=54.1 counter_per_op=141.3
-field set=p324 op=inv batch=200 samples=31 ns_per_op=2499.1 counter_per_op=6525.9
-field set=p376 op=mul batch=10000 samples=31 ns_per_op=81.2 counter_per_op=212.1
-field set=p376 op=square batch=10000 samples=31 ns_per_op=53.4 counter_per_op=139.5
-field set=p376 op=inv batch=200 samples=31 ns_per_op=2934.0 counter_per_op=7661.6
-field set=p500 op=mul batch=10000 samples=31 ns_per_op=148.0 counter_per_op=386.5
-field set=p500 op=square batch=10000 samples=31 ns_per_op=97.9 counter_per_op=255.6
-field set=p500 op=inv batch=200 samples=31 ns_per_op=4560.5 counter_per_op=11908.7
-field set=p664 op=mul batch=10000 samples=31 ns_per_op=255.7 counter_per_op=667.8
-field set=p664 op=square batch=10000 samples=31 ns_per_op=171.3 counter_per_op=447.2
-field set=p664 op=inv batch=200 samples=31 ns_per_op=7461.0 counter_per_op=19482.5
+set=p248 outcome=accepted samples=31 median_ns=11323679 spread_ns=1809075 median_counter=29568736 counter_spread=4723974
+set=p376 outcome=accepted samples=31 median_ns=32660022 spread_ns=16083092 median_counter=85283286 counter_spread=41995324
+set=p500 outcome=accepted samples=31 median_ns=71392743 spread_ns=6535150 median_counter=186422980 counter_spread=17064864
+set=p248 outcome=refused error=Codomain samples=31 median_ns=10610574 spread_ns=1731588 median_counter=27706734 counter_spread=4521578
+set=p248 outcome=refused error=Kernel samples=31 median_ns=5415013 spread_ns=1066957 median_counter=14139860 counter_spread=2786136
+set=p324 outcome=refused error=Codomain samples=31 median_ns=25589183 spread_ns=6910525 median_counter=66819188 counter_spread=18045126
+set=p324 outcome=refused error=Kernel samples=31 median_ns=11778075 spread_ns=3173209 median_counter=30755266 counter_spread=8286038
+set=p376 outcome=refused error=Codomain samples=31 median_ns=30383447 spread_ns=1404335 median_counter=79338110 counter_spread=3666950
+set=p376 outcome=refused error=Kernel samples=31 median_ns=13556115 spread_ns=733663 median_counter=35398114 counter_spread=1915766
+set=p500 outcome=refused error=Codomain samples=31 median_ns=67514152 spread_ns=3670660 median_counter=176294858 counter_spread=9585808
+set=p500 outcome=refused error=Kernel samples=31 median_ns=28187493 spread_ns=338604 median_counter=73603952 counter_spread=882558
+set=p664 outcome=refused error=Codomain samples=31 median_ns=159355545 spread_ns=33805823 median_counter=416113736 counter_spread=88274878
+set=p664 outcome=refused error=Kernel samples=31 median_ns=65298187 spread_ns=5191481 median_counter=170508282 counter_spread=13556780
+search set=p248 window=1024 composite=1017 prime=7 first_prime=588 samples=31 composite_ns_per_attempt=134236 prime_ns_per_attempt=1746029
+search set=p324 window=1024 composite=1018 prime=6 first_prime=24 samples=31 composite_ns_per_attempt=156992 prime_ns_per_attempt=2251407
+search set=p376 window=1024 composite=1011 prime=13 first_prime=172 samples=31 composite_ns_per_attempt=183469 prime_ns_per_attempt=2668714
+search set=p500 window=1024 composite=1020 prime=4 first_prime=190 samples=31 composite_ns_per_attempt=238732 prime_ns_per_attempt=3489012
+search set=p664 window=1024 composite=1022 prime=2 first_prime=413 samples=31 composite_ns_per_attempt=599657 prime_ns_per_attempt=8026058
+field set=p248 op=mul batch=10000 samples=31 ns_per_op=40.4 counter_per_op=105.4
+field set=p248 op=square batch=10000 samples=31 ns_per_op=28.8 counter_per_op=75.2
+field set=p248 op=inv batch=200 samples=31 ns_per_op=1587.1 counter_per_op=4144.5
+field set=p324 op=mul batch=10000 samples=31 ns_per_op=79.0 counter_per_op=206.2
+field set=p324 op=square batch=10000 samples=31 ns_per_op=52.6 counter_per_op=137.5
+field set=p324 op=inv batch=200 samples=31 ns_per_op=2403.8 counter_per_op=6277.0
+field set=p376 op=mul batch=10000 samples=31 ns_per_op=80.1 counter_per_op=209.1
+field set=p376 op=square batch=10000 samples=31 ns_per_op=52.0 counter_per_op=135.7
+field set=p376 op=inv batch=200 samples=31 ns_per_op=2815.7 counter_per_op=7352.7
+field set=p500 op=mul batch=10000 samples=31 ns_per_op=141.6 counter_per_op=369.9
+field set=p500 op=square batch=10000 samples=31 ns_per_op=94.3 counter_per_op=246.3
+field set=p500 op=inv batch=200 samples=31 ns_per_op=4357.8 counter_per_op=11379.4
+field set=p664 op=mul batch=10000 samples=31 ns_per_op=249.9 counter_per_op=652.6
+field set=p664 op=square batch=10000 samples=31 ns_per_op=168.7 counter_per_op=440.6
+field set=p664 op=inv batch=200 samples=31 ns_per_op=7449.4 counter_per_op=19452.4
 # conditions after
-time=2026-11-16T02:24:22Z
-loadavg=3.86 6.57 6.62 1/2562 355685
+time=2026-11-16T02:51:21Z
+loadavg=2.36 6.57 6.43 1/2574 489436
 RUN 2
 # conditions before
-time=2026-11-16T02:24:22Z
-loadavg=3.86 6.57 6.62 1/2562 355687
-source_commit=351deb45d33838449ba3d863d2a1b123f2b3ff11
+time=2026-11-16T02:51:21Z
+loadavg=2.36 6.57 6.43 1/2574 489438
+source_commit=43d6e3ee4206c898705d85e4a982b901cd95bcbd
 # cargo run --release --locked -p prism-bench
 field-backend=scalar
 counter=rdtsc
-set=p248 outcome=accepted samples=31 median_ns=11930818 spread_ns=543097 median_counter=31154184 counter_spread=1408952
-set=p376 outcome=accepted samples=31 median_ns=33881628 spread_ns=3554431 median_counter=88473606 counter_spread=9281554
-set=p500 outcome=accepted samples=31 median_ns=73728167 spread_ns=8551765 median_counter=192521230 counter_spread=22330676
-set=p248 outcome=refused error=Codomain samples=31 median_ns=10708784 spread_ns=1420995 median_counter=27963114 counter_spread=3710808
-set=p248 outcome=refused error=Kernel samples=31 median_ns=5595649 spread_ns=1070036 median_counter=14611542 counter_spread=2794064
-set=p324 outcome=refused error=Codomain samples=31 median_ns=26418303 spread_ns=5497536 median_counter=68984398 counter_spread=14355800
-set=p324 outcome=refused error=Kernel samples=31 median_ns=12145997 spread_ns=491875 median_counter=31716756 counter_spread=1286478
-set=p376 outcome=refused error=Codomain samples=31 median_ns=32171684 spread_ns=5670788 median_counter=84008246 counter_spread=14808040
-set=p376 outcome=refused error=Kernel samples=31 median_ns=14696548 spread_ns=2312147 median_counter=38378950 counter_spread=6038000
-set=p500 outcome=refused error=Codomain samples=31 median_ns=69767501 spread_ns=5773256 median_counter=182179040 counter_spread=15077892
-set=p500 outcome=refused error=Kernel samples=31 median_ns=28318225 spread_ns=2814550 median_counter=73949302 counter_spread=7349410
-set=p664 outcome=refused error=Codomain samples=31 median_ns=157102545 spread_ns=10156129 median_counter=410230090 counter_spread=26520100
-set=p664 outcome=refused error=Kernel samples=31 median_ns=64263391 spread_ns=5242280 median_counter=167806272 counter_spread=13688920
-search set=p248 outcome=prime-salt counters=589 samples=31 median_ns=80582356 spread_ns=5461864 median_counter=210418540 counter_spread=14262390
-search set=p324 outcome=prime-salt counters=25 samples=31 median_ns=6935346 spread_ns=406563 median_counter=18109776 counter_spread=1061624
-search set=p376 outcome=prime-salt counters=173 samples=31 median_ns=35387482 spread_ns=3892235 median_counter=92404646 counter_spread=10163498
-search set=p500 outcome=prime-salt counters=191 samples=31 median_ns=51484911 spread_ns=2667192 median_counter=134438868 counter_spread=6964868
-search set=p664 outcome=prime-salt counters=414 samples=31 median_ns=249515776 spread_ns=15458263 median_counter=651541776 counter_spread=40364668
-field set=p248 op=mul batch=10000 samples=31 ns_per_op=39.8 counter_per_op=104.0
+set=p248 outcome=accepted samples=31 median_ns=11435891 spread_ns=584545 median_counter=29861754 counter_spread=1519540
+set=p376 outcome=accepted samples=31 median_ns=30864986 spread_ns=1919030 median_counter=80595470 counter_spread=5009848
+set=p500 outcome=accepted samples=31 median_ns=68998263 spread_ns=5196870 median_counter=180169996 counter_spread=13570236
+set=p248 outcome=refused error=Codomain samples=31 median_ns=10666679 spread_ns=833006 median_counter=27853166 counter_spread=2175350
+set=p248 outcome=refused error=Kernel samples=31 median_ns=5378782 spread_ns=294440 median_counter=14045248 counter_spread=768824
+set=p324 outcome=refused error=Codomain samples=31 median_ns=25966996 spread_ns=2225993 median_counter=67805702 counter_spread=5812570
+set=p324 outcome=refused error=Kernel samples=31 median_ns=11665750 spread_ns=1159450 median_counter=30461944 counter_spread=3027622
+set=p376 outcome=refused error=Codomain samples=31 median_ns=30181402 spread_ns=2289954 median_counter=78810634 counter_spread=5979786
+set=p376 outcome=refused error=Kernel samples=31 median_ns=13544968 spread_ns=707629 median_counter=35369004 counter_spread=1847780
+set=p500 outcome=refused error=Codomain samples=31 median_ns=66965641 spread_ns=2560176 median_counter=174862362 counter_spread=6685394
+set=p500 outcome=refused error=Kernel samples=31 median_ns=27899324 spread_ns=401748 median_counter=72851500 counter_spread=1049044
+set=p664 outcome=refused error=Codomain samples=31 median_ns=156328294 spread_ns=15430841 median_counter=408208268 counter_spread=40293436
+set=p664 outcome=refused error=Kernel samples=31 median_ns=64463915 spread_ns=783002 median_counter=168329808 counter_spread=2044586
+search set=p248 window=1024 composite=1017 prime=7 first_prime=588 samples=31 composite_ns_per_attempt=191365 prime_ns_per_attempt=2390717
+search set=p324 window=1024 composite=1018 prime=6 first_prime=24 samples=31 composite_ns_per_attempt=229376 prime_ns_per_attempt=3120106
+search set=p376 window=1024 composite=1011 prime=13 first_prime=172 samples=31 composite_ns_per_attempt=266681 prime_ns_per_attempt=3692831
+search set=p500 window=1024 composite=1020 prime=4 first_prime=190 samples=31 composite_ns_per_attempt=358747 prime_ns_per_attempt=4939212
+search set=p664 window=1024 composite=1022 prime=2 first_prime=413 samples=31 composite_ns_per_attempt=618978 prime_ns_per_attempt=8289531
+field set=p248 op=mul batch=10000 samples=31 ns_per_op=40.2 counter_per_op=105.0
 field set=p248 op=square batch=10000 samples=31 ns_per_op=28.8 counter_per_op=75.1
-field set=p248 op=inv batch=200 samples=31 ns_per_op=1558.0 counter_per_op=4068.5
-field set=p324 op=mul batch=10000 samples=31 ns_per_op=78.2 counter_per_op=204.2
-field set=p324 op=square batch=10000 samples=31 ns_per_op=52.3 counter_per_op=136.7
-field set=p324 op=inv batch=200 samples=31 ns_per_op=2405.6 counter_per_op=6281.7
-field set=p376 op=mul batch=10000 samples=31 ns_per_op=82.3 counter_per_op=214.9
-field set=p376 op=square batch=10000 samples=31 ns_per_op=53.1 counter_per_op=138.5
-field set=p376 op=inv batch=200 samples=31 ns_per_op=2965.8 counter_per_op=7744.6
-field set=p500 op=mul batch=10000 samples=31 ns_per_op=140.6 counter_per_op=367.1
-field set=p500 op=square batch=10000 samples=31 ns_per_op=92.4 counter_per_op=241.3
-field set=p500 op=inv batch=200 samples=31 ns_per_op=4325.7 counter_per_op=11295.5
-field set=p664 op=mul batch=10000 samples=31 ns_per_op=245.4 counter_per_op=640.8
-field set=p664 op=square batch=10000 samples=31 ns_per_op=166.0 counter_per_op=433.5
-field set=p664 op=inv batch=200 samples=31 ns_per_op=7408.2 counter_per_op=19344.8
+field set=p248 op=inv batch=200 samples=31 ns_per_op=1604.2 counter_per_op=4189.1
+field set=p324 op=mul batch=10000 samples=31 ns_per_op=78.8 counter_per_op=205.8
+field set=p324 op=square batch=10000 samples=31 ns_per_op=52.7 counter_per_op=137.6
+field set=p324 op=inv batch=200 samples=31 ns_per_op=2450.1 counter_per_op=6398.0
+field set=p376 op=mul batch=10000 samples=31 ns_per_op=79.8 counter_per_op=208.5
+field set=p376 op=square batch=10000 samples=31 ns_per_op=52.7 counter_per_op=137.5
+field set=p376 op=inv batch=200 samples=31 ns_per_op=2887.9 counter_per_op=7541.2
+field set=p500 op=mul batch=10000 samples=31 ns_per_op=143.1 counter_per_op=373.7
+field set=p500 op=square batch=10000 samples=31 ns_per_op=94.6 counter_per_op=247.1
+field set=p500 op=inv batch=200 samples=31 ns_per_op=4404.8 counter_per_op=11502.2
+field set=p664 op=mul batch=10000 samples=31 ns_per_op=250.2 counter_per_op=653.3
+field set=p664 op=square batch=10000 samples=31 ns_per_op=169.4 counter_per_op=442.5
+field set=p664 op=inv batch=200 samples=31 ns_per_op=7523.0 counter_per_op=19644.4
 # conditions after
-time=2026-11-16T02:24:57Z
-loadavg=2.80 6.00 6.43 2/2562 356322
+time=2026-11-16T02:52:46Z
+loadavg=2.76 5.61 6.10 3/2573 491344
 RUN 3
 # conditions before
-time=2026-11-16T02:24:57Z
-loadavg=2.80 6.00 6.43 2/2562 356324
-source_commit=351deb45d33838449ba3d863d2a1b123f2b3ff11
+time=2026-11-16T02:52:46Z
+loadavg=2.76 5.61 6.10 1/2573 491346
+source_commit=43d6e3ee4206c898705d85e4a982b901cd95bcbd
 # cargo run --release --locked -p prism-bench
 field-backend=scalar
 counter=rdtsc
-set=p248 outcome=accepted samples=31 median_ns=11754692 spread_ns=587925 median_counter=30694240 counter_spread=1535204
-set=p376 outcome=accepted samples=31 median_ns=31482368 spread_ns=3562579 median_counter=82208038 counter_spread=9303084
-set=p500 outcome=accepted samples=31 median_ns=70925952 spread_ns=25146510 median_counter=185204046 counter_spread=65663106
-set=p248 outcome=refused error=Codomain samples=31 median_ns=11189811 spread_ns=785326 median_counter=29219256 counter_spread=2050860
-set=p248 outcome=refused error=Kernel samples=31 median_ns=5888741 spread_ns=1663492 median_counter=15376898 counter_spread=4343796
-set=p324 outcome=refused error=Codomain samples=31 median_ns=25723366 spread_ns=2209994 median_counter=67169760 counter_spread=5771774
-set=p324 outcome=refused error=Kernel samples=31 median_ns=11529710 spread_ns=1578144 median_counter=30106710 counter_spread=4120722
-set=p376 outcome=refused error=Codomain samples=31 median_ns=30835250 spread_ns=2572914 median_counter=80517982 counter_spread=6718412
-set=p376 outcome=refused error=Kernel samples=31 median_ns=13786247 spread_ns=390845 median_counter=35999098 counter_spread=1020592
-set=p500 outcome=refused error=Codomain samples=31 median_ns=67472508 spread_ns=5422951 median_counter=176186276 counter_spread=14161218
-set=p500 outcome=refused error=Kernel samples=31 median_ns=27710640 spread_ns=1740924 median_counter=72358958 counter_spread=4545680
-set=p664 outcome=refused error=Codomain samples=31 median_ns=158782391 spread_ns=27927465 median_counter=414616520 counter_spread=72924556
-set=p664 outcome=refused error=Kernel samples=31 median_ns=65777439 spread_ns=8235572 median_counter=171760000 counter_spread=21504502
-search set=p248 outcome=prime-salt counters=589 samples=31 median_ns=84032403 spread_ns=13982359 median_counter=219428858 counter_spread=36511494
-search set=p324 outcome=prime-salt counters=25 samples=31 median_ns=7157610 spread_ns=1229550 median_counter=18690194 counter_spread=3210416
-search set=p376 outcome=prime-salt counters=173 samples=31 median_ns=36279798 spread_ns=15040411 median_counter=94735194 counter_spread=39274154
-search set=p500 outcome=prime-salt counters=191 samples=31 median_ns=52242915 spread_ns=10237678 median_counter=136417950 counter_spread=26732958
-search set=p664 outcome=prime-salt counters=414 samples=31 median_ns=249481499 spread_ns=44070490 median_counter=651452288 counter_spread=115078462
-field set=p248 op=mul batch=10000 samples=31 ns_per_op=41.2 counter_per_op=107.5
-field set=p248 op=square batch=10000 samples=31 ns_per_op=29.1 counter_per_op=75.9
-field set=p248 op=inv batch=200 samples=31 ns_per_op=1606.9 counter_per_op=4196.3
-field set=p324 op=mul batch=10000 samples=31 ns_per_op=80.6 counter_per_op=210.4
-field set=p324 op=square batch=10000 samples=31 ns_per_op=54.0 counter_per_op=141.0
-field set=p324 op=inv batch=200 samples=31 ns_per_op=2598.3 counter_per_op=6784.9
-field set=p376 op=mul batch=10000 samples=31 ns_per_op=83.4 counter_per_op=217.7
-field set=p376 op=square batch=10000 samples=31 ns_per_op=55.5 counter_per_op=144.8
-field set=p376 op=inv batch=200 samples=31 ns_per_op=2837.5 counter_per_op=7409.6
-field set=p500 op=mul batch=10000 samples=31 ns_per_op=136.7 counter_per_op=357.1
-field set=p500 op=square batch=10000 samples=31 ns_per_op=91.4 counter_per_op=238.6
-field set=p500 op=inv batch=200 samples=31 ns_per_op=4283.5 counter_per_op=11185.3
-field set=p664 op=mul batch=10000 samples=31 ns_per_op=243.8 counter_per_op=636.6
-field set=p664 op=square batch=10000 samples=31 ns_per_op=165.5 counter_per_op=432.1
-field set=p664 op=inv batch=200 samples=31 ns_per_op=7388.9 counter_per_op=19294.3
+set=p248 outcome=accepted samples=31 median_ns=21026621 spread_ns=34629125 median_counter=54905358 counter_spread=90424554
+set=p376 outcome=accepted samples=31 median_ns=76689009 spread_ns=42353348 median_counter=200252890 counter_spread=110594088
+set=p500 outcome=accepted samples=31 median_ns=141157454 spread_ns=32630409 median_counter=368594952 counter_spread=85205212
+set=p248 outcome=refused error=Codomain samples=31 median_ns=22236266 spread_ns=8904343 median_counter=58064346 counter_spread=23251086
+set=p248 outcome=refused error=Kernel samples=31 median_ns=11748044 spread_ns=6258700 median_counter=30677238 counter_spread=16343124
+set=p324 outcome=refused error=Codomain samples=31 median_ns=62827295 spread_ns=34830666 median_counter=164057332 counter_spread=90950932
+set=p324 outcome=refused error=Kernel samples=31 median_ns=25249447 spread_ns=12688556 median_counter=65932518 counter_spread=33132388
+set=p376 outcome=refused error=Codomain samples=31 median_ns=68757894 spread_ns=37396930 median_counter=179543874 counter_spread=97652020
+set=p376 outcome=refused error=Kernel samples=31 median_ns=30351316 spread_ns=19861775 median_counter=79256224 counter_spread=51855506
+set=p500 outcome=refused error=Codomain samples=31 median_ns=139657804 spread_ns=73678470 median_counter=364678186 counter_spread=192390864
+set=p500 outcome=refused error=Kernel samples=31 median_ns=58367301 spread_ns=107799055 median_counter=152410286 counter_spread=281488300
+set=p664 outcome=refused error=Codomain samples=31 median_ns=275604425 spread_ns=477511683 median_counter=719665848 counter_spread=1246890024
+set=p664 outcome=refused error=Kernel samples=31 median_ns=70205703 spread_ns=53046089 median_counter=183323114 counter_spread=138515860
+search set=p248 window=1024 composite=1017 prime=7 first_prime=588 samples=31 composite_ns_per_attempt=140618 prime_ns_per_attempt=1818203
+search set=p324 window=1024 composite=1018 prime=6 first_prime=24 samples=31 composite_ns_per_attempt=186264 prime_ns_per_attempt=2594313
+search set=p376 window=1024 composite=1011 prime=13 first_prime=172 samples=31 composite_ns_per_attempt=192711 prime_ns_per_attempt=2825423
+search set=p500 window=1024 composite=1020 prime=4 first_prime=190 samples=31 composite_ns_per_attempt=248789 prime_ns_per_attempt=3620365
+search set=p664 window=1024 composite=1022 prime=2 first_prime=413 samples=31 composite_ns_per_attempt=638873 prime_ns_per_attempt=8523177
+field set=p248 op=mul batch=10000 samples=31 ns_per_op=43.7 counter_per_op=114.0
+field set=p248 op=square batch=10000 samples=31 ns_per_op=31.1 counter_per_op=81.2
+field set=p248 op=inv batch=200 samples=31 ns_per_op=1748.5 counter_per_op=4566.0
+field set=p324 op=mul batch=10000 samples=31 ns_per_op=82.9 counter_per_op=216.5
+field set=p324 op=square batch=10000 samples=31 ns_per_op=55.7 counter_per_op=145.5
+field set=p324 op=inv batch=200 samples=31 ns_per_op=2719.9 counter_per_op=7102.5
+field set=p376 op=mul batch=10000 samples=31 ns_per_op=88.6 counter_per_op=231.5
+field set=p376 op=square batch=10000 samples=31 ns_per_op=59.5 counter_per_op=155.3
+field set=p376 op=inv batch=200 samples=31 ns_per_op=3266.9 counter_per_op=8530.9
+field set=p500 op=mul batch=10000 samples=31 ns_per_op=157.6 counter_per_op=411.5
+field set=p500 op=square batch=10000 samples=31 ns_per_op=100.8 counter_per_op=263.3
+field set=p500 op=inv batch=200 samples=31 ns_per_op=4675.9 counter_per_op=12209.9
+field set=p664 op=mul batch=10000 samples=31 ns_per_op=255.8 counter_per_op=667.9
+field set=p664 op=square batch=10000 samples=31 ns_per_op=174.3 counter_per_op=455.1
+field set=p664 op=inv batch=200 samples=31 ns_per_op=7682.6 counter_per_op=20061.2
 # conditions after
-time=2026-11-16T02:25:33Z
-loadavg=2.58 5.59 6.27 1/2558 356871
+time=2026-11-16T02:54:28Z
+loadavg=16.48 9.88 7.61 2/2609 508550
 # Summary: the median of the three run medians, with the three beside it.
-summary set=p248 outcome=accepted median_ms=11.755 runs_ms=11.194,11.931,11.755
-summary set=p376 outcome=accepted median_ms=31.841 runs_ms=31.841,33.882,31.482
-summary set=p500 outcome=accepted median_ms=71.331 runs_ms=71.331,73.728,70.926
-summary set=p248 outcome=refused error=Codomain median_ms=10.937 runs_ms=10.937,10.709,11.190
-summary set=p248 outcome=refused error=Kernel median_ms=5.596 runs_ms=5.543,5.596,5.889
-summary set=p324 outcome=refused error=Codomain median_ms=26.222 runs_ms=26.222,26.418,25.723
-summary set=p324 outcome=refused error=Kernel median_ms=11.530 runs_ms=11.328,12.146,11.530
-summary set=p376 outcome=refused error=Codomain median_ms=30.835 runs_ms=30.340,32.172,30.835
-summary set=p376 outcome=refused error=Kernel median_ms=13.786 runs_ms=13.587,14.697,13.786
-summary set=p500 outcome=refused error=Codomain median_ms=68.055 runs_ms=68.055,69.768,67.473
-summary set=p500 outcome=refused error=Kernel median_ms=28.218 runs_ms=28.218,28.318,27.711
-summary set=p664 outcome=refused error=Codomain median_ms=158.400 runs_ms=158.400,157.103,158.782
-summary set=p664 outcome=refused error=Kernel median_ms=65.417 runs_ms=65.417,64.263,65.777
-summary search set=p248 counters=589 median_ms=82.715 runs_ms=82.715,80.582,84.032
-summary search set=p324 counters=25 median_ms=7.158 runs_ms=7.374,6.935,7.158
-summary search set=p376 counters=173 median_ms=36.280 runs_ms=36.340,35.387,36.280
-summary search set=p500 counters=191 median_ms=52.243 runs_ms=53.322,51.485,52.243
-summary search set=p664 counters=414 median_ms=249.516 runs_ms=256.358,249.516,249.481
-summary field set=p248 op=mul ns_per_op=40.9 runs_ns=40.9,39.8,41.2
-summary field set=p248 op=square ns_per_op=29.1 runs_ns=29.6,28.8,29.1
-summary field set=p248 op=inv ns_per_op=1606.9 runs_ns=1619.3,1558.0,1606.9
-summary field set=p324 op=mul ns_per_op=80.6 runs_ns=80.6,78.2,80.6
-summary field set=p324 op=square ns_per_op=54.0 runs_ns=54.1,52.3,54.0
-summary field set=p324 op=inv ns_per_op=2499.1 runs_ns=2499.1,2405.6,2598.3
-summary field set=p376 op=mul ns_per_op=82.3 runs_ns=81.2,82.3,83.4
-summary field set=p376 op=square ns_per_op=53.4 runs_ns=53.4,53.1,55.5
-summary field set=p376 op=inv ns_per_op=2934.0 runs_ns=2934.0,2965.8,2837.5
-summary field set=p500 op=mul ns_per_op=140.6 runs_ns=148.0,140.6,136.7
-summary field set=p500 op=square ns_per_op=92.4 runs_ns=97.9,92.4,91.4
-summary field set=p500 op=inv ns_per_op=4325.7 runs_ns=4560.5,4325.7,4283.5
-summary field set=p664 op=mul ns_per_op=245.4 runs_ns=255.7,245.4,243.8
-summary field set=p664 op=square ns_per_op=166.0 runs_ns=171.3,166.0,165.5
-summary field set=p664 op=inv ns_per_op=7408.2 runs_ns=7461.0,7408.2,7388.9
+summary set=p248 outcome=accepted median_ms=11.436 runs_ms=11.324,11.436,21.027
+summary set=p376 outcome=accepted median_ms=32.660 runs_ms=32.660,30.865,76.689
+summary set=p500 outcome=accepted median_ms=71.393 runs_ms=71.393,68.998,141.157
+summary set=p248 outcome=refused error=Codomain median_ms=10.667 runs_ms=10.611,10.667,22.236
+summary set=p248 outcome=refused error=Kernel median_ms=5.415 runs_ms=5.415,5.379,11.748
+summary set=p324 outcome=refused error=Codomain median_ms=25.967 runs_ms=25.589,25.967,62.827
+summary set=p324 outcome=refused error=Kernel median_ms=11.778 runs_ms=11.778,11.666,25.249
+summary set=p376 outcome=refused error=Codomain median_ms=30.383 runs_ms=30.383,30.181,68.758
+summary set=p376 outcome=refused error=Kernel median_ms=13.556 runs_ms=13.556,13.545,30.351
+summary set=p500 outcome=refused error=Codomain median_ms=67.514 runs_ms=67.514,66.966,139.658
+summary set=p500 outcome=refused error=Kernel median_ms=28.187 runs_ms=28.187,27.899,58.367
+summary set=p664 outcome=refused error=Codomain median_ms=159.356 runs_ms=159.356,156.328,275.604
+summary set=p664 outcome=refused error=Kernel median_ms=65.298 runs_ms=65.298,64.464,70.206
+summary search set=p248 window=1024 composite=1017 prime=7 first_prime=588 kind=composite ms_per_attempt=0.141 runs_ms=0.134,0.191,0.141
+summary search set=p248 window=1024 composite=1017 prime=7 first_prime=588 kind=prime ms_per_attempt=1.818 runs_ms=1.746,2.391,1.818
+summary search set=p324 window=1024 composite=1018 prime=6 first_prime=24 kind=composite ms_per_attempt=0.186 runs_ms=0.157,0.229,0.186
+summary search set=p324 window=1024 composite=1018 prime=6 first_prime=24 kind=prime ms_per_attempt=2.594 runs_ms=2.251,3.120,2.594
+summary search set=p376 window=1024 composite=1011 prime=13 first_prime=172 kind=composite ms_per_attempt=0.193 runs_ms=0.183,0.267,0.193
+summary search set=p376 window=1024 composite=1011 prime=13 first_prime=172 kind=prime ms_per_attempt=2.825 runs_ms=2.669,3.693,2.825
+summary search set=p500 window=1024 composite=1020 prime=4 first_prime=190 kind=composite ms_per_attempt=0.249 runs_ms=0.239,0.359,0.249
+summary search set=p500 window=1024 composite=1020 prime=4 first_prime=190 kind=prime ms_per_attempt=3.620 runs_ms=3.489,4.939,3.620
+summary search set=p664 window=1024 composite=1022 prime=2 first_prime=413 kind=composite ms_per_attempt=0.619 runs_ms=0.600,0.619,0.639
+summary search set=p664 window=1024 composite=1022 prime=2 first_prime=413 kind=prime ms_per_attempt=8.290 runs_ms=8.026,8.290,8.523
+summary field set=p248 op=mul ns_per_op=40.4 runs_ns=40.4,40.2,43.7
+summary field set=p248 op=square ns_per_op=28.8 runs_ns=28.8,28.8,31.1
+summary field set=p248 op=inv ns_per_op=1604.2 runs_ns=1587.1,1604.2,1748.5
+summary field set=p324 op=mul ns_per_op=79.0 runs_ns=79.0,78.8,82.9
+summary field set=p324 op=square ns_per_op=52.7 runs_ns=52.6,52.7,55.7
+summary field set=p324 op=inv ns_per_op=2450.1 runs_ns=2403.8,2450.1,2719.9
+summary field set=p376 op=mul ns_per_op=80.1 runs_ns=80.1,79.8,88.6
+summary field set=p376 op=square ns_per_op=52.7 runs_ns=52.0,52.7,59.5
+summary field set=p376 op=inv ns_per_op=2887.9 runs_ns=2815.7,2887.9,3266.9
+summary field set=p500 op=mul ns_per_op=143.1 runs_ns=141.6,143.1,157.6
+summary field set=p500 op=square ns_per_op=94.6 runs_ns=94.3,94.6,100.8
+summary field set=p500 op=inv ns_per_op=4404.8 runs_ns=4357.8,4404.8,4675.9
+summary field set=p664 op=mul ns_per_op=250.2 runs_ns=249.9,250.2,255.8
+summary field set=p664 op=square ns_per_op=169.4 runs_ns=168.7,169.4,174.3
+summary field set=p664 op=inv ns_per_op=7523.0 runs_ns=7449.4,7523.0,7682.6

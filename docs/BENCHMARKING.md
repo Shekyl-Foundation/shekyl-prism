@@ -12,8 +12,8 @@
   It is not an accepted verification. "The refusal after the pairing
   check" below says what it is and gives the figures.
 
-It then times the sender's search for the salt of that refused response
-(`search` rows) and one field multiplication, squaring and inversion at
+It then times what one tried salt costs the sender of that refused
+response, composite and prime degrees apart (`search` rows), and one field multiplication, squaring and inversion at
 each set (`field` rows).
 
 The native signer roundtrip can be run with:
@@ -326,8 +326,9 @@ file there, not because the response is larger.
 All of this is held in vectors owned by values local to one call of
 `verify`, so it is freed when the call returns and nothing is shared
 between calls. That is read from the code, not measured: outside the
-counter feature the three crates have one `static`, the pinned-vector
-table of `prism_verify::reference`, which `verify` does not call. Massif
+counter feature the three crates have two `static`s, the pinned-key
+table and the pinned-refusal table of `prism_verify::reference`, neither
+of which `verify` calls. Massif
 agrees where its last sample falls after the call (544 bytes at levels I
 and III; at level V the last sample was taken during the release). So
 verifications running at once each hold their own, and four at once, one
@@ -381,78 +382,85 @@ The curve at each set is the one the operation counts were already taken
 on (`negative-verdicts.tsv`, cases `identity-response-q-difference` and
 `identity-response-q-negated`): the response curve of the honest
 signature the accept row times at `p248`, `p376` and `p500`, and the
-model curve of the Sage file at `p324` and `p664`.
+model curve of the Sage file at `p324` and `p664`. Tests hold each
+committed row to that counted input.
 
-All figures are at `351deb4`, toolchain 1.94.0, scalar backend, one
+All figures are at `43d6e3e`, toolchain 1.94.0, scalar backend, one
 thread, in milliseconds.
 
 ### On the floor device
 
 Raspberry Pi 4 Model B Rev 1.4, `bash scripts/bench_floor.sh`, three runs
-on 2026-11-16 (02:24Z to 02:37Z), 238 s each. The resident node used
+on 2026-11-16 (02:51Z to 03:14Z), 462 s each. The resident node used
 about 1.9 of the four cores throughout and was not stopped: load average
-3.0 to 3.6, clock 1.8 GHz and 66.7 to 68.2 °C at every reading. The
+3.0 to 3.4, clock 1.8 GHz and 66.2 to 69.1 °C at every reading. The
 record of 2026-11-14 found that this load moves a single-threaded figure
-by under 0.5%. Record:
+by under 0.5% at the three sets it covered; it was not repeated at `p324`
+or `p664`. Record:
 [benchmarks/codomain_refusal_pi4_2026-11-16.txt](benchmarks/codomain_refusal_pi4_2026-11-16.txt).
 
 Table: Pi 4, median of the three run medians. The refusal columns are refusals, not accepted verifications.
 
 | Set | Accept (three sets only) | `Codomain` refusal | `Kernel` refusal | Refusal ÷ accept, time | Refusal ÷ accept, operations |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| `p248` | 89.77 | 86.10 | 40.88 | 0.959 | 0.948 |
-| `p324` | none | 192.76 | 84.36 | | |
-| `p376` | 232.39 | 221.38 | 96.00 | 0.953 | 0.950 |
-| `p500` | 520.50 | 493.34 | 203.75 | 0.948 | 0.947 |
-| `p664` | none | 1,171.48 | 476.21 | | |
+| `p248` | 89.18 | 85.35 | 40.88 | 0.957 | 0.948 |
+| `p324` | none | 192.13 | 84.44 | | |
+| `p376` | 231.68 | 220.21 | 95.88 | 0.950 | 0.950 |
+| `p500` | 521.62 | 494.15 | 203.42 | 0.947 | 0.947 |
+| `p664` | none | 1,171.34 | 476.36 | | |
 
 Table: the three run medians behind each Pi figure.
 
 | Set | Accept | `Codomain` refusal | `Kernel` refusal |
 | --- | --- | --- | --- |
-| `p248` | 89.07, 89.77, 89.94 | 85.28, 86.39, 86.10 | 40.88, 40.84, 40.96 |
-| `p324` | none | 192.47, 192.76, 193.61 | 84.34, 84.44, 84.36 |
-| `p376` | 232.39, 232.15, 232.82 | 221.38, 221.17, 221.76 | 96.00, 95.88, 96.06 |
-| `p500` | 520.42, 520.50, 520.72 | 493.34, 492.91, 493.58 | 203.12, 203.76, 203.85 |
-| `p664` | none | 1,169.85, 1,172.55, 1,171.48 | 476.21, 475.84, 476.33 |
+| `p248` | 89.08, 90.47, 89.18 | 85.14, 86.37, 85.35 | 40.75, 41.15, 40.88 |
+| `p324` | none | 192.13, 192.14, 191.96 | 84.44, 84.33, 84.45 |
+| `p376` | 231.68, 232.50, 231.14 | 220.10, 221.09, 220.21 | 95.82, 95.94, 95.88 |
+| `p500` | 521.11, 522.61, 521.62 | 494.09, 494.93, 494.15 | 203.42, 203.84, 203.20 |
+| `p664` | none | 1,171.34, 1,176.07, 1,170.84 | 476.36, 476.01, 476.81 |
 
-The run medians of one row differ by at most 1.3%, and by under 0.6%
+The run medians of one row differ by at most 1.6%, and by at most 0.6%
 outside `p248`. The accept figures equal those of 2026-11-14 (89.1,
-231.7, 520.8) to within 0.8%.
+231.7, 520.8) to within 0.2%. An earlier session of three runs the same
+night, at `351deb4` before the bench's search rows changed, gave every
+verification and field figure within 0.9% of these.
 
 The two ratio columns both compare the `Codomain` refusal with the
 accept. "Operations" is extension-field multiplications plus squarings,
-from the count records. They agree to 1.1% at `p248`, 0.2% at `p376` and
-0.1% at `p500`: on this device the count of multiplications and
-squarings predicts the time ratio of two runs of the same code to about
-1%. It predicts the time itself less well. The counted multiplications,
-squarings and inversions of the `Codomain` refusal, at the per-operation
-times below, come to 76%, 83%, 83%, 88% and 88% of the measured time
-from `p248` to `p664`; the rest is additions, subtractions, the hash,
-the primality test and everything outside the field.
+from the count records. They agree to 0.9% at `p248` and to under 0.1%
+at `p376` and `p500`: on this device the count of multiplications and
+squarings predicts the time ratio of two runs of the same code to
+within 1%. It predicts the time itself less well. The counted
+multiplications, squarings and inversions of the `Codomain` refusal, at
+the per-operation times below, come to 77%, 83%, 83%, 88% and 88% of the
+measured time from `p248` to `p664`; the rest is additions,
+subtractions, the hash, the primality test and everything outside the
+field.
 
 ### On the development machine
 
-x86_64 workstation (Core i9-11950H), `cargo run --release --locked -p
-prism-bench`, three runs on 2026-11-16 (02:23Z to 02:26Z). The machine is
-shared: load average 2.6 to 4.8 from other work, and the run medians of
-one row differ by up to 8%. It is an observation, not a floor figure.
-Three runs were taken because one is not readable at this noise, and
-the table is their median. Record:
+x86_64 development workstation, `cargo run --release --locked -p
+prism-bench`, three runs on 2026-11-16 (02:50Z to 02:54Z). The machine is
+shared. Runs 1 and 2 ran at load 2.4 to 3.0, and their verification rows agree
+to 6%. Another job
+started during run 3, whose figures are about twice the others'; it is
+kept in the record, and the median of three is then the larger of runs 1
+and 2 at every row. This is an observation, not a floor figure. Record:
 [benchmarks/codomain_refusal_x86_64_2026-11-16.txt](benchmarks/codomain_refusal_x86_64_2026-11-16.txt).
 
 Table: x86_64, median of the three run medians. The refusal columns are refusals, not accepted verifications.
 
 | Set | Accept (three sets only) | `Codomain` refusal | `Kernel` refusal | Refusal ÷ accept, time | Refusal ÷ accept, operations |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| `p248` | 11.76 | 10.94 | 5.60 | 0.931 | 0.948 |
-| `p324` | none | 26.22 | 11.53 | | |
-| `p376` | 31.84 | 30.84 | 13.79 | 0.968 | 0.950 |
-| `p500` | 71.33 | 68.06 | 28.22 | 0.954 | 0.947 |
-| `p664` | none | 158.40 | 65.42 | | |
+| `p248` | 11.44 | 10.67 | 5.42 | 0.933 | 0.948 |
+| `p324` | none | 25.97 | 11.78 | | |
+| `p376` | 32.66 | 30.38 | 13.56 | 0.930 | 0.950 |
+| `p500` | 71.39 | 67.51 | 28.19 | 0.946 | 0.947 |
+| `p664` | none | 159.36 | 65.30 | | |
 
-Here the time ratios scatter by 2% either side of the operation ratios,
-which is the noise of the machine and not a finding about the code.
+Here the time ratios lie up to 2% below the operation ratios. With two
+usable runs on a shared machine that is within its noise, and it is not
+a finding about the code.
 
 ### Derived: an estimate of an accept at `p324` and `p664`
 
@@ -466,10 +474,10 @@ Table: **Derived.** Estimated time of an accepted verification, in milliseconds.
 
 | Set | Measured `Codomain` refusal | Ratios used | Estimated accept |
 | --- | ---: | --- | ---: |
-| `p324`, Pi 4 | 192.76 | 0.948 to 0.959 | 201 to 203 |
-| `p664`, Pi 4 | 1,171.48 | 0.948 to 0.959 | 1,221 to 1,236 |
-| `p324`, x86_64 | 26.22 | 0.931 to 0.968 | 27.1 to 28.2 |
-| `p664`, x86_64 | 158.40 | 0.931 to 0.968 | 164 to 170 |
+| `p324`, Pi 4 | 192.13 | 0.947 to 0.957 | 201 to 203 |
+| `p664`, Pi 4 | 1,171.34 | 0.947 to 0.957 | 1,224 to 1,237 |
+| `p324`, x86_64 | 25.97 | 0.930 to 0.946 | 27.5 to 27.9 |
+| `p664`, x86_64 | 159.36 | 0.930 to 0.946 | 168 to 171 |
 
 ### One field operation on the Pi, at all five sets
 
@@ -481,52 +489,64 @@ Table: time measured; cycles **estimated at an assumed 1.8 GHz**, not counted.
 
 | Set | multiplication: ns measured, cycles estimated at an assumed 1.8 GHz | squaring: ns measured, cycles estimated at an assumed 1.8 GHz | inversion: ns measured, cycles estimated at an assumed 1.8 GHz |
 | --- | ---: | ---: | ---: |
-| `p248` | 342.4 ns, est. 616 | 224.9 ns, est. 405 | 6,286 ns, est. 11,314 |
-| `p324` | 626.1 ns, est. 1,127 | 410.1 ns, est. 738 | 10,354 ns, est. 18,637 |
-| `p376` | 619.5 ns, est. 1,115 | 405.3 ns, est. 730 | 12,142 ns, est. 21,855 |
-| `p500` | 1,085.7 ns, est. 1,954 | 699.1 ns, est. 1,258 | 19,732 ns, est. 35,518 |
-| `p664` | 1,898.5 ns, est. 3,417 | 1,233.0 ns, est. 2,219 | 35,101 ns, est. 63,181 |
+| `p248` | 342.2 ns, est. 616 | 224.8 ns, est. 405 | 6,281 ns, est. 11,306 |
+| `p324` | 626.4 ns, est. 1,128 | 410.4 ns, est. 739 | 10,347 ns, est. 18,625 |
+| `p376` | 619.1 ns, est. 1,114 | 404.8 ns, est. 729 | 12,159 ns, est. 21,886 |
+| `p500` | 1,089.5 ns, est. 1,961 | 700.1 ns, est. 1,260 | 19,727 ns, est. 35,509 |
+| `p664` | 1,900.1 ns, est. 3,420 | 1,230.3 ns, est. 2,215 | 35,031 ns, est. 63,055 |
 
-`p324` and `p376` are both six limbs and multiply in the same time to 1%;
-`p324` inverts faster because its exponent is shorter. A multiplication
-at `p664`, eleven limbs, costs 1.75 times one at `p500`, eight limbs;
-the square of the limb ratio is 1.89. The three older sets start from the
-honest key, as in the record of 2026-11-14, and agree with it to 0.8%;
-`p324` and `p664` start from the key of their `Codomain` refusal.
+`p324` and `p376` are both six limbs and multiply in the same time to
+1.2%; `p324` inverts faster because its exponent is shorter. A
+multiplication at `p664`, eleven limbs, costs 1.74 times one at `p500`,
+eight limbs; the square of the limb ratio is 1.89. The three older sets
+start from the honest key, as in the record of 2026-11-14, and agree
+with it to 0.7%; `p324` and `p664` start from the key of their
+`Codomain` refusal.
 
 ### What the refusal costs the verifier, and what it costs its sender
 
 The `Codomain` refusal is also what anyone can make a node do with
 public data and no secret key. What the sender has to do per message is
 find a salt whose challenge degree is prime: derive the challenge and
-run the primality test, counter by counter. The bench times exactly that
-search for the committed row, from counter zero to the committed
-counter (`search` rows).
+run the primality test, salt by salt.
 
-One search is one sample of a geometric wait: the committed counters
-are 588, 24, 172, 190 and 413, and another key or message gives another
-count. So the table also gives the cost of one attempt and the search
-expected at the measured density of prime degrees. The density is one
-sample of 10,000 degrees per set (the differential of 2026-11-15: 133,
-79, 81 and 60 primes at `p248` to `p500`), and at `p664` the 166 primes
-in 34,000 of three samples; a count of 60 to 130 carries about 10% of
-sampling error.
+A salt whose degree is prime costs about fourteen times one whose
+degree is composite, because only it runs the whole test. So the bench
+times the two kinds apart (`search` rows): it tries the first 1,024
+salt counters under the committed row's key and message, times each
+attempt, and reports the mean of each kind. Each pass is held to the
+committed row: the first prime degree must be at the committed counter.
+
+The expected search is then `(n − 1)` composite attempts and one prime
+one, where one degree in `n` is prime. The density is one sample of
+10,000 degrees per set (the differential of 2026-11-15: 133, 79, 81 and
+60 primes at `p248` to `p500`), and at `p664` the 166 primes in 34,000
+of three samples; a count of 60 to 130 carries about 10% of sampling
+error, and the expected search carries the same.
 
 Table: Pi 4, milliseconds. Sender columns are the salt search only.
 
-| Set | Verifier: `Codomain` refusal | Sender: one attempt | Sender: the committed search (attempts) | Verifier ÷ that search | Prime degrees, about one in | Sender: expected search | Verifier ÷ expected search |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `p248` | 86.10 | 0.822 | 484.2 (589) | 0.18 | 75 | 62 | 1.4 |
-| `p324` | 192.76 | 1.720 | 43.0 (25) | 4.5 | 127 | 218 | 0.9 |
-| `p376` | 221.38 | 1.263 | 218.5 (173) | 1.0 | 123 | 156 | 1.4 |
-| `p500` | 493.34 | 1.680 | 320.9 (191) | 1.5 | 167 | 280 | 1.8 |
-| `p664` | 1,171.48 | 3.672 | 1,520.1 (414) | 0.77 | 205 | 752 | 1.6 |
+| Set | Verifier: `Codomain` refusal | Sender: one composite attempt | Sender: one prime attempt | Prime degrees, about one in | Sender: expected search | Verifier ÷ expected search |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `p248` | 85.35 | 0.820 | 11.10 | 75 | 72 | 1.2 |
+| `p324` | 192.13 | 0.980 | 14.37 | 127 | 137 | 1.4 |
+| `p376` | 220.21 | 1.124 | 16.67 | 123 | 154 | 1.4 |
+| `p500` | 494.15 | 1.481 | 22.02 | 167 | 267 | 1.8 |
+| `p664` | 1,171.34 | 3.675 | 50.43 | 205 | 800 | 1.5 |
 
 On the same device, then, a refusal costs the verifier between about
-0.9 and 1.8 times what finding its salt is expected to cost the sender.
+1.2 and 1.8 times what finding its salt is expected to cost the sender.
 At `p664` with the predicted density of one in 248 the expected search
-is 911 ms and the ratio 1.3. On x86_64 the same ratios are 1.0, 0.7,
-1.2, 1.5 and 1.3.
+is 958 ms and the ratio 1.2.
+
+The committed rows' own searches are single draws of that wait. Their
+first prime degrees are at counters 588, 24, 172, 190 and 413, which at
+the per-attempt costs above is 493, 38, 210, 303 and 1,568 ms: the
+verifier's cost is 0.17, 5.1, 1.0, 1.6 and 0.75 times those. That
+spread is the luck of one search and not a property of the set.
+
+The search rows on x86_64 differ by up to 48% between the three runs,
+so no x86_64 ratio is given.
 
 What the sender column leaves out, and what the ratio does not say:
 
