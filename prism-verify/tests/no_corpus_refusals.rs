@@ -34,6 +34,8 @@
 
 #[path = "support/identity.rs"]
 mod identity;
+#[path = "support/verdict.rs"]
+mod verdict;
 
 use identity::{first_prime_salt_counter, identity_response, salt_of, Form};
 use prism_field::{Field, ParameterSet, Salt, P248, P324, P376, P500, P664};
@@ -493,12 +495,15 @@ fn the_pairing_is_passed_from_public_data_and_the_chains_refuse<L: WithoutCorpus
     // That response is the set's committed `Codomain` refusal, and the
     // other form under the same key its `Kernel` one: the bytes the bench
     // times are the bytes the operation counts were taken on.
-    let set: prism_verify::Set = L::NAME.parse().expect("a set's name");
     for form in Form::ALL {
         let [refusal] = form.allowed() else {
             panic!("one pinned refusal for each form");
         };
-        let row = prism_verify::reference::refusal(set, *refusal).expect("a committed row");
+        let verdict = prism_vectors::refusals::Verdict::ALL
+            .into_iter()
+            .find(|verdict| verdict::error_of(*verdict) == *refusal)
+            .expect("a verdict for the form's refusal");
+        let row = prism_vectors::refusals::row(L::NAME, verdict).expect("a committed row");
         let again =
             identity_response::<L>(coefficient::<L>(fixtures.model_curve), message::<L>(), form);
         assert_eq!(row.case, form.name());

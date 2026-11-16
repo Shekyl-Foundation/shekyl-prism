@@ -452,12 +452,12 @@ mod tests {
         use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
 
         const VECTORS: [&str; 6] = [
-            include_str!("../../prism-verify/testdata/s5_lvl1.txt"),
-            include_str!("../../prism-verify/testdata/s5_lvl1b.txt"),
-            include_str!("../../prism-verify/testdata/s5_lvl3.txt"),
-            include_str!("../../prism-verify/testdata/s5_lvl3b.txt"),
-            include_str!("../../prism-verify/testdata/s5_lvl5.txt"),
-            include_str!("../../prism-verify/testdata/s5_lvl5b.txt"),
+            prism_vectors::corpus::Primary::Lvl1.text(),
+            prism_vectors::corpus::Primary::Lvl1b.text(),
+            prism_vectors::corpus::Primary::Lvl3.text(),
+            prism_vectors::corpus::Primary::Lvl3b.text(),
+            prism_vectors::corpus::Primary::Lvl5.text(),
+            prism_vectors::corpus::Primary::Lvl5b.text(),
         ];
 
         fn element<L: ParameterSet>(text: &str, name: &str) -> L::Ext {

@@ -79,6 +79,7 @@ name = "prism-bench"
 version = "0.1.0"
 dependencies = [
  "prism-field",
+ "prism-vectors",
  "prism-verify",
 ]
 
@@ -88,6 +89,7 @@ version = "0.1.0"
 dependencies = [
  "prism-field",
  "prism-signer",
+ "prism-vectors",
  "prism-verify",
  "sha3",
 ]

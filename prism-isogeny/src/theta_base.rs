@@ -252,12 +252,24 @@ mod tests {
 
     #[test]
     fn the_theta_base_change_matches_the_closed_form_files() {
-        agrees::<P248>(include_str!("../testdata/s5_model/s5_lvl1_matrices.json"));
-        agrees::<P248>(include_str!("../testdata/s5_model/s5_lvl1b_matrices.json"));
-        agrees::<P376>(include_str!("../testdata/s5_model/s5_lvl3_matrices.json"));
-        agrees::<P376>(include_str!("../testdata/s5_model/s5_lvl3b_matrices.json"));
-        agrees::<P500>(include_str!("../testdata/s5_model/s5_lvl5_matrices.json"));
-        agrees::<P500>(include_str!("../testdata/s5_model/s5_lvl5b_matrices.json"));
+        agrees::<P248>(prism_vectors::model::matrices(
+            prism_vectors::corpus::Primary::Lvl1,
+        ));
+        agrees::<P248>(prism_vectors::model::matrices(
+            prism_vectors::corpus::Primary::Lvl1b,
+        ));
+        agrees::<P376>(prism_vectors::model::matrices(
+            prism_vectors::corpus::Primary::Lvl3,
+        ));
+        agrees::<P376>(prism_vectors::model::matrices(
+            prism_vectors::corpus::Primary::Lvl3b,
+        ));
+        agrees::<P500>(prism_vectors::model::matrices(
+            prism_vectors::corpus::Primary::Lvl5,
+        ));
+        agrees::<P500>(prism_vectors::model::matrices(
+            prism_vectors::corpus::Primary::Lvl5b,
+        ));
     }
 
     /// The two blocks the search reads, from the eight entries of the

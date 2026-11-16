@@ -101,7 +101,7 @@ pub struct Archived {
 
 /// Every archived unsalted vector kept for the comparison, in name order.
 pub fn archived_vectors() -> Vec<Archived> {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata/unsalted");
+    let root = prism_vectors::unsalted::dir();
     let mut paths = Vec::new();
     for dir in [root.clone(), root.join("accept")] {
         for entry in std::fs::read_dir(dir).expect("archived vector directory") {
@@ -142,7 +142,7 @@ pub fn archived_vectors() -> Vec<Archived> {
 mod tests {
     use super::*;
     use prism_field::{P248, P376, P500};
-    use std::path::{Path, PathBuf};
+    use std::path::PathBuf;
     fn hex(s: &str) -> Vec<u8> {
         s.as_bytes()
             .chunks_exact(2)
@@ -150,7 +150,7 @@ mod tests {
             .collect()
     }
     fn files() -> Vec<PathBuf> {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata/unsalted");
+        let root = prism_vectors::unsalted::dir();
         let mut out: Vec<_> = std::fs::read_dir(root.join("accept"))
             .unwrap()
             .map(|p| p.unwrap().path())

@@ -14,9 +14,6 @@
 //!   `2^e` basis and its pairing;
 //! - `<set>_challenge.tsv`: challenge scalars from an independent script.
 //!
-//! The files stay in `prism-verify/testdata`, where the scripts write
-//! them, and are read from there.
-//!
 //! [`WithoutCorpus`] is such a set, and [`SageFixtures`] is what it
 //! states: its files, and the curves of its file that tests name. A curve
 //! is named by what it is used for. What makes it fit for that use is a
@@ -111,12 +108,12 @@ pub fn curve_table<L: WithoutCorpus>() -> CurveTable {
 
 impl WithoutCorpus for P324 {
     const FIXTURES: SageFixtures = SageFixtures {
-        field_table: include_str!("../../prism-verify/testdata/p324_field.tsv"),
+        field_table: verify_data!("p324_field.tsv"),
         field_seed: u64::from_be_bytes(*b"PRISM324"),
         curve_file: "p324_curves.tsv",
-        curve_table: include_str!("../../prism-verify/testdata/p324_curves.tsv"),
+        curve_table: verify_data!("p324_curves.tsv"),
         curves: 8,
-        challenge_table: include_str!("../../prism-verify/testdata/p324_challenge.tsv"),
+        challenge_table: verify_data!("p324_challenge.tsv"),
         square_branch_curve: CurveNumber::new(1),
         other_branch_curve: CurveNumber::new(7),
         model_curve: CurveNumber::new(7),
@@ -136,12 +133,12 @@ impl WithoutCorpus for P324 {
 
 impl WithoutCorpus for P664 {
     const FIXTURES: SageFixtures = SageFixtures {
-        field_table: include_str!("../../prism-verify/testdata/p664_field.tsv"),
+        field_table: verify_data!("p664_field.tsv"),
         field_seed: u64::from_be_bytes(*b"PRISM664"),
         curve_file: "p664_curves.tsv",
-        curve_table: include_str!("../../prism-verify/testdata/p664_curves.tsv"),
+        curve_table: verify_data!("p664_curves.tsv"),
         curves: 8,
-        challenge_table: include_str!("../../prism-verify/testdata/p664_challenge.tsv"),
+        challenge_table: verify_data!("p664_challenge.tsv"),
         square_branch_curve: CurveNumber::new(1),
         other_branch_curve: CurveNumber::new(3),
         model_curve: CurveNumber::new(3),

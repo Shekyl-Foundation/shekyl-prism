@@ -9,6 +9,7 @@ publish.workspace = true
 
 [dependencies]
 prism-field = { workspace = true }
+prism-vectors = { workspace = true }
 prism-verify = { workspace = true }
 
 [[bin]]

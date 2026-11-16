@@ -397,12 +397,24 @@ mod tests {
 
     #[test]
     fn the_known_answer_matrices_match_at_every_set() {
-        agrees::<P248>(include_str!("../testdata/s5_model/s5_lvl1_matrices.json"));
-        agrees::<P248>(include_str!("../testdata/s5_model/s5_lvl1b_matrices.json"));
-        agrees::<P376>(include_str!("../testdata/s5_model/s5_lvl3_matrices.json"));
-        agrees::<P376>(include_str!("../testdata/s5_model/s5_lvl3b_matrices.json"));
-        agrees::<P500>(include_str!("../testdata/s5_model/s5_lvl5_matrices.json"));
-        agrees::<P500>(include_str!("../testdata/s5_model/s5_lvl5b_matrices.json"));
+        agrees::<P248>(prism_vectors::model::matrices(
+            prism_vectors::corpus::Primary::Lvl1,
+        ));
+        agrees::<P248>(prism_vectors::model::matrices(
+            prism_vectors::corpus::Primary::Lvl1b,
+        ));
+        agrees::<P376>(prism_vectors::model::matrices(
+            prism_vectors::corpus::Primary::Lvl3,
+        ));
+        agrees::<P376>(prism_vectors::model::matrices(
+            prism_vectors::corpus::Primary::Lvl3b,
+        ));
+        agrees::<P500>(prism_vectors::model::matrices(
+            prism_vectors::corpus::Primary::Lvl5,
+        ));
+        agrees::<P500>(prism_vectors::model::matrices(
+            prism_vectors::corpus::Primary::Lvl5b,
+        ));
     }
 
     /// An integer modulo `2^e`, as little-endian bytes: a second
@@ -644,7 +656,7 @@ mod tests {
     /// powers the matrices are built from, computed by
     /// `scripts/residue_known_answers.py` with Python's integers. CI holds
     /// the file to the script.
-    const KNOWN_ANSWERS: &str = include_str!("../testdata/residue_known_answers.tsv");
+    const KNOWN_ANSWERS: &str = prism_vectors::kat::RESIDUE_KNOWN_ANSWERS;
 
     fn hex(text: &str) -> Vec<u8> {
         prism_vectors::hex::decode(text).expect("hex")

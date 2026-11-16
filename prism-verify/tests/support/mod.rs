@@ -21,10 +21,7 @@ use prism_verify::{
     signature::canonical_sign, AffinePoint, ChallengeScalar, CommittedSet, KeyIdentity, Response,
     VerifyError,
 };
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{fs, path::PathBuf};
 
 fn field<'a>(text: &'a str, name: &str) -> &'a str {
     text.lines()
@@ -57,7 +54,7 @@ pub fn set(text: &str) -> CommittedSet {
 }
 /// Every committed honest vector, sorted by path.
 pub fn files() -> Vec<PathBuf> {
-    let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata");
+    let base = prism_vectors::corpus::dir();
     let mut files: Vec<_> = fs::read_dir(base.join("accept"))
         .unwrap()
         .map(|p| p.unwrap().path())
@@ -69,7 +66,7 @@ pub fn files() -> Vec<PathBuf> {
 }
 /// The six vectors the negatives are derived from, two keys per set.
 pub fn primary() -> Vec<PathBuf> {
-    let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata");
+    let base = prism_vectors::corpus::dir();
     ["1", "1b", "3", "3b", "5", "5b"]
         .iter()
         .map(|n| base.join(format!("s5_lvl{n}.txt")))
@@ -319,10 +316,9 @@ pub fn negatives<L: ParameterSet>(text: &str) -> Vec<Case> {
         signature: other.encode(),
         allowed: &[VerifyError::Image],
     });
-    let other_key = prism_verify::reference_key(set(text))
+    let other_key = prism_vectors::hints::row(set(text).label())
         .unwrap()
-        .public_key
-        .clone();
+        .public_key;
     other = r;
     other.salt = find(&other_key, &msg);
     cases.push(Case {

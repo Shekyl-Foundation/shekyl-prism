@@ -343,7 +343,7 @@ mod e0_vectors {
 
     #[test]
     fn the_degree_q_graph_stops_before_both_readings() {
-        let text = include_str!("../testdata/e0_endomorphisms.txt");
+        let text = prism_vectors::kat::E0_ENDOMORPHISMS;
         // The file's blocks are headed by the committed label; `p248`'s
         // runs from its heading to the next one.
         let heading = format!("{}\n", P248::LABEL);
@@ -652,16 +652,16 @@ mod s5_vectors {
 
     #[test]
     fn the_weil_values_match_sage() {
-        let table = include_str!("../testdata/weil_pairing.tsv");
+        let table = prism_vectors::kat::WEIL_PAIRING;
         let mut rows = table.lines().filter(|line| !line.is_empty());
         assert_eq!(rows.next(), Some("file\tvk\tsig"));
         let files: [(&str, &str); 6] = [
-            ("s5_lvl1.txt", include_str!("../testdata/s5_lvl1.txt")),
-            ("s5_lvl3.txt", include_str!("../testdata/s5_lvl3.txt")),
-            ("s5_lvl5.txt", include_str!("../testdata/s5_lvl5.txt")),
-            ("s5_lvl1b.txt", include_str!("../testdata/s5_lvl1b.txt")),
-            ("s5_lvl3b.txt", include_str!("../testdata/s5_lvl3b.txt")),
-            ("s5_lvl5b.txt", include_str!("../testdata/s5_lvl5b.txt")),
+            ("s5_lvl1.txt", prism_vectors::corpus::Primary::Lvl1.text()),
+            ("s5_lvl3.txt", prism_vectors::corpus::Primary::Lvl3.text()),
+            ("s5_lvl5.txt", prism_vectors::corpus::Primary::Lvl5.text()),
+            ("s5_lvl1b.txt", prism_vectors::corpus::Primary::Lvl1b.text()),
+            ("s5_lvl3b.txt", prism_vectors::corpus::Primary::Lvl3b.text()),
+            ("s5_lvl5b.txt", prism_vectors::corpus::Primary::Lvl5b.text()),
         ];
         for (name, text) in files {
             let row = rows.next().expect(name);
@@ -735,32 +735,32 @@ mod s5_vectors {
         // cofactor of the uncleared difference, let `p248` and `p376` reach
         // both readings. The accept path replaces this chain.
         honest::<P248>(
-            include_str!("../testdata/s5_lvl1.txt"),
+            prism_vectors::corpus::Primary::Lvl1.text(),
             Stop::Step(1),
             Stop::Readings,
             true,
         );
         honest::<P376>(
-            include_str!("../testdata/s5_lvl3.txt"),
+            prism_vectors::corpus::Primary::Lvl3.text(),
             Stop::Step(1),
             Stop::Readings,
             true,
         );
         honest::<P500>(
-            include_str!("../testdata/s5_lvl5.txt"),
+            prism_vectors::corpus::Primary::Lvl5.text(),
             Stop::Step(1),
             Stop::Readings,
             false,
         );
-        assert_vk_basis::<P248>(include_str!("../testdata/s5_lvl1.txt"));
-        assert_vk_basis::<P376>(include_str!("../testdata/s5_lvl3.txt"));
-        assert_vk_basis::<P500>(include_str!("../testdata/s5_lvl5.txt"));
-        assert_vk_basis::<P248>(include_str!("../testdata/s5_lvl1b.txt"));
-        assert_vk_basis::<P376>(include_str!("../testdata/s5_lvl3b.txt"));
-        assert_vk_basis::<P500>(include_str!("../testdata/s5_lvl5b.txt"));
-        second_key::<P248>(include_str!("../testdata/s5_lvl1b.txt"));
-        second_key::<P376>(include_str!("../testdata/s5_lvl3b.txt"));
-        second_key::<P500>(include_str!("../testdata/s5_lvl5b.txt"));
+        assert_vk_basis::<P248>(prism_vectors::corpus::Primary::Lvl1.text());
+        assert_vk_basis::<P376>(prism_vectors::corpus::Primary::Lvl3.text());
+        assert_vk_basis::<P500>(prism_vectors::corpus::Primary::Lvl5.text());
+        assert_vk_basis::<P248>(prism_vectors::corpus::Primary::Lvl1b.text());
+        assert_vk_basis::<P376>(prism_vectors::corpus::Primary::Lvl3b.text());
+        assert_vk_basis::<P500>(prism_vectors::corpus::Primary::Lvl5b.text());
+        second_key::<P248>(prism_vectors::corpus::Primary::Lvl1b.text());
+        second_key::<P376>(prism_vectors::corpus::Primary::Lvl3b.text());
+        second_key::<P500>(prism_vectors::corpus::Primary::Lvl5b.text());
     }
 
     fn second_key<L: ParameterSet>(text: &str) {

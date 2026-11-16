@@ -457,28 +457,28 @@ mod tests {
     #[test]
     fn both_chains_match_every_sage_null_point() {
         known::<P248>(
-            include_str!("../testdata/s5_lvl1.txt"),
-            include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl1_nulls.json"),
+            prism_vectors::corpus::Primary::Lvl1.text(),
+            prism_vectors::model::nulls(prism_vectors::corpus::Primary::Lvl1),
         );
         known::<P248>(
-            include_str!("../testdata/s5_lvl1b.txt"),
-            include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl1b_nulls.json"),
+            prism_vectors::corpus::Primary::Lvl1b.text(),
+            prism_vectors::model::nulls(prism_vectors::corpus::Primary::Lvl1b),
         );
         known::<P376>(
-            include_str!("../testdata/s5_lvl3.txt"),
-            include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl3_nulls.json"),
+            prism_vectors::corpus::Primary::Lvl3.text(),
+            prism_vectors::model::nulls(prism_vectors::corpus::Primary::Lvl3),
         );
         known::<P376>(
-            include_str!("../testdata/s5_lvl3b.txt"),
-            include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl3b_nulls.json"),
+            prism_vectors::corpus::Primary::Lvl3b.text(),
+            prism_vectors::model::nulls(prism_vectors::corpus::Primary::Lvl3b),
         );
         known::<P500>(
-            include_str!("../testdata/s5_lvl5.txt"),
-            include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl5_nulls.json"),
+            prism_vectors::corpus::Primary::Lvl5.text(),
+            prism_vectors::model::nulls(prism_vectors::corpus::Primary::Lvl5),
         );
         known::<P500>(
-            include_str!("../testdata/s5_lvl5b.txt"),
-            include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl5b_nulls.json"),
+            prism_vectors::corpus::Primary::Lvl5b.text(),
+            prism_vectors::model::nulls(prism_vectors::corpus::Primary::Lvl5b),
         );
     }
 
@@ -595,7 +595,7 @@ mod tests {
 
     #[test]
     fn the_shared_doublings_give_the_ladders_kernel_on_every_vector() {
-        let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata");
+        let base = prism_vectors::corpus::dir();
         let mut files: Vec<_> = std::fs::read_dir(base.join("accept"))
             .unwrap()
             .map(|p| p.unwrap().path())
@@ -643,7 +643,7 @@ mod tests {
 
     #[test]
     fn a_table_multiplies_as_the_ladder_does() {
-        let text = include_str!("../testdata/s5_lvl1.txt");
+        let text = prism_vectors::corpus::Primary::Lvl1.text();
         let f = |row: &str| {
             P248::ext_decode(&hex(text
                 .lines()

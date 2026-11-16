@@ -108,26 +108,14 @@ fuzz_target!(|data: &[u8]| {
     // no arm that an unlisted set would fall into.
     const SETS: [fn(u8, &[u8]); 5] = [
         |order, scalars| {
-            committed::<P248>(
-                include_str!("../../prism-verify/testdata/s5_lvl1.txt"),
-                order,
-                scalars,
-            )
+            committed::<P248>(prism_vectors::corpus::Primary::Lvl1.text(), order, scalars)
         },
         sage_basis::<P324>,
         |order, scalars| {
-            committed::<P376>(
-                include_str!("../../prism-verify/testdata/s5_lvl3.txt"),
-                order,
-                scalars,
-            )
+            committed::<P376>(prism_vectors::corpus::Primary::Lvl3.text(), order, scalars)
         },
         |order, scalars| {
-            committed::<P500>(
-                include_str!("../../prism-verify/testdata/s5_lvl5.txt"),
-                order,
-                scalars,
-            )
+            committed::<P500>(prism_vectors::corpus::Primary::Lvl5.text(), order, scalars)
         },
         sage_basis::<P664>,
     ];
