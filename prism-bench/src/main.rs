@@ -5,61 +5,126 @@
 
 //! Time a verification at every parameter set.
 //!
-//! Times the complete successful two-chain verification path. Only a run
-//! on an identified Raspberry Pi 4 Model B is the floor-device measurement.
-//! Userspace counters are cntvct_el0 on aarch64 and rdtsc on x86_64.
+//! Three kinds of row, each with its own leading words so that no script
+//! can read one kind as another:
+//!
+//! - `set=… outcome=accepted`: the complete successful two-chain
+//!   verification of a committed honest signature, at the sets that have
+//!   one;
+//! - `set=… outcome=refused error=…`: the verification of a committed
+//!   response that passes the pairing check and is refused after it, at
+//!   every set. `error=Codomain` runs both chains, so it is nearly all of
+//!   the work of an accepted verification; `error=Kernel` stops at the
+//!   start of the chain work. Neither is an accepted verification;
+//! - `search set=…`: the search for the salt of that refused response, the
+//!   work of whoever sends it.
+//!
+//! Every timed call's result is compared with the pinned one, warm-ups
+//! included. A row is printed only if all of them agreed. Otherwise a line
+//! without `outcome=` says what happened and the run exits non-zero.
+//!
+//! Only a run on an identified Raspberry Pi 4 Model B is the floor-device
+//! measurement. Userspace counters are cntvct_el0 on aarch64 and rdtsc on
+//! x86_64.
 //!
 //! After the verifications it times one extension-field multiplication,
 //! squaring and inversion per set. With the operation counts of
 //! `docs/benchmarks/op-counts.txt` these turn a count into an estimate for
 //! the machine the run was on.
 
+use std::fmt;
 use std::process::ExitCode;
 use std::time::Instant;
 
-use prism_field::{Field, ParameterSet, FIELD_BACKEND, P248, P376, P500};
-use prism_verify::{reference::honest, verify_set, CommittedSet, VectorError, VerifyError};
+use prism_field::{Field, ParameterSet, Salt, FIELD_BACKEND, P248, P324, P376, P500, P664};
+use prism_verify::reference::{honest, refusal};
+use prism_verify::{
+    verify_set, ChallengeScalar, CommittedSet, KeyIdentity, Refusal, Set, VectorError, VerifyError,
+};
 
 /// Runs before the clock starts, to settle the frequency and the caches.
 const WARMUP: usize = 5;
 /// Odd, so the median is a sample rather than a mean of two.
 const SAMPLES: usize = 31;
 
-// Every timed invocation must accept the honest signature.
+/// The refusals timed at every set, in the order their rows are printed.
+/// `Codomain` is the one that does the work of both chains.
+const REFUSALS: [VerifyError; 2] = [VerifyError::Codomain, VerifyError::Kernel];
+
+/// Call a function that is generic over the parameter set for a set named
+/// at run time.
+macro_rules! at_set {
+    ($set:expr, $function:ident($($argument:expr),*)) => {
+        match $set {
+            Set::P248 => $function::<P248>($($argument),*),
+            Set::P324 => $function::<P324>($($argument),*),
+            Set::P376 => $function::<P376>($($argument),*),
+            Set::P500 => $function::<P500>($($argument),*),
+            Set::P664 => $function::<P664>($($argument),*),
+        }
+    };
+}
 
 fn main() -> ExitCode {
     println!("field-backend={FIELD_BACKEND}");
     println!("counter={}", counter_name());
-    let mut refused = false;
+    let mut failed = false;
     for set in CommittedSet::ALL {
-        match measure(set) {
-            Ok(timing) => println!(
-                "set={set} outcome=accepted samples={SAMPLES} median_ns={} spread_ns={} median_counter={} counter_spread={}",
-                timing.median_ns, timing.spread_ns, timing.median_counter, timing.counter_spread
-            ),
+        match accepted(set) {
+            Ok(timing) => println!("set={set} outcome=accepted {timing}"),
             Err(err) => {
-                refused = true;
+                failed = true;
                 println!("set={set} refused=\"{err}\"");
             }
         }
     }
-    for set in CommittedSet::ALL {
-        let Ok(sample) = honest(set) else {
-            continue;
-        };
-        match set {
-            CommittedSet::P248 => field_operations::<P248>(set, &sample.public_key),
-            CommittedSet::P376 => field_operations::<P376>(set, &sample.public_key),
-            CommittedSet::P500 => field_operations::<P500>(set, &sample.public_key),
+    for set in Set::ALL {
+        for error in REFUSALS {
+            match refused(set, error) {
+                Ok(timing) => println!("set={set} outcome=refused error={error:?} {timing}"),
+                Err(err) => {
+                    failed = true;
+                    println!("set={set} expected={error:?} found=\"{err}\"");
+                }
+            }
         }
     }
-    if refused {
+    for set in Set::ALL {
+        match refusal(set, VerifyError::Codomain) {
+            Ok(row) => match at_set!(set, salt_search(row)) {
+                Ok(timing) => println!(
+                    "search set={set} outcome=prime-salt counters={} {timing}",
+                    row.salt_counter + 1
+                ),
+                Err(err) => {
+                    failed = true;
+                    println!("search set={set} found=\"{err}\"");
+                }
+            },
+            Err(err) => {
+                failed = true;
+                println!("search set={set} found=\"{err}\"");
+            }
+        }
+    }
+    for set in Set::ALL {
+        match field_start(set) {
+            Ok(key) => at_set!(set, field_operations(set, &key)),
+            Err(err) => {
+                failed = true;
+                println!("field set={set} refused=\"{err}\"");
+            }
+        }
+    }
+    if failed {
         ExitCode::FAILURE
     } else {
         ExitCode::SUCCESS
     }
 }
 
+/// The median and peak-to-peak spread of the samples of one row, on the
+/// wall clock and on the counter.
 struct Timing {
     median_ns: u128,
     spread_ns: u128,
@@ -67,35 +132,52 @@ struct Timing {
     counter_spread: u128,
 }
 
-/// Why a set produced no timing.
-enum BenchError {
-    /// The sample could not be built, so there is nothing to time.
-    Prepare(VectorError),
-    /// A timed invocation refused the honest signature.
-    Refused(VerifyError),
+impl fmt::Display for Timing {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "samples={SAMPLES} median_ns={} spread_ns={} median_counter={} counter_spread={}",
+            self.median_ns, self.spread_ns, self.median_counter, self.counter_spread
+        )
+    }
 }
 
-impl std::fmt::Display for BenchError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+/// Why a row produced no timing.
+enum BenchError {
+    /// The committed input could not be read, so there is nothing to time.
+    Prepare(VectorError),
+    /// A timed verification did not end as pinned. This is what it
+    /// returned.
+    Verdict(Result<(), VerifyError>),
+    /// The salt search did not end at the committed counter. This is the
+    /// first counter of prime degree it found, if any.
+    Search(Option<u64>),
+}
+
+impl fmt::Display for BenchError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Prepare(err) => write!(f, "{err}"),
-            Self::Refused(err) => write!(f, "{err}"),
+            Self::Verdict(Ok(())) => f.write_str("accepted"),
+            Self::Verdict(Err(err)) => write!(f, "{err}"),
+            Self::Search(Some(counter)) => write!(f, "first prime degree at counter {counter}"),
+            Self::Search(None) => f.write_str("no prime degree up to the committed counter"),
         }
     }
 }
 
-fn measure(set: CommittedSet) -> Result<Timing, BenchError> {
-    let sample = honest(set).map_err(BenchError::Prepare)?;
-    let run = || {
-        verify_set(
-            set.set(),
-            &sample.public_key,
-            sample.message,
-            &sample.signature,
-        )
+/// Time `run`, holding every call, warm-ups included, to `pinned`. The
+/// first call that returns anything else ends the row with that value.
+fn measure<T: PartialEq>(pinned: &T, run: impl Fn() -> T) -> Result<Timing, T> {
+    let held = |outcome: T| {
+        if outcome == *pinned {
+            Ok(())
+        } else {
+            Err(outcome)
+        }
     };
     for _ in 0..WARMUP {
-        expected(run())?;
+        held(run())?;
     }
     let mut walls = Vec::with_capacity(SAMPLES);
     let mut counters = Vec::with_capacity(SAMPLES);
@@ -105,7 +187,7 @@ fn measure(set: CommittedSet) -> Result<Timing, BenchError> {
         let outcome = run();
         let elapsed = start.elapsed().as_nanos();
         let delta = counter().wrapping_sub(before);
-        expected(outcome)?;
+        held(outcome)?;
         walls.push(elapsed);
         counters.push(u128::from(delta));
     }
@@ -117,6 +199,58 @@ fn measure(set: CommittedSet) -> Result<Timing, BenchError> {
         median_counter,
         counter_spread,
     })
+}
+
+/// The accepted verification of the set's committed honest signature.
+fn accepted(set: CommittedSet) -> Result<Timing, BenchError> {
+    let sample = honest(set).map_err(BenchError::Prepare)?;
+    measure(&Ok(()), || {
+        verify_set(
+            set.set(),
+            &sample.public_key,
+            sample.message,
+            &sample.signature,
+        )
+    })
+    .map_err(BenchError::Verdict)
+}
+
+/// The verification of the set's committed response that is refused as
+/// `error`. It is not an accepted verification, and its row says so.
+fn refused(set: Set, error: VerifyError) -> Result<Timing, BenchError> {
+    let row = refusal(set, error).map_err(BenchError::Prepare)?;
+    measure(&Err(error), || {
+        verify_set(set, &row.public_key, &row.message, &row.signature)
+    })
+    .map_err(BenchError::Verdict)
+}
+
+/// What the sender of a refused response does to find its salt: derive the
+/// challenge and test its degree, counter by counter from zero, up to the
+/// first prime one. It needs the key and the message, and no secret.
+///
+/// The count of attempts is the committed row's, and differs from key to
+/// key; `median_ns` over `counters` is the cost of one attempt.
+fn salt_search<L: ParameterSet>(row: &Refusal) -> Result<Timing, BenchError> {
+    let first_prime = || {
+        let identity = KeyIdentity::<L>::decode(&row.public_key).ok()?;
+        (0..=row.salt_counter).find(|&counter| {
+            L::Salt::from_counter(counter).is_some_and(|salt| {
+                ChallengeScalar::derive(&identity, &row.message, salt).degree_is_prime::<L>()
+            })
+        })
+    };
+    measure(&Some(row.salt_counter), first_prime).map_err(BenchError::Search)
+}
+
+/// The element the field timings of a set start from: the key of the
+/// set's honest signature where there is one, as in every earlier record,
+/// and the key of its `Codomain` refusal where there is not.
+fn field_start(set: Set) -> Result<Vec<u8>, VectorError> {
+    match set.committed() {
+        Ok(committed) => honest(committed).map(|sample| sample.public_key),
+        Err(_) => refusal(set, VerifyError::Codomain).map(|row| row.public_key.clone()),
+    }
 }
 
 /// Operations in one timed batch of multiplications or squarings.
@@ -155,8 +289,8 @@ fn per_op<T: Copy>(start: T, batch: u32, step: impl Fn(T) -> T) -> (f64, f64) {
 }
 
 /// Time one extension-field multiplication, squaring and inversion,
-/// starting from the sample key's coefficient.
-fn field_operations<L: ParameterSet>(set: CommittedSet, key: &[u8]) {
+/// starting from the coefficient [`field_start`] names.
+fn field_operations<L: ParameterSet>(set: Set, key: &[u8]) {
     let Some(start) = L::ext_decode(key) else {
         println!("field set={set} refused=\"the sample key does not decode\"");
         return;
@@ -176,10 +310,6 @@ fn field_operations<L: ParameterSet>(set: CommittedSet, key: &[u8]) {
         x.inv().map_or(fixed, |y| y.add(fixed))
     });
     report("inv", INVERSION_BATCH, inv);
-}
-
-fn expected(outcome: Result<(), VerifyError>) -> Result<(), BenchError> {
-    outcome.map_err(BenchError::Refused)
 }
 
 /// Median and peak-to-peak spread of a non-empty sample.
