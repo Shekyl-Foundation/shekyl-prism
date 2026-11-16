@@ -22,7 +22,7 @@ verifier at reduced challenge widths.
 | `prism-signer` | Unix research API for an isolated deterministic C backend |
 | `prism-bench` | Timing: an accepted verification at the sets with a signer, and a refusal after the pairing check at all five |
 | `prism-compare` | Archived derivation and explicit research experiments; no production dependency |
-| `prism-fixtures` | Committed test fixtures read into typed values; a dev-dependency only |
+| `prism-vectors` | A public crate: every committed test vector and a documented reader for each family. Depends on `prism-field` alone, so the data can be used without a verifier; the library crates take it as a dev-dependency only |
 
 The [verifier specification](docs/VERIFIER_SPEC.md) defines the current
 research encoding, including the `e′=e−2` parameter choice. Signatures are

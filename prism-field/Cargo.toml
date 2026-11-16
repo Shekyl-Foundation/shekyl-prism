@@ -1,6 +1,6 @@
 [package]
 name = "prism-field"
-description = "NIST I, III, and V base fields for the PRISM research verifier"
+description = "The five PRISM parameter sets (p248, p324, p376, p500, p664): base and extension fields, encodings and the sizes each set fixes"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

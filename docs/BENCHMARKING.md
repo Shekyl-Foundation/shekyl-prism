@@ -326,9 +326,9 @@ file there, not because the response is larger.
 All of this is held in vectors owned by values local to one call of
 `verify`, so it is freed when the call returns and nothing is shared
 between calls. That is read from the code, not measured: outside the
-counter feature the three crates have two `static`s, the pinned-key
-table and the pinned-refusal table of `prism_verify::reference`, neither
-of which `verify` calls. Massif
+counter feature the three crates have no `static` at all; the committed
+vectors and their tables are in `prism-vectors`, which no build of the
+verifier contains. Massif
 agrees where its last sample falls after the call (544 bytes at levels I
 and III; at level V the last sample was taken during the release). So
 verifications running at once each hold their own, and four at once, one
