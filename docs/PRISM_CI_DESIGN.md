@@ -30,7 +30,9 @@ verifier has no reduced-width entry point (`check_research_boundary.py`),
 and lints `prism-compare` with its `experiments` feature on.
 Both workspace test jobs execute the full 113-signature acceptance corpus
 and malleability regressions. The accept-list job remains a provenance check.
-The benchmark smoke test now requires successful complete verification.
+The benchmark smoke test requires every timed verification to end as
+pinned: accepted for the honest signatures, and the pinned refusal for
+the committed responses of `prism-verify/testdata/identity_refusals.tsv`.
 
 ## PR gate — `ci.yml` (pull_request, push to `dev`)
 
@@ -40,7 +42,7 @@ The benchmark smoke test now requires successful complete verification.
 | `test-x86_64` | `cargo test --workspace --locked` in debug (overflow checks on) and `--release`; then, in release and by name, the ignored comparison of the Weil pairing with its affine reference on 1,000 full-order pairs a level | any test, either profile; the pairing differs from its reference in a value or a refusal |
 | `test-aarch64` | the same on `ubuntu-24.04-arm` (free for public repos) | the portable `fp2` path disagrees |
 | `op-counts` (x86_64 and aarch64) | the counter's own test, then `scripts/op_counts.sh --check` twice: the field operations of every honest vector and the verdict and cost of every negative must equal `docs/benchmarks/op-counts.txt` and `negative-verdicts.tsv` byte for byte | a verification costs a different number of field operations, a negative is refused differently, or the count depends on the machine or the run |
-| `bench-smoke` | `cargo run --release -p prism-bench`; it already exits non-zero if any sample's outcome isn't the expected refusal. Timings are printed, not judged. | the bench stops timing the path it claims to |
+| `bench-smoke` | `cargo run --release -p prism-bench`; it exits non-zero if any timed call, warm-ups included, does not end as pinned: an accept for an honest signature, the pinned `Codomain` or `Kernel` for a committed refusal, the committed counter for the salt search. Timings are printed, not judged. | the bench stops timing the path it claims to |
 | `deny` | `cargo deny check` (licences, advisories, sources, bans) under rule 17 | a new crate, licence or advisory |
 | `hygiene` | 1. no AI-attribution trailer in any commit in the PR range (rule 90); 2. copyright header on every `.rs`/`.py`/`.c` (rule 92); 3. every crate inherits `unsafe_code = "forbid"` from `[workspace.lints]` | rule violation |
 | `c-reference-pin` | checks out the submodule and runs `scripts/check_c_reference.py` (pin plus the recorded quirks) | the pin or the spec's recorded quirks moved |
