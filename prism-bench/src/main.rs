@@ -41,7 +41,7 @@ use std::time::Instant;
 
 use prism_field::{Field, ParameterSet, Salt, FIELD_BACKEND, P248, P324, P376, P500, P664};
 use prism_vectors::corpus::{Malformed as MalformedVector, Primary, WithCorpus};
-use prism_vectors::refusals::{self, Malformed as MalformedRefusals, Refusal, Verdict};
+use prism_vectors::refusals::{self, Error as RefusalError, Refusal, Verdict};
 use prism_verify::{verify_set, ChallengeScalar, CommittedSet, KeyIdentity, Set, VerifyError};
 
 /// Runs before the clock starts, to settle the frequency and the caches.
@@ -167,7 +167,7 @@ enum BenchError {
     Vector(MalformedVector),
     /// The committed refusal vectors could not be read, or have no row
     /// for this set.
-    Refusals(MalformedRefusals),
+    Refusals(RefusalError),
     /// The committed key of a row does not decode, so nothing was timed.
     Key(VerifyError),
     /// A timed verification did not end as pinned. This is what it

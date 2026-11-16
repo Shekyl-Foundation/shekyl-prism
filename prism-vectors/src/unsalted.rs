@@ -14,6 +14,7 @@
 
 use std::path::PathBuf;
 
+use crate::corpus;
 use crate::Group;
 
 /// The directory of the archive, in a checkout of this repository.
@@ -21,30 +22,33 @@ pub fn dir() -> PathBuf {
     Group::Compare.dir().join("unsalted")
 }
 
+/// Every archived vector, the six primary files and the accept directory,
+/// sorted by path. The layout is the corpus's.
+///
+/// # Panics
+///
+/// If the archive's accept directory cannot be read.
+pub fn files() -> Vec<PathBuf> {
+    corpus::layout(&dir())
+}
+
 #[cfg(test)]
 mod tests {
-    use super::dir;
-    use crate::corpus::{Primary, HONEST_VECTORS};
+    use super::{dir, files};
+    use crate::corpus::{self, Primary, HONEST_VECTORS};
 
     #[test]
     fn the_archive_mirrors_the_corpus() {
-        let count = |path: std::path::PathBuf| {
-            std::fs::read_dir(path)
-                .expect("an archive directory")
-                .filter(|entry| {
-                    entry
-                        .as_ref()
-                        .expect("an entry")
-                        .path()
-                        .extension()
-                        .is_some_and(|extension| extension == "txt")
-                })
-                .count()
-        };
-        assert_eq!(count(dir()), Primary::ALL.len());
-        assert_eq!(count(dir()) + count(dir().join("accept")), HONEST_VECTORS);
+        let files = files();
+        assert_eq!(files.len(), HONEST_VECTORS);
         for primary in Primary::ALL {
-            assert!(dir().join(primary.file_name()).is_file(), "{primary:?}");
+            let path = dir().join(primary.file_name());
+            assert!(files.contains(&path), "{primary:?}");
+            let text = std::fs::read_to_string(&path).unwrap();
+            let vector = corpus::Vector::new(&text);
+            assert!(vector.curve_and_points().is_ok(), "{primary:?}");
+            assert_eq!(vector.salt(), Err(corpus::Malformed::Missing("salt")));
+            assert!(vector.field("j").is_some(), "{primary:?}");
         }
     }
 }

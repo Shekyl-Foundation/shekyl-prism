@@ -19,31 +19,26 @@ use prism_field::{Field, ParameterSet, P248, P324, P376, P500, P664};
 use prism_isogeny::jac::{add, Jac};
 use prism_isogeny::montgomery::Montgomery;
 use prism_isogeny::pairing::{mul, oracle, weil};
+use prism_vectors::corpus::{Vector, WithCorpus};
 use prism_vectors::curve_table::Point;
 use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
 
-fn element<L: ParameterSet>(text: &str, name: &str) -> L::Ext {
-    let hex = text
-        .lines()
-        .find_map(|line| line.strip_prefix(name))
-        .expect("the vector has this row");
-    let bytes: Vec<u8> = hex
-        .as_bytes()
-        .chunks_exact(2)
-        .map(|pair| u8::from_str_radix(core::str::from_utf8(pair).unwrap(), 16).unwrap())
-        .collect();
+fn element<L: ParameterSet>(vector: Vector<'_>, name: &'static str) -> L::Ext {
+    let bytes = vector
+        .bytes(name)
+        .unwrap_or_else(|err| panic!("{name}: {err}"));
     L::ext_decode(&bytes).expect("a committed element is canonical")
 }
 
 /// The curve and basis of a committed signature.
-fn committed<L: ParameterSet>(text: &str, order: u8, scalars: &[u8]) {
+fn committed<L: ParameterSet>(vector: Vector<'_>, order: u8, scalars: &[u8]) {
     let at = |x, y| Jac {
-        x: element::<L>(text, x),
-        y: element::<L>(text, y),
+        x: element::<L>(vector, x),
+        y: element::<L>(vector, y),
         z: L::Ext::one(),
     };
-    let curve = Montgomery::normalized(element::<L>(text, "E "));
-    pair::<L>(curve, at("Px ", "Py "), at("Qx ", "Qy "), order, scalars);
+    let curve = Montgomery::normalized(element::<L>(vector, "E"));
+    pair::<L>(curve, at("Px", "Py"), at("Qx", "Qy"), order, scalars);
 }
 
 /// At a set without a corpus: the square-branch curve of its Sage curve
@@ -108,14 +103,14 @@ fuzz_target!(|data: &[u8]| {
     // no arm that an unlisted set would fall into.
     const SETS: [fn(u8, &[u8]); 5] = [
         |order, scalars| {
-            committed::<P248>(prism_vectors::corpus::Primary::Lvl1.text(), order, scalars)
+            committed::<P248>(<P248 as WithCorpus>::PRIMARY[0].vector(), order, scalars)
         },
         sage_basis::<P324>,
         |order, scalars| {
-            committed::<P376>(prism_vectors::corpus::Primary::Lvl3.text(), order, scalars)
+            committed::<P376>(<P376 as WithCorpus>::PRIMARY[0].vector(), order, scalars)
         },
         |order, scalars| {
-            committed::<P500>(prism_vectors::corpus::Primary::Lvl5.text(), order, scalars)
+            committed::<P500>(<P500 as WithCorpus>::PRIMARY[0].vector(), order, scalars)
         },
         sage_basis::<P664>,
     ];

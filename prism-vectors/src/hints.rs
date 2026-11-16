@@ -13,6 +13,8 @@
 //! against it. Lines that start with `#` are provenance: the pinned
 //! commit of the C tree and the seeds of the run.
 
+use std::sync::OnceLock;
+
 use crate::hex;
 
 /// The committed file, as text.
@@ -29,40 +31,53 @@ pub struct KeyHint {
     pub hint: u8,
 }
 
-/// A row is not `<level> <hex of A> <hint byte>`.
+/// Why a hint could not be read.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Malformed;
+pub enum Error {
+    /// A row is not `<level> <hex of A> <hint byte>`.
+    Malformed,
+    /// The file has no row for this level.
+    Missing,
+}
 
-impl core::fmt::Display for Malformed {
+impl core::fmt::Display for Error {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.write_str("a hint row is not <level> <hex A> <hint byte>")
+        f.write_str(match self {
+            Self::Malformed => "a hint row is not <level> <hex A> <hint byte>",
+            Self::Missing => "the hint file has no row for this level",
+        })
     }
 }
 
-impl std::error::Error for Malformed {}
+impl std::error::Error for Error {}
 
 /// Every row of the file, in file order.
-pub fn rows() -> Result<Vec<KeyHint>, Malformed> {
-    TEXT.lines()
-        .filter(|line| !line.is_empty() && !line.starts_with('#'))
-        .map(parse)
-        .collect()
+pub fn rows() -> Result<&'static [KeyHint], Error> {
+    static ROWS: OnceLock<Result<Vec<KeyHint>, Error>> = OnceLock::new();
+    ROWS.get_or_init(|| {
+        TEXT.lines()
+            .filter(|line| !line.is_empty() && !line.starts_with('#'))
+            .map(parse)
+            .collect()
+    })
+    .as_deref()
+    .map_err(|err| *err)
 }
 
 /// The row whose level string is `level`.
-pub fn row(level: &str) -> Result<KeyHint, Malformed> {
+pub fn row(level: &str) -> Result<&'static KeyHint, Error> {
     rows()?
-        .into_iter()
+        .iter()
         .find(|row| row.level == level)
-        .ok_or(Malformed)
+        .ok_or(Error::Missing)
 }
 
-fn parse(line: &'static str) -> Result<KeyHint, Malformed> {
+fn parse(line: &'static str) -> Result<KeyHint, Error> {
     let mut fields = line.split_whitespace();
-    let mut next = || fields.next().ok_or(Malformed);
+    let mut next = || fields.next().ok_or(Error::Malformed);
     let level = next()?;
-    let public_key = hex::decode(next()?).ok_or(Malformed)?;
-    let hint = next()?.parse().map_err(|_| Malformed)?;
+    let public_key = hex::decode(next()?).ok_or(Error::Malformed)?;
+    let hint = next()?.parse().map_err(|_| Error::Malformed)?;
     Ok(KeyHint {
         level,
         public_key,
@@ -87,14 +102,14 @@ mod tests {
         for level in levels {
             assert!(row(level).is_ok(), "{level}");
         }
-        assert_eq!(row("no-such-level"), Err(Malformed));
+        assert_eq!(row("no-such-level"), Err(Error::Missing));
     }
 
     #[test]
     fn a_short_row_or_a_wide_hint_is_refused() {
-        assert_eq!(parse("NIST-I 00"), Err(Malformed));
-        assert_eq!(parse("NIST-I 0 1"), Err(Malformed));
-        assert_eq!(parse("NIST-I 00 256"), Err(Malformed));
+        assert_eq!(parse("NIST-I 00"), Err(Error::Malformed));
+        assert_eq!(parse("NIST-I 0 1"), Err(Error::Malformed));
+        assert_eq!(parse("NIST-I 00 256"), Err(Error::Malformed));
         assert!(parse("NIST-I 00 255").is_ok());
     }
 }

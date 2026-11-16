@@ -2,7 +2,7 @@
 # Written by scripts/sage/no_corpus_fixture.sage. Do not edit.
 # Image: sagemath/sagemath@sha256:4f5589eb6c565949a006f8665de2876b8414410daf5ac554f4434a15d4f3d528
 # Command: sage scripts/sage/no_corpus_fixture.sage p664 (from the repository root)
-# Script sha256 when run: 4953549640afa2c7d111fd9f5df9f2b6f306bd912b6e93657d87bfed31c5e9fd
+# Script sha256 when run: 7bbe603fc2084b480be77bf020af509c3da60ba0a8e9551a1658e6706c02cb2e
 # Generator: SplitMix64, seed 0x505249534d363634; field elements are little-endian, re then im.
 # BASE a b add sub mul square(a) inv(a) is_square(a) sqrt_of_square(a)
 # EXT  x y add sub mul square(x) inv(x) is_square(x) sqrt_of_square(x)

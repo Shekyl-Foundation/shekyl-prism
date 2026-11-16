@@ -17,60 +17,37 @@ use prism_isogeny::{
     montgomery::Montgomery,
     pairing::mul,
 };
+use prism_vectors::corpus::{Primary, Vector};
 use prism_verify::{
     signature::canonical_sign, AffinePoint, ChallengeScalar, CommittedSet, KeyIdentity, Response,
     VerifyError,
 };
-use std::{fs, path::PathBuf};
+use std::path::PathBuf;
 
-fn field<'a>(text: &'a str, name: &str) -> &'a str {
-    text.lines()
-        .find_map(|line| line.strip_prefix(name))
-        .unwrap_or_else(|| panic!("missing {name}"))
-}
-fn hex(text: &str) -> Vec<u8> {
-    text.as_bytes()
-        .chunks_exact(2)
-        .map(|p| u8::from_str_radix(std::str::from_utf8(p).unwrap(), 16).unwrap())
-        .collect()
-}
 /// Public key, message and decoded response of one vector file.
 pub fn vector<L: ParameterSet>(text: &str) -> (Vec<u8>, Vec<u8>, Response<L>) {
-    let pk = hex(field(text, "A "));
-    let mut sig = Vec::new();
-    for name in ["E ", "Px ", "Py ", "Qx ", "Qy "] {
-        sig.extend(hex(field(text, name)));
-    }
-    sig.extend(hex(field(text, "salt ")));
+    let parsed = Vector::new(text);
+    let public_key = parsed.public_key().expect("the vector's public key");
+    let message = parsed.message().expect("the vector's message").to_vec();
+    let signature = parsed.signature().expect("the vector's signature");
     (
-        pk,
-        field(text, "message ").as_bytes().to_vec(),
-        Response::decode(&sig).unwrap(),
+        public_key,
+        message,
+        Response::decode(&signature).expect("the vector's signature decodes"),
     )
 }
 /// The set a vector file names.
 pub fn set(text: &str) -> CommittedSet {
-    CommittedSet::from_label(field(text, "level ")).unwrap()
+    let level = Vector::new(text).level().expect("the vector's level");
+    CommittedSet::from_label(level).expect("the vector's level is a set")
 }
 /// Every committed honest vector, sorted by path.
 pub fn files() -> Vec<PathBuf> {
-    let base = prism_vectors::corpus::dir();
-    let mut files: Vec<_> = fs::read_dir(base.join("accept"))
-        .unwrap()
-        .map(|p| p.unwrap().path())
-        .filter(|p| p.extension().is_some_and(|e| e == "txt"))
-        .collect();
-    files.extend(primary());
-    files.sort();
-    files
+    prism_vectors::corpus::files()
 }
 /// The six vectors the negatives are derived from, two keys per set.
 pub fn primary() -> Vec<PathBuf> {
-    let base = prism_vectors::corpus::dir();
-    ["1", "1b", "3", "3b", "5", "5b"]
-        .iter()
-        .map(|n| base.join(format!("s5_lvl{n}.txt")))
-        .collect()
+    Primary::ALL.map(Primary::path).to_vec()
 }
 
 /// One input that must be refused, and the refusals it may meet.
@@ -318,7 +295,8 @@ pub fn negatives<L: ParameterSet>(text: &str) -> Vec<Case> {
     });
     let other_key = prism_vectors::hints::row(set(text).label())
         .unwrap()
-        .public_key;
+        .public_key
+        .clone();
     other = r;
     other.salt = find(&other_key, &msg);
     cases.push(Case {

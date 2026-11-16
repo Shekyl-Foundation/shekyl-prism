@@ -76,21 +76,29 @@ pub struct Refusal {
     pub signature: Vec<u8>,
 }
 
-/// The file is not in the form this reader documents.
+/// Why a refusal could not be read.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Malformed;
+pub enum Error {
+    /// The file is not in the form this reader documents.
+    Malformed,
+    /// The file has no row for this set and verdict.
+    Missing,
+}
 
-impl core::fmt::Display for Malformed {
+impl core::fmt::Display for Error {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.write_str("the identity-refusal file is not in its documented form")
+        f.write_str(match self {
+            Self::Malformed => "the identity-refusal file is not in its documented form",
+            Self::Missing => "the identity-refusal file has no row for this set and verdict",
+        })
     }
 }
 
-impl std::error::Error for Malformed {}
+impl std::error::Error for Error {}
 
 /// Every pinned refusal, in the file's order.
-pub fn rows() -> Result<&'static [Refusal], Malformed> {
-    static ROWS: OnceLock<Result<Vec<Refusal>, Malformed>> = OnceLock::new();
+pub fn rows() -> Result<&'static [Refusal], Error> {
+    static ROWS: OnceLock<Result<Vec<Refusal>, Error>> = OnceLock::new();
     ROWS.get_or_init(|| {
         let mut lines = TEXT
             .lines()
@@ -98,7 +106,7 @@ pub fn rows() -> Result<&'static [Refusal], Malformed> {
         // The first line names the columns. A file with other columns is
         // not one this reader can be trusted to read.
         if lines.next() != Some(COLUMNS) {
-            return Err(Malformed);
+            return Err(Error::Malformed);
         }
         lines.map(parse).collect()
     })
@@ -107,29 +115,29 @@ pub fn rows() -> Result<&'static [Refusal], Malformed> {
 }
 
 /// The pinned refusal of the set named `set` that ends in `verdict`.
-pub fn row(set: &str, verdict: Verdict) -> Result<&'static Refusal, Malformed> {
+pub fn row(set: &str, verdict: Verdict) -> Result<&'static Refusal, Error> {
     rows()?
         .iter()
         .find(|row| row.set == set && row.verdict == verdict)
-        .ok_or(Malformed)
+        .ok_or(Error::Missing)
 }
 
-fn parse(line: &'static str) -> Result<Refusal, Malformed> {
+fn parse(line: &'static str) -> Result<Refusal, Error> {
     let fields: Vec<&'static str> = line.split('\t').collect();
     let &[set, vector, case, verdict, salt_counter, message, public_key, signature] =
         fields.as_slice()
     else {
-        return Err(Malformed);
+        return Err(Error::Malformed);
     };
     Ok(Refusal {
         set,
         vector,
         case,
-        verdict: Verdict::from_text(verdict).ok_or(Malformed)?,
-        salt_counter: salt_counter.parse().map_err(|_| Malformed)?,
-        message: hex::decode(message).ok_or(Malformed)?,
-        public_key: hex::decode(public_key).ok_or(Malformed)?,
-        signature: hex::decode(signature).ok_or(Malformed)?,
+        verdict: Verdict::from_text(verdict).ok_or(Error::Malformed)?,
+        salt_counter: salt_counter.parse().map_err(|_| Error::Malformed)?,
+        message: hex::decode(message).ok_or(Error::Malformed)?,
+        public_key: hex::decode(public_key).ok_or(Error::Malformed)?,
+        signature: hex::decode(signature).ok_or(Error::Malformed)?,
     })
 }
 
@@ -167,9 +175,19 @@ mod tests {
 
     #[test]
     fn a_row_with_another_verdict_or_another_width_is_refused() {
-        assert_eq!(parse("p248\tv\tc\tImage\t0\t00\t00\t00"), Err(Malformed));
-        assert_eq!(parse("p248\tv\tc\tKernel\t0\t00\t00"), Err(Malformed));
-        assert_eq!(parse("p248\tv\tc\tKernel\tx\t00\t00\t00"), Err(Malformed));
+        assert_eq!(row("no-such-set", Verdict::Kernel), Err(Error::Missing));
+        assert_eq!(
+            parse("p248\tv\tc\tImage\t0\t00\t00\t00"),
+            Err(Error::Malformed)
+        );
+        assert_eq!(
+            parse("p248\tv\tc\tKernel\t0\t00\t00"),
+            Err(Error::Malformed)
+        );
+        assert_eq!(
+            parse("p248\tv\tc\tKernel\tx\t00\t00\t00"),
+            Err(Error::Malformed)
+        );
         assert!(parse("p248\tv\tc\tKernel\t7\t00\t01\t02").is_ok());
     }
 }

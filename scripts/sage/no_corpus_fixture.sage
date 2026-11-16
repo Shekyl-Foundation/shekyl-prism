@@ -66,7 +66,7 @@ assert NAME == "p%d" % E_EXPONENT
 # The curve walk: this many 2-isogeny steps from A = 0, and every
 # WALK_STRIDE-th curve of it is written. Which of those curves are on
 # which branch of the basis search, and which are a permitted response
-# model, is an accident of each set's walk; the fixtures crate records it
+# model, is an accident of each set's walk; prism-vectors records it
 # for each set and the tests hold it.
 WALK_STEPS = 40
 WALK_STRIDE = 5

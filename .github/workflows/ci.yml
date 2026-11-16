@@ -119,9 +119,9 @@ jobs:
           python3 scripts/ci/check_vectors_manifest.py
           python3 scripts/ci/check_vectors_manifest.py --moved
       # CI has no Sage and cannot run the script. This holds that the header
-      # of each committed Sage file records the digest of the script as it
-      # was when it ran, and the pinned image, so the script cannot change
-      # without a new run. The Rust tests then read the files.
+      # of each committed Sage file records the digest of the committed
+      # script and the pinned image, so the script cannot change without a
+      # new run. The Rust tests then read the files.
       - name: The Sage files record the committed script and the pinned image
         run: |
           python3 scripts/ci/check_sage_fixture.py --selftest

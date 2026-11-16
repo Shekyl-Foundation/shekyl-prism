@@ -22,40 +22,70 @@
 
 use crate::corpus::Primary;
 
+/// One model file of a primary vector. `include_str!` needs a literal, so
+/// the six stems are written once, here, and each kind is a suffix.
+macro_rules! model_file {
+    ($vector:expr, $kind:literal) => {
+        match $vector {
+            Primary::Lvl1 => {
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/data/isogeny/s5_model/s5_lvl1_",
+                    $kind
+                ))
+            }
+            Primary::Lvl1b => {
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/data/isogeny/s5_model/s5_lvl1b_",
+                    $kind
+                ))
+            }
+            Primary::Lvl3 => {
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/data/isogeny/s5_model/s5_lvl3_",
+                    $kind
+                ))
+            }
+            Primary::Lvl3b => {
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/data/isogeny/s5_model/s5_lvl3b_",
+                    $kind
+                ))
+            }
+            Primary::Lvl5 => {
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/data/isogeny/s5_model/s5_lvl5_",
+                    $kind
+                ))
+            }
+            Primary::Lvl5b => {
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/data/isogeny/s5_model/s5_lvl5b_",
+                    $kind
+                ))
+            }
+        }
+    };
+}
+
 /// The matrices file of a primary vector.
 pub const fn matrices(vector: Primary) -> &'static str {
-    match vector {
-        Primary::Lvl1 => isogeny_data!("s5_model/s5_lvl1_matrices.json"),
-        Primary::Lvl1b => isogeny_data!("s5_model/s5_lvl1b_matrices.json"),
-        Primary::Lvl3 => isogeny_data!("s5_model/s5_lvl3_matrices.json"),
-        Primary::Lvl3b => isogeny_data!("s5_model/s5_lvl3b_matrices.json"),
-        Primary::Lvl5 => isogeny_data!("s5_model/s5_lvl5_matrices.json"),
-        Primary::Lvl5b => isogeny_data!("s5_model/s5_lvl5b_matrices.json"),
-    }
+    model_file!(vector, "matrices.json")
 }
 
 /// The null-point file of a primary vector.
 pub const fn nulls(vector: Primary) -> &'static str {
-    match vector {
-        Primary::Lvl1 => isogeny_data!("s5_model/s5_lvl1_nulls.json"),
-        Primary::Lvl1b => isogeny_data!("s5_model/s5_lvl1b_nulls.json"),
-        Primary::Lvl3 => isogeny_data!("s5_model/s5_lvl3_nulls.json"),
-        Primary::Lvl3b => isogeny_data!("s5_model/s5_lvl3b_nulls.json"),
-        Primary::Lvl5 => isogeny_data!("s5_model/s5_lvl5_nulls.json"),
-        Primary::Lvl5b => isogeny_data!("s5_model/s5_lvl5b_nulls.json"),
-    }
+    model_file!(vector, "nulls.json")
 }
 
 /// The step-8 image file of a primary vector.
 pub const fn step8(vector: Primary) -> &'static str {
-    match vector {
-        Primary::Lvl1 => isogeny_data!("s5_model/s5_lvl1_step8.json"),
-        Primary::Lvl1b => isogeny_data!("s5_model/s5_lvl1b_step8.json"),
-        Primary::Lvl3 => isogeny_data!("s5_model/s5_lvl3_step8.json"),
-        Primary::Lvl3b => isogeny_data!("s5_model/s5_lvl3b_step8.json"),
-        Primary::Lvl5 => isogeny_data!("s5_model/s5_lvl5_step8.json"),
-        Primary::Lvl5b => isogeny_data!("s5_model/s5_lvl5b_step8.json"),
-    }
+    model_file!(vector, "step8.json")
 }
 
 /// `negatives.json`: the model's verdict on each negative it derives from

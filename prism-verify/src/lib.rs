@@ -188,7 +188,7 @@ mod tests {
         let row =
             prism_vectors::hints::row(set.label()).unwrap_or_else(|err| panic!("{set}: {err}"));
         ReferenceKey {
-            public_key: row.public_key,
+            public_key: row.public_key.clone(),
             hint: BasisHint::from_c_byte(row.hint)
                 .unwrap_or_else(|| panic!("{set}: hint byte {}", row.hint)),
         }

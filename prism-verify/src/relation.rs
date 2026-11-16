@@ -377,20 +377,6 @@ mod s5_vectors {
     use prism_isogeny::pairing::{mul, weil};
     use prism_isogeny::torsion::{even_basis, has_order_p_plus_one, rational_basis};
 
-    fn line<'a>(text: &'a str, label: &str) -> &'a str {
-        text.lines()
-            .find_map(|line| line.strip_prefix(label))
-            .unwrap()
-            .trim()
-    }
-
-    fn hex_bytes(text: &str) -> Vec<u8> {
-        (0..text.len())
-            .step_by(2)
-            .map(|index| u8::from_str_radix(&text[index..index + 2], 16).unwrap())
-            .collect()
-    }
-
     fn decimal_le(text: &str) -> Vec<u8> {
         let mut bytes = vec![0u8];
         for digit in text.bytes() {
@@ -410,28 +396,35 @@ mod s5_vectors {
 
     struct Sample<L: ParameterSet> {
         key: Vec<u8>,
+        message: Vec<u8>,
         response: Response<L>,
         scalar: Vec<u8>,
     }
 
     fn sample<L: ParameterSet>(text: &str) -> Sample<L> {
-        let key = hex_bytes(line(text, "A "));
+        let vector = prism_vectors::corpus::Vector::new(text);
+        let key = vector.public_key().expect("the vector's public key");
         let identity = KeyIdentity::<L>::decode(&key).expect("key");
-        let salt = L::Salt::from_bytes(&hex_bytes(line(text, "salt "))).unwrap();
-        let scalar = ChallengeScalar::derive::<L>(&identity, b"shekyl-prism-s5", salt);
-        let mut from_file = decimal_le(line(text, "s "));
+        let message = vector.message().expect("the vector's message").to_vec();
+        let salt = L::Salt::from_bytes(&vector.salt().expect("the vector's salt")).unwrap();
+        let scalar = ChallengeScalar::derive::<L>(&identity, &message, salt);
+        let mut from_file = decimal_le(vector.field("s").expect("the vector's scalar"));
         from_file.resize(scalar.as_bytes().len(), 0);
         assert_eq!(from_file, scalar.as_bytes());
-        let point = |x, y| AffinePoint::<L> {
-            x: L::ext_decode(&hex_bytes(line(text, x))).unwrap(),
-            y: L::ext_decode(&hex_bytes(line(text, y))).unwrap(),
-        };
+        let element = |name| L::ext_decode(&vector.bytes(name).expect(name)).unwrap();
         Sample {
             key,
+            message,
             response: Response {
-                curve: L::ext_decode(&hex_bytes(line(text, "E "))).unwrap(),
-                p: point("Px ", "Py "),
-                q: point("Qx ", "Qy "),
+                curve: element("E"),
+                p: AffinePoint {
+                    x: element("Px"),
+                    y: element("Py"),
+                },
+                q: AffinePoint {
+                    x: element("Qx"),
+                    y: element("Qy"),
+                },
                 salt,
             },
             scalar: scalar.as_bytes().to_vec(),
@@ -525,7 +518,7 @@ mod s5_vectors {
         );
         // The degree is prime at e', so verify reaches the chain.
         assert_eq!(
-            verify::<L>(&sample.key, b"shekyl-prism-s5", &sample.response.encode()),
+            verify::<L>(&sample.key, &sample.message, &sample.response.encode()),
             Ok(())
         );
 
@@ -533,7 +526,7 @@ mod s5_vectors {
         wrong_sign.p.y = wrong_sign.p.y.negate();
         wrong_sign.q.y = wrong_sign.q.y.negate();
         assert_eq!(
-            verify::<L>(&sample.key, b"shekyl-prism-s5", &wrong_sign.encode()),
+            verify::<L>(&sample.key, &sample.message, &wrong_sign.encode()),
             Err(VerifyError::Sign)
         );
 
@@ -558,16 +551,12 @@ mod s5_vectors {
         composite_response.salt = (0u64..65_536)
             .find_map(|n| {
                 let salt = L::Salt::from_counter(n).unwrap();
-                let scalar = ChallengeScalar::derive(&identity, b"shekyl-prism-s5", salt);
+                let scalar = ChallengeScalar::derive(&identity, &sample.message, salt);
                 (!degree_is_prime::<L::Degree>(L::E - 2, scalar.as_bytes())).then_some(salt)
             })
             .expect("a composite salt exists");
         assert_eq!(
-            verify::<L>(
-                &sample.key,
-                b"shekyl-prism-s5",
-                &composite_response.encode()
-            ),
+            verify::<L>(&sample.key, &sample.message, &composite_response.encode()),
             Err(VerifyError::Composite)
         );
 
@@ -612,7 +601,7 @@ mod s5_vectors {
             );
         } else {
             assert_eq!(
-                verify::<L>(&sample.key, b"shekyl-prism-s5", &swapped.encode()),
+                verify::<L>(&sample.key, &sample.message, &swapped.encode()),
                 Err(VerifyError::Sign)
             );
         }
@@ -626,17 +615,17 @@ mod s5_vectors {
             .coefficient();
         let vk = Montgomery::normalized(coefficient);
         let sig = Montgomery::normalized(sample.response.curve);
-        let at = |x: &str, y: &str| Jac {
-            x: L::ext_decode(&hex_bytes(line(text, x))).unwrap(),
-            y: L::ext_decode(&hex_bytes(line(text, y))).unwrap(),
+        let vector = prism_vectors::corpus::Vector::new(text);
+        let at = |x, y| Jac {
+            x: L::ext_decode(&vector.bytes(x).expect(x)).unwrap(),
+            y: L::ext_decode(&vector.bytes(y).expect(y)).unwrap(),
             z: one,
         };
-        let public =
-            weil(vk, at("VkPx ", "VkPy "), at("VkQx ", "VkQy "), L::E).expect("e(P_vk, Q_vk)");
+        let public = weil(vk, at("VkPx", "VkPy"), at("VkQx", "VkQy"), L::E).expect("e(P_vk, Q_vk)");
         let signed = weil(
             sig,
-            mul(sig, at("Px ", "Py "), &sample.scalar),
-            mul(sig, at("Qx ", "Qy "), &sample.scalar),
+            mul(sig, at("Px", "Py"), &sample.scalar),
+            mul(sig, at("Qx", "Qy"), &sample.scalar),
             L::E,
         )
         .expect("e([s]P_sig, [s]Q_sig)");
@@ -652,31 +641,29 @@ mod s5_vectors {
 
     #[test]
     fn the_weil_values_match_sage() {
-        let table = prism_vectors::kat::WEIL_PAIRING;
-        let mut rows = table.lines().filter(|line| !line.is_empty());
+        use prism_vectors::corpus::{CorpusSet, Primary};
+        let mut rows = prism_vectors::kat::WEIL_PAIRING
+            .lines()
+            .filter(|line| !line.is_empty());
         assert_eq!(rows.next(), Some("file\tvk\tsig"));
-        let files: [(&str, &str); 6] = [
-            ("s5_lvl1.txt", prism_vectors::corpus::Primary::Lvl1.text()),
-            ("s5_lvl3.txt", prism_vectors::corpus::Primary::Lvl3.text()),
-            ("s5_lvl5.txt", prism_vectors::corpus::Primary::Lvl5.text()),
-            ("s5_lvl1b.txt", prism_vectors::corpus::Primary::Lvl1b.text()),
-            ("s5_lvl3b.txt", prism_vectors::corpus::Primary::Lvl3b.text()),
-            ("s5_lvl5b.txt", prism_vectors::corpus::Primary::Lvl5b.text()),
-        ];
-        for (name, text) in files {
-            let row = rows.next().expect(name);
+        let mut seen = Vec::new();
+        for row in rows {
             let mut parts = row.split('\t');
-            assert_eq!(parts.next(), Some(name));
+            let name = parts.next().expect("file");
             let vk = parts.next().expect("vk");
             let sig = parts.next().expect("sig");
-            match name {
-                "s5_lvl1.txt" | "s5_lvl1b.txt" => assert_weil_values::<P248>(text, vk, sig),
-                "s5_lvl3.txt" | "s5_lvl3b.txt" => assert_weil_values::<P376>(text, vk, sig),
-                "s5_lvl5.txt" | "s5_lvl5b.txt" => assert_weil_values::<P500>(text, vk, sig),
-                _ => panic!("unexpected row {name}"),
+            let primary =
+                Primary::by_file_name(name).unwrap_or_else(|| panic!("unexpected row {name}"));
+            assert!(!seen.contains(&primary), "{name} is listed twice");
+            seen.push(primary);
+            match primary.corpus_set() {
+                CorpusSet::P248 => assert_weil_values::<P248>(primary.text(), vk, sig),
+                CorpusSet::P376 => assert_weil_values::<P376>(primary.text(), vk, sig),
+                CorpusSet::P500 => assert_weil_values::<P500>(primary.text(), vk, sig),
             }
         }
-        assert!(rows.next().is_none());
+        seen.sort();
+        assert_eq!(seen, Primary::ALL.to_vec());
     }
 
     fn assert_vk_basis<L: ParameterSet>(text: &str) {
@@ -690,9 +677,11 @@ mod s5_vectors {
         let hint = basis_hint::<L>(coefficient).unwrap();
         let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
             .expect("canonical basis");
-        let vk_px = L::ext_decode(&hex_bytes(line(text, "VkPx "))).unwrap();
-        let vk_qx = L::ext_decode(&hex_bytes(line(text, "VkQx "))).unwrap();
-        let vk_dx = L::ext_decode(&hex_bytes(line(text, "VkDx "))).unwrap();
+        let vector = prism_vectors::corpus::Vector::new(text);
+        let coordinate = |name| L::ext_decode(&vector.bytes(name).expect(name)).unwrap();
+        let vk_px = coordinate("VkPx");
+        let vk_qx = coordinate("VkQx");
+        let vk_dx = coordinate("VkDx");
         let p = even.p.x_affine().expect("P");
         let r = even.q.x_affine().expect("R");
         let q = even
@@ -734,33 +723,34 @@ mod s5_vectors {
         // and `(P, −Q)` reaches both readings. The earlier field, the
         // cofactor of the uncleared difference, let `p248` and `p376` reach
         // both readings. The accept path replaces this chain.
+        use prism_vectors::corpus::WithCorpus;
+        // `(P, −Q)` reaches both readings at `p248` and `p376`, and stops
+        // at `p500`. That is a measured fact of each set, so it stays written
+        // on the set rather than folded into the loop below.
         honest::<P248>(
-            prism_vectors::corpus::Primary::Lvl1.text(),
+            <P248 as WithCorpus>::PRIMARY[0].text(),
             Stop::Step(1),
             Stop::Readings,
             true,
         );
         honest::<P376>(
-            prism_vectors::corpus::Primary::Lvl3.text(),
+            <P376 as WithCorpus>::PRIMARY[0].text(),
             Stop::Step(1),
             Stop::Readings,
             true,
         );
         honest::<P500>(
-            prism_vectors::corpus::Primary::Lvl5.text(),
+            <P500 as WithCorpus>::PRIMARY[0].text(),
             Stop::Step(1),
             Stop::Readings,
             false,
         );
-        assert_vk_basis::<P248>(prism_vectors::corpus::Primary::Lvl1.text());
-        assert_vk_basis::<P376>(prism_vectors::corpus::Primary::Lvl3.text());
-        assert_vk_basis::<P500>(prism_vectors::corpus::Primary::Lvl5.text());
-        assert_vk_basis::<P248>(prism_vectors::corpus::Primary::Lvl1b.text());
-        assert_vk_basis::<P376>(prism_vectors::corpus::Primary::Lvl3b.text());
-        assert_vk_basis::<P500>(prism_vectors::corpus::Primary::Lvl5b.text());
-        second_key::<P248>(prism_vectors::corpus::Primary::Lvl1b.text());
-        second_key::<P376>(prism_vectors::corpus::Primary::Lvl3b.text());
-        second_key::<P500>(prism_vectors::corpus::Primary::Lvl5b.text());
+        prism_vectors::for_each_corpus_set!(Set, {
+            for primary in <Set as WithCorpus>::PRIMARY {
+                assert_vk_basis::<Set>(primary.text());
+            }
+            second_key::<Set>(<Set as WithCorpus>::PRIMARY[1].text());
+        });
     }
 
     fn second_key<L: ParameterSet>(text: &str) {

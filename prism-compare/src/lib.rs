@@ -102,37 +102,26 @@ pub struct Archived {
 /// Every archived unsalted vector kept for the comparison, in name order.
 pub fn archived_vectors() -> Vec<Archived> {
     let root = prism_vectors::unsalted::dir();
-    let mut paths = Vec::new();
-    for dir in [root.clone(), root.join("accept")] {
-        for entry in std::fs::read_dir(dir).expect("archived vector directory") {
-            let path = entry.expect("archived vector entry").path();
-            if path.extension().is_some_and(|s| s == "txt") {
-                paths.push(path);
-            }
-        }
-    }
-    paths.sort();
-    paths
-        .iter()
+    prism_vectors::unsalted::files()
+        .into_iter()
         .map(|path| {
-            let text = std::fs::read_to_string(path).expect("archived vector");
-            let rows: std::collections::HashMap<_, _> =
-                text.lines().filter_map(|s| s.split_once(' ')).collect();
-            let mut response = Vec::new();
-            for name in ["E", "Px", "Py", "Qx", "Qy"] {
-                response.extend(decode(rows[name]).expect("archived hex"));
-            }
+            let text = std::fs::read_to_string(&path).expect("archived vector");
+            let vector = prism_vectors::corpus::Vector::new(&text);
             Archived {
                 file: path
                     .strip_prefix(&root)
                     .expect("under the archive root")
                     .to_string_lossy()
                     .into_owned(),
-                level: rows["level"].to_string(),
-                message: rows["message"].as_bytes().to_vec(),
-                key: decode(rows["A"]).expect("archived key hex"),
-                response,
-                index: rows["j"].parse().expect("archived index"),
+                level: vector.level().expect("archived level").to_string(),
+                message: vector.message().expect("archived message").to_vec(),
+                key: vector.public_key().expect("archived key"),
+                response: vector.curve_and_points().expect("archived response"),
+                index: vector
+                    .field("j")
+                    .expect("archived index")
+                    .parse()
+                    .expect("archived index"),
             }
         })
         .collect()
@@ -142,63 +131,40 @@ pub fn archived_vectors() -> Vec<Archived> {
 mod tests {
     use super::*;
     use prism_field::{P248, P376, P500};
-    use std::path::PathBuf;
-    fn hex(s: &str) -> Vec<u8> {
-        s.as_bytes()
-            .chunks_exact(2)
-            .map(|p| u8::from_str_radix(std::str::from_utf8(p).unwrap(), 16).unwrap())
-            .collect()
-    }
-    fn files() -> Vec<PathBuf> {
-        let root = prism_vectors::unsalted::dir();
-        let mut out: Vec<_> = std::fs::read_dir(root.join("accept"))
-            .unwrap()
-            .map(|p| p.unwrap().path())
-            .collect();
-        out.extend(
-            std::fs::read_dir(root)
-                .unwrap()
-                .map(|p| p.unwrap().path())
-                .filter(|p| p.extension().is_some_and(|s| s == "txt")),
-        );
-        assert_eq!(out.len(), 113);
-        out
-    }
-    fn check<L: ParameterSet>(rows: &std::collections::HashMap<&str, &str>) {
-        let key = hex(rows["A"]);
-        let j: u16 = rows["j"].parse().unwrap();
-        let scalar = unsalted::<L>(&key, rows["message"].as_bytes(), j, L::CHALLENGE_BITS).unwrap();
-        assert_eq!(prism_signer::decimal(&scalar), rows["s"]);
+    use prism_vectors::corpus::Vector;
+    fn check<L: ParameterSet>(vector: Vector<'_>) {
+        let key = vector.public_key().unwrap();
+        let message = vector.message().unwrap();
+        let j: u16 = vector.field("j").unwrap().parse().unwrap();
+        let scalar = unsalted::<L>(&key, message, j, L::CHALLENGE_BITS).unwrap();
+        assert_eq!(prism_signer::decimal(&scalar), vector.field("s").unwrap());
         assert!(prism_verify::degree_is_prime::<L::Degree>(
             L::E - 2,
             &scalar
         ));
-        let mut sig = Vec::new();
-        for name in ["E", "Px", "Py", "Qx", "Qy"] {
-            sig.extend(hex(rows[name]));
-        }
+        let mut sig = vector.curve_and_points().unwrap();
         sig.extend(j.to_le_bytes());
         assert_eq!(
-            prism_verify::verify::<L>(&key, rows["message"].as_bytes(), &sig),
+            prism_verify::verify::<L>(&key, message, &sig),
             Err(prism_verify::VerifyError::Length)
         );
         #[cfg(feature = "experiments")]
         assert_eq!(
-            verify_unsalted::<L>(&key, rows["message"].as_bytes(), &sig, L::CHALLENGE_BITS),
+            verify_unsalted::<L>(&key, message, &sig, L::CHALLENGE_BITS),
             Ok(())
         );
     }
     #[test]
     fn archived_hashes_match_every_original_and_default_verifier_rejects_old_wire() {
-        for p in files() {
-            let text = std::fs::read_to_string(p).unwrap();
-            let rows: std::collections::HashMap<_, _> =
-                text.lines().filter_map(|s| s.split_once(' ')).collect();
-            match prism_verify::CommittedSet::from_label(rows["level"]) {
-                Ok(prism_verify::CommittedSet::P248) => check::<P248>(&rows),
-                Ok(prism_verify::CommittedSet::P376) => check::<P376>(&rows),
-                Ok(prism_verify::CommittedSet::P500) => check::<P500>(&rows),
-                Err(_) => panic!("row"),
+        let files = prism_vectors::unsalted::files();
+        assert_eq!(files.len(), prism_vectors::corpus::HONEST_VECTORS);
+        for path in files {
+            let text = std::fs::read_to_string(&path).unwrap();
+            let vector = Vector::new(&text);
+            match prism_verify::CommittedSet::from_label(vector.level().unwrap()).unwrap() {
+                prism_verify::CommittedSet::P248 => check::<P248>(vector),
+                prism_verify::CommittedSet::P376 => check::<P376>(vector),
+                prism_verify::CommittedSet::P500 => check::<P500>(vector),
             }
         }
     }
