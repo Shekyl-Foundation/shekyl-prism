@@ -143,6 +143,8 @@ impl fmt::Display for Timing {
 enum BenchError {
     /// The committed input could not be read, so there is nothing to time.
     Prepare(VectorError),
+    /// The committed key of a row does not decode, so nothing was timed.
+    Key(VerifyError),
     /// A timed verification did not end as pinned. This is what it
     /// returned.
     Verdict(Result<(), VerifyError>),
@@ -155,6 +157,7 @@ impl fmt::Display for BenchError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Prepare(err) => write!(f, "{err}"),
+            Self::Key(err) => write!(f, "the committed key does not decode: {err}"),
             Self::Verdict(Ok(())) => f.write_str("accepted"),
             Self::Verdict(Err(err)) => write!(f, "{err}"),
             Self::Search(Some(counter)) => write!(f, "first prime degree at counter {counter}"),
@@ -260,8 +263,7 @@ impl fmt::Display for SearchCost {
 /// pass, warm-ups included, is held to the committed row: its first prime
 /// degree must be at the committed counter.
 fn salt_attempts<L: ParameterSet>(row: &Refusal) -> Result<SearchCost, BenchError> {
-    let identity =
-        KeyIdentity::<L>::decode(&row.public_key).map_err(|err| BenchError::Verdict(Err(err)))?;
+    let identity = KeyIdentity::<L>::decode(&row.public_key).map_err(BenchError::Key)?;
     let mut composite_means = Vec::with_capacity(SAMPLES);
     let mut prime_means = Vec::with_capacity(SAMPLES);
     let mut counts = (0, 0);

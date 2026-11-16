@@ -25,7 +25,7 @@ use std::fmt::Write as _;
 
 use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
 use prism_fixtures::no_corpus::{curve_table, WithoutCorpus};
-use prism_verify::reference::honest;
+use prism_verify::reference::{honest, REFUSAL_VERDICTS};
 use prism_verify::{CommittedSet, Response, Set, VerifyError};
 
 use super::identity::{first_prime_salt_counter, identity_response, Form};
@@ -60,13 +60,22 @@ impl Row {
         *error
     }
 
+    /// The text the file uses for the row's verdict.
+    fn verdict(&self) -> &'static str {
+        let error = self.error();
+        REFUSAL_VERDICTS
+            .into_iter()
+            .find_map(|(text, verdict)| (verdict == error).then_some(text))
+            .expect("the file has a text for each form's refusal")
+    }
+
     fn render(&self) -> String {
         format!(
-            "{}\t{}\t{}\t{:?}\t{}\t{}\t{}\t{}",
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
             self.set,
             self.vector,
             self.form.name(),
-            self.error(),
+            self.verdict(),
             self.salt_counter,
             hex(&self.message),
             hex(&self.public_key),
@@ -76,7 +85,8 @@ impl Row {
 }
 
 fn hex(bytes: &[u8]) -> String {
-    bytes.iter().fold(String::new(), |mut text, byte| {
+    let text = String::with_capacity(bytes.len() * 2);
+    bytes.iter().fold(text, |mut text, byte| {
         write!(text, "{byte:02x}").expect("writing to a string");
         text
     })

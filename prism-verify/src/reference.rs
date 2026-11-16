@@ -238,6 +238,16 @@ const IDENTITY_REFUSALS: &str = include_str!("../testdata/identity_refusals.tsv"
 const REFUSAL_COLUMNS: &str =
     "set\tvector\tcase\tverdict\tsalt_counter\tmessage\tpublic_key\tsignature";
 
+/// The verdicts a row of [`IDENTITY_REFUSALS`] may carry, by the text the
+/// file uses for each. They are the two refusals a response with no
+/// isogeny behind it can reach once it has passed the pairing check. The
+/// text is the file's format and is stated here, so renaming an error
+/// does not change what the file says.
+pub const REFUSAL_VERDICTS: [(&str, VerifyError); 2] = [
+    ("Kernel", VerifyError::Kernel),
+    ("Codomain", VerifyError::Codomain),
+];
+
 /// One pinned refusal: an input and the one error the verifier must return
 /// for it. Nothing here is accepted, at any set.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -290,11 +300,9 @@ fn parse_refusal(line: &'static str) -> Result<Refusal, VectorError> {
     else {
         return Err(VectorError::Malformed);
     };
-    // The two refusals a response with no isogeny behind it can reach
-    // once it has passed the pairing check.
-    let error = [VerifyError::Kernel, VerifyError::Codomain]
+    let (_, error) = REFUSAL_VERDICTS
         .into_iter()
-        .find(|error| format!("{error:?}") == verdict)
+        .find(|(text, _)| *text == verdict)
         .ok_or(VectorError::Malformed)?;
     Ok(Refusal {
         set: set.parse().map_err(|_| VectorError::Malformed)?,
