@@ -43,6 +43,44 @@ fn negative<L: ParameterSet>(text: &str) {
         );
     }
 }
+/// The committed refusal vectors of a set with a corpus are the two
+/// identity-response negatives of the vector its timing sample is: the
+/// cases the count records hold under the same names. So a row of
+/// `testdata/identity_refusals.tsv` and the row of that case in
+/// `docs/benchmarks/negative-verdicts.tsv` are one input.
+fn committed_refusals_are_the_counted_negatives<L: ParameterSet>(set: CommittedSet, text: &str) {
+    let cases = negatives::<L>(text);
+    let rows: Vec<_> = prism_verify::reference::refusals()
+        .expect("the committed file parses")
+        .iter()
+        .filter(|row| row.set == set.set())
+        .collect();
+    assert_eq!(rows.len(), 2, "{set}");
+    for row in rows {
+        let case = cases
+            .iter()
+            .find(|case| case.name == row.case)
+            .unwrap_or_else(|| panic!("{set}: no negative named {}", row.case));
+        assert_eq!(case.key, row.public_key, "{set} {}", row.case);
+        assert_eq!(case.message, row.message, "{set} {}", row.case);
+        assert_eq!(case.signature, row.signature, "{set} {}", row.case);
+        assert_eq!(case.allowed, [row.error], "{set} {}", row.case);
+    }
+}
+#[test]
+fn the_committed_refusal_vectors_are_the_counted_negatives() {
+    let text = |name: &str| {
+        fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("testdata")
+                .join(name),
+        )
+        .unwrap()
+    };
+    committed_refusals_are_the_counted_negatives::<P248>(CommittedSet::P248, &text("s5_lvl1.txt"));
+    committed_refusals_are_the_counted_negatives::<P376>(CommittedSet::P376, &text("s5_lvl3.txt"));
+    committed_refusals_are_the_counted_negatives::<P500>(CommittedSet::P500, &text("s5_lvl5.txt"));
+}
 /// Prime and composite degrees among the one-bit salt mutations of a vector.
 fn salt_flips<L: ParameterSet>(text: &str) -> (usize, usize) {
     let (pk, msg, r) = vector::<L>(text);
