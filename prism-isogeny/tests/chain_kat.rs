@@ -3,7 +3,7 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! The length-160 chain in `testdata/chain_lvl1.txt` is
+//! The length-160 chain `prism_vectors::kat::CHAIN_LVL1` is
 //! `theta_chain_compute_and_eval` on the graph of an endomorphism of `E0`,
 //! generated from the pinned C tree. The codomain and the image are compared
 //! projectively.

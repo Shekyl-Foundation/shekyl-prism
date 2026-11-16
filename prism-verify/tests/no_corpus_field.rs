@@ -5,7 +5,7 @@
 
 //! Field arithmetic against Sage, at a set that has no corpus.
 //!
-//! `testdata/<set>_field.tsv` is written by
+//! `<set>_field.tsv` of `prism-vectors` is written by
 //! `scripts/sage/no_corpus_fixture.sage`. It holds every result in full
 //! for a grid of edge values, and for 10,000 random rows one SHA3-256
 //! digest for each operation in each field. The random inputs are not in

@@ -108,12 +108,24 @@ jobs:
       # The Rust tests read the file; this holds the file to the script.
       - name: The residue known answers are what the script writes
         run: python3 scripts/residue_known_answers.py --check
+      # Every file under prism-vectors/data has its SHA-256 in
+      # prism-vectors/data.sha256, so a data file cannot change, appear or
+      # disappear without that list changing in the same commit. `--moved`
+      # holds the record of 2026-11-16: the move into the crate changed no
+      # byte and no file name.
+      - name: The committed test data is what its manifest records
+        run: |
+          python3 scripts/ci/check_vectors_manifest.py --selftest
+          python3 scripts/ci/check_vectors_manifest.py
+          python3 scripts/ci/check_vectors_manifest.py --moved
       # CI has no Sage and cannot run the script. This holds that the header
-      # of each committed Sage file records the digest of the committed
-      # script and the pinned image, so the script cannot change without a
-      # new run. The Rust tests then read the files.
+      # of each committed Sage file records the digest of the script as it
+      # was when it ran, and the pinned image, so the script cannot change
+      # without a new run. The Rust tests then read the files.
       - name: The Sage files record the committed script and the pinned image
-        run: python3 scripts/ci/check_sage_fixture.py
+        run: |
+          python3 scripts/ci/check_sage_fixture.py --selftest
+          python3 scripts/ci/check_sage_fixture.py
       # The affine oracles are for the fuzz crate alone. The self-test plants
       # each breach in a copy of the manifests first, so a check that had
       # gone blind fails here instead of passing.
@@ -331,7 +343,7 @@ jobs:
           PRISM_REF_BUILD=/tmp/prism-v2-ref sh scripts/export_s5_vectors.sh regenerate salt-brief-2026-11-12
           git diff --exit-code -- docs/comparison/salted-vector-generation.json
       - name: The committed vectors match
-        run: bash scripts/ci/diff_testdata.sh
+        run: bash scripts/ci/diff_vectors_data.sh
       - name: C Q is the cleared difference
         run: python3 scripts/check_even_basis.py 100
 

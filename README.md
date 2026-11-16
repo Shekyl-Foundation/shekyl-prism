@@ -103,7 +103,7 @@ This fresh comparison does not rewrite committed known answers. Set
 The value is the `level` field the vectors carry: `NIST-III`, which is
 `p376`.
 The original model report is in
-[REPORT.md](prism-isogeny/testdata/s5_model/REPORT.md).
+[REPORT.md](prism-vectors/data/isogeny/s5_model/REPORT.md).
 
 The comparison experiments are `prism-compare` binaries behind the
 `experiments` feature. `sh scripts/run_comparison.sh <record> <driver>

@@ -6,7 +6,7 @@
 
 """Decide whether the C-vector rebuild has to run.
 
-It runs when the range touches export scripts, reference sources, testdata,
+It runs when the range touches export scripts, reference sources, the vectors crate and its data,
 Rust field/isogeny/verifier inputs, dependency pins or the compiler/CI setup. Anything else — a missing base, a git error, an unnamed range —
 is `true`. Skipping the rebuild on a guess is the failure; running it is
 the cost.
@@ -23,16 +23,25 @@ import tempfile
 def wanted(path: str) -> bool:
     if path in ("Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".github/workflows/ci.yml"):
         return True
-    if path.startswith(("scripts/", "external/", "prism-field/", "prism-isogeny/", "prism-verify/", "prism-compare/")):
-        return True
-    return "testdata" in path.split("/")
+    return path.startswith(
+        (
+            "scripts/",
+            "external/",
+            "prism-field/",
+            "prism-isogeny/",
+            "prism-verify/",
+            "prism-compare/",
+            # The committed vectors and their readers.
+            "prism-vectors/",
+        )
+    )
 
 
 def paths_from_name_status(raw: bytes) -> list[str] | None:
     """Paths from `git diff --name-status --no-renames -z`.
 
     Rename detection would report only the destination, so a move out of
-    `scripts/` or `testdata/` would look out of scope. NUL-delimited names
+    `scripts/` or `prism-vectors/` would look out of scope. NUL-delimited names
     are not quoted, so a non-ASCII path keeps its prefix.
     """
     parts = raw.split(b"\0")
@@ -122,7 +131,9 @@ def selftest() -> int:
     cases = {
         "scripts/export_c_basis_hints.py": True,
         "external/PRISM_v2/src/prism.c": True,
-        "prism-verify/testdata/c_basis_hints.txt": True,
+        "prism-vectors/data/verify/c_basis_hints.txt": True,
+        "prism-vectors/data/compare/unsalted/s5_lvl1.txt": True,
+        "prism-vectors/src/corpus.rs": True,
         "prism-verify/src/lib.rs": True,
         "prism-isogeny/src/torsion.rs": True,
         "prism-compare/src/lib.rs": True,

@@ -38,12 +38,12 @@ echo "# source_commit=$(git rev-parse HEAD) source_dirty=$([ -n "$(git status --
 # kind, input, the run that does not verify, the run that does.
 cases=""
 for n in 1 1b 3 3b 5 5b; do
-    vector=prism-verify/testdata/s5_lvl$n.txt
+    vector=prism-vectors/data/verify/s5_lvl$n.txt
     test -f "$vector" || { echo "missing $vector" >&2; exit 1; }
     cases="$cases accept:$vector:load:verify"
 done
 for n in 1 1b 3 3b 5 5b; do
-    cases="$cases refuse:prism-verify/testdata/s5_lvl$n.txt:build:refuse"
+    cases="$cases refuse:prism-vectors/data/verify/s5_lvl$n.txt:build:refuse"
 done
 for name in p324 p664; do
     cases="$cases refuse:$name:build:refuse"

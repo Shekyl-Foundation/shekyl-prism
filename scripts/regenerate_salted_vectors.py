@@ -54,7 +54,7 @@ def main():
     for entry in manifest:
         if entry["keygen_stream_seed"] is None:
             raise SystemExit(f"missing original seed recipe: {entry['file']}")
-        archived = ROOT / "prism-compare/testdata/unsalted" / entry["file"]
+        archived = ROOT / "prism-vectors/data/compare/unsalted" / entry["file"]
         old = rows(archived.read_text())
         level = entry["level"]
         n, _, _, _ = PARAMS[level]
@@ -107,7 +107,7 @@ def main():
                     break
             if accepted is None:
                 raise SystemExit(f"counter bound exhausted: {entry['file']}")
-            target = ROOT / "prism-verify/testdata" / entry["file"]
+            target = ROOT / "prism-vectors/data/verify" / entry["file"]
             target.write_text(accepted)
             print(f"accepted {entry['file']} counter={counter} primes={primes} backend_errors={errors} rejected={rejected}", flush=True)
     (ROOT / "docs/comparison/salted-vector-generation.json").write_text(json.dumps(report, indent=2) + "\n")

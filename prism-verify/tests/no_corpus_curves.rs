@@ -6,7 +6,7 @@
 //! Curves, point orders, the torsion basis and the Weil pairing against
 //! Sage, at a set that has no corpus.
 //!
-//! `testdata/<set>_curves.tsv` is written by
+//! `<set>_curves.tsv` of `prism-vectors` is written by
 //! `scripts/sage/no_corpus_fixture.sage`. Each row is one supersingular
 //! Montgomery curve on a 2-isogeny walk from `A = 0`, with points whose
 //! orders Sage computed, the basis the verifier's index search names, and

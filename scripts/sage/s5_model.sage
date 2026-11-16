@@ -65,15 +65,15 @@ LEVELS = {
 }
 
 VECTORS = [
-    ROOT / "prism-verify" / "testdata" / "s5_lvl1.txt",
-    ROOT / "prism-verify" / "testdata" / "s5_lvl3.txt",
-    ROOT / "prism-verify" / "testdata" / "s5_lvl5.txt",
-    ROOT / "prism-verify" / "testdata" / "s5_lvl1b.txt",
-    ROOT / "prism-verify" / "testdata" / "s5_lvl3b.txt",
-    ROOT / "prism-verify" / "testdata" / "s5_lvl5b.txt",
+    ROOT / "prism-vectors" / "data" / "verify" / "s5_lvl1.txt",
+    ROOT / "prism-vectors" / "data" / "verify" / "s5_lvl3.txt",
+    ROOT / "prism-vectors" / "data" / "verify" / "s5_lvl5.txt",
+    ROOT / "prism-vectors" / "data" / "verify" / "s5_lvl1b.txt",
+    ROOT / "prism-vectors" / "data" / "verify" / "s5_lvl3b.txt",
+    ROOT / "prism-vectors" / "data" / "verify" / "s5_lvl5b.txt",
 ]
 
-OUT = ROOT / "prism-isogeny" / "testdata" / "s5_model"
+OUT = ROOT / "prism-vectors" / "data" / "isogeny" / "s5_model"
 OUT.mkdir(parents=True, exist_ok=True)
 
 
@@ -622,7 +622,7 @@ def run_vector(path, run_chains=True, soft=None, completion="closed"):
     # Known-answer files are the six original vectors. Accept-set files are
     # verdicts only; writing a matrix file for each of them is not the record.
     original = {item.name for item in (
-        ROOT / "prism-verify" / "testdata" / f"s5_lvl{n}.txt"
+        ROOT / "prism-vectors" / "data" / "verify" / f"s5_lvl{n}.txt"
         for n in ("1", "1b", "3", "3b", "5", "5b")
     )}
     if soft is None and not comparing and path.name in original:
@@ -1012,7 +1012,7 @@ def run_negatives(completion="library"):
         print(f"  11 -> {row['11']} salt {prime_salt}", flush=True)
 
         # 12. the other key, at a salt whose degree is prime for that key
-        sibling = load_vector(ROOT / "prism-verify" / "testdata" / SIBLING[name])
+        sibling = load_vector(ROOT / "prism-vectors" / "data" / "verify" / SIBLING[name])
         prime_salt, scalar = first_prime_salt(level, sibling["A"], message)
         if prime_salt is None:
             row["12"] = "MISSING"
@@ -1087,7 +1087,7 @@ def run_negatives(completion="library"):
 
 def honest_vectors():
     paths = list(VECTORS)
-    accept = ROOT / "prism-verify" / "testdata" / "accept"
+    accept = ROOT / "prism-vectors" / "data" / "verify" / "accept"
     paths.extend(sorted(accept.glob("s5_*.txt")))
     return paths
 

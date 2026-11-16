@@ -24,7 +24,7 @@ fails:
 2. the scalar here equals the `s` of every committed vector, at the three
    sets that have vectors, so the cSHAKE framing and the projection are
    the verifier's;
-3. `prism-verify/testdata/<set>_challenge.tsv` is what this script writes,
+3. `prism-vectors/data/verify/<set>_challenge.tsv` is what this script writes,
    for each set that has no vectors.
 
 Only then does such a file mean anything at its set: a Rust test compares
@@ -35,7 +35,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-TESTDATA = ROOT / "prism-verify" / "testdata"
+TESTDATA = ROOT / "prism-vectors" / "data" / "verify"
 # The sets that have no vectors, by name, with each exponent. The key of
 # each row is a curve of the set's Sage file. Everything else a set needs
 # here is computed from its name and exponent.

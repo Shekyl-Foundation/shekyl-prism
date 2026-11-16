@@ -152,22 +152,14 @@ use std::path::PathBuf;
 /// The text of a committed file of the `verify` group.
 macro_rules! verify_data {
     ($name:literal) => {
-        include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../prism-verify/testdata/",
-            $name
-        ))
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/data/verify/", $name))
     };
 }
 
 /// The text of a committed file of the `isogeny` group.
 macro_rules! isogeny_data {
     ($name:literal) => {
-        include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../prism-isogeny/testdata/",
-            $name
-        ))
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/data/isogeny/", $name))
     };
 }
 
@@ -199,9 +191,9 @@ impl Group {
     /// The group's directory, relative to this crate.
     const fn relative(self) -> &'static str {
         match self {
-            Self::Verify => "../prism-verify/testdata",
-            Self::Isogeny => "../prism-isogeny/testdata",
-            Self::Compare => "../prism-compare/testdata",
+            Self::Verify => "data/verify",
+            Self::Isogeny => "data/isogeny",
+            Self::Compare => "data/compare",
         }
     }
 

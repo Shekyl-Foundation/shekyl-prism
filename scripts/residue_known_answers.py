@@ -30,7 +30,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "prism-isogeny" / "testdata" / "residue_known_answers.tsv"
+OUT = ROOT / "prism-vectors" / "data" / "isogeny" / "residue_known_answers.tsv"
 # Every parameter set, by name, with its exponent.
 SETS = {"p248": 248, "p324": 324, "p376": 376, "p500": 500, "p664": 664}
 RANDOM_ROWS = 8

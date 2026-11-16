@@ -15,7 +15,7 @@ Inherited from shekyl-core's CI rulings:
 - **The Pi runs different arithmetic from x86 CI.** `fp2` 0.6.0 takes `core::arch` paths on `x86_64` (`utils64.rs`, plus an `lzcnt` branch) and portable fallbacks everywhere else. The floor device is aarch64, so x86-only CI never executes the field code the gate measures.
 - **Byte order is a known failure class here.** The C reference hashes its salt in native byte order (`common.c:76`). The Rust spec says little-endian throughout, and only a big-endian run proves the code agrees.
 - **The verifier parses untrusted bytes.** Anything reachable from `verify` must refuse, never panic.
-- **Committed test data claims a provenance.** `testdata/c_basis_hints.txt` says it came from the pinned C tree; Algorithm 3's chain KATs will say the same. CI should prove it by regenerating them.
+- **Committed test data claims a provenance.** `prism-vectors/data/verify/c_basis_hints.txt` says it came from the pinned C tree; Algorithm 3's chain KATs will say the same. CI should prove it by regenerating them.
 - **PR #1 carried a `Co-authored-by: Cursor` trailer** past review. Rule 90 is checkable, so check it.
 
 The acceptance implementation adds a required `native-signer` job: build the
@@ -32,7 +32,7 @@ Both workspace test jobs execute the full 113-signature acceptance corpus
 and malleability regressions. The accept-list job remains a provenance check.
 The benchmark smoke test requires every timed verification to end as
 pinned: accepted for the honest signatures, and the pinned refusal for
-the committed responses of `prism-verify/testdata/identity_refusals.tsv`.
+the committed responses of `prism-vectors/data/verify/identity_refusals.tsv`.
 
 ## PR gate — `ci.yml` (pull_request, push to `dev`)
 
@@ -46,7 +46,7 @@ the committed responses of `prism-verify/testdata/identity_refusals.tsv`.
 | `deny` | `cargo deny check` (licences, advisories, sources, bans) under rule 17 | a new crate, licence or advisory |
 | `hygiene` | 1. no AI-attribution trailer in any commit in the PR range (rule 90); 2. copyright header on every `.rs`/`.py`/`.c` (rule 92); 3. every crate inherits `unsafe_code = "forbid"` from `[workspace.lints]` | rule violation |
 | `c-reference-pin` | checks out the submodule and runs `scripts/check_c_reference.py` (pin plus the recorded quirks) | the pin or the spec's recorded quirks moved |
-| `c-vectors` (path-scoped: export/reference/testdata, field/isogeny/verifier crates, dependency/compiler/CI inputs) | builds `PRISM_v2` at the pin with mini-gmp, reruns every export script, then `git diff --exit-code` on `testdata/` | committed vectors don't reproduce from the pinned tree |
+| `c-vectors` (path-scoped: export/reference, the vectors crate and its data, field/isogeny/verifier crates, dependency/compiler/CI inputs) | builds `PRISM_v2` at the pin with mini-gmp, reruns every export script, then `git diff --exit-code` on `testdata/` | committed vectors don't reproduce from the pinned tree |
 | `codeql` | CodeQL Rust | per core ruling |
 | `ci-pass` | the aggregator: needs every job, and treats `c-vectors` "skipped" as passing only when the path filter said not needed (core's pattern) | anything above |
 

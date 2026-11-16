@@ -32,8 +32,10 @@ verdicts=docs/benchmarks/negative-verdicts.tsv
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 # The counted sources: the three crates of the verifier, what pins their
-# dependencies, and the fixtures crate, which names the curve and the
-# message the p324 rows are counted on. Tracked files and new files not
+# dependencies, and the vectors crate with its data: every input a count
+# is taken on, and the curve and message the rows without a corpus name.
+# The digest is over each file's bytes and its path, so a file that moves
+# changes it. Tracked files and new files not
 # yet added, never ignored ones, so the digest is the same before and
 # after `git add`.
 git ls-files -co --exclude-standard -- \

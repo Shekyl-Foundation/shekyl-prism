@@ -168,7 +168,7 @@ jobs:
       - name: Rebuild the vectors from the pin
         run: python3 scripts/export_c_basis_hints.py
       - name: The committed vectors match
-        run: bash scripts/ci/diff_testdata.sh
+        run: bash scripts/ci/diff_vectors_data.sh
 
   # Every mutant of a crate runs that crate's whole test suite, about half
   # a minute for prism-verify, and there are some 700 mutants: hours in

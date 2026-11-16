@@ -25,7 +25,7 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-VECTORS = ROOT / "prism-verify" / "testdata"
+VECTORS = ROOT / "prism-vectors" / "data" / "verify"
 # A bound the order check can finish, far above the empty Lemma 3 threshold.
 ORDER_FLOOR = 1 << 24
 

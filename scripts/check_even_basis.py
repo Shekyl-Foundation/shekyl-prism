@@ -123,7 +123,7 @@ def main():
     for level, variant, exponent in LEVELS:
         binary = compile_level(variant)
         coefficients = []
-        vector = ROOT / "prism-verify" / "testdata" / f"s5_lvl{variant[-1]}.txt"
+        vector = ROOT / "prism-vectors" / "data" / "verify" / f"s5_lvl{variant[-1]}.txt"
         for line in vector.read_text().splitlines():
             if line.startswith("A "):
                 coefficients.append(line.split()[1])

@@ -8,7 +8,7 @@
 //!
 //! ```text
 //! cargo build --release --locked -p prism-verify --example verify_once
-//! target/release/examples/verify_once prism-verify/testdata/s5_lvl1.txt verify
+//! target/release/examples/verify_once prism-vectors/data/verify/s5_lvl1.txt verify
 //! target/release/examples/verify_once p664 refuse
 //! ```
 //!

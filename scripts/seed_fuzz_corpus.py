@@ -8,7 +8,7 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-base = ROOT / "prism-verify/testdata"
+base = ROOT / "prism-vectors/data/verify"
 paths = sorted((base / "accept").glob("*.txt")) + sorted(base.glob("s5_lvl*.txt"))
 assert len(paths) == 113, "review the corpus when fixtures change"
 for path in paths:

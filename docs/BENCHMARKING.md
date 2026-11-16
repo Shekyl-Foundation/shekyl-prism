@@ -371,7 +371,7 @@ response curve, and the verifier's own basis `(P, Q)` answered as
 `(P, P − Q)`. It passes the pairing check, runs both theta chains and is
 refused as `Codomain`. Answered as `(P, −Q)` it is refused as `Kernel`,
 at the start of the chain work. Both are committed bytes, in
-[`prism-verify/testdata/identity_refusals.tsv`](../prism-verify/testdata/identity_refusals.tsv),
+[`prism-vectors/data/verify/identity_refusals.tsv`](../prism-vectors/data/verify/identity_refusals.tsv),
 and the bench reads them from there.
 
 **Neither is an accepted verification.** The `Codomain` refusal stops
