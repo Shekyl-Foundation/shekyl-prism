@@ -1,0 +1,243 @@
+# The refusal after the pairing check, at all five sets. Raspberry Pi 4 Model B Rev 1.4 (Cortex-A72, aarch64), the floor device.
+# commit 43d6e3ee4206c898705d85e4a982b901cd95bcbd
+# command: cargo build --release --locked -p prism-bench (nice 10, two jobs), then bash scripts/bench_floor.sh; three runs, 2026-11-16 02:51Z to 03:14Z. Each run took 462 s.
+# Conditions are read before and after each run: load average, SoC temperature in millidegrees C, cpu0 clock in kHz, and the three busiest processes.
+# A resident node (shekyld, about 188% of one core, with its tor) ran throughout and was not stopped: this is a measurement under recorded load, not an idle-device baseline.
+# Firmware throttling flags could not be read.
+# The counter is cntvct_el0, a 54 MHz timer, not a cycle counter.
+# Rows with outcome=refused are refusals, not accepted verifications. Rows that begin "search" are the sender's cost of one tried salt for the Codomain row's input, composite and prime degrees apart.
+# An earlier session of three runs at 351deb4 (02:24Z to 02:37Z), before the search row was split, gave verification and field figures within 0.9% of these.
+RUN 1
+# conditions before
+time=2026-11-16T02:51:21Z
+loadavg=3.44 2.46 2.39 3/224 1694756
+temp_millic=66218
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 188 shekyld
+ 100 ps
+ 2.9 tor
+# bench_floor.sh
+device=Raspberry Pi 4 Model B Rev 1.4
+source_commit=43d6e3ee4206c898705d85e4a982b901cd95bcbd
+source_dirty=false
+Linux 7.0.0-1020-raspi #20-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 11 16:02:28 UTC 2026 aarch64 GNU/Linux
+rustc 1.94.0 (4a4ef493e 2026-03-02)
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu2/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor=ondemand
+field-backend=scalar
+counter=cntvct_el0
+set=p248 outcome=accepted samples=31 median_ns=89075250 spread_ns=860461 median_counter=4810096 counter_spread=46476
+set=p376 outcome=accepted samples=31 median_ns=231679934 spread_ns=686646 median_counter=12510767 counter_spread=37010
+set=p500 outcome=accepted samples=31 median_ns=521110718 spread_ns=1543310 median_counter=28140077 counter_spread=83372
+set=p248 outcome=refused error=Codomain samples=31 median_ns=85136890 spread_ns=772110 median_counter=4597423 counter_spread=41695
+set=p248 outcome=refused error=Kernel samples=31 median_ns=40753597 spread_ns=763757 median_counter=2200706 counter_spread=41266
+set=p324 outcome=refused error=Codomain samples=31 median_ns=192133000 spread_ns=1125737 median_counter=10375233 counter_spread=60783
+set=p324 outcome=refused error=Kernel samples=31 median_ns=84443188 spread_ns=359166 median_counter=4559984 counter_spread=19477
+set=p376 outcome=refused error=Codomain samples=31 median_ns=220102279 spread_ns=734425 median_counter=11885572 counter_spread=39652
+set=p376 outcome=refused error=Kernel samples=31 median_ns=95823788 spread_ns=332518 median_counter=5174524 counter_spread=17960
+set=p500 outcome=refused error=Codomain samples=31 median_ns=494089547 spread_ns=1603459 median_counter=26680925 counter_spread=86575
+set=p500 outcome=refused error=Kernel samples=31 median_ns=203415526 spread_ns=4379507 median_counter=10984477 counter_spread=236481
+set=p664 outcome=refused error=Codomain samples=31 median_ns=1171344489 spread_ns=2146661 median_counter=63252781 counter_spread=115909
+set=p664 outcome=refused error=Kernel samples=31 median_ns=476359020 spread_ns=1034923 median_counter=25723466 counter_spread=55891
+search set=p248 window=1024 composite=1017 prime=7 first_prime=588 samples=31 composite_ns_per_attempt=820105 prime_ns_per_attempt=11095206
+search set=p324 window=1024 composite=1018 prime=6 first_prime=24 samples=31 composite_ns_per_attempt=980215 prime_ns_per_attempt=14367573
+search set=p376 window=1024 composite=1011 prime=13 first_prime=172 samples=31 composite_ns_per_attempt=1123646 prime_ns_per_attempt=16654999
+search set=p500 window=1024 composite=1020 prime=4 first_prime=190 samples=31 composite_ns_per_attempt=1481455 prime_ns_per_attempt=22016609
+search set=p664 window=1024 composite=1022 prime=2 first_prime=413 samples=31 composite_ns_per_attempt=3675127 prime_ns_per_attempt=50445711
+field set=p248 op=mul batch=10000 samples=31 ns_per_op=342.2 counter_per_op=18.5
+field set=p248 op=square batch=10000 samples=31 ns_per_op=224.8 counter_per_op=12.1
+field set=p248 op=inv batch=200 samples=31 ns_per_op=6279.4 counter_per_op=339.1
+field set=p324 op=mul batch=10000 samples=31 ns_per_op=626.4 counter_per_op=33.8
+field set=p324 op=square batch=10000 samples=31 ns_per_op=410.4 counter_per_op=22.2
+field set=p324 op=inv batch=200 samples=31 ns_per_op=10347.0 counter_per_op=558.8
+field set=p376 op=mul batch=10000 samples=31 ns_per_op=619.1 counter_per_op=33.4
+field set=p376 op=square batch=10000 samples=31 ns_per_op=404.5 counter_per_op=21.8
+field set=p376 op=inv batch=200 samples=31 ns_per_op=12153.9 counter_per_op=656.3
+field set=p500 op=mul batch=10000 samples=31 ns_per_op=1089.5 counter_per_op=58.8
+field set=p500 op=square batch=10000 samples=31 ns_per_op=700.4 counter_per_op=37.8
+field set=p500 op=inv batch=200 samples=31 ns_per_op=19727.0 counter_per_op=1065.3
+field set=p664 op=mul batch=10000 samples=31 ns_per_op=1900.1 counter_per_op=102.6
+field set=p664 op=square batch=10000 samples=31 ns_per_op=1230.3 counter_per_op=66.4
+field set=p664 op=inv batch=200 samples=31 ns_per_op=35065.1 counter_per_op=1893.5
+# conditions after
+time=2026-11-16T02:59:03Z
+loadavg=3.09 2.94 2.66 3/223 1695226
+temp_millic=69140
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 188 shekyld
+ 100 ps
+ 2.9 tor
+run_seconds=462
+RUN 2
+# conditions before
+time=2026-11-16T02:59:03Z
+loadavg=3.09 2.94 2.66 3/223 1695234
+temp_millic=67679
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 188 shekyld
+ 2.9 tor
+ 0.0 kworker/3:0-cgroup_free
+# bench_floor.sh
+device=Raspberry Pi 4 Model B Rev 1.4
+source_commit=43d6e3ee4206c898705d85e4a982b901cd95bcbd
+source_dirty=false
+Linux 7.0.0-1020-raspi #20-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 11 16:02:28 UTC 2026 aarch64 GNU/Linux
+rustc 1.94.0 (4a4ef493e 2026-03-02)
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu2/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor=ondemand
+field-backend=scalar
+counter=cntvct_el0
+set=p248 outcome=accepted samples=31 median_ns=90473616 spread_ns=1423922 median_counter=4885638 counter_spread=76903
+set=p376 outcome=accepted samples=31 median_ns=232502265 spread_ns=1830161 median_counter=12555183 counter_spread=98756
+set=p500 outcome=accepted samples=31 median_ns=522609307 spread_ns=1438422 median_counter=28220997 counter_spread=77676
+set=p248 outcome=refused error=Codomain samples=31 median_ns=86373923 spread_ns=966923 median_counter=4664219 counter_spread=52213
+set=p248 outcome=refused error=Kernel samples=31 median_ns=41148892 spread_ns=3979342 median_counter=2222053 counter_spread=214912
+set=p324 outcome=refused error=Codomain samples=31 median_ns=192142130 spread_ns=64222908 median_counter=10375717 counter_spread=3468053
+set=p324 outcome=refused error=Kernel samples=31 median_ns=84333299 spread_ns=3405435 median_counter=4554025 counter_spread=183903
+set=p376 outcome=refused error=Codomain samples=31 median_ns=221090314 spread_ns=1524403 median_counter=11938933 counter_spread=82330
+set=p376 outcome=refused error=Kernel samples=31 median_ns=95935009 spread_ns=3223287 median_counter=5180517 counter_spread=174073
+set=p500 outcome=refused error=Codomain samples=31 median_ns=494926824 spread_ns=1869254 median_counter=26726131 counter_spread=100868
+set=p500 outcome=refused error=Kernel samples=31 median_ns=203844025 spread_ns=1181663 median_counter=11007622 counter_spread=63824
+set=p664 outcome=refused error=Codomain samples=31 median_ns=1176065162 spread_ns=31084011 median_counter=63507698 counter_spread=1678542
+set=p664 outcome=refused error=Kernel samples=31 median_ns=476014095 spread_ns=715442 median_counter=25704850 counter_spread=38629
+search set=p248 window=1024 composite=1017 prime=7 first_prime=588 samples=31 composite_ns_per_attempt=819050 prime_ns_per_attempt=11109643
+search set=p324 window=1024 composite=1018 prime=6 first_prime=24 samples=31 composite_ns_per_attempt=978013 prime_ns_per_attempt=14371848
+search set=p376 window=1024 composite=1011 prime=13 first_prime=172 samples=31 composite_ns_per_attempt=1122753 prime_ns_per_attempt=16673332
+search set=p500 window=1024 composite=1020 prime=4 first_prime=190 samples=31 composite_ns_per_attempt=1480685 prime_ns_per_attempt=22046493
+search set=p664 window=1024 composite=1022 prime=2 first_prime=413 samples=31 composite_ns_per_attempt=3659469 prime_ns_per_attempt=50243091
+field set=p248 op=mul batch=10000 samples=31 ns_per_op=342.1 counter_per_op=18.5
+field set=p248 op=square batch=10000 samples=31 ns_per_op=224.7 counter_per_op=12.1
+field set=p248 op=inv batch=200 samples=31 ns_per_op=6281.3 counter_per_op=339.2
+field set=p324 op=mul batch=10000 samples=31 ns_per_op=625.6 counter_per_op=33.8
+field set=p324 op=square batch=10000 samples=31 ns_per_op=410.0 counter_per_op=22.1
+field set=p324 op=inv batch=200 samples=31 ns_per_op=10346.6 counter_per_op=558.7
+field set=p376 op=mul batch=10000 samples=31 ns_per_op=618.9 counter_per_op=33.4
+field set=p376 op=square batch=10000 samples=31 ns_per_op=405.0 counter_per_op=21.9
+field set=p376 op=inv batch=200 samples=31 ns_per_op=12158.9 counter_per_op=656.6
+field set=p500 op=mul batch=10000 samples=31 ns_per_op=1089.5 counter_per_op=58.8
+field set=p500 op=square batch=10000 samples=31 ns_per_op=699.9 counter_per_op=37.8
+field set=p500 op=inv batch=200 samples=31 ns_per_op=19720.7 counter_per_op=1064.9
+field set=p664 op=mul batch=10000 samples=31 ns_per_op=1891.0 counter_per_op=102.1
+field set=p664 op=square batch=10000 samples=31 ns_per_op=1229.9 counter_per_op=66.4
+field set=p664 op=inv batch=200 samples=31 ns_per_op=34992.7 counter_per_op=1889.6
+# conditions after
+time=2026-11-16T03:06:45Z
+loadavg=3.04 2.99 2.81 3/226 1695889
+temp_millic=69140
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 188 shekyld
+ 2.9 tor
+ 0.0 kworker/2:0-events
+run_seconds=462
+RUN 3
+# conditions before
+time=2026-11-16T03:06:45Z
+loadavg=3.04 2.99 2.81 8/226 1695897
+temp_millic=68166
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 188 shekyld
+ 2.9 tor
+ 0.0 kworker/2:0-events
+# bench_floor.sh
+device=Raspberry Pi 4 Model B Rev 1.4
+source_commit=43d6e3ee4206c898705d85e4a982b901cd95bcbd
+source_dirty=false
+Linux 7.0.0-1020-raspi #20-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 11 16:02:28 UTC 2026 aarch64 GNU/Linux
+rustc 1.94.0 (4a4ef493e 2026-03-02)
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu2/cpufreq/scaling_governor=ondemand
+/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor=ondemand
+field-backend=scalar
+counter=cntvct_el0
+set=p248 outcome=accepted samples=31 median_ns=89182342 spread_ns=854683 median_counter=4815877 counter_spread=46153
+set=p376 outcome=accepted samples=31 median_ns=231140121 spread_ns=3942564 median_counter=12481623 counter_spread=212898
+set=p500 outcome=accepted samples=31 median_ns=521616031 spread_ns=1827291 median_counter=28167363 counter_spread=98676
+set=p248 outcome=refused error=Codomain samples=31 median_ns=85347463 spread_ns=1111275 median_counter=4608801 counter_spread=60021
+set=p248 outcome=refused error=Kernel samples=31 median_ns=40880838 spread_ns=840368 median_counter=2207585 counter_spread=45381
+set=p324 outcome=refused error=Codomain samples=31 median_ns=191955982 spread_ns=1230404 median_counter=10365662 counter_spread=66438
+set=p324 outcome=refused error=Kernel samples=31 median_ns=84452355 spread_ns=180556 median_counter=4560460 counter_spread=9755
+set=p376 outcome=refused error=Codomain samples=31 median_ns=220209282 spread_ns=767000 median_counter=11891362 counter_spread=41411
+set=p376 outcome=refused error=Kernel samples=31 median_ns=95884437 spread_ns=429962 median_counter=5177780 counter_spread=23189
+set=p500 outcome=refused error=Codomain samples=31 median_ns=494148684 spread_ns=7498518 median_counter=26684203 counter_spread=404930
+set=p500 outcome=refused error=Kernel samples=31 median_ns=203200567 spread_ns=2305883 median_counter=10972875 counter_spread=124644
+set=p664 outcome=refused error=Codomain samples=31 median_ns=1170839876 spread_ns=8712885 median_counter=63225530 counter_spread=470426
+set=p664 outcome=refused error=Kernel samples=31 median_ns=476805339 spread_ns=12567337 median_counter=25747593 counter_spread=678643
+search set=p248 window=1024 composite=1017 prime=7 first_prime=588 samples=31 composite_ns_per_attempt=820109 prime_ns_per_attempt=11098994
+search set=p324 window=1024 composite=1018 prime=6 first_prime=24 samples=31 composite_ns_per_attempt=979759 prime_ns_per_attempt=14365370
+search set=p376 window=1024 composite=1011 prime=13 first_prime=172 samples=31 composite_ns_per_attempt=1124582 prime_ns_per_attempt=16668868
+search set=p500 window=1024 composite=1020 prime=4 first_prime=190 samples=31 composite_ns_per_attempt=1480471 prime_ns_per_attempt=22004846
+search set=p664 window=1024 composite=1022 prime=2 first_prime=413 samples=31 composite_ns_per_attempt=3675877 prime_ns_per_attempt=50432647
+field set=p248 op=mul batch=10000 samples=31 ns_per_op=342.5 counter_per_op=18.5
+field set=p248 op=square batch=10000 samples=31 ns_per_op=225.3 counter_per_op=12.2
+field set=p248 op=inv batch=200 samples=31 ns_per_op=6283.2 counter_per_op=339.3
+field set=p324 op=mul batch=10000 samples=31 ns_per_op=626.9 counter_per_op=33.9
+field set=p324 op=square batch=10000 samples=31 ns_per_op=410.8 counter_per_op=22.2
+field set=p324 op=inv batch=200 samples=31 ns_per_op=10353.8 counter_per_op=559.1
+field set=p376 op=mul batch=10000 samples=31 ns_per_op=619.5 counter_per_op=33.5
+field set=p376 op=square batch=10000 samples=31 ns_per_op=404.8 counter_per_op=21.9
+field set=p376 op=inv batch=200 samples=31 ns_per_op=12159.9 counter_per_op=656.7
+field set=p500 op=mul batch=10000 samples=31 ns_per_op=1086.6 counter_per_op=58.7
+field set=p500 op=square batch=10000 samples=31 ns_per_op=700.1 counter_per_op=37.8
+field set=p500 op=inv batch=200 samples=31 ns_per_op=19729.9 counter_per_op=1065.4
+field set=p664 op=mul batch=10000 samples=31 ns_per_op=1900.2 counter_per_op=102.6
+field set=p664 op=square batch=10000 samples=31 ns_per_op=1230.7 counter_per_op=66.5
+field set=p664 op=inv batch=200 samples=31 ns_per_op=35030.7 counter_per_op=1891.7
+# conditions after
+time=2026-11-16T03:14:27Z
+loadavg=3.04 3.04 2.93 3/221 1696623
+temp_millic=69140
+cpu0_freq_khz=1800000
+%CPU COMMAND
+ 188 shekyld
+ 100 ps
+ 2.9 tor
+run_seconds=462
+# Summary: the median of the three run medians, with the three beside it.
+summary set=p248 outcome=accepted median_ms=89.182 runs_ms=89.075,90.474,89.182
+summary set=p376 outcome=accepted median_ms=231.680 runs_ms=231.680,232.502,231.140
+summary set=p500 outcome=accepted median_ms=521.616 runs_ms=521.111,522.609,521.616
+summary set=p248 outcome=refused error=Codomain median_ms=85.347 runs_ms=85.137,86.374,85.347
+summary set=p248 outcome=refused error=Kernel median_ms=40.881 runs_ms=40.754,41.149,40.881
+summary set=p324 outcome=refused error=Codomain median_ms=192.133 runs_ms=192.133,192.142,191.956
+summary set=p324 outcome=refused error=Kernel median_ms=84.443 runs_ms=84.443,84.333,84.452
+summary set=p376 outcome=refused error=Codomain median_ms=220.209 runs_ms=220.102,221.090,220.209
+summary set=p376 outcome=refused error=Kernel median_ms=95.884 runs_ms=95.824,95.935,95.884
+summary set=p500 outcome=refused error=Codomain median_ms=494.149 runs_ms=494.090,494.927,494.149
+summary set=p500 outcome=refused error=Kernel median_ms=203.416 runs_ms=203.416,203.844,203.201
+summary set=p664 outcome=refused error=Codomain median_ms=1171.344 runs_ms=1171.344,1176.065,1170.840
+summary set=p664 outcome=refused error=Kernel median_ms=476.359 runs_ms=476.359,476.014,476.805
+summary search set=p248 window=1024 composite=1017 prime=7 first_prime=588 kind=composite ms_per_attempt=0.820 runs_ms=0.820,0.819,0.820
+summary search set=p248 window=1024 composite=1017 prime=7 first_prime=588 kind=prime ms_per_attempt=11.099 runs_ms=11.095,11.110,11.099
+summary search set=p324 window=1024 composite=1018 prime=6 first_prime=24 kind=composite ms_per_attempt=0.980 runs_ms=0.980,0.978,0.980
+summary search set=p324 window=1024 composite=1018 prime=6 first_prime=24 kind=prime ms_per_attempt=14.368 runs_ms=14.368,14.372,14.365
+summary search set=p376 window=1024 composite=1011 prime=13 first_prime=172 kind=composite ms_per_attempt=1.124 runs_ms=1.124,1.123,1.125
+summary search set=p376 window=1024 composite=1011 prime=13 first_prime=172 kind=prime ms_per_attempt=16.669 runs_ms=16.655,16.673,16.669
+summary search set=p500 window=1024 composite=1020 prime=4 first_prime=190 kind=composite ms_per_attempt=1.481 runs_ms=1.481,1.481,1.480
+summary search set=p500 window=1024 composite=1020 prime=4 first_prime=190 kind=prime ms_per_attempt=22.017 runs_ms=22.017,22.046,22.005
+summary search set=p664 window=1024 composite=1022 prime=2 first_prime=413 kind=composite ms_per_attempt=3.675 runs_ms=3.675,3.659,3.676
+summary search set=p664 window=1024 composite=1022 prime=2 first_prime=413 kind=prime ms_per_attempt=50.433 runs_ms=50.446,50.243,50.433
+summary field set=p248 op=mul ns_per_op=342.2 runs_ns=342.2,342.1,342.5 est_cycles_at_assumed_1.8GHz=616
+summary field set=p248 op=square ns_per_op=224.8 runs_ns=224.8,224.7,225.3 est_cycles_at_assumed_1.8GHz=405
+summary field set=p248 op=inv ns_per_op=6281.3 runs_ns=6279.4,6281.3,6283.2 est_cycles_at_assumed_1.8GHz=11306
+summary field set=p324 op=mul ns_per_op=626.4 runs_ns=626.4,625.6,626.9 est_cycles_at_assumed_1.8GHz=1128
+summary field set=p324 op=square ns_per_op=410.4 runs_ns=410.4,410.0,410.8 est_cycles_at_assumed_1.8GHz=739
+summary field set=p324 op=inv ns_per_op=10347.0 runs_ns=10347.0,10346.6,10353.8 est_cycles_at_assumed_1.8GHz=18625
+summary field set=p376 op=mul ns_per_op=619.1 runs_ns=619.1,618.9,619.5 est_cycles_at_assumed_1.8GHz=1114
+summary field set=p376 op=square ns_per_op=404.8 runs_ns=404.5,405.0,404.8 est_cycles_at_assumed_1.8GHz=729
+summary field set=p376 op=inv ns_per_op=12158.9 runs_ns=12153.9,12158.9,12159.9 est_cycles_at_assumed_1.8GHz=21886
+summary field set=p500 op=mul ns_per_op=1089.5 runs_ns=1089.5,1089.5,1086.6 est_cycles_at_assumed_1.8GHz=1961
+summary field set=p500 op=square ns_per_op=700.1 runs_ns=700.4,699.9,700.1 est_cycles_at_assumed_1.8GHz=1260
+summary field set=p500 op=inv ns_per_op=19727.0 runs_ns=19727.0,19720.7,19729.9 est_cycles_at_assumed_1.8GHz=35509
+summary field set=p664 op=mul ns_per_op=1900.1 runs_ns=1900.1,1891.0,1900.2 est_cycles_at_assumed_1.8GHz=3420
+summary field set=p664 op=square ns_per_op=1230.3 runs_ns=1230.3,1229.9,1230.7 est_cycles_at_assumed_1.8GHz=2215
+summary field set=p664 op=inv ns_per_op=35030.7 runs_ns=35065.1,34992.7,35030.7 est_cycles_at_assumed_1.8GHz=63055

@@ -39,7 +39,9 @@ pub use challenge::{ChallengeScalar, CHALLENGE_DOMAIN};
 pub use identity::KeyIdentity;
 pub use prime::{challenge_degree, degree_is_prime, is_baillie_psw};
 pub use prism_field::Salt;
-pub use reference::{prepared, reference_key, Prepared, PreparedError, ReferenceKey, VectorError};
+pub use reference::{
+    prepared, reference_key, Prepared, PreparedError, ReferenceKey, Refusal, VectorError,
+};
 pub use set::{
     verify_set, Committed, CommittedSet, NoCorpus, Set, UnknownCommittedLabel, UnknownSet,
 };

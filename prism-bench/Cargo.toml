@@ -1,6 +1,6 @@
 [package]
 name = "prism-bench"
-description = "Time complete successful prime-degree PRISM verification"
+description = "Time PRISM verification: an accepted signature, and a refusal after the pairing check"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

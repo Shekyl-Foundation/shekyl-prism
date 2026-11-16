@@ -102,6 +102,28 @@ inversions at `p324`, and 632,495 and 76 at `p664`.
 That is the cost of a refusal, not of an accepted verification, which
 does not exist at these primes.
 
+Both refusals are committed bytes at all five sets
+(`prism-verify/testdata/identity_refusals.tsv`), and the `Codomain` one
+is timed. On the Raspberry Pi 4 floor device at `43d6e3e`, one thread,
+under the resident node's load:
+
+Table: Pi 4, milliseconds. The middle column is a refusal, not an accepted verification; the last is **Derived** where no accept exists.
+
+| Set | Accept, measured | `Codomain` refusal, measured | Accept, **Derived** from the refusal |
+| --- | ---: | ---: | ---: |
+| `p248` | 89.18 | 85.35 | |
+| `p324` | none | 192.13 | 201 to 203 |
+| `p376` | 231.68 | 220.21 | |
+| `p500` | 521.62 | 494.15 | |
+| `p664` | none | 1,171.34 | 1,224 to 1,237 |
+
+The derived column divides the refusal by the refusal-to-accept time
+ratio measured at the three sets that have both (0.947 to 0.957), and
+assumes the ratio at the other two lies in that range. The record, the
+x86_64 figures and the sender's cost of producing such a response are in
+[BENCHMARKING.md](BENCHMARKING.md), "The refusal after the pairing
+check, at all five sets".
+
 Not reached at either set: `Basis`, `Image`, and acceptance. `Image` is
 compared only after the codomains agree, and no response buildable from
 public data is known to get them to.

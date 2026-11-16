@@ -20,7 +20,7 @@ verifier at reduced challenge widths.
 | `prism-isogeny` | Montgomery and theta arithmetic, adapted chains and duals |
 | `prism-verify` | Canonical decoding, pairing, both chains and complete images |
 | `prism-signer` | Unix research API for an isolated deterministic C backend |
-| `prism-bench` | Successful complete verification at every parameter set |
+| `prism-bench` | Timing: an accepted verification at the sets with a signer, and a refusal after the pairing check at all five |
 | `prism-compare` | Archived derivation and explicit research experiments; no production dependency |
 | `prism-fixtures` | Committed test fixtures read into typed values; a dev-dependency only |
 
@@ -112,7 +112,9 @@ provenance under `docs/comparison/`;
 `python3 scripts/analyze_comparison.py` recomputes every table of the
 comparison document from those records.
 
-The benchmark now times accepted signatures. Development-machine results
+The benchmark times accepted signatures at the three sets that have
+them, and at all five sets a committed response that runs both chains
+and is refused. Development-machine results
 and the Raspberry Pi 4 command are in [BENCHMARKING.md](docs/BENCHMARKING.md).
 The Pi measurement is recorded: `p376` takes about 449 ms in the
 captured conditions, for the unsalted verifier before its operation count

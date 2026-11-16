@@ -490,6 +490,22 @@ fn the_pairing_is_passed_from_public_data_and_the_chains_refuse<L: WithoutCorpus
         message::<L>(),
         Form::Difference,
     );
+    // That response is the set's committed `Codomain` refusal, and the
+    // other form under the same key its `Kernel` one: the bytes the bench
+    // times are the bytes the operation counts were taken on.
+    let set: prism_verify::Set = L::NAME.parse().expect("a set's name");
+    for form in Form::ALL {
+        let [refusal] = form.allowed() else {
+            panic!("one pinned refusal for each form");
+        };
+        let row = prism_verify::reference::refusal(set, *refusal).expect("a committed row");
+        let again =
+            identity_response::<L>(coefficient::<L>(fixtures.model_curve), message::<L>(), form);
+        assert_eq!(row.case, form.name());
+        assert_eq!(row.public_key, again.key);
+        assert_eq!(row.message, message::<L>());
+        assert_eq!(row.signature, again.response.encode());
+    }
     let file = unrelated::<L>(built.response.salt);
     assert!(Field::same(file.p.x, built.response.p.x) && Field::same(file.q.x, built.response.q.x));
     let mut other_sign = file;
