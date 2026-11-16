@@ -34,12 +34,14 @@ does. This check requires that:
 
 `--selftest` plants each breach of 1 and 2 in a copy of the manifests.
 
-The consumer is built with `--offline`, so the locked dependencies must be
-in the registry first (`cargo fetch --locked`).
+The consumer is built with `--offline` from a copy of the tree's lock file,
+so the locked dependencies must be in the registry first
+(`cargo fetch --locked`).
 """
 import copy
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -81,6 +83,15 @@ def names_feature(entry):
     `op-count`, `prism-field/op-count` and `prism-field?/op-count` all are.
     """
     return isinstance(entry, str) and entry.rsplit("/", 1)[-1] == FEATURE
+
+
+def string_list(value):
+    """Whether a value is what a feature list must be.
+
+    A string in place of a list would be read letter by letter, and no
+    letter names the feature.
+    """
+    return isinstance(value, list) and all(isinstance(item, str) for item in value)
 
 
 def dependency_tables(manifest):
@@ -127,6 +138,8 @@ def manifest_fault(parsed):
         if expected is not None and features.get("default") != []:
             return f"{name}: default features must be declared, and empty"
         for feature, entries in features.items():
+            if not string_list(entries):
+                return f"{name}: feature `{feature}` is not a list of strings"
             if feature == FEATURE and expected is not None:
                 continue
             if any(names_feature(entry) for entry in entries):
@@ -135,7 +148,10 @@ def manifest_fault(parsed):
             for key, value in table.items():
                 if not isinstance(value, dict):
                     continue
-                if any(names_feature(entry) for entry in value.get("features", [])):
+                enabled = value.get("features", [])
+                if not string_list(enabled):
+                    return f"{name}: [{where}] {key}: features is not a list of strings"
+                if any(names_feature(entry) for entry in enabled):
                     return f"{name}: [{where}] {key} enables {FEATURE}"
     return None
 
@@ -190,17 +206,21 @@ def graph_fault():
     return None
 
 
-# What a default consumer must be refused, with the words of the refusal.
+# What a default consumer must be refused, with the compiler's error code
+# for the refusal. Each source is one line, so the code says why that line
+# failed, and a code is steadier across toolchains than a message's words.
 # The two public modules are not compiled in a default build, so the
 # compiler finds no such name. The two modules the crates mark through are
 # compiled and private; the feature must not open those either.
+ABSENT = "E0432"   # unresolved import
+PRIVATE = "E0603"  # the item is private
 REFUSED = (
-    ("pub use prism_field::ops;\n", "unresolved import `prism_field::ops`"),
-    ("pub use prism_field::ops::take;\n", "could not find `ops` in `prism_field`"),
-    ("pub use prism_verify::stage;\n", "unresolved import `prism_verify::stage`"),
-    ("pub use prism_verify::Stage;\n", "unresolved import `prism_verify::Stage`"),
-    ("pub use prism_field::tally::tally;\n", "module `tally` is private"),
-    ("pub use prism_verify::mark::Stage;\n", "module `mark` is private"),
+    ("pub use prism_field::ops;\n", ABSENT),
+    ("pub use prism_field::ops::take;\n", ABSENT),
+    ("pub use prism_verify::stage;\n", ABSENT),
+    ("pub use prism_verify::Stage;\n", ABSENT),
+    ("pub use prism_field::tally::tally;\n", PRIVATE),
+    ("pub use prism_verify::mark::Stage;\n", PRIVATE),
 )
 # The same two, with the feature on.
 STILL_PRIVATE = REFUSED[4:]
@@ -210,6 +230,32 @@ ALLOWED = (
     "pub use prism_verify::Stage;\n"
     "pub const NAMES: usize = Stage::ALL.len();\n"
 )
+
+
+def error_codes(stdout):
+    """The codes of the compiler's errors in `--message-format=json` output."""
+    codes = set()
+    for line in stdout.splitlines():
+        if not line.startswith("{"):
+            continue
+        record = json.loads(line)
+        message = record.get("message")
+        if record.get("reason") != "compiler-message" or not isinstance(message, dict):
+            continue
+        if message.get("level") == "error" and message.get("code"):
+            codes.add(message["code"]["code"])
+    return codes
+
+
+def rendered(result):
+    """What the compiler said, for a failure message."""
+    said = []
+    for line in result.stdout.splitlines():
+        if line.startswith("{"):
+            message = json.loads(line).get("message")
+            if isinstance(message, dict) and message.get("rendered"):
+                said.append(message["rendered"])
+    return "".join(said) + result.stderr
 
 
 def api_fault():
@@ -227,7 +273,12 @@ def api_fault():
             f'[workspace]\n[features]\ncount=["{VERIFY}/{FEATURE}"]\n'
             f"[dependencies]\n{FIELD}={{path={field}}}\n{VERIFY}={{path={verify}}}\n"
         )
-        command = ["cargo", "check", "--offline", "--manifest-path", str(tmp / "Cargo.toml")]
+        # The consumer is its own workspace. It starts from the tree's lock
+        # file, so cargo keeps the versions the tree is locked to and only
+        # drops the packages this crate does not use.
+        shutil.copyfile(ROOT / "Cargo.lock", tmp / "Cargo.lock")
+        command = ["cargo", "check", "--offline", "--message-format=json",
+                   "--manifest-path", str(tmp / "Cargo.toml")]
         source = tmp / "src/lib.rs"
 
         def build(text, *extra):
@@ -236,27 +287,28 @@ def api_fault():
 
         default = build("pub use prism_field::Field;\npub use prism_verify::verify;\n")
         if default.returncode:
-            return "a default consumer of both crates failed to build:\n" + default.stderr
-        for text, words in REFUSED:
+            return "a default consumer of both crates failed to build:\n" + rendered(default)
+        for text, code in REFUSED:
             refused = build(text)
             if refused.returncode == 0:
                 return f"a default build compiles `{text.strip()}`"
-            if words not in refused.stderr:
+            if error_codes(refused.stdout) != {code}:
                 return (
-                    f"`{text.strip()}` failed, but not with \"{words}\":\n" + refused.stderr
+                    f"`{text.strip()}` failed, but not with {code} alone:\n"
+                    + rendered(refused)
                 )
-        for text, words in STILL_PRIVATE:
+        for text, code in STILL_PRIVATE:
             refused = build(text, "--features", "count")
-            if refused.returncode == 0 or words not in refused.stderr:
+            if refused.returncode == 0 or error_codes(refused.stdout) != {code}:
                 return (
                     f"with the feature on, `{text.strip()}` is not refused "
-                    f"with \"{words}\":\n" + refused.stderr
+                    f"with {code} alone:\n" + rendered(refused)
                 )
         counted = build(ALLOWED, "--features", "count")
         if counted.returncode:
             return (
                 f"a consumer that enables {VERIFY}/{FEATURE} cannot name the "
-                "counter's API:\n" + counted.stderr
+                "counter's API:\n" + rendered(counted)
             )
     return None
 
@@ -325,6 +377,11 @@ def selftest():
             plant(field, lambda m: m["features"].pop(FEATURE)),
         "the verifier drops the feature":
             plant(verify, lambda m: m["features"].pop(FEATURE)),
+        "a tool's feature is a string, not a list":
+            plant(bench, feature("count", f"{VERIFY}/{FEATURE}")),
+        "a dependency's features are a string, not a list":
+            plant(bench, dependency(("dependencies",), VERIFY,
+                                    {"workspace": True, "features": FEATURE})),
     }
     for case, change in planted.items():
         for name, manifest in change.items():
