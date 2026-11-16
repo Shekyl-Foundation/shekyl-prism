@@ -1,0 +1,80 @@
+# Peak heap and stack of one verification, accepted and refused, at every set. x86_64 development machine.
+# command: sh scripts/peak_heap.sh (Valgrind Massif on the verify_once example; see the script for what each column is).
+# vector= rows are accepted verifications of the six primary vectors. refusal= rows are the Codomain refusal the count
+# records call identity-response-q-difference: at a vector, under that signature's response curve as key; at p324 and
+# p664, which have no vectors, under the model curve of the set's Sage file. A refusal row is not an accepted verification.
+# Memory was measured on x86_64 only; it was not measured on the Raspberry Pi 4. Load during the run: 5.5 (1 min).
+#
+# Written by scripts/peak_heap.sh.
+# valgrind-3.24.0; rustc 1.94.0 (4a4ef493e 2026-03-02); Linux 6.12.113+deb13-amd64 x86_64
+# source_commit=33af013e617218c8422132cbfd87d8ea7405775f source_dirty=false
+PEAK vector=s5_lvl1.txt load_heap_bytes=3194 verify_heap_bytes=1107210 allocator_overhead_bytes=238 largest_stack_sample_bytes=91576
+SITE vector=s5_lvl1.txt bytes=663616 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl1.txt bytes=250112 holder=prism_isogeny::dual_chain::invert_coords
+SITE vector=s5_lvl1.txt bytes=190464 holder=prism_verify::accept::Doublings::new
+SITE vector=s5_lvl1.txt bytes=3018 holder=other
+PEAK vector=s5_lvl1b.txt load_heap_bytes=3195 verify_heap_bytes=1107211 allocator_overhead_bytes=237 largest_stack_sample_bytes=91432
+SITE vector=s5_lvl1b.txt bytes=663616 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl1b.txt bytes=250112 holder=prism_isogeny::dual_chain::invert_coords
+SITE vector=s5_lvl1b.txt bytes=190464 holder=prism_verify::accept::Doublings::new
+SITE vector=s5_lvl1b.txt bytes=3019 holder=other
+PEAK vector=s5_lvl3.txt load_heap_bytes=4366 verify_heap_bytes=2995710 allocator_overhead_bytes=250 largest_stack_sample_bytes=134312
+SITE vector=s5_lvl3.txt bytes=1986688 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl3.txt bytes=571776 holder=prism_isogeny::dual_chain::invert_coords
+SITE vector=s5_lvl3.txt bytes=433152 holder=prism_verify::accept::Doublings::new
+SITE vector=s5_lvl3.txt bytes=4094 holder=other
+PEAK vector=s5_lvl3b.txt load_heap_bytes=4368 verify_heap_bytes=2995712 allocator_overhead_bytes=248 largest_stack_sample_bytes=134104
+SITE vector=s5_lvl3b.txt bytes=1986688 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl3b.txt bytes=571776 holder=prism_isogeny::dual_chain::invert_coords
+SITE vector=s5_lvl3b.txt bytes=433152 holder=prism_verify::accept::Doublings::new
+SITE vector=s5_lvl3b.txt bytes=4096 holder=other
+PEAK vector=s5_lvl5.txt load_heap_bytes=5534 verify_heap_bytes=4441774 allocator_overhead_bytes=234 largest_stack_sample_bytes=177000
+SITE vector=s5_lvl5.txt bytes=2646144 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl5.txt bytes=1016320 holder=prism_isogeny::dual_chain::invert_coords
+SITE vector=s5_lvl5.txt bytes=774144 holder=prism_verify::accept::Doublings::new
+SITE vector=s5_lvl5.txt bytes=5166 holder=other
+PEAK vector=s5_lvl5b.txt load_heap_bytes=5535 verify_heap_bytes=4441775 allocator_overhead_bytes=233 largest_stack_sample_bytes=175448
+SITE vector=s5_lvl5b.txt bytes=2646144 holder=prism_isogeny::dual_chain::DualChain::new
+SITE vector=s5_lvl5b.txt bytes=1016320 holder=prism_isogeny::dual_chain::invert_coords
+SITE vector=s5_lvl5b.txt bytes=774144 holder=prism_verify::accept::Doublings::new
+SITE vector=s5_lvl5b.txt bytes=5167 holder=other
+PEAK refusal=s5_lvl1.txt build_heap_bytes=3195 refuse_heap_bytes=1107210 allocator_overhead_bytes=238 largest_stack_sample_bytes=90512
+SITE refusal=s5_lvl1.txt bytes=663616 holder=prism_isogeny::dual_chain::DualChain::new
+SITE refusal=s5_lvl1.txt bytes=250112 holder=prism_isogeny::dual_chain::invert_coords
+SITE refusal=s5_lvl1.txt bytes=190464 holder=prism_verify::accept::Doublings::new
+SITE refusal=s5_lvl1.txt bytes=3018 holder=other
+PEAK refusal=s5_lvl1b.txt build_heap_bytes=3196 refuse_heap_bytes=1107211 allocator_overhead_bytes=237 largest_stack_sample_bytes=91304
+SITE refusal=s5_lvl1b.txt bytes=663616 holder=prism_isogeny::dual_chain::DualChain::new
+SITE refusal=s5_lvl1b.txt bytes=250112 holder=prism_isogeny::dual_chain::invert_coords
+SITE refusal=s5_lvl1b.txt bytes=190464 holder=prism_verify::accept::Doublings::new
+SITE refusal=s5_lvl1b.txt bytes=3019 holder=other
+PEAK refusal=s5_lvl3.txt build_heap_bytes=4367 refuse_heap_bytes=2995710 allocator_overhead_bytes=250 largest_stack_sample_bytes=133624
+SITE refusal=s5_lvl3.txt bytes=1986688 holder=prism_isogeny::dual_chain::DualChain::new
+SITE refusal=s5_lvl3.txt bytes=571776 holder=prism_isogeny::dual_chain::invert_coords
+SITE refusal=s5_lvl3.txt bytes=433152 holder=prism_verify::accept::Doublings::new
+SITE refusal=s5_lvl3.txt bytes=4094 holder=other
+PEAK refusal=s5_lvl3b.txt build_heap_bytes=4369 refuse_heap_bytes=2995712 allocator_overhead_bytes=248 largest_stack_sample_bytes=132728
+SITE refusal=s5_lvl3b.txt bytes=1986688 holder=prism_isogeny::dual_chain::DualChain::new
+SITE refusal=s5_lvl3b.txt bytes=571776 holder=prism_isogeny::dual_chain::invert_coords
+SITE refusal=s5_lvl3b.txt bytes=433152 holder=prism_verify::accept::Doublings::new
+SITE refusal=s5_lvl3b.txt bytes=4096 holder=other
+PEAK refusal=s5_lvl5.txt build_heap_bytes=5535 refuse_heap_bytes=4441774 allocator_overhead_bytes=234 largest_stack_sample_bytes=174888
+SITE refusal=s5_lvl5.txt bytes=2646144 holder=prism_isogeny::dual_chain::DualChain::new
+SITE refusal=s5_lvl5.txt bytes=1016320 holder=prism_isogeny::dual_chain::invert_coords
+SITE refusal=s5_lvl5.txt bytes=774144 holder=prism_verify::accept::Doublings::new
+SITE refusal=s5_lvl5.txt bytes=5166 holder=other
+PEAK refusal=s5_lvl5b.txt build_heap_bytes=5536 refuse_heap_bytes=4441775 allocator_overhead_bytes=233 largest_stack_sample_bytes=174888
+SITE refusal=s5_lvl5b.txt bytes=2646144 holder=prism_isogeny::dual_chain::DualChain::new
+SITE refusal=s5_lvl5b.txt bytes=1016320 holder=prism_isogeny::dual_chain::invert_coords
+SITE refusal=s5_lvl5b.txt bytes=774144 holder=prism_verify::accept::Doublings::new
+SITE refusal=s5_lvl5b.txt bytes=5167 holder=other
+PEAK refusal=p324 build_heap_bytes=13697 refuse_heap_bytes=2857683 allocator_overhead_bytes=229 largest_stack_sample_bytes=131928
+SITE refusal=p324 bytes=1986688 holder=prism_isogeny::dual_chain::DualChain::new
+SITE refusal=p324 bytes=491904 holder=prism_isogeny::dual_chain::invert_coords
+SITE refusal=p324 bytes=377856 holder=prism_verify::accept::Doublings::new
+SITE refusal=p324 bytes=1235 holder=other
+PEAK refusal=p664 build_heap_bytes=24797 refuse_heap_bytes=10511473 allocator_overhead_bytes=231 largest_stack_sample_bytes=237608
+SITE refusal=p664 bytes=7248000 holder=prism_isogeny::dual_chain::DualChain::new
+SITE refusal=p664 bytes=1859264 holder=prism_isogeny::dual_chain::invert_coords
+SITE refusal=p664 bytes=1402368 holder=prism_verify::accept::Doublings::new
+SITE refusal=p664 bytes=1841 holder=other

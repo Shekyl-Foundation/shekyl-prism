@@ -12,6 +12,12 @@
 //! integers. A public modulus whose width changes with the parameter set
 //! stays on these limbs instead.
 //!
+//! The width is a type, `W:` [`DegreeWidth`], and every integer and every
+//! routine here is generic over it. A parameter set names its width
+//! (`ParameterSet::Degree`), so the test for a set is compiled at that
+//! width. The verdict on an integer does not depend on the width it is
+//! held in, as long as it fits.
+//!
 //! The test is the one `docs/VERIFIER_SPEC.md` specifies: trial division by
 //! the primes below 100, a perfect-square filter, one strong Miller–Rabin
 //! test at base 2, then the strong Lucas test with Selfridge's parameters.
@@ -19,44 +25,44 @@
 
 use core::cmp::Ordering;
 
-/// Width of the integers this module represents.
-///
-/// `q = 2^{2e−1} − s^2` is 999 bits at `p500`, the widest parameter set, so
-/// 1024 bits carries every set with a limb to spare. `prism-verify`
-/// asserts each set's degree fits this width at compile time.
-pub(crate) const WIDTH_BITS: usize = 1024;
+use prism_field::width::LIMB_BITS;
+use prism_field::{DegreeWidth, Limbs};
 
-const LIMB_BITS: usize = u64::BITS as usize;
-const LIMBS: usize = WIDTH_BITS / LIMB_BITS;
-
-/// A non-negative integer below `2^WIDTH_BITS`.
+/// A non-negative integer below `2^W::BITS`.
 #[derive(Clone, Copy, PartialEq, Eq)]
-struct Nat {
+struct Nat<W: DegreeWidth> {
     /// Little-endian limbs: `limbs[0]` is the least significant.
-    limbs: [u64; LIMBS],
+    limbs: W::Limbs,
 }
 
-impl core::fmt::Debug for Nat {
+impl<W: DegreeWidth> core::fmt::Debug for Nat<W> {
     /// Big-endian hex, so a failing assertion names the integer.
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let top = self
             .limbs
+            .as_ref()
             .iter()
             .rposition(|limb| *limb != 0)
             .unwrap_or_default();
         write!(f, "0x{:x}", self.limbs[top])?;
-        for limb in self.limbs[..top].iter().rev() {
+        for limb in self.limbs.as_ref()[..top].iter().rev() {
             write!(f, "{limb:016x}")?;
         }
         Ok(())
     }
 }
 
-impl Ord for Nat {
+impl<W: DegreeWidth> Ord for Nat<W> {
     fn cmp(&self, other: &Self) -> Ordering {
         // Most significant limb first. The limbs are little-endian, so the
         // order a derive would produce is not the integer order.
-        for (left, right) in self.limbs.iter().rev().zip(other.limbs.iter().rev()) {
+        for (left, right) in self
+            .limbs
+            .as_ref()
+            .iter()
+            .rev()
+            .zip(other.limbs.as_ref().iter().rev())
+        {
             match left.cmp(right) {
                 Ordering::Equal => (),
                 unequal => return unequal,
@@ -66,26 +72,34 @@ impl Ord for Nat {
     }
 }
 
-impl PartialOrd for Nat {
+impl<W: DegreeWidth> PartialOrd for Nat<W> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Nat {
-    const ZERO: Self = Self::from_u64(0);
-    const ONE: Self = Self::from_u64(1);
+impl<W: DegreeWidth> Nat<W> {
+    /// How many limbs this width has.
+    const LIMBS: usize = <W::Limbs as Limbs>::COUNT;
 
-    const fn from_u64(value: u64) -> Self {
-        let mut out = Self { limbs: [0; LIMBS] };
+    const ZERO: Self = Self {
+        limbs: <W::Limbs as Limbs>::ZERO,
+    };
+
+    fn one() -> Self {
+        Self::from_u64(1)
+    }
+
+    fn from_u64(value: u64) -> Self {
+        let mut out = Self::ZERO;
         out.limbs[0] = value;
         out
     }
 
     /// The integer `bytes` spells, or `None` when it is wider than
-    /// [`WIDTH_BITS`].
+    /// the width.
     fn from_le_bytes(bytes: &[u8]) -> Option<Self> {
-        if bytes.len() > LIMBS * 8 {
+        if bytes.len() > Self::LIMBS * 8 {
             return None;
         }
         let mut out = Self::ZERO;
@@ -97,7 +111,7 @@ impl Nat {
 
     /// `2^bit`, or `None` when the bit lies outside this module's width.
     fn power_of_two(bit: usize) -> Option<Self> {
-        if bit >= WIDTH_BITS {
+        if bit >= W::BITS {
             return None;
         }
         let mut out = Self::ZERO;
@@ -115,7 +129,7 @@ impl Nat {
 
     fn bit(self, index: usize) -> bool {
         let limb = index / LIMB_BITS;
-        if limb >= LIMBS {
+        if limb >= Self::LIMBS {
             return false;
         }
         (self.limbs[limb] >> (index % LIMB_BITS)) & 1 == 1
@@ -123,8 +137,8 @@ impl Nat {
 
     /// Little-endian bytes, without high zeros. Zero is a single zero byte.
     fn to_le_bytes(self) -> Vec<u8> {
-        let mut out = Vec::with_capacity(LIMBS * 8);
-        for limb in self.limbs {
+        let mut out = Vec::with_capacity(Self::LIMBS * 8);
+        for limb in self.limbs.as_ref() {
             out.extend_from_slice(&limb.to_le_bytes());
         }
         while out.len() > 1 && out.last() == Some(&0) {
@@ -135,7 +149,7 @@ impl Nat {
 
     /// Position of the highest set bit, counting from one. Zero has none.
     fn bit_len(self) -> usize {
-        for (index, limb) in self.limbs.iter().enumerate().rev() {
+        for (index, limb) in self.limbs.as_ref().iter().enumerate().rev() {
             if *limb != 0 {
                 return index * LIMB_BITS + (LIMB_BITS - limb.leading_zeros() as usize);
             }
@@ -143,11 +157,11 @@ impl Nat {
         0
     }
 
-    /// `self + rhs mod 2^WIDTH_BITS`, with the carry out of the top limb.
+    /// `self + rhs mod 2^W::BITS`, with the carry out of the top limb.
     fn overflowing_add(self, rhs: Self) -> (Self, bool) {
         let mut out = Self::ZERO;
         let mut carry = 0u128;
-        for (index, slot) in out.limbs.iter_mut().enumerate() {
+        for (index, slot) in out.limbs.as_mut().iter_mut().enumerate() {
             carry += u128::from(self.limbs[index]) + u128::from(rhs.limbs[index]);
             *slot = carry as u64;
             carry >>= LIMB_BITS;
@@ -155,11 +169,11 @@ impl Nat {
         (out, carry != 0)
     }
 
-    /// `self − rhs mod 2^WIDTH_BITS`.
+    /// `self − rhs mod 2^W::BITS`.
     fn wrapping_sub(self, rhs: Self) -> Self {
         let mut out = Self::ZERO;
         let mut borrow = 0i128;
-        for (index, slot) in out.limbs.iter_mut().enumerate() {
+        for (index, slot) in out.limbs.as_mut().iter_mut().enumerate() {
             borrow += i128::from(self.limbs[index]) - i128::from(rhs.limbs[index]);
             *slot = borrow as u64;
             borrow >>= LIMB_BITS;
@@ -167,12 +181,12 @@ impl Nat {
         out
     }
 
-    /// `2^WIDTH_BITS − self`: adding this is subtracting `self` with the
+    /// `2^W::BITS − self`: adding this is subtracting `self` with the
     /// borrow out of the top limb discarded.
     fn twos_complement(self) -> Self {
         let mut out = Self::ZERO;
         let mut carry = 1u64;
-        for (index, slot) in out.limbs.iter_mut().enumerate() {
+        for (index, slot) in out.limbs.as_mut().iter_mut().enumerate() {
             let (sum, overflow) = (!self.limbs[index]).overflowing_add(carry);
             *slot = sum;
             carry = u64::from(overflow);
@@ -182,9 +196,9 @@ impl Nat {
 
     fn shr1(self) -> Self {
         let mut out = Self::ZERO;
-        for index in 0..LIMBS {
+        for index in 0..Self::LIMBS {
             out.limbs[index] = self.limbs[index] >> 1;
-            if let Some(above) = self.limbs.get(index + 1) {
+            if let Some(above) = self.limbs.as_ref().get(index + 1) {
                 out.limbs[index] |= above << (LIMB_BITS - 1);
             }
         }
@@ -197,7 +211,7 @@ impl Nat {
         if carry || sum >= modulus {
             // Both operands are reduced, so the true sum is below `2·modulus`
             // and one subtraction brings it back. A carry means the sum wrapped
-            // through `2^WIDTH_BITS`; adding the two's complement subtracts
+            // through `2^W::BITS`; adding the two's complement subtracts
             // `modulus` from the wrapped residue, which is the same residue.
             sum.overflowing_add(modulus.twos_complement()).0
         } else {
@@ -223,7 +237,7 @@ impl Nat {
         let (sum, carry) = self.overflowing_add(modulus);
         let mut out = sum.shr1();
         if carry {
-            out.limbs[LIMBS - 1] |= 1u64 << (LIMB_BITS - 1);
+            out.limbs[Self::LIMBS - 1] |= 1u64 << (LIMB_BITS - 1);
         }
         out
     }
@@ -237,7 +251,7 @@ impl Nat {
         for index in (0..self.bit_len()).rev() {
             rest = rest.add_mod(rest, modulus);
             if self.bit(index) {
-                rest = rest.add_mod(Self::ONE, modulus);
+                rest = rest.add_mod(Self::one(), modulus);
             }
         }
         rest
@@ -247,30 +261,34 @@ impl Nat {
     fn rem_u32(self, modulus: u32) -> u32 {
         let modulus = u128::from(modulus);
         let mut rest = 0u128;
-        for limb in self.limbs.iter().rev() {
+        for limb in self.limbs.as_ref().iter().rev() {
             rest = ((rest << LIMB_BITS) | u128::from(*limb)) % modulus;
         }
         rest as u32
     }
 
-    /// `self^2`, or `None` when the product is wider than [`WIDTH_BITS`].
+    /// `self^2`, or `None` when the product is wider than the width.
     fn checked_square(self) -> Option<Self> {
-        let mut wide = [0u64; LIMBS * 2];
-        for index in 0..LIMBS {
+        // The scratch array is the length this routine indexes.
+        let () = W::CONSISTENT;
+        let mut wide = <W::Product as Limbs>::ZERO;
+        for index in 0..Self::LIMBS {
             let mut carry = 0u128;
-            for (offset, limb) in self.limbs.iter().enumerate() {
+            for (offset, limb) in self.limbs.as_ref().iter().enumerate() {
                 carry += u128::from(wide[index + offset])
                     + u128::from(self.limbs[index]) * u128::from(*limb);
                 wide[index + offset] = carry as u64;
                 carry >>= LIMB_BITS;
             }
-            wide[index + LIMBS] = carry as u64;
+            wide[index + Self::LIMBS] = carry as u64;
         }
-        if wide[LIMBS..].iter().any(|limb| *limb != 0) {
+        if wide.as_ref()[Self::LIMBS..].iter().any(|limb| *limb != 0) {
             return None;
         }
         let mut out = Self::ZERO;
-        out.limbs.copy_from_slice(&wide[..LIMBS]);
+        out.limbs
+            .as_mut()
+            .copy_from_slice(&wide.as_ref()[..Self::LIMBS]);
         Some(out)
     }
 
@@ -304,21 +322,21 @@ impl Nat {
     }
 }
 
-/// Montgomery arithmetic modulo an odd `modulus`, with `R = 2^WIDTH_BITS`.
-struct Mod {
-    modulus: Nat,
+/// Montgomery arithmetic modulo an odd `modulus`, with `R = 2^W::BITS`.
+struct Mod<W: DegreeWidth> {
+    modulus: Nat<W>,
     /// `−modulus^{-1} mod 2^64`.
     modulus_prime: u64,
     /// `R^2 mod modulus`, the factor that lifts a value into Montgomery form.
-    r_squared: Nat,
+    r_squared: Nat<W>,
 }
 
-impl Mod {
+impl<W: DegreeWidth> Mod<W> {
     /// `modulus` must be odd and above one.
-    fn new(modulus: Nat) -> Self {
-        let mut r_squared = Nat::ONE;
-        // `R^2 = 2^{2·WIDTH_BITS}`, reached by doubling one that many times.
-        for _ in 0..(2 * WIDTH_BITS) {
+    fn new(modulus: Nat<W>) -> Self {
+        let mut r_squared = Nat::one();
+        // `R^2 = 2^{2·W::BITS}`, reached by doubling one that many times.
+        for _ in 0..(2 * W::BITS) {
             r_squared = r_squared.add_mod(r_squared, modulus);
         }
         Self {
@@ -330,38 +348,42 @@ impl Mod {
 
     /// `left · right · R^{-1} mod modulus`, by coarsely integrated operand
     /// scanning: one limb product row, then one reduction row.
-    fn mont_mul(&self, left: Nat, right: Nat) -> Nat {
-        let mut t = [0u64; LIMBS + 2];
-        for index in 0..LIMBS {
+    fn mont_mul(&self, left: Nat<W>, right: Nat<W>) -> Nat<W> {
+        // The scratch array is the length this routine indexes.
+        let () = W::CONSISTENT;
+        let mut t = <W::Reduction as Limbs>::ZERO;
+        for index in 0..Nat::<W>::LIMBS {
             let mut carry = 0u128;
-            for (offset, slot) in t.iter_mut().enumerate().take(LIMBS) {
+            for (offset, slot) in t.as_mut().iter_mut().enumerate().take(Nat::<W>::LIMBS) {
                 carry += u128::from(*slot)
                     + u128::from(left.limbs[offset]) * u128::from(right.limbs[index]);
                 *slot = carry as u64;
                 carry >>= LIMB_BITS;
             }
-            carry += u128::from(t[LIMBS]);
-            t[LIMBS] = carry as u64;
-            t[LIMBS + 1] = (carry >> LIMB_BITS) as u64;
+            carry += u128::from(t[Nat::<W>::LIMBS]);
+            t[Nat::<W>::LIMBS] = carry as u64;
+            t[Nat::<W>::LIMBS + 1] = (carry >> LIMB_BITS) as u64;
 
             let factor = t[0].wrapping_mul(self.modulus_prime);
             carry = 0;
-            for (offset, slot) in t.iter_mut().enumerate().take(LIMBS) {
+            for (offset, slot) in t.as_mut().iter_mut().enumerate().take(Nat::<W>::LIMBS) {
                 carry +=
                     u128::from(*slot) + u128::from(factor) * u128::from(self.modulus.limbs[offset]);
                 *slot = carry as u64;
                 carry >>= LIMB_BITS;
             }
-            carry += u128::from(t[LIMBS]);
-            t[LIMBS] = carry as u64;
-            t[LIMBS + 1] += (carry >> LIMB_BITS) as u64;
+            carry += u128::from(t[Nat::<W>::LIMBS]);
+            t[Nat::<W>::LIMBS] = carry as u64;
+            t[Nat::<W>::LIMBS + 1] += (carry >> LIMB_BITS) as u64;
 
-            t.copy_within(1.., 0);
-            t[LIMBS + 1] = 0;
+            t.as_mut().copy_within(1.., 0);
+            t[Nat::<W>::LIMBS + 1] = 0;
         }
-        let mut out = Nat::ZERO;
-        out.limbs.copy_from_slice(&t[..LIMBS]);
-        if t[LIMBS] != 0 {
+        let mut out = Nat::<W>::ZERO;
+        out.limbs
+            .as_mut()
+            .copy_from_slice(&t.as_ref()[..Nat::<W>::LIMBS]);
+        if t[Nat::<W>::LIMBS] != 0 {
             // The residue overflowed the width; the borrow out of the top limb
             // cancels the overflow bit.
             out.overflowing_add(self.modulus.twos_complement()).0
@@ -373,31 +395,31 @@ impl Mod {
     }
 
     /// Into Montgomery form: `value · R mod modulus`.
-    fn lift(&self, value: Nat) -> Nat {
+    fn lift(&self, value: Nat<W>) -> Nat<W> {
         self.mont_mul(value, self.r_squared)
     }
 
     /// Out of Montgomery form: `value · R^{-1} mod modulus`.
-    fn lower(&self, value: Nat) -> Nat {
-        self.mont_mul(value, Nat::ONE)
+    fn lower(&self, value: Nat<W>) -> Nat<W> {
+        self.mont_mul(value, Nat::one())
     }
 
     /// `left · right mod modulus`, both arguments and the result in normal
     /// form. Lifting one operand is enough: `mont_mul` strips the `R` again,
     /// so this is two Montgomery multiplications rather than four.
-    fn mul(&self, left: Nat, right: Nat) -> Nat {
+    fn mul(&self, left: Nat<W>, right: Nat<W>) -> Nat<W> {
         self.mont_mul(self.lift(left), right)
     }
 
     /// `value · factor mod modulus` for a small signed factor.
-    fn mul_small(&self, value: Nat, factor: i32) -> Nat {
+    fn mul_small(&self, value: Nat<W>, factor: i32) -> Nat<W> {
         self.mul(value, reduce_i32(factor, self.modulus))
     }
 
     /// `base^exponent mod modulus`, square and multiply from the top bit.
-    fn pow(&self, base: Nat, exponent: Nat) -> Nat {
+    fn pow(&self, base: Nat<W>, exponent: Nat<W>) -> Nat<W> {
         let base = self.lift(base);
-        let mut result = self.lift(Nat::ONE);
+        let mut result = self.lift(Nat::one());
         for index in (0..exponent.bit_len()).rev() {
             result = self.mont_mul(result, result);
             if exponent.bit(index) {
@@ -421,7 +443,7 @@ fn negated_inverse_limb(value: u64) -> u64 {
 }
 
 /// `value mod modulus` for a small signed `value`.
-fn reduce_i32(value: i32, modulus: Nat) -> Nat {
+fn reduce_i32<W: DegreeWidth>(value: i32, modulus: Nat<W>) -> Nat<W> {
     let magnitude = Nat::from_u64(u64::from(value.unsigned_abs())).rem(modulus);
     if value >= 0 || magnitude.is_zero() {
         magnitude
@@ -459,7 +481,7 @@ impl Jacobi {
     }
 }
 
-fn jacobi(a: i32, n: Nat) -> Jacobi {
+fn jacobi<W: DegreeWidth>(a: i32, n: Nat<W>) -> Jacobi {
     // `(a/n) = (−1/n)·(|a|/n)`, and `(−1/n)` is `−1` exactly when `n ≡ 3 (mod 4)`.
     let symbol = jacobi_nonneg(Nat::from_u64(u64::from(a.unsigned_abs())), n);
     if a < 0 && n.rem_u32(4) == 3 {
@@ -469,7 +491,7 @@ fn jacobi(a: i32, n: Nat) -> Jacobi {
     }
 }
 
-fn jacobi_nonneg(a: Nat, n: Nat) -> Jacobi {
+fn jacobi_nonneg<W: DegreeWidth>(a: Nat<W>, n: Nat<W>) -> Jacobi {
     let mut numerator = a;
     let mut modulus = n;
     let mut negated = false;
@@ -485,7 +507,7 @@ fn jacobi_nonneg(a: Nat, n: Nat) -> Jacobi {
                 negated = !negated;
             }
         }
-        if numerator == Nat::ONE {
+        if numerator == Nat::one() {
             return Jacobi::from_negated(negated);
         }
         // Quadratic reciprocity flips the sign when both are `3 (mod 4)`.
@@ -503,7 +525,7 @@ fn jacobi_nonneg(a: Nat, n: Nat) -> Jacobi {
 /// The sequence terminates for every `n` that is not a perfect square, and
 /// [`is_prime`] filters those out first. The bound keeps a direct call to
 /// [`strong_lucas_selfridge`] from looping on one.
-fn selfridge_discriminant(n: Nat) -> Option<i32> {
+fn selfridge_discriminant<W: DegreeWidth>(n: Nat<W>) -> Option<i32> {
     const CANDIDATE_LIMIT: usize = 256;
     let mut d = 5i32;
     for _ in 0..CANDIDATE_LIMIT {
@@ -517,9 +539,14 @@ fn selfridge_discriminant(n: Nat) -> Option<i32> {
 }
 
 /// `U_k`, `V_k` and `Q^k` of the Lucas sequence with `P = 1`.
-fn lucas_chain(ctx: &Mod, k: Nat, discriminant: i32, q: i32) -> (Nat, Nat, Nat) {
-    let mut u = Nat::ONE;
-    let mut v = Nat::ONE;
+fn lucas_chain<W: DegreeWidth>(
+    ctx: &Mod<W>,
+    k: Nat<W>,
+    discriminant: i32,
+    q: i32,
+) -> (Nat<W>, Nat<W>, Nat<W>) {
+    let mut u = Nat::one();
+    let mut v = Nat::one();
     let mut q_power = reduce_i32(q, ctx.modulus);
     let bits = k.bit_len();
     if bits <= 1 {
@@ -550,8 +577,8 @@ fn lucas_chain(ctx: &Mod, k: Nat, discriminant: i32, q: i32) -> (Nat, Nat, Nat) 
 }
 
 /// One strong Miller–Rabin test at base 2, for an odd `n` above three.
-fn miller_rabin_base2(n: Nat) -> bool {
-    let below = n.wrapping_sub(Nat::ONE);
+fn miller_rabin_base2<W: DegreeWidth>(n: Nat<W>) -> bool {
+    let below = n.wrapping_sub(Nat::one());
     let mut odd_part = below;
     let mut twos = 0u32;
     while odd_part.is_even() {
@@ -560,7 +587,7 @@ fn miller_rabin_base2(n: Nat) -> bool {
     }
     let ctx = Mod::new(n);
     let mut witness = ctx.pow(Nat::from_u64(2), odd_part);
-    if witness == Nat::ONE || witness == below {
+    if witness == Nat::one() || witness == below {
         return true;
     }
     for _ in 1..twos {
@@ -574,12 +601,12 @@ fn miller_rabin_base2(n: Nat) -> bool {
 
 /// The strong Lucas test with Selfridge's parameters, for an odd `n` above
 /// three that is not a perfect square.
-fn strong_lucas_selfridge(n: Nat) -> bool {
+fn strong_lucas_selfridge<W: DegreeWidth>(n: Nat<W>) -> bool {
     let Some(discriminant) = selfridge_discriminant(n) else {
         return false;
     };
     let q = (1 - discriminant) / 4;
-    let above = n.overflowing_add(Nat::ONE).0;
+    let above = n.overflowing_add(Nat::one()).0;
     let mut odd_part = above;
     let mut twos = 0u32;
     while odd_part.is_even() {
@@ -615,12 +642,12 @@ const SMALLEST_PRIME: u64 = 2;
 
 /// `true` when the little-endian integer `bytes` passes Baillie–PSW.
 ///
-/// An integer wider than [`WIDTH_BITS`] is refused rather than truncated.
-pub fn is_baillie_psw(bytes: &[u8]) -> bool {
-    Nat::from_le_bytes(bytes).is_some_and(is_prime)
+/// An integer wider than the width is refused rather than truncated.
+pub fn is_baillie_psw<W: DegreeWidth>(bytes: &[u8]) -> bool {
+    Nat::<W>::from_le_bytes(bytes).is_some_and(is_prime)
 }
 
-fn is_prime(n: Nat) -> bool {
+fn is_prime<W: DegreeWidth>(n: Nat<W>) -> bool {
     if n < Nat::from_u64(SMALLEST_PRIME) {
         return false;
     }
@@ -648,8 +675,8 @@ fn is_prime(n: Nat) -> bool {
 /// `None` when `s` is not a positive odd integer strictly below
 /// `2^{exponent−1}`. Zero would make `q` a power of two, the prime 2
 /// exactly at exponent 1, and that integer is not a challenge degree.
-pub fn challenge_degree(exponent: u32, scalar: &[u8]) -> Option<Vec<u8>> {
-    let scalar = Nat::from_le_bytes(scalar)?;
+pub fn challenge_degree<W: DegreeWidth>(exponent: u32, scalar: &[u8]) -> Option<Vec<u8>> {
+    let scalar = Nat::<W>::from_le_bytes(scalar)?;
     if scalar.is_zero() || scalar.is_even() {
         return None;
     }
@@ -669,8 +696,8 @@ pub fn challenge_degree(exponent: u32, scalar: &[u8]) -> Option<Vec<u8>> {
 /// scalar with `s² < 2^{2·exponent−1}`; it does not enforce the narrower
 /// challenge domain `s < 2^{exponent−1}`. The verifier gets that domain
 /// from `ChallengeScalar::derive`, rather than reducing supplied bytes.
-pub fn degree_is_prime(exponent: u32, scalar: &[u8]) -> bool {
-    challenge_degree(exponent, scalar).is_some_and(|degree| is_baillie_psw(&degree))
+pub fn degree_is_prime<W: DegreeWidth>(exponent: u32, scalar: &[u8]) -> bool {
+    challenge_degree::<W>(exponent, scalar).is_some_and(|degree| is_baillie_psw::<W>(&degree))
 }
 
 /// `2e − 1`, the exponent in `q = 2^{2e−1} − s^2`.
@@ -680,174 +707,4 @@ fn degree_exponent(e: u32) -> Option<usize> {
 }
 
 #[cfg(test)]
-mod probe {
-    //! Byte entry points for the two halves, so a test can show that a
-    //! pseudoprime for one half is refused by the other.
-
-    use super::Nat;
-
-    pub(crate) fn miller_rabin_base2(bytes: &[u8]) -> bool {
-        Nat::from_le_bytes(bytes).is_some_and(super::miller_rabin_base2)
-    }
-
-    pub(crate) fn strong_lucas_selfridge(bytes: &[u8]) -> bool {
-        Nat::from_le_bytes(bytes).is_some_and(super::strong_lucas_selfridge)
-    }
-}
-
-#[cfg(test)]
-mod self_test {
-    use super::probe;
-    use super::{
-        challenge_degree, degree_is_prime, is_baillie_psw, Mod, Nat, TRIAL_PRIMES, WIDTH_BITS,
-    };
-
-    /// The primes below 300, for a dense sweep of the small cases.
-    const PRIMES_BELOW_300: &[u32] = &[
-        2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89,
-        97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181,
-        191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281,
-        283, 293,
-    ];
-
-    fn le(value: u128) -> Vec<u8> {
-        let bytes = value.to_le_bytes();
-        let len = bytes.iter().rposition(|b| *b != 0).map_or(1, |at| at + 1);
-        bytes[..len].to_vec()
-    }
-
-    #[test]
-    fn every_integer_below_three_hundred_gets_the_right_verdict() {
-        for value in 0u32..300 {
-            let expected = PRIMES_BELOW_300.contains(&value);
-            assert_eq!(is_baillie_psw(&le(u128::from(value))), expected, "{value}");
-        }
-    }
-
-    #[test]
-    fn a_wide_integer_is_not_its_low_limb() {
-        // The low limb spells a trial prime; the integer does not. Each of
-        // these is even or a multiple of three, so the sieve refuses it.
-        for prime in [2u128, 3, 5, 97] {
-            for multiple in 1u128..=5 {
-                let wide = multiple * (1u128 << 64) + prime;
-                assert!(!is_baillie_psw(&le(wide)), "2^64·{multiple} + {prime}");
-            }
-        }
-        // 2^64 + 13 is prime and 2^64 + 15 is not, so the sieve is not simply
-        // refusing everything above one limb.
-        assert!(is_baillie_psw(&le((1u128 << 64) + 13)));
-        assert!(!is_baillie_psw(&le((1u128 << 64) + 15)));
-    }
-
-    #[test]
-    fn the_degree_is_the_power_of_two_minus_the_square() {
-        // `s = 1` at exponent 4: `q = 2^7 − 1 = 127`.
-        assert_eq!(challenge_degree(4, &[1]).as_deref(), Some(&[127][..]));
-        assert!(degree_is_prime(4, &[1]));
-        // An even scalar names no degree. `12^2` is already past `2^7`.
-        assert!(challenge_degree(4, &[2]).is_none());
-        assert!(challenge_degree(4, &[12]).is_none());
-    }
-
-    #[test]
-    fn an_integer_wider_than_the_module_is_refused() {
-        assert!(!is_baillie_psw(&[0xff; WIDTH_BITS / 8 + 1]));
-        // `2^1024 − 1` fits the width, and it is composite.
-        assert!(!is_baillie_psw(&[0xff; WIDTH_BITS / 8]));
-    }
-
-    #[test]
-    fn the_sieve_table_is_the_primes_below_one_hundred() {
-        for &prime in TRIAL_PRIMES {
-            assert!(PRIMES_BELOW_300.contains(&prime), "{prime}");
-            assert!(prime < 100, "{prime}");
-        }
-        let expected = PRIMES_BELOW_300.iter().filter(|p| **p < 100).count();
-        assert_eq!(TRIAL_PRIMES.len(), expected);
-    }
-
-    #[test]
-    fn base2_pseudoprimes_fail_the_lucas_half() {
-        for n in [2047u128, 3277, 4033, 4681, 8321] {
-            assert!(probe::miller_rabin_base2(&le(n)), "{n}");
-            assert!(!is_baillie_psw(&le(n)), "{n}");
-        }
-    }
-
-    #[test]
-    fn strong_lucas_pseudoprimes_fail_the_miller_half() {
-        for n in [5459u128, 5777, 10877, 16109, 18971] {
-            assert!(probe::strong_lucas_selfridge(&le(n)), "{n}");
-            assert!(!is_baillie_psw(&le(n)), "{n}");
-        }
-        // The standard Lucas test accepts 323. The strong test does not.
-        assert!(!probe::strong_lucas_selfridge(&le(323)));
-    }
-
-    #[test]
-    fn carmichael_numbers_are_refused() {
-        for n in [561u128, 1105, 1729, 2465, 2821, 6601, 8911] {
-            assert!(!is_baillie_psw(&le(n)), "{n}");
-        }
-    }
-
-    #[test]
-    fn mersenne_primes_pass_at_every_width() {
-        for exponent in [61u32, 89, 107, 127, 521] {
-            let mut bytes = vec![0xffu8; (exponent as usize).div_ceil(8)];
-            if let Some(top) = bytes.last_mut() {
-                *top = u8::MAX >> (7 - (exponent - 1) % 8);
-            }
-            assert!(is_baillie_psw(&bytes), "2^{exponent} − 1");
-        }
-    }
-
-    #[test]
-    fn montgomery_multiplication_agrees_with_small_products() {
-        let modulus = Nat::from_u64(1_000_003);
-        let ctx = Mod::new(modulus);
-        for left in [0u64, 1, 2, 999, 1_000_002] {
-            for right in [0u64, 1, 7, 65_537, 1_000_002] {
-                let expected = Nat::from_u64((left * right) % 1_000_003);
-                assert_eq!(
-                    ctx.mul(Nat::from_u64(left), Nat::from_u64(right)),
-                    expected,
-                    "{left}·{right}"
-                );
-            }
-        }
-        // `2^(p−1) = 1 (mod p)` for the prime above.
-        assert_eq!(
-            ctx.pow(Nat::from_u64(2), Nat::from_u64(1_000_002)),
-            Nat::ONE
-        );
-    }
-
-    #[test]
-    fn a_perfect_square_is_refused_before_either_half() {
-        for root in [3u128, 5, 101, 1_000_003, 4_294_967_291] {
-            assert!(!is_baillie_psw(&le(root * root)), "{root}^2");
-        }
-    }
-
-    #[test]
-    fn a_known_prime_degree_passes() {
-        // q = 2^{17} − 3^2 = 131063, which is prime. e = 9 gives the exponent
-        // 2e−1 = 17, and s = 3 is the odd integer below 2^{8}.
-        assert!(degree_is_prime(9, &[3]));
-        // 2^{17} − 2^2 is even.
-        assert!(!degree_is_prime(9, &[2]));
-    }
-
-    #[test]
-    fn a_scalar_at_or_above_the_power_names_no_degree() {
-        // s^2 = 2^{2e−1} leaves q = 0, and anything larger is negative.
-        assert!(!degree_is_prime(1, &[1]));
-        assert!(!degree_is_prime(9, &le(1 << 9)));
-        // An exponent whose power exceeds the module's width is refused.
-        assert!(!degree_is_prime(u32::MAX, &[3]));
-        assert!(!degree_is_prime(0, &[3]));
-        assert!(!degree_is_prime((WIDTH_BITS as u32) / 2 + 1, &le(3)));
-    }
-}
+mod tests;

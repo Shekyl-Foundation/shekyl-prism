@@ -81,7 +81,7 @@ impl<F: Field> Doublings<F> {
 }
 
 /// The two columns of `matrix` that name a chain's kernel, as scalars.
-fn columns(matrix: Mat4) -> [[Vec<u8>; 4]; 2] {
+fn columns<L: ParameterSet>(matrix: Mat4<L>) -> [[Vec<u8>; 4]; 2] {
     let rows = matrix.rows();
     core::array::from_fn(|j| rows.map(|row| row[j + 2].to_le_bytes()))
 }
@@ -168,7 +168,11 @@ fn kernel_by_ladders<F: Field>(
 /// `zeta⁴ = 1`, and the search fails only when `zeta² = −3`. Separately,
 /// the tests below try each of the 256 matrices this can build at the
 /// roots of `−3`, and none fails there either.
-fn change<F: Field>(matrix: Mat4, m0: [[u8; 4]; 4], zeta: F) -> Option<[[F; 4]; 4]> {
+fn change<L: ParameterSet>(
+    matrix: Mat4<L>,
+    m0: [[u8; 4]; 4],
+    zeta: L::Ext,
+) -> Option<[[L::Ext; 4]; 4]> {
     let rows = matrix.rows().map(|row| row.map(|v| v.to_le_bytes()[0] & 3));
     let result = core::array::from_fn(|i| {
         core::array::from_fn(|j| {
@@ -234,10 +238,10 @@ type Basis<F> = [Jac<F>; 4];
 fn basis_points<L: ParameterSet>(
     lifted: &Lifted<L::Ext>,
     scalar: &[u8],
-) -> Result<(Residue, Basis<L::Ext>), VerifyError> {
+) -> Result<(Residue<L>, Basis<L::Ext>), VerifyError> {
     let [p1, p2] = lifted.vk;
     let [r1, r2] = lifted.scaled;
-    let s = Residue::from_le_bytes(L::E, scalar);
+    let s = Residue::<L>::from_le_bytes(scalar);
     let q_inverse = s.multiply(s).negate().inv().ok_or(VerifyError::Kernel)?;
     let r2_scaled = mul(lifted.curves[1], r2, &q_inverse.to_le_bytes());
     Ok((s, [p1, r1, p2, r2_scaled]))
@@ -365,7 +369,7 @@ pub(crate) fn check<L: ParameterSet>(
 mod tests {
     use super::*;
     use crate::{basis_hint, ChallengeScalar, KeyIdentity, Salt};
-    use prism_field::{P248, P324, P376, P500};
+    use prism_field::{P248, P324, P376, P500, P664};
     use prism_isogeny::{
         theta::{projectively_same, ThetaPoint},
         torsion::even_basis,
@@ -560,7 +564,7 @@ mod tests {
         let mut stream = Stream(0x4b45_524e_454c + name.len() as u64);
         // Minus one exactly, which takes the negation; all ones to the byte,
         // which is minus one only where `e` is a multiple of eight.
-        let minus_one = Residue::one(L::E).negate().to_le_bytes();
+        let minus_one = Residue::<L>::one().negate().to_le_bytes();
         assert!(is_minus_one(&minus_one, L::E));
         let special = [
             vec![0u8; len],
@@ -685,7 +689,7 @@ mod tests {
         let zetas = [L::ext_i(), L::ext_i().negate(), root, root.negate()];
         let mut tried = 0;
         for s in [1, 3] {
-            let (_, m1, m2) = challenge_matrices(Residue::from_u64(L::E, s)).unwrap();
+            let (_, m1, m2) = challenge_matrices(Residue::<L>::from_u64(s)).unwrap();
             for mt in canonical_forms() {
                 for mu in canonical_forms() {
                     let m0 = [
@@ -712,5 +716,6 @@ mod tests {
         every_reachable_base_change_exists::<P324>();
         every_reachable_base_change_exists::<P376>();
         every_reachable_base_change_exists::<P500>();
+        every_reachable_base_change_exists::<P664>();
     }
 }

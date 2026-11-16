@@ -107,7 +107,7 @@ pub fn sign_unsalted<L: Committed>(
     let mut primes = 0u32;
     for index in 0..=u16::MAX {
         let scalar = super::unsalted::<L>(session.public_key(), message, index, bits)?;
-        if !prism_verify::degree_is_prime(L::E - 2, &scalar) {
+        if !prism_verify::degree_is_prime::<L::Degree>(L::E - 2, &scalar) {
             continue;
         }
         primes += 1;

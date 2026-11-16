@@ -24,4 +24,4 @@
 
 pub mod curve_table;
 pub mod hex;
-pub mod p324;
+pub mod no_corpus;

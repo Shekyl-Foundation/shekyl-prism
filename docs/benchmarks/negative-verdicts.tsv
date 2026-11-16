@@ -1,4 +1,4 @@
-# Sources: sha256 6638d31060c85798345f45ee564fd295c834b77ddb24b3eb52a1a92f653aadbb
+# Sources: sha256 03c9d5b1aaa82e4f3dfbbd6cbbe4348440fd1b0342a6dc69be8fc2a7498de627
 set	vector	case	verdict	ext_mul	ext_square	ext_inv	ext_sqrt	ext_is_square
 p248	s5_lvl1.txt	both-y-negated	Sign	0	1	0	0	0
 p248	s5_lvl1.txt	q-negated	Pairing	33982	17569	13	6	4
@@ -2726,3 +2726,5 @@ p500	s5_lvl5b.txt	curve-bytes-all-ones	Canonical	0	1	0	0	0
 p500	s5_lvl5b.txt	key-zero	Origin	0	0	0	0	0
 p324	p324_curves.tsv:7	identity-response-q-negated	Kernel	74510	44923	24	6	4
 p324	p324_curves.tsv:7	identity-response-q-difference	Codomain	176662	118716	72	6	4
+p664	p664_curves.tsv:3	identity-response-q-negated	Kernel	151494	91511	24	6	4
+p664	p664_curves.tsv:3	identity-response-q-difference	Codomain	374005	258490	76	6	4

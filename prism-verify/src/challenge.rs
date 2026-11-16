@@ -5,7 +5,8 @@
 
 //! Salted challenge derivation. Public verification never searches.
 use crate::{identity::KeyIdentity, prime};
-use prism_field::{ParameterSet, Salt};
+use prism_field::width::degree_bits;
+use prism_field::{DegreeWidth, ParameterSet, Salt};
 use sha3::digest::core_api::CoreWrapper;
 use sha3::digest::{ExtendableOutput, Update, XofReader};
 use sha3::{CShake256, CShake256Core};
@@ -70,10 +71,12 @@ impl ChallengeScalar {
         &self.bytes
     }
     pub fn degree_is_prime<L: ParameterSet>(&self) -> bool {
+        // The set's width holds every value its primality test forms. A
+        // set whose degree outgrew its width stops compiling here.
         const {
-            assert!((L::E as usize) * 2 - 1 < prime::WIDTH_BITS);
+            assert!(degree_bits(L::E) <= <L::Degree as DegreeWidth>::BITS);
         }
-        prime::degree_is_prime(L::E - 2, &self.bytes)
+        prime::degree_is_prime::<L::Degree>(L::CHAIN_STEPS, &self.bytes)
     }
 }
 fn top_byte_mask(bits: u32) -> u8 {
@@ -83,7 +86,7 @@ fn top_byte_mask(bits: u32) -> u8 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prism_field::{Field, P248, P324, P376, P500};
+    use prism_field::{Field, P248, P324, P376, P500, P664};
     #[test]
     fn salted_transcript_binds_message_and_all_salt_bytes_at_every_row() {
         fn check<L: ParameterSet>() {
@@ -116,6 +119,7 @@ mod tests {
         check::<P324>();
         check::<P376>();
         check::<P500>();
+        check::<P664>();
     }
     #[test]
     fn top_mask_keeps_the_requested_bits() {

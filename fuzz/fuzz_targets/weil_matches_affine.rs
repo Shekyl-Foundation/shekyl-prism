@@ -8,14 +8,16 @@
 //!
 //! The input picks a set and a claimed order, then four scalars. The
 //! pair is `([a]P + [b]Q, [c]P + [d]Q)` on a committed signature's curve,
-//! or at `p324`, which has no signature, on a curve and basis Sage built,
+//! or at a set that has no signature, on a curve and basis Sage built,
 //! so short inputs give the degenerate pairs (a zero point, dependent
 //! points, points of low order) and long ones the generic pair.
 
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
+use prism_field::{Field, ParameterSet, P248, P324, P376, P500, P664};
+use prism_fixtures::curve_table::Point;
+use prism_fixtures::no_corpus::{curve_table, WithoutCorpus};
 use prism_isogeny::jac::{add, Jac};
 use prism_isogeny::montgomery::Montgomery;
 use prism_isogeny::pairing::{mul, oracle, weil};
@@ -44,22 +46,25 @@ fn committed<L: ParameterSet>(text: &str, order: u8, scalars: &[u8]) {
     pair::<L>(curve, at("Px ", "Py "), at("Qx ", "Qy "), order, scalars);
 }
 
-/// The square-branch curve of `p324_curves.tsv` and the order-`2^e`
-/// basis Sage built on it. `P` and `Q` are the columns of those names.
-fn sage_basis(order: u8, scalars: &[u8]) {
-    use prism_fixtures::{curve_table::Point, p324};
-    let row = p324::curve_table().curve(p324::SQUARE_BRANCH_CURVE);
+/// At a set without a corpus: the square-branch curve of its Sage curve
+/// file and the order-`2^e` basis Sage built on it. `P` and `Q` are the
+/// columns of those names.
+fn sage_basis<L: WithoutCorpus>(order: u8, scalars: &[u8]) {
+    let row = curve_table::<L>().curve(L::FIXTURES.square_branch_curve);
     let point = |point: &Point| {
-        let (x, y) = point.decode::<P324>();
+        let (x, y) = point.decode::<L>();
         Jac {
             x,
             y,
-            z: <P324 as ParameterSet>::Ext::one(),
+            z: L::Ext::one(),
         }
     };
-    let curve = Montgomery::normalized(row.coefficient.decode::<P324>());
-    pair::<P324>(curve, point(&row.p), point(&row.q), order, scalars);
+    let curve = Montgomery::normalized(row.coefficient.decode::<L>());
+    pair::<L>(curve, point(&row.p), point(&row.q), order, scalars);
 }
+
+/// The scalars of one input: the coefficients of two points on the basis.
+const SCALARS: usize = 4;
 
 fn pair<L: ParameterSet>(
     curve: Montgomery<L::Ext>,
@@ -68,7 +73,12 @@ fn pair<L: ParameterSet>(
     order: u8,
     scalars: &[u8],
 ) {
-    let width = scalars.len().div_ceil(4).max(1);
+    // Four scalars of at most `e` bits each. A longer input belongs to
+    // no pair at this set.
+    if scalars.len() > SCALARS * (L::E as usize).div_ceil(8) {
+        return;
+    }
+    let width = scalars.len().div_ceil(SCALARS).max(1);
     let mut parts = scalars.chunks(width);
     let mut next = || parts.next().unwrap_or(&[]);
     let (a, b, c, d) = (next(), next(), next(), next());
@@ -94,13 +104,9 @@ fuzz_target!(|data: &[u8]| {
     let [which, order, scalars @ ..] = data else {
         return;
     };
-    // Four scalars of at most `e` bits each.
-    if scalars.len() > 4 * 63 {
-        return;
-    }
     // One entry for each set. The input's first byte picks one; there is
     // no arm that an unlisted set would fall into.
-    const SETS: [fn(u8, &[u8]); 4] = [
+    const SETS: [fn(u8, &[u8]); 5] = [
         |order, scalars| {
             committed::<P248>(
                 include_str!("../../prism-verify/testdata/s5_lvl1.txt"),
@@ -108,7 +114,7 @@ fuzz_target!(|data: &[u8]| {
                 scalars,
             )
         },
-        sage_basis,
+        sage_basis::<P324>,
         |order, scalars| {
             committed::<P376>(
                 include_str!("../../prism-verify/testdata/s5_lvl3.txt"),
@@ -123,6 +129,7 @@ fuzz_target!(|data: &[u8]| {
                 scalars,
             )
         },
+        sage_basis::<P664>,
     ];
     SETS[usize::from(*which) % SETS.len()](*order, scalars);
 });

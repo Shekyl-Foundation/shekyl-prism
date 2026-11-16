@@ -25,7 +25,8 @@
 mod support;
 
 use prism_field::ops::{self, Counts, Slot};
-use prism_field::{ParameterSet, P248, P324, P376, P500};
+use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
+use prism_fixtures::no_corpus::{curve_table, WithoutCorpus};
 use prism_verify::{verify, CommittedSet, Stage, VerifyError};
 use std::collections::BTreeSet;
 use std::fs;
@@ -167,35 +168,35 @@ fn refuse<L: ParameterSet>(path: &Path, text: &str, accepted: Slot) -> Result<()
     );
     Ok(())
 }
-/// `p324` has no honest vector, so no accepted count and no negatives
-/// derived from one. What can be counted is the refusal of a response
-/// built from a public key alone that passes the pairing check
-/// (`tests/support/identity.rs`): the key is the model curve of the Sage
-/// file, under its refusal message (`prism_fixtures::p324`). The form refused as
-/// `Codomain` is the first measured cost of the chain work at this prime.
-/// It is the cost of a refusal, not of a verification that accepts.
-fn refuse_at_p324() -> Result<(), String> {
-    use prism_fixtures::p324::{curve_table, CURVE_FILE, MODEL_CURVE, REFUSAL_MESSAGE};
-    let coefficient = curve_table()
-        .curve(MODEL_CURVE)
+/// A set without a corpus has no honest vector, so no accepted count and
+/// no negatives derived from one. What can be counted is the refusal of a
+/// response built from a public key alone that passes the pairing check
+/// (`tests/support/identity.rs`): the key is the model curve of the set's
+/// Sage file, under the set's refusal message. The form refused as
+/// `Codomain` is the measured cost of the chain work at that prime. It is
+/// the cost of a refusal, not of a verification that accepts.
+fn refuse_without_a_corpus<L: WithoutCorpus>() -> Result<(), String> {
+    let fixtures = L::FIXTURES;
+    let coefficient = curve_table::<L>()
+        .curve(fixtures.model_curve)
         .coefficient
-        .decode::<P324>();
-    let message = REFUSAL_MESSAGE;
-    let vector = format!("{CURVE_FILE}:{MODEL_CURVE}");
+        .decode::<L>();
+    let message = fixtures.refusal_message;
+    let vector = format!("{}:{}", fixtures.curve_file, fixtures.model_curve);
     for form in Form::ALL {
-        let built = identity_response::<P324>(coefficient, message, form);
-        let (verdict, table) = counted::<P324>(&built.key, message, &built.response.encode());
+        let built = identity_response::<L>(coefficient, message, form);
+        let (verdict, table) = counted::<L>(&built.key, message, &built.response.encode());
         let error = match verdict {
             Err(e) if form.allowed().contains(&e) => e,
             other => return Err(format!("{vector} {}: {other:?}", form.name())),
         };
         println!(
             "{}",
-            verdict_row::<P324>(&vector, form.name(), error, total(&table))
+            verdict_row::<L>(&vector, form.name(), error, total(&table))
         );
         let kind = format!(
             "refuse set={} vector={vector} case={} error={error:?}",
-            P324::NAME,
+            L::NAME,
             form.name()
         );
         stages(&kind, &table);
@@ -235,7 +236,8 @@ fn run() -> Result<(), String> {
             }?;
         }
     }
-    refuse_at_p324()
+    refuse_without_a_corpus::<P324>()?;
+    refuse_without_a_corpus::<P664>()
 }
 fn main() -> std::process::ExitCode {
     match run() {

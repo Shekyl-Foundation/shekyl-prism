@@ -417,6 +417,7 @@ mod tests {
             ("p324", Set::P324),
             ("p376", Set::P376),
             ("p500", Set::P500),
+            ("p664", Set::P664),
         ] {
             assert_eq!(name.parse::<Set>(), Ok(set), "{name}");
             assert_eq!(set.to_string(), name);
@@ -427,7 +428,7 @@ mod tests {
                 "{name}"
             );
         }
-        assert_eq!(Set::ALL.len(), 4);
+        assert_eq!(Set::ALL.len(), 5);
         for (label, committed, set) in [
             (P248::LABEL, CommittedSet::P248, Set::P248),
             (P376::LABEL, CommittedSet::P376, Set::P376),
@@ -445,7 +446,7 @@ mod tests {
             (P248::LABEL, P376::LABEL, P500::LABEL),
             ("NIST-I", "NIST-III", "NIST-V")
         );
-        for text in ["", "248", "P248", "p664", "1", "I", "iv"] {
+        for text in ["", "248", "P248", "p1024", "1", "I", "iv"] {
             assert_eq!(text.parse::<Set>(), Err(UnknownSet), "{text}");
             assert_eq!(
                 CommittedSet::from_label(text),
@@ -467,21 +468,21 @@ mod tests {
         }
         assert_eq!(
             UnknownSet.to_string(),
-            "not the name of a parameter set: expected p248, p324, p376 or p500"
+            "not the name of a parameter set: expected p248, p324, p376, p500 or p664"
         );
     }
 
-    /// `p324` has no vectors, no records and no label. Asking for it as a
-    /// set with committed data is its own error, which names the set, and
-    /// every other set converts. The exhaustive match is the point: a set
+    /// `p324` and `p664` have no vectors, no records and no label. Asking
+    /// for either as a set with committed data is its own error, which
+    /// names the set, and every other set converts. The exhaustive match is the point: a set
     /// added later must be placed on one side here before this compiles.
     #[test]
     fn a_set_without_a_corpus_says_so_and_is_given_no_label() {
         for set in Set::ALL {
             match set {
-                Set::P324 => {
+                Set::P324 | Set::P664 => {
                     assert_eq!(set.committed(), Err(NoCorpus(set)));
-                    assert!(NoCorpus(set).to_string().contains("p324"));
+                    assert!(NoCorpus(set).to_string().contains(set.name()));
                 }
                 Set::P248 | Set::P376 | Set::P500 => {
                     assert_eq!(set.committed().map(CommittedSet::set), Ok(set));
@@ -489,7 +490,7 @@ mod tests {
             }
         }
         // No committed label, in either spelling a guess might take.
-        for text in ["NIST-II", "p324", "P324"] {
+        for text in ["NIST-II", "p324", "P324", "p664", "P664", "NIST-VII"] {
             assert_eq!(CommittedSet::from_label(text), Err(UnknownCommittedLabel));
         }
         assert_ne!(
@@ -500,18 +501,24 @@ mod tests {
 
     #[test]
     fn two_thousand_forty_seven_is_not_a_prime() {
-        assert!(!is_baillie_psw(&2047u32.to_le_bytes()[..2]));
-        assert!(is_baillie_psw(&1019u32.to_le_bytes()[..2]));
-        assert!(!is_baillie_psw(&[1]));
-        assert!(!is_baillie_psw(&[91]));
-        assert!(!is_baillie_psw(&[49, 2]));
+        let is_prime = is_baillie_psw::<<P248 as ParameterSet>::Degree>;
+        assert!(!is_prime(&2047u32.to_le_bytes()[..2]));
+        assert!(is_prime(&1019u32.to_le_bytes()[..2]));
+        assert!(!is_prime(&[1]));
+        assert!(!is_prime(&[91]));
+        assert!(!is_prime(&[49, 2]));
     }
 
     #[test]
     fn the_three_field_primes_pass_baillie_psw() {
-        assert!(is_baillie_psw(&prime_bytes(5, P248::E)));
-        assert!(is_baillie_psw(&prime_bytes(65, P376::E)));
-        assert!(is_baillie_psw(&prime_bytes(27, P500::E)));
+        // Each at its own set's width, which holds `p` with room: the
+        // width is for a degree of about twice the bits.
+        fn passes<L: ParameterSet>(cofactor: u128) -> bool {
+            is_baillie_psw::<L::Degree>(&prime_bytes(cofactor, L::E))
+        }
+        assert!(passes::<P248>(5));
+        assert!(passes::<P376>(65));
+        assert!(passes::<P500>(27));
     }
 
     /// `cofactor·2^shift − 1`, little-endian.

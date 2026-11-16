@@ -411,7 +411,7 @@ pub fn double_times<L: ParameterSet>(
 mod tests {
     use super::{even_basis, has_order_p_plus_one, mul_odd_then_double, odd_parts_generate};
     use crate::torsion::double_times;
-    use prism_field::{Field, ParameterSet, P248, P324, P376, P500};
+    use prism_field::{Field, ParameterSet, P248, P324, P376, P500, P664};
 
     fn key<L: ParameterSet>(hex: &str) -> L::Ext {
         let bytes: Vec<u8> = (0..hex.len())
@@ -507,6 +507,7 @@ mod tests {
         only_the_full_point_is_full_order::<P324>();
         only_the_full_point_is_full_order::<P376>();
         only_the_full_point_is_full_order::<P500>();
+        only_the_full_point_is_full_order::<P664>();
     }
 
     #[test]
@@ -527,6 +528,11 @@ mod tests {
     #[test]
     fn the_starting_curve_has_a_basis_at_p500() {
         starting::<P500>();
+    }
+
+    #[test]
+    fn the_starting_curve_has_a_basis_at_p664() {
+        starting::<P664>();
     }
 
     #[test]

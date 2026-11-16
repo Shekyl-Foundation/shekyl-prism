@@ -37,7 +37,7 @@ pub fn unsalted<L: ParameterSet>(
 pub fn first_prime<L: ParameterSet>(key: &[u8], message: &[u8]) -> Option<(u16, Vec<u8>)> {
     for index in 0..=u16::MAX {
         let scalar = unsalted::<L>(key, message, index, L::CHALLENGE_BITS)?;
-        if prism_verify::degree_is_prime(L::E - 2, &scalar) {
+        if prism_verify::degree_is_prime::<L::Degree>(L::E - 2, &scalar) {
             return Some((index, scalar));
         }
     }
@@ -169,7 +169,10 @@ mod tests {
         let j: u16 = rows["j"].parse().unwrap();
         let scalar = unsalted::<L>(&key, rows["message"].as_bytes(), j, L::CHALLENGE_BITS).unwrap();
         assert_eq!(prism_signer::decimal(&scalar), rows["s"]);
-        assert!(prism_verify::degree_is_prime(L::E - 2, &scalar));
+        assert!(prism_verify::degree_is_prime::<L::Degree>(
+            L::E - 2,
+            &scalar
+        ));
         let mut sig = Vec::new();
         for name in ["E", "Px", "Py", "Qx", "Qy"] {
             sig.extend(hex(rows[name]));

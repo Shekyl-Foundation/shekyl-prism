@@ -16,7 +16,7 @@
 //! name order: the file name and the two verdicts. A behaviour-preserving
 //! change gives the same output before and after.
 
-use prism_field::{ParameterSet, P248, P324, P376, P500};
+use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
 use prism_verify::Set;
 use prism_verify::{verify, VerifyError};
 use std::path::PathBuf;
@@ -84,6 +84,7 @@ fn main() -> std::process::ExitCode {
         Ok(Set::P324) => run::<P324>(&files),
         Ok(Set::P376) => run::<P376>(&files),
         Ok(Set::P500) => run::<P500>(&files),
+        Ok(Set::P664) => run::<P664>(&files),
         Err(unknown) => Err(unknown.to_string()),
     };
     match outcome {

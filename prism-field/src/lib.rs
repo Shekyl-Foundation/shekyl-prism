@@ -31,6 +31,9 @@ use fp2::define_fp2_from_type;
 use fp2::define_fp_core;
 
 pub mod ops;
+pub mod width;
+
+pub use width::{DegreeLimbs, DegreeWidth, Limbs, SetDegree};
 
 /// The bytes of one set's public salt.
 ///
@@ -80,8 +83,8 @@ pub trait Field: Copy {
 ///
 /// This is the bit length of the public salt and the number of candidates
 /// each torsion search tries. A parameter set carries no security
-/// assessment; both widths are this rounding of its exponent. The prime
-/// ruled but not yet built, `e = 664`, rounds to 768.
+/// assessment; both widths are this rounding of its exponent. `e = 664`
+/// rounds to 768.
 ///
 /// Panics if the rounding does not fit in `u32`.
 pub const fn width_bits(e: u32) -> u32 {
@@ -228,7 +231,7 @@ const fn is_odd_prime(candidate: u64) -> bool {
 
 /// One parameter set: a prime `p = f·2^e − 1`, its two fields and the
 /// lengths its encodings use.
-pub trait ParameterSet: Copy + Clone + Eq + Send + Sync + 'static {
+pub trait ParameterSet: Copy + Clone + Eq + core::fmt::Debug + Send + Sync + 'static {
     type Base: Field;
     type Ext: Field;
     /// The set's name, `p` and then `e`: `p248`, `p376`, `p500`.
@@ -240,6 +243,14 @@ pub trait ParameterSet: Copy + Clone + Eq + Send + Sync + 'static {
     const E: u32;
     /// The odd cofactor `f` in `p + 1 = f·2^e`, with its prime factors.
     const COFACTOR: Cofactor;
+    /// The width of the integers the challenge degree's primality test
+    /// runs on at this set. A [`SetDegree`]: the 1,024-bit or 1,344-bit
+    /// width, not a width that exists only so a carry can be checked.
+    /// See [`width`].
+    type Degree: SetDegree;
+    /// The limbs of an integer modulo `2^e` at this set, which is what the
+    /// entries of the verifier's matrices are.
+    type TorsionLimbs: Limbs;
     /// Instantiated long-chain length `e′ = e − 2`. The short chain
     /// has length `CHAIN_STEPS − 1`; the rational torsion exponent is `E`.
     const CHAIN_STEPS: u32;
@@ -294,8 +305,9 @@ macro_rules! parameter_set {
         pub mod $modname {
             use super::ops::{tally, Kind, Op};
             use super::{
-                candidate_bound, define_fp2_from_type, define_fp_core, width_bits, Cofactor,
-                Field, ParameterSet, Salt,
+                candidate_bound, define_fp2_from_type, define_fp_core,
+                width::{degree_bits, degree_limbs, torsion_limbs, DegreeLimbs, DegreeWidth},
+                width_bits, Cofactor, Field, ParameterSet, Salt,
             };
 
             /// Checked here, when the set is compiled.
@@ -347,6 +359,13 @@ macro_rules! parameter_set {
             const _: () = assert!(
                 $e > 64,
                 "a set needs e > 64: one challenge byte, and a prime above 2^64"
+            );
+            // The width the set names holds every value its primality test
+            // forms. A count that is not a `SetDegree` fails on the
+            // associated type below, before this comparison.
+            const _: () = assert!(
+                degree_bits($e) <= <DegreeLimbs<{ degree_limbs($e) }> as DegreeWidth>::BITS,
+                "the set's width holds every value its primality test forms"
             );
 
             define_fp_core!(
@@ -483,6 +502,9 @@ macro_rules! parameter_set {
                 const NAME: &'static str = concat!("p", stringify!($e));
                 const E: u32 = $e;
                 const COFACTOR: Cofactor = COFACTOR;
+                // A limb count that is not a width fails here.
+                type Degree = DegreeLimbs<{ degree_limbs($e) }>;
+                type TorsionLimbs = [u64; torsion_limbs($e)];
                 const CHAIN_STEPS: u32 = $e - 2;
                 const CHALLENGE_BITS: u32 = $e - 3;
                 const FP_LEN: usize = <$fp>::ENCODED_LENGTH;
@@ -600,6 +622,28 @@ parameter_set!(
         0x01AFFFFFFFFFFFFFu64,
     ]
 );
+parameter_set!(
+    p664,
+    P664,
+    f = 17,
+    odd_primes = [17],
+    e = 664,
+    FpP664,
+    Fp2P664,
+    [
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0xFFFFFFFFFFFFFFFFu64,
+        0x0000000010FFFFFFu64,
+    ]
+);
 
 /// Packed arithmetic is not enabled. See the crate docs.
 pub const FIELD_BACKEND: &str = "scalar";
@@ -608,6 +652,7 @@ pub const FIELD_BACKEND: &str = "scalar";
 mod tests {
     use super::{
         width_bits, Cofactor, CofactorError, Field, ParameterSet, Salt, P248, P324, P376, P500,
+        P664,
     };
 
     fn hex(bytes: &[u8]) -> String {
@@ -692,6 +737,7 @@ mod tests {
         the_odd_primes_factor_the_cofactor::<P324>();
         the_odd_primes_factor_the_cofactor::<P376>();
         the_odd_primes_factor_the_cofactor::<P500>();
+        the_odd_primes_factor_the_cofactor::<P664>();
         let stated = |cofactor: Cofactor| (cofactor.value(), cofactor.odd_primes());
         assert_eq!(stated(P248::COFACTOR), (5, &[5][..]));
         assert_eq!(stated(P324::COFACTOR), (3, &[3][..]));
@@ -886,6 +932,7 @@ mod tests {
         decoding_is_the_integer_order::<P324>();
         decoding_is_the_integer_order::<P376>();
         decoding_is_the_integer_order::<P500>();
+        decoding_is_the_integer_order::<P664>();
     }
 
     /// The sizes of `p324`, each computed here from `f = 3` and `e = 324`
@@ -928,6 +975,58 @@ mod tests {
         }
     }
 
+    /// The sizes of `p664`, each computed here from `f = 17` and `e = 664`
+    /// and then compared with what the set says. It is the first field
+    /// above eight limbs, and the first whose challenge degree does not
+    /// fit 1,024 bits.
+    #[test]
+    fn p664_has_the_sizes_its_prime_gives() {
+        let (f, e): (u64, u32) = (17, 664);
+        let bits = e + (64 - f.leading_zeros());
+        assert_eq!(bits, 669);
+        let field = bits.div_ceil(8) as usize;
+        assert_eq!(field, 84);
+        assert_eq!(bits.div_ceil(64), 11, "eleven 64-bit limbs");
+        let salt = (e.div_ceil(128) * 128 / 8) as usize;
+        assert_eq!((P664::COFACTOR.value(), P664::E), (f, e));
+        assert_eq!(P664::COFACTOR.odd_primes(), &[17]);
+        assert_eq!(P664::NAME, "p664");
+        assert_eq!(P664::FP_LEN, field);
+        assert_eq!(P664::FP2_LEN, 2 * field);
+        assert_eq!(P664::PUBLIC_KEY_LEN, 168);
+        assert_eq!(P664::WIDTH_BITS, 768);
+        assert_eq!(P664::SALT_LEN, salt);
+        assert_eq!(P664::SALT_LEN, 96);
+        assert_eq!(P664::SEARCH_BOUND, 768);
+        assert_eq!(P664::SIGNATURE_ELEMENTS, 5);
+        assert_eq!(P664::SIGNATURE_LEN, 5 * 168 + 96);
+        assert_eq!(P664::SIGNATURE_LEN, 936);
+        assert_eq!(P664::CHAIN_STEPS, 662);
+        assert_eq!(P664::CHALLENGE_BITS, 661);
+        assert_eq!(P664::S_LEN, 83);
+        // The top limb is 17·2^24 − 1 = 0x10ffffff, in the low four bytes
+        // of the eleventh limb: bytes 80 to 83 of p − 1, of which the top
+        // one is 0x10, with three spare bits.
+        let minus_one = modulus_minus_one(f, e, field);
+        assert_eq!(&minus_one[80..], &[0xff, 0xff, 0xff, 0x10]);
+        assert_eq!(u32::from_le_bytes([0xff, 0xff, 0xff, 0x10]), 0x10ff_ffff);
+        assert_eq!(8 * field as u32 - bits, 3, "three spare bits");
+        // p ≡ 7 (mod 8): p − 1 ends in ...110.
+        assert_eq!(minus_one[0] & 7, 6);
+        // The widths of the two integers the verifier sizes by the set:
+        // the challenge degree has 2e − 5 bits and needs 2e − 4, which is
+        // 21 limbs, and a residue modulo 2^e needs 11.
+        assert_eq!(crate::width::degree_bits(e), 1324);
+        assert_eq!(
+            <<P664 as ParameterSet>::Degree as crate::DegreeWidth>::BITS,
+            1344
+        );
+        assert_eq!(
+            <<P664 as ParameterSet>::TorsionLimbs as crate::Limbs>::COUNT,
+            11
+        );
+    }
+
     /// The name, the cofactor, the exponent and the limbs of a set agree:
     /// the field's `−1` is `f·2^e − 2`, computed from `f` and `e` without
     /// reading the limb literals.
@@ -948,10 +1047,10 @@ mod tests {
         the_prime_is::<P324>("p324", 3, 324);
         the_prime_is::<P376>("p376", 65, 376);
         the_prime_is::<P500>("p500", 27, 500);
+        the_prime_is::<P664>("p664", 17, 664);
     }
 
-    /// The sizes of the sets in the code, and the width of the ruled
-    /// exponent that has no type yet. The sizes are the pin.
+    /// The sizes of the sets in the code. The sizes are the pin.
     #[test]
     fn the_width_is_e_rounded_up_to_128_bits() {
         fn check<L: ParameterSet>(salt_bytes: usize, candidates: u16) {
@@ -966,8 +1065,7 @@ mod tests {
         check::<P324>(48, 384);
         check::<P376>(48, 384);
         check::<P500>(64, 512);
-        // Ruled, not built. The salt is the width over 8: 96 bytes.
-        assert_eq!(width_bits(664), 768);
+        check::<P664>(96, 768);
     }
 
     fn hex_bytes(text: &str) -> Vec<u8> {
@@ -1048,6 +1146,7 @@ mod tests {
         check::<P324>();
         check::<P376>();
         check::<P500>();
+        check::<P664>();
     }
 
     #[test]

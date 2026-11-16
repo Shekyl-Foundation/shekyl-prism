@@ -5,18 +5,23 @@
 
 //! A Sage curve file, read by column name into typed values.
 //!
-//! `scripts/sage/p324_fixture.sage` writes one `CURVE` row for each curve,
-//! under a header comment that names the columns. That header is the
-//! schema. A reader asks for a column by name, so reordering the columns
+//! `scripts/sage/no_corpus_fixture.sage` writes one `CURVE` row for each
+//! curve, under a header comment that names the columns. That header is
+//! the schema. A reader asks for a column by name, so reordering the columns
 //! does not move a value onto a different name. A missing name, a repeated
 //! name, a row whose width is not the header's, a field that is not hex
 //! where hex is due, or a repeated curve, refuses the file.
 //!
-//! Nothing here is particular to one prime. The file of each prime, and
-//! the curves of it that tests name, are in that prime's module.
+//! Nothing here is particular to one prime but one column's name: the
+//! point missing the cofactor's odd prime is `x([3]R)` in the file of a
+//! prime with `f = 3` and `x([17]R)` where `f = 17`. So a file is read
+//! against a cofactor, and a header written for another cofactor is not
+//! this schema. A cofactor with two odd primes would need two such
+//! columns; no set that has a curve file has one, and the reader refuses
+//! it.
 
 use crate::hex;
-use prism_field::ParameterSet;
+use prism_field::{Cofactor, ParameterSet};
 
 /// The first field of every data row.
 const ROW_TAG: &str = "CURVE";
@@ -31,9 +36,9 @@ enum Column {
     Index,
     Square,
     OrderFull,
-    OrderWithoutThree,
+    OrderWithoutOddPrime,
     OrderWithoutTwo,
-    OrderThree,
+    OrderOddPrime,
     PX,
     PY,
     QX,
@@ -49,9 +54,9 @@ impl Column {
         Self::Index,
         Self::Square,
         Self::OrderFull,
-        Self::OrderWithoutThree,
+        Self::OrderWithoutOddPrime,
         Self::OrderWithoutTwo,
-        Self::OrderThree,
+        Self::OrderOddPrime,
         Self::PX,
         Self::PY,
         Self::QX,
@@ -59,23 +64,24 @@ impl Column {
         Self::Pairing,
     ];
 
-    /// The name the header gives this column.
-    const fn name(self) -> &'static str {
+    /// The name the header gives this column, in the file of a set whose
+    /// cofactor has the one odd prime `odd_prime`.
+    fn name(self, odd_prime: u64) -> String {
         match self {
-            Self::Tag => ROW_TAG,
-            Self::Number => "n",
-            Self::Coefficient => "A",
-            Self::Index => "index",
-            Self::Square => "square",
-            Self::OrderFull => "x(R)",
-            Self::OrderWithoutThree => "x([3]R)",
-            Self::OrderWithoutTwo => "x([2]R)",
-            Self::OrderThree => "x([2^e]R)",
-            Self::PX => "x(P)",
-            Self::PY => "y(P)",
-            Self::QX => "x(Q)",
-            Self::QY => "y(Q)",
-            Self::Pairing => "e(P,Q)",
+            Self::Tag => ROW_TAG.into(),
+            Self::Number => "n".into(),
+            Self::Coefficient => "A".into(),
+            Self::Index => "index".into(),
+            Self::Square => "square".into(),
+            Self::OrderFull => "x(R)".into(),
+            Self::OrderWithoutOddPrime => format!("x([{odd_prime}]R)"),
+            Self::OrderWithoutTwo => "x([2]R)".into(),
+            Self::OrderOddPrime => "x([2^e]R)".into(),
+            Self::PX => "x(P)".into(),
+            Self::PY => "y(P)".into(),
+            Self::QX => "x(Q)".into(),
+            Self::QY => "y(Q)".into(),
+            Self::Pairing => "e(P,Q)".into(),
         }
     }
 
@@ -92,9 +98,9 @@ impl Column {
             Self::Index => 3,
             Self::Square => 4,
             Self::OrderFull => 5,
-            Self::OrderWithoutThree => 6,
+            Self::OrderWithoutOddPrime => 6,
             Self::OrderWithoutTwo => 7,
-            Self::OrderThree => 8,
+            Self::OrderOddPrime => 8,
             Self::PX => 9,
             Self::PY => 10,
             Self::QX => 11,
@@ -106,11 +112,28 @@ impl Column {
 
 /// Where each column is in one file: the position of its name in that
 /// file's header.
-struct Layout([usize; Column::ALL.len()]);
+struct Layout {
+    positions: [usize; Column::ALL.len()],
+    /// The odd prime the header was read for, to name a column in an
+    /// error.
+    odd_prime: u64,
+}
+
+/// The one odd prime of `cofactor`, which names a column of its file.
+fn odd_prime(cofactor: Cofactor) -> Result<u64, String> {
+    match cofactor.odd_primes() {
+        [prime] => Ok(*prime),
+        primes => Err(format!(
+            "a curve file has one column for the cofactor's odd prime, and {} has {}",
+            cofactor.value(),
+            primes.len()
+        )),
+    }
+}
 
 impl Layout {
     /// `None` unless `names` is exactly the column names, each once.
-    fn of(names: &[&str]) -> Option<Self> {
+    fn of(names: &[&str], odd_prime: u64) -> Option<Self> {
         if names.len() != Column::ALL.len() {
             return None;
         }
@@ -119,24 +142,32 @@ impl Layout {
             let mut matches = names
                 .iter()
                 .enumerate()
-                .filter(|(_, name)| **name == column.name());
+                .filter(|(_, name)| **name == column.name(odd_prime));
             let (position, _) = matches.next()?;
             if matches.next().is_some() {
                 return None;
             }
             positions[column.index()] = position;
         }
-        Some(Self(positions))
+        Some(Self {
+            positions,
+            odd_prime,
+        })
     }
 
-    /// The one header comment of `table` that names the columns.
-    fn read(table: &str) -> Result<Self, String> {
+    /// The one header comment of `table` that names the columns of a
+    /// file for `cofactor`.
+    fn read(table: &str, cofactor: Cofactor) -> Result<Self, String> {
+        let odd_prime = odd_prime(cofactor)?;
         let mut layouts = table
             .lines()
             .filter_map(|line| line.strip_prefix('#'))
-            .filter_map(|rest| Self::of(&rest.split_whitespace().collect::<Vec<_>>()));
+            .filter_map(|rest| Self::of(&rest.split_whitespace().collect::<Vec<_>>(), odd_prime));
         let layout = layouts.next().ok_or_else(|| {
-            let names: Vec<&str> = Column::ALL.into_iter().map(Column::name).collect();
+            let names: Vec<String> = Column::ALL
+                .into_iter()
+                .map(|column| column.name(odd_prime))
+                .collect();
             format!("the curve file does not name {}", names.join(" "))
         })?;
         if layouts.next().is_some() {
@@ -147,7 +178,7 @@ impl Layout {
 
     /// The field of `column` in a row already known to have every column.
     fn field<'a>(&self, fields: &[&'a str], column: Column) -> &'a str {
-        fields[self.0[column.index()]]
+        fields[self.positions[column.index()]]
     }
 }
 
@@ -220,12 +251,12 @@ pub struct CurveRow {
     pub coefficient_is_square: bool,
     /// Column `x(R)`, a point of order `p + 1`.
     pub order_full_x: Element,
-    /// Column `x([3]R)`, order `(p + 1)/3`.
-    pub order_without_three_x: Element,
+    /// Column `x([q]R)` for the cofactor's odd prime `q`, order `(p + 1)/q`.
+    pub order_without_odd_prime_x: Element,
     /// Column `x([2]R)`, order `(p + 1)/2`.
     pub order_without_two_x: Element,
-    /// Column `x([2^e]R)`, order `3`.
-    pub order_three_x: Element,
+    /// Column `x([2^e]R)`, of order the cofactor.
+    pub order_odd_prime_x: Element,
     /// Columns `x(P)` and `y(P)`.
     pub p: Point,
     /// Columns `x(Q)` and `y(Q)`. This `Q` is the second point the basis
@@ -241,8 +272,9 @@ pub struct CurveRow {
 pub struct CurveTable(Vec<CurveRow>);
 
 impl CurveTable {
-    pub fn parse(table: &str) -> Result<Self, String> {
-        let layout = Layout::read(table)?;
+    /// The rows of `table`, the file of a set with this `cofactor`.
+    pub fn parse(table: &str, cofactor: Cofactor) -> Result<Self, String> {
+        let layout = Layout::read(table, cofactor)?;
         let mut rows: Vec<CurveRow> = Vec::new();
         for line in table.lines() {
             if line.is_empty() || line.starts_with('#') {
@@ -267,7 +299,7 @@ impl CurveTable {
                 format!(
                     "curve {}: {} is {}",
                     text(Column::Number),
-                    column.name(),
+                    column.name(layout.odd_prime),
                     text(column)
                 )
             };
@@ -291,9 +323,9 @@ impl CurveTable {
                     _ => return Err(refused(Column::Square)),
                 },
                 order_full_x: element(Column::OrderFull)?,
-                order_without_three_x: element(Column::OrderWithoutThree)?,
+                order_without_odd_prime_x: element(Column::OrderWithoutOddPrime)?,
                 order_without_two_x: element(Column::OrderWithoutTwo)?,
-                order_three_x: element(Column::OrderThree)?,
+                order_odd_prime_x: element(Column::OrderOddPrime)?,
                 p: Point {
                     x: element(Column::PX)?,
                     y: element(Column::PY)?,
@@ -331,6 +363,25 @@ impl CurveTable {
 #[cfg(test)]
 mod tests {
     use super::{Column, CurveNumber, CurveTable, Element, Layout};
+    use prism_field::Cofactor;
+
+    /// The cofactor the test files below are written for.
+    const ODD_PRIME: u64 = 3;
+
+    fn cofactor(value: u64, odd_primes: &'static [u64]) -> Cofactor {
+        Cofactor::new(value, odd_primes).expect("a cofactor")
+    }
+
+    fn three() -> Cofactor {
+        cofactor(ODD_PRIME, &[ODD_PRIME])
+    }
+
+    fn names() -> Vec<String> {
+        Column::ALL
+            .into_iter()
+            .map(|column| column.name(ODD_PRIME))
+            .collect()
+    }
 
     /// One row's fields in the order of [`Column::ALL`], with a different
     /// value in every hex column.
@@ -339,7 +390,7 @@ mod tests {
     ];
 
     fn header() -> String {
-        Column::ALL.map(Column::name).join(" ")
+        names().join(" ")
     }
 
     /// Where `column` sits in [`Column::ALL`], which is the order [`FIELDS`]
@@ -356,27 +407,27 @@ mod tests {
         let mut seen = [false; Column::ALL.len()];
         for column in Column::ALL {
             let slot = column.index();
-            assert!(slot < seen.len(), "{}", column.name());
-            assert!(!seen[slot], "{} shares a slot", column.name());
+            assert!(slot < seen.len(), "{}", column.name(ODD_PRIME));
+            assert!(!seen[slot], "{} shares a slot", column.name(ODD_PRIME));
             seen[slot] = true;
         }
     }
 
     #[test]
     fn a_column_moves_with_its_name() {
-        let names: Vec<&str> = Column::ALL.into_iter().rev().map(Column::name).collect();
+        let names: Vec<String> = names().into_iter().rev().collect();
         let fields: Vec<&str> = FIELDS.into_iter().rev().collect();
         let text = format!("# {}\n{}\n", names.join(" "), fields.join("\t"));
-        let table = CurveTable::parse(&text).expect("a permuted header");
+        let table = CurveTable::parse(&text, three()).expect("a permuted header");
         assert_eq!(table.rows().len(), 1);
         let row = table.curve(CurveNumber::new(7));
         assert_eq!(row.coefficient.bytes(), &[0xa0]);
         assert_eq!(row.index, 1);
         assert!(!row.coefficient_is_square);
         assert_eq!(row.order_full_x.bytes(), &[0xf1]);
-        assert_eq!(row.order_without_three_x.bytes(), &[0x03]);
+        assert_eq!(row.order_without_odd_prime_x.bytes(), &[0x03]);
         assert_eq!(row.order_without_two_x.bytes(), &[0x02]);
-        assert_eq!(row.order_three_x.bytes(), &[0x33]);
+        assert_eq!(row.order_odd_prime_x.bytes(), &[0x33]);
         assert_eq!(
             (row.p.x.bytes(), row.p.y.bytes()),
             (&[0xb1][..], &[0xb2][..])
@@ -399,7 +450,7 @@ mod tests {
     fn a_file_that_is_not_the_schema_is_refused() {
         let header = header();
         let row = FIELDS.join("\t");
-        let parsed = |text: &str| CurveTable::parse(text).map(|table| table.rows().len());
+        let parsed = |text: &str| CurveTable::parse(text, three()).map(|table| table.rows().len());
         assert_eq!(parsed(&format!("# {header}\n{row}\n")), Ok(1));
         let refused = |text: String, why: &str| assert!(parsed(&text).is_err(), "{why}");
         refused("# not a header\n".into(), "no header");
@@ -427,6 +478,29 @@ mod tests {
 
     #[test]
     fn the_schema_names_itself() {
-        Layout::read(&format!("# {}\n", header())).expect("a header of every column name");
+        Layout::read(&format!("# {}\n", header()), three()).expect("a header of every column name");
+    }
+
+    /// One column is named for the cofactor's odd prime, so a file is the
+    /// schema of its own cofactor and of no other.
+    #[test]
+    fn a_file_is_read_against_its_own_cofactor() {
+        let text = format!("# {}\n{}\n", header(), FIELDS.join("\t"));
+        let seventeen = cofactor(17, &[17]);
+        assert!(CurveTable::parse(&text, three()).is_ok());
+        assert!(
+            CurveTable::parse(&text, seventeen).is_err(),
+            "a header for f = 3 is not the schema at f = 17"
+        );
+        let for_seventeen = text.replace("x([3]R)", "x([17]R)");
+        assert!(CurveTable::parse(&for_seventeen, seventeen).is_ok());
+        assert!(CurveTable::parse(&for_seventeen, three()).is_err());
+        // Two odd primes would need two such columns.
+        let two_primes = cofactor(65, &[5, 13]);
+        let reason = CurveTable::parse(&text, two_primes).expect_err("no such file");
+        assert!(reason.contains("65 has 2"), "{reason}");
+        // A cofactor that is a power of its prime has the one column.
+        let power = cofactor(27, &[3]);
+        assert!(CurveTable::parse(&text, power).is_ok());
     }
 }

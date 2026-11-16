@@ -91,7 +91,7 @@ fn write_sample<L: Committed>(
     scalar: &[u8],
     out: &mut impl Write,
 ) -> Result<(), ()> {
-    let degree = challenge_degree(L::E - 2, scalar).ok_or_else(|| {
+    let degree = challenge_degree::<L::Degree>(L::E - 2, scalar).ok_or_else(|| {
         eprintln!("sample_e_prime: {produced} named a prime the degree constructor refuses");
     })?;
     writeln!(

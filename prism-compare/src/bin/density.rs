@@ -38,7 +38,7 @@ fn set<L: Committed>(samples: u64, salted: bool) -> String {
             ChallengeScalar::derive(&id, &m, salt).degree_is_prime::<L>()
         } else {
             let s = unsalted::<L>(&key, &m, 0, L::CHALLENGE_BITS).expect("full width");
-            prism_verify::degree_is_prime(L::E - 2, &s)
+            prism_verify::degree_is_prime::<L::Degree>(L::E - 2, &s)
         };
         blocks[(n * 10 / samples) as usize] += u64::from(prime);
     }

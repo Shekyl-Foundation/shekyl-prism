@@ -486,7 +486,7 @@ mod s5_vectors {
             sample.response.q.x,
             sample.response.q.y
         ));
-        assert!(degree_is_prime(L::E - 2, &sample.scalar));
+        assert!(degree_is_prime::<L::Degree>(L::E - 2, &sample.scalar));
         let coefficient = KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient();
         let p = Xz::affine(sample.response.p.x);
         let q = Xz::affine(sample.response.q.x);
@@ -559,7 +559,7 @@ mod s5_vectors {
             .find_map(|n| {
                 let salt = L::Salt::from_counter(n).unwrap();
                 let scalar = ChallengeScalar::derive(&identity, b"shekyl-prism-s5", salt);
-                (!degree_is_prime(L::E - 2, scalar.as_bytes())).then_some(salt)
+                (!degree_is_prime::<L::Degree>(L::E - 2, scalar.as_bytes())).then_some(salt)
             })
             .expect("a composite salt exists");
         assert_eq!(
