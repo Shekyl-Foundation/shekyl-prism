@@ -6,11 +6,12 @@
 //! Counts of field operations, the machine-independent cost of a
 //! verification.
 //!
-//! The functions here always exist. Without the `op-count` feature
-//! [`tally`] and [`enter`] have empty bodies and [`take`] returns zeros, so
-//! a caller marks its stages unconditionally and a default build carries no
-//! counter. With the feature, each thread keeps its own table: one row per
-//! slot, and the caller says which slot is current with [`enter`].
+//! This module exists only with the `op-count` feature: a default build
+//! has no counter, and no such module in its API. The field
+//! implementations tally unconditionally all the same, through a function
+//! private to the crate that is empty without the feature. With it, each
+//! thread keeps its own table: one row per slot, and the caller says which
+//! slot is current with [`enter`].
 //!
 //! What is counted is a call through the [`Field`](crate::Field) trait.
 //! An extension-field multiplication is one `Ext` multiplication; the
@@ -21,25 +22,11 @@
 /// Slots a caller may [`enter`]. Slot 0 is current after [`take`].
 pub const SLOTS: usize = 16;
 
-/// Whether this build counts. `false` means every count reads zero.
-pub const ENABLED: bool = cfg!(feature = "op-count");
+/// Whether this build counts. The module exists only in a build that
+/// does, so this is `true` wherever it can be named.
+pub const ENABLED: bool = true;
 
-/// Which field an operation was in.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Kind {
-    Base,
-    Ext,
-}
-
-/// A counted operation.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Op {
-    Mul,
-    Square,
-    Inv,
-    Sqrt,
-    IsSquare,
-}
+pub use crate::tally::{Kind, Op};
 
 /// Operations of one field in one slot.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -72,7 +59,6 @@ pub struct Slot {
     pub ext: Counts,
 }
 
-#[cfg(feature = "op-count")]
 mod table {
     use super::{Counts, Kind, Op, Slot, SLOTS};
     use core::cell::Cell;
@@ -130,32 +116,22 @@ mod table {
 /// Count one operation in the current slot.
 #[inline(always)]
 pub fn tally(kind: Kind, op: Op) {
-    #[cfg(feature = "op-count")]
     table::tally(kind, op);
-    #[cfg(not(feature = "op-count"))]
-    let _ = (kind, op);
 }
 
-/// Make `slot` current for this thread. Panics at `SLOTS` or above when
-/// counting is on.
+/// Make `slot` current for this thread. Panics at `SLOTS` or above.
 #[inline(always)]
 pub fn enter(slot: usize) {
-    #[cfg(feature = "op-count")]
     table::enter(slot);
-    #[cfg(not(feature = "op-count"))]
-    let _ = slot;
 }
 
 /// This thread's table, which is then cleared with slot 0 current.
 #[must_use]
 pub fn take() -> [Slot; SLOTS] {
-    #[cfg(feature = "op-count")]
-    return table::take();
-    #[cfg(not(feature = "op-count"))]
-    [Slot::default(); SLOTS]
+    table::take()
 }
 
-#[cfg(all(test, feature = "op-count"))]
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::{Field, ParameterSet, P248};

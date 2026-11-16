@@ -8,14 +8,15 @@
 //!
 //! ```text
 //! cargo run --release --locked -p prism-verify --example op_counts \
-//!     --features prism-field/op-count
+//!     --features prism-verify/op-count
 //! ```
 //!
 //! `scripts/op_counts.sh` runs this and writes the two committed records.
 //! Lines starting `COUNT` are `docs/benchmarks/op-counts.txt`; lines
 //! starting `VERDICT` are `docs/benchmarks/negative-verdicts.tsv`. The
-//! feature is given on the command line and by no manifest, so a build
-//! without it exits with an error instead of printing zeros.
+//! feature is given on the command line and by no manifest. The example
+//! requires it, so a build without it, or with the field crate's feature
+//! alone, does not build this file instead of printing zeros.
 //!
 //! A count is a call through `prism_field::Field` in the extension field
 //! (`ext_*`) or made directly in the base field (`base_*`). Hashing and the
@@ -216,9 +217,6 @@ fn verdict_row<L: ParameterSet>(vector: &str, case: &str, error: VerifyError, su
     )
 }
 fn run() -> Result<(), String> {
-    if !ops::ENABLED {
-        return Err("built without counting: pass --features prism-field/op-count".into());
-    }
     let primary = primary();
     for path in files() {
         let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;

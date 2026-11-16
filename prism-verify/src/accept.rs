@@ -4,7 +4,7 @@
 // BSD-3-Clause
 
 //! Two adapted chains and the complete image check of the Sage model.
-use crate::stage::Stage;
+use crate::mark::Stage;
 use crate::{AffinePoint, VerifyError};
 use prism_field::{Field, ParameterSet};
 use prism_isogeny::dual_chain::{canonical_four, product_null, Couple, DualChain};

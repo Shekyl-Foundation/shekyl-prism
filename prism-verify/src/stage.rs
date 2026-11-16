@@ -7,38 +7,16 @@
 //!
 //! A stage is a purpose, not a position in the source: work moved earlier
 //! or later keeps its stage, so counts taken before and after a change line
-//! up. The marks cost nothing in a default build; see [`prism_field::ops`].
+//! up.
+//!
+//! This module exists only with the `op-count` feature, which also turns
+//! the counter on ([`prism_field::ops`]): a default build has neither. The
+//! verifier marks its stages unconditionally all the same, through a
+//! function private to the crate that is empty without the feature.
 
 use prism_field::ops;
 
-/// What the verifier is doing when a field operation is counted.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Stage {
-    /// Not inside a verification.
-    Outside,
-    /// Lengths, decoding, sign, model and the basis search.
-    Public,
-    /// Challenge derivation and the primality test. The hash and
-    /// Baillie–PSW do not use the field, so this reads near zero.
-    Challenge,
-    /// The key's basis, the on-curve test, and the order and span checks.
-    Torsion,
-    /// `[s]` of the two signature points.
-    Scale,
-    /// The two Weil pairings and the power they are compared through.
-    Pairing,
-    /// Lifts, the canonical four-torsion, the matrices, both chain kernels
-    /// and both theta base changes.
-    Kernel,
-    /// The long chain.
-    Chain1,
-    /// The short chain.
-    Chain2,
-    /// The comparison of the two codomains.
-    Codomain,
-    /// The three image comparisons.
-    Image,
-}
+pub use crate::mark::Stage;
 
 impl Stage {
     /// Every stage, in slot order.
@@ -78,12 +56,6 @@ impl Stage {
             Self::Codomain => "codomain",
             Self::Image => "image",
         }
-    }
-
-    /// Count what follows on this thread under this stage.
-    #[inline(always)]
-    pub(crate) fn enter(self) {
-        ops::enter(self.slot());
     }
 }
 

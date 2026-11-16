@@ -83,8 +83,16 @@ jobs:
         run: cargo fetch --locked
       - name: Reduced-width API is absent from default production builds
         run: python3 scripts/ci/check_research_boundary.py
-      - name: The operation counter is in no default build
-        run: python3 scripts/ci/check_op_count_isolation.py
+      # The counter and the stage names are measuring equipment. No manifest
+      # turns the feature on, no default graph has it, and a consumer of a
+      # default build cannot name `prism_field::ops` or
+      # `prism_verify::stage`: the check compiles one that tries. The
+      # self-test plants each breach of the manifest rules.
+      - name: The operation counter and its API are in no default build
+        run: |
+          set -euo pipefail
+          python3 scripts/ci/check_op_count_isolation.py --selftest
+          python3 scripts/ci/check_op_count_isolation.py
       # The crate that holds the committed test data is in no build of the
       # three library crates, and has neither the verifier nor the isogeny
       # crate in its own graph, dev edges included. The self-test plants
@@ -138,7 +146,7 @@ jobs:
       # The counter is compiled only when asked for, so its code and the
       # reporter's counting path are linted in a pass of their own.
       - name: Clippy, operation counter
-        run: cargo clippy -p prism-field -p prism-verify --features prism-field/op-count --all-targets --locked -- -D warnings
+        run: cargo clippy -p prism-field -p prism-verify --features prism-verify/op-count --all-targets --locked -- -D warnings
       # The workspace run leaves the research feature off, so the real-backend
       # adapter and the experiment drivers need their own pass.
       - name: Clippy, comparison drivers
@@ -236,8 +244,12 @@ jobs:
         run: |
           set -euo pipefail
           test "$(uname -m)" = "${{ matrix.machine }}"
+      # The one build that names the field crate's feature and not the
+      # verifier's: it builds the field crate alone, where the verifier's
+      # feature does not exist. Every build of the verifier passes
+      # `prism-verify/op-count`.
       - name: The counter's own test
-        run: cargo test -p prism-field --features op-count --locked ops
+        run: cargo test -p prism-field --features prism-field/op-count --locked ops
       - name: Counts and verdicts equal the committed records
         run: sh scripts/op_counts.sh --check
       - name: A second run gives the same records

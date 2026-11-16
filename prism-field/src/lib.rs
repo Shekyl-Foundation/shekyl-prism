@@ -30,7 +30,12 @@
 use fp2::define_fp2_from_type;
 use fp2::define_fp_core;
 
+// The counter is measuring equipment and not part of the library: its
+// module exists only when counting is asked for. `tally` is what the
+// field implementations call, with or without it.
+#[cfg(feature = "op-count")]
 pub mod ops;
+mod tally;
 pub mod width;
 
 pub use width::{DegreeLimbs, DegreeWidth, Limbs, SetDegree};
@@ -303,7 +308,7 @@ macro_rules! parameter_set {
         [$($limb:expr),+ $(,)?]
     ) => {
         pub mod $modname {
-            use super::ops::{tally, Kind, Op};
+            use super::tally::{tally, Kind, Op};
             use super::{
                 candidate_bound, define_fp2_from_type, define_fp_core,
                 width::{degree_bits, degree_limbs, torsion_limbs, DegreeLimbs, DegreeWidth},

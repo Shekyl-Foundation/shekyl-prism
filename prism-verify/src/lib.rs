@@ -22,6 +22,7 @@ mod accept;
 pub mod basis;
 pub mod challenge;
 pub mod identity;
+mod mark;
 mod model;
 mod prime;
 mod relation;
@@ -29,6 +30,10 @@ mod relation;
 pub mod research;
 pub mod set;
 pub mod signature;
+// The stage names are the counter's and not part of the library: the
+// module exists only when counting is asked for. `mark` is what the
+// verifier calls, with or without it.
+#[cfg(feature = "op-count")]
 pub mod stage;
 
 use prism_field::ParameterSet;
@@ -42,6 +47,7 @@ pub use set::{
     verify_set, Committed, CommittedSet, NoCorpus, Set, UnknownCommittedLabel, UnknownSet,
 };
 pub use signature::{AffinePoint, Response};
+#[cfg(feature = "op-count")]
 pub use stage::Stage;
 
 /// Why a signature was refused.
@@ -115,7 +121,7 @@ pub fn verify<L: ParameterSet>(
     signature: &[u8],
 ) -> Result<(), VerifyError> {
     let opened = open::<L>(public_key, signature)?;
-    Stage::Challenge.enter();
+    mark::Stage::Challenge.enter();
     let scalar = ChallengeScalar::derive(&opened.identity, message, opened.response.salt);
     accept(&opened, &scalar)
 }
@@ -136,7 +142,7 @@ pub(crate) fn open<'a, L: ParameterSet>(
     public_key: &'a [u8],
     signature: &[u8],
 ) -> Result<Opened<'a, L>, VerifyError> {
-    Stage::Public.enter();
+    mark::Stage::Public.enter();
     if public_key.len() != L::PUBLIC_KEY_LEN || signature.len() != L::SIGNATURE_LEN {
         return Err(VerifyError::Length);
     }
@@ -155,7 +161,7 @@ pub(crate) fn accept<L: ParameterSet>(
     opened: &Opened<'_, L>,
     scalar: &ChallengeScalar,
 ) -> Result<(), VerifyError> {
-    Stage::Challenge.enter();
+    mark::Stage::Challenge.enter();
     if !scalar.degree_is_prime::<L>() {
         return Err(VerifyError::Composite);
     }
