@@ -518,26 +518,42 @@ attempt, and reports the mean of each kind. Each pass is held to the
 committed row: the first prime degree must be at the committed counter.
 
 The expected search is then `(n − 1)` composite attempts and one prime
-one, where one degree in `n` is prime. The density is one sample of
-10,000 degrees per set (the differential of 2026-11-15: 133, 79, 81 and
-60 primes at `p248` to `p500`), and at `p664` the 166 primes in 34,000
-of three samples; a count of 60 to 130 carries about 10% of sampling
-error, and the expected search carries the same.
+one, where one degree in `n` is prime. Two values of `n` are given for
+each set, and neither is exact:
+
+- **Sampled** (Ran): one sample of 10,000 degrees per set (the
+  differential of 2026-11-15: 133, 79, 81 and 60 primes at `p248` to
+  `p500`), and at `p664` the 166 primes in 34,000 of three samples. A
+  count of 60 to 130 carries about 10% of sampling error.
+- **Predicted** (reviewer, Derived): the heuristic density `3.70 / ln q`
+  for a degree `q = 2^(2e′−1) − s²` of `2e′ − 1` bits, `e′ = e − 2`.
+
+At `p248` the sample (one in 75) sits well off the prediction (one in
+92); a single sample of 133 primes does not decide between them.
 
 Table: Pi 4, milliseconds. Sender columns are the salt search only.
 
-| Set | Verifier: `Codomain` refusal | Sender: one composite attempt | Sender: one prime attempt | Prime degrees, about one in | Sender: expected search | Verifier ÷ expected search |
+| Set | Verifier: `Codomain` refusal | Sender: one composite attempt | Sender: one prime attempt |
+| --- | ---: | ---: | ---: |
+| `p248` | 85.35 | 0.820 | 11.10 |
+| `p324` | 192.13 | 0.980 | 14.37 |
+| `p376` | 220.21 | 1.124 | 16.67 |
+| `p500` | 494.15 | 1.481 | 22.02 |
+| `p664` | 1,171.34 | 3.675 | 50.43 |
+
+Table: the sender's expected search on the Pi 4, in milliseconds, at the sampled and at the predicted density, and the verifier's refusal divided by each.
+
+| Set | Sampled: one prime degree in | Expected search | Verifier ÷ search | Predicted: one prime degree in | Expected search | Verifier ÷ search |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `p248` | 85.35 | 0.820 | 11.10 | 75 | 72 | 1.2 |
-| `p324` | 192.13 | 0.980 | 14.37 | 127 | 137 | 1.4 |
-| `p376` | 220.21 | 1.124 | 16.67 | 123 | 154 | 1.4 |
-| `p500` | 494.15 | 1.481 | 22.02 | 167 | 267 | 1.8 |
-| `p664` | 1,171.34 | 3.675 | 50.43 | 205 | 800 | 1.5 |
+| `p248` | 75 | 72 | 1.2 | 92 | 86 | 1.0 |
+| `p324` | 127 | 137 | 1.4 | 121 | 131 | 1.5 |
+| `p376` | 123 | 154 | 1.4 | 140 | 173 | 1.3 |
+| `p500` | 167 | 267 | 1.8 | 186 | 297 | 1.7 |
+| `p664` | 205 | 800 | 1.5 | 248 | 958 | 1.2 |
 
 On the same device, then, a refusal costs the verifier between about
-1.2 and 1.8 times what finding its salt is expected to cost the sender.
-At `p664` with the predicted density of one in 248 the expected search
-is 958 ms and the ratio 1.2.
+1.0 and 1.8 times what finding its salt is expected to cost the sender,
+whichever density is used.
 
 The committed rows' own searches are single draws of that wait. Their
 first prime degrees are at counters 588, 24, 172, 190 and 413, which at
