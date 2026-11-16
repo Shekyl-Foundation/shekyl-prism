@@ -3,8 +3,8 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! Pinned key-generation vectors from the C tree, and the timing sample
-//! built from them.
+//! Pinned key-generation vectors from the C tree, the timing sample built
+//! from them, and the pinned refusals a timing run uses at every set.
 //!
 //! The vectors are written by `scripts/export_c_basis_hints.py` against the
 //! submodule commit `docs/C_REFERENCE.md` pins, from that script's frozen
@@ -16,9 +16,9 @@ use std::sync::OnceLock;
 use prism_field::{Field, ParameterSet, P248, P376, P500};
 
 use crate::basis::BasisHint;
-use crate::set::CommittedSet;
+use crate::set::{CommittedSet, Set};
 use crate::signature::{AffinePoint, Response};
-use crate::{ChallengeScalar, KeyIdentity, Salt};
+use crate::{ChallengeScalar, KeyIdentity, Salt, VerifyError};
 
 /// `A` from the C tree's key generation, one row per parameter set.
 ///
@@ -42,7 +42,7 @@ pub struct ReferenceKey {
 /// Why a pinned row could not be read.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum VectorError {
-    /// A row is not `<committed label> <hex of A> <hint byte>`.
+    /// A row is not in the form its file's reader documents.
     Malformed,
     /// The file carries no row for this set.
     Missing,
@@ -51,7 +51,7 @@ pub enum VectorError {
 impl core::fmt::Display for VectorError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let reason = match self {
-            Self::Malformed => "a pinned row is not <committed label> <hex A> <hint>",
+            Self::Malformed => "a pinned row is not in its file's form",
             Self::Missing => "no pinned row for this set",
         };
         f.write_str(reason)
@@ -223,5 +223,87 @@ pub fn honest(set: CommittedSet) -> Result<Prepared, VectorError> {
         public_key,
         message: field("message ")?.as_bytes(),
         signature,
+    })
+}
+
+/// Responses built from public data alone, at every set, that pass the
+/// pairing check and are refused after it.
+///
+/// The file's own header says how each row is built and on which curve.
+/// Rows are tab-separated, in the columns of [`REFUSAL_COLUMNS`], the last
+/// three in hex.
+const IDENTITY_REFUSALS: &str = include_str!("../testdata/identity_refusals.tsv");
+
+/// The line of [`IDENTITY_REFUSALS`] that names its columns.
+const REFUSAL_COLUMNS: &str =
+    "set\tvector\tcase\tverdict\tsalt_counter\tmessage\tpublic_key\tsignature";
+
+/// One pinned refusal: an input and the one error the verifier must return
+/// for it. Nothing here is accepted, at any set.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Refusal {
+    pub set: Set,
+    /// The committed file, and the curve in it, that the key is.
+    pub vector: &'static str,
+    /// The name the case has in `docs/benchmarks/negative-verdicts.tsv`.
+    pub case: &'static str,
+    /// The pinned verdict.
+    pub error: VerifyError,
+    /// The counter the salt encodes: the first whose challenge degree is
+    /// prime under this key and message.
+    pub salt_counter: u64,
+    pub message: Vec<u8>,
+    pub public_key: Vec<u8>,
+    pub signature: Vec<u8>,
+}
+
+/// Every pinned refusal, in the file's order.
+pub fn refusals() -> Result<&'static [Refusal], VectorError> {
+    static ROWS: OnceLock<Result<Vec<Refusal>, VectorError>> = OnceLock::new();
+    ROWS.get_or_init(|| {
+        let mut lines = IDENTITY_REFUSALS
+            .lines()
+            .filter(|line| !line.is_empty() && !line.starts_with('#'));
+        // The first line names the columns. A file with other columns is
+        // not one this reader can be trusted to read.
+        if lines.next() != Some(REFUSAL_COLUMNS) {
+            return Err(VectorError::Malformed);
+        }
+        lines.map(parse_refusal).collect()
+    })
+    .as_deref()
+    .map_err(|err| *err)
+}
+
+/// The pinned refusal of a set that ends in `error`.
+pub fn refusal(set: Set, error: VerifyError) -> Result<&'static Refusal, VectorError> {
+    refusals()?
+        .iter()
+        .find(|row| row.set == set && row.error == error)
+        .ok_or(VectorError::Missing)
+}
+
+fn parse_refusal(line: &'static str) -> Result<Refusal, VectorError> {
+    let fields: Vec<&'static str> = line.split('\t').collect();
+    let &[set, vector, case, verdict, salt_counter, message, public_key, signature] =
+        fields.as_slice()
+    else {
+        return Err(VectorError::Malformed);
+    };
+    // The two refusals a response with no isogeny behind it can reach
+    // once it has passed the pairing check.
+    let error = [VerifyError::Kernel, VerifyError::Codomain]
+        .into_iter()
+        .find(|error| format!("{error:?}") == verdict)
+        .ok_or(VectorError::Malformed)?;
+    Ok(Refusal {
+        set: set.parse().map_err(|_| VectorError::Malformed)?,
+        vector,
+        case,
+        error,
+        salt_counter: salt_counter.parse().map_err(|_| VectorError::Malformed)?,
+        message: decode_hex(message)?,
+        public_key: decode_hex(public_key)?,
+        signature: decode_hex(signature)?,
     })
 }
