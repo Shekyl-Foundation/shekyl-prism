@@ -12,7 +12,7 @@
  *
  * randombytes is defined here so the reference's OS reader is not linked.
  * The seed is the argument. The same seed reproduces the same key, which
- * is what lets CI diff testdata/.
+ * is what lets CI diff the committed vectors.
  */
 #include <stdint.h>
 #include <stdio.h>

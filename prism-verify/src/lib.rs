@@ -24,7 +24,6 @@ pub mod challenge;
 pub mod identity;
 mod model;
 mod prime;
-pub mod reference;
 mod relation;
 #[cfg(feature = "research-reduced-width")]
 pub mod research;
@@ -39,9 +38,6 @@ pub use challenge::{ChallengeScalar, CHALLENGE_DOMAIN};
 pub use identity::KeyIdentity;
 pub use prime::{challenge_degree, degree_is_prime, is_baillie_psw};
 pub use prism_field::Salt;
-pub use reference::{
-    prepared, reference_key, Prepared, PreparedError, ReferenceKey, Refusal, VectorError,
-};
 pub use set::{
     verify_set, Committed, CommittedSet, NoCorpus, Set, UnknownCommittedLabel, UnknownSet,
 };
@@ -178,6 +174,100 @@ mod tests {
         L::ext_encode(L::Ext::from_u64(coefficient))
     }
 
+    /// The message the samples of [`prepared`] are under.
+    const SAMPLE_MESSAGE: &[u8] = b"shekyl-prism";
+
+    /// The committed C-generated key of a set and the hint the C derived
+    /// for it, from `prism_vectors::hints`.
+    struct ReferenceKey {
+        public_key: Vec<u8>,
+        hint: BasisHint,
+    }
+
+    fn reference_key(set: CommittedSet) -> ReferenceKey {
+        let row =
+            prism_vectors::hints::row(set.label()).unwrap_or_else(|err| panic!("{set}: {err}"));
+        ReferenceKey {
+            public_key: row.public_key.clone(),
+            hint: BasisHint::from_c_byte(row.hint)
+                .unwrap_or_else(|| panic!("{set}: hint byte {}", row.hint)),
+        }
+    }
+
+    /// The first primary vector of a set: the honest signature whose
+    /// response curve the samples borrow.
+    fn primary(set: CommittedSet) -> prism_vectors::corpus::Primary {
+        use prism_vectors::corpus::WithCorpus;
+        match set {
+            CommittedSet::P248 => P248::PRIMARY[0],
+            CommittedSet::P376 => P376::PRIMARY[0],
+            CommittedSet::P500 => P500::PRIMARY[0],
+        }
+    }
+
+    /// A public key, a message and a signature that pass every public
+    /// check and stop at `Kernel`.
+    struct Sample {
+        public_key: Vec<u8>,
+        message: &'static [u8],
+        signature: Vec<u8>,
+    }
+
+    /// A sample for the tests of the public checks, under the set's
+    /// committed C-generated key.
+    ///
+    /// It is computed here and not committed as data: its salt is the
+    /// first counter whose challenge degree is prime under that key and
+    /// [`SAMPLE_MESSAGE`], which takes the verifier's own challenge and
+    /// primality code to find, and only these tests use it. The response
+    /// carries an admissible curve, the response curve of the set's first
+    /// primary vector, and point coordinates that are not on it, so
+    /// verification passes the sign and degree checks and stops at
+    /// `Kernel`.
+    fn prepared(set: CommittedSet) -> Sample {
+        match set {
+            CommittedSet::P248 => sample::<P248>(set),
+            CommittedSet::P376 => sample::<P376>(set),
+            CommittedSet::P500 => sample::<P500>(set),
+        }
+    }
+
+    fn sample<L: ParameterSet>(set: CommittedSet) -> Sample {
+        let key = reference_key(set);
+        let id = KeyIdentity::<L>::decode(&key.public_key).expect("the committed key decodes");
+        let salt = (0u64..65_536)
+            .find_map(|counter| {
+                let salt = L::Salt::from_counter(counter)?;
+                ChallengeScalar::derive(&id, SAMPLE_MESSAGE, salt)
+                    .degree_is_prime::<L>()
+                    .then_some(salt)
+            })
+            .expect("a salt of prime degree within the search");
+        let honest = primary(set)
+            .vector()
+            .signature()
+            .expect("the primary vector reads");
+        let response = Response::<L> {
+            curve: Response::<L>::decode(&honest)
+                .expect("the honest signature decodes")
+                .curve,
+            p: AffinePoint {
+                x: L::Ext::zero(),
+                y: L::Ext::one(),
+            },
+            q: AffinePoint {
+                x: L::Ext::zero(),
+                y: L::Ext::zero(),
+            },
+            salt,
+        };
+        Sample {
+            public_key: key.public_key,
+            message: SAMPLE_MESSAGE,
+            signature: response.encode(),
+        }
+    }
+
     #[test]
     fn public_refusals_precede_the_expensive_checks() {
         // The declared order is the documented one, and `Sign` precedes the
@@ -300,7 +390,7 @@ mod tests {
     fn a_bad_sign_is_refused_before_the_challenge_is_hashed() {
         // The key's basis exists and the salt names a prime degree,
         // so the only failing check below `Composite` is the sign test.
-        let sample = prepared(CommittedSet::P248).expect("`p248` sample");
+        let sample = prepared(CommittedSet::P248);
         let mut response = Response::<P248>::decode(&sample.signature).expect("the sample decodes");
         response.p.y = response.p.y.negate();
         assert_eq!(
@@ -331,7 +421,7 @@ mod tests {
     #[test]
     fn the_derived_index_equals_the_c_hint() {
         for set in CommittedSet::ALL {
-            let row = reference_key(set).unwrap_or_else(|err| panic!("{set}: {err}"));
+            let row = reference_key(set);
             let derived = match set {
                 CommittedSet::P248 => derive_hint::<P248>(&row.public_key),
                 CommittedSet::P376 => derive_hint::<P376>(&row.public_key),
@@ -358,7 +448,7 @@ mod tests {
             (CommittedSet::P376, 13),
             (CommittedSet::P500, 21),
         ] {
-            let row = reference_key(set).unwrap_or_else(|err| panic!("{set}: {err}"));
+            let row = reference_key(set);
             assert_eq!(row.hint.to_c_byte(), Some(byte), "{set}");
             assert!(row.hint.index() >= 1 && row.hint.index() <= C_HINT_MAX_INDEX);
         }
@@ -367,7 +457,7 @@ mod tests {
     #[test]
     fn a_signature_round_trips_through_the_layout() {
         for set in CommittedSet::ALL {
-            let sample = prepared(set).unwrap_or_else(|err| panic!("{set}: {err}"));
+            let sample = prepared(set);
             let decoded = match set {
                 CommittedSet::P248 => {
                     Response::<P248>::decode(&sample.signature).map(|r| r.encode())
@@ -385,7 +475,7 @@ mod tests {
 
     #[test]
     fn a_carried_salt_reaches_the_real_relation_without_a_search() {
-        let sample = prepared(CommittedSet::P248).expect("sample");
+        let sample = prepared(CommittedSet::P248);
         assert_eq!(
             verify_set(
                 Set::P248,

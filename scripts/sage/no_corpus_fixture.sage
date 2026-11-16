@@ -6,8 +6,8 @@
 # Sage values for a parameter set that has no signer and so no vectors.
 # The set is named on the command line. Two files are written for it:
 #
-#   prism-verify/testdata/<set>_field.tsv    field arithmetic in F_p, F_p^2
-#   prism-verify/testdata/<set>_curves.tsv   supersingular curves, points of
+#   prism-vectors/data/verify/<set>_field.tsv    field arithmetic in F_p, F_p^2
+#   prism-vectors/data/verify/<set>_curves.tsv   supersingular curves, points of
 #                                            known order, a 2^e basis, pairings
 #
 # Run from the repository root in the pinned image, with the Theta_dim4
@@ -66,7 +66,7 @@ assert NAME == "p%d" % E_EXPONENT
 # The curve walk: this many 2-isogeny steps from A = 0, and every
 # WALK_STRIDE-th curve of it is written. Which of those curves are on
 # which branch of the basis search, and which are a permitted response
-# model, is an accident of each set's walk; the fixtures crate records it
+# model, is an accident of each set's walk; prism-vectors records it
 # for each set and the tests hold it.
 WALK_STEPS = 40
 WALK_STRIDE = 5
@@ -355,7 +355,7 @@ def header(what, columns):
 
 
 def main():
-    out = ROOT / "prism-verify" / "testdata"
+    out = ROOT / "prism-vectors" / "data" / "verify"
     field = header(
         "Field arithmetic",
         [

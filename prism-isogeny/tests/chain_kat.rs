@@ -3,7 +3,7 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! The length-160 chain in `testdata/chain_lvl1.txt` is
+//! The length-160 chain `prism_vectors::kat::CHAIN_LVL1` is
 //! `theta_chain_compute_and_eval` on the graph of an endomorphism of `E0`,
 //! generated from the pinned C tree. The codomain and the image are compared
 //! projectively.
@@ -47,17 +47,17 @@ fn same_point(left: Xz<Ext>, right: Xz<Ext>) -> bool {
 
 #[test]
 fn the_length_160_chain_matches_the_reference() {
-    check(include_str!("../testdata/chain_lvl1.txt"), true);
+    check(prism_vectors::kat::CHAIN_LVL1, true);
 }
 
 #[test]
 fn the_length_160_chain_without_extra_torsion_matches_the_reference() {
-    check(include_str!("../testdata/chain_lvl1_order.txt"), false);
+    check(prism_vectors::kat::CHAIN_LVL1_ORDER, false);
 }
 
 #[test]
 fn the_fixed_degree_kernel_on_the_starting_curve_splits() {
-    let text = include_str!("../testdata/e0_fixed_lvl1.txt");
+    let text = prism_vectors::kat::E0_FIXED_LVL1;
     let mut lines = text.lines().filter(|line| !line.is_empty());
     let length: u32 = lines
         .next()

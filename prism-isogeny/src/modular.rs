@@ -397,12 +397,12 @@ mod tests {
 
     #[test]
     fn the_known_answer_matrices_match_at_every_set() {
-        agrees::<P248>(include_str!("../testdata/s5_model/s5_lvl1_matrices.json"));
-        agrees::<P248>(include_str!("../testdata/s5_model/s5_lvl1b_matrices.json"));
-        agrees::<P376>(include_str!("../testdata/s5_model/s5_lvl3_matrices.json"));
-        agrees::<P376>(include_str!("../testdata/s5_model/s5_lvl3b_matrices.json"));
-        agrees::<P500>(include_str!("../testdata/s5_model/s5_lvl5_matrices.json"));
-        agrees::<P500>(include_str!("../testdata/s5_model/s5_lvl5b_matrices.json"));
+        use prism_vectors::corpus::WithCorpus;
+        prism_vectors::for_each_corpus_set!(Set, {
+            for primary in <Set as WithCorpus>::PRIMARY {
+                agrees::<Set>(prism_vectors::model::matrices(primary));
+            }
+        });
     }
 
     /// An integer modulo `2^e`, as little-endian bytes: a second
@@ -644,10 +644,10 @@ mod tests {
     /// powers the matrices are built from, computed by
     /// `scripts/residue_known_answers.py` with Python's integers. CI holds
     /// the file to the script.
-    const KNOWN_ANSWERS: &str = include_str!("../testdata/residue_known_answers.tsv");
+    const KNOWN_ANSWERS: &str = prism_vectors::kat::RESIDUE_KNOWN_ANSWERS;
 
     fn hex(text: &str) -> Vec<u8> {
-        prism_fixtures::hex::decode(text).expect("hex")
+        prism_vectors::hex::decode(text).expect("hex")
     }
 
     /// Every row of the file for one set. Returns how many products and

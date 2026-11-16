@@ -4,27 +4,34 @@
 # All rights reserved.
 # BSD-3-Clause
 
-"""`prism-fixtures` is in no shipped build.
+"""Where `prism-vectors` may and may not appear in a dependency graph.
 
-The crate reads committed test files. A shipped crate may name it only as
-a dev-dependency, and only the crates whose tests read it do. The fuzz
-crate is its own workspace and is not shipped; it depends on it normally.
-The fixtures crate itself depends on `prism-field` and on nothing else of
-this workspace, which is what lets the unit tests of `prism-isogeny` use it.
+`prism-vectors` holds the committed test data and its readers. Two rules
+keep it what it is:
+
+- **No build of a library crate contains test data.** The library crates
+  are `prism-field`, `prism-isogeny` and `prism-verify`. Each may name
+  `prism-vectors` as a dev-dependency and in no other kind.
+- **The vectors crate does not depend on the code it tests.** It has
+  neither `prism-verify` nor `prism-isogeny` in its graph, in any kind,
+  dev-dependencies included. A dev-dependency back onto the verifier
+  would give the verifier's tests two copies of the verifier's types. Its
+  only dependency on this workspace is `prism-field`.
+
+Tools (the bench, the comparison, the signer, the fuzz crate) are not
+constrained: they may depend on the vectors crate normally.
 
 1. the crate is a workspace member, and every member manifest is in the
    census (the subject exists);
-2. `prism-isogeny` and `prism-verify` name it as a dev-dependency and
-   nowhere else, and the fuzz crate names it as a normal dependency;
-3. no other manifest names it under any dependency table, including a
-   renamed package and a target-specific table;
-4. its own normal and build dependencies on this workspace are
-   `prism-field` alone, again including renames and target-specific tables;
-5. `cargo tree` agrees: the crate is on the dev edge of those two members
-   and the normal edge of the fuzz crate, and on no normal or build edge
-   of a shipped member.
+2. no library manifest names it under a normal or build table, including
+   a renamed package and a target-specific table;
+3. its own manifest names no workspace crate but `prism-field`, in any
+   table, again including renames and target-specific tables;
+4. `cargo tree` agrees: the crate is in no normal or build graph of a
+   library crate, and its own graph over every edge kind holds no
+   workspace crate but `prism-field`.
 
-`--selftest` plants each breach of 1–4 in a copy of the manifests, and
+`--selftest` plants each breach of 1–3 in a copy of the manifests, and
 checks that the graph reader can tell a dev edge from a normal one.
 """
 import subprocess
@@ -33,14 +40,18 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PACKAGE = "prism-fixtures"
+PACKAGE = "prism-vectors"
+OWN = "prism-vectors/Cargo.toml"
 ONLY_DEPENDENCY = "prism-field"
-OWN = "prism-fixtures/Cargo.toml"
-DEV_USERS = ("prism-isogeny/Cargo.toml", "prism-verify/Cargo.toml")
-NORMAL_USER = "fuzz/Cargo.toml"
-# Kinds that put the crate into a build of the package itself.
-SHIPPED_KINDS = ("dependencies", "build-dependencies")
+# The crates whose builds must not contain test data.
+LIBRARY = ("prism-field", "prism-isogeny", "prism-verify")
+# Kinds that put a crate into a build of the package itself.
+BUILD_KINDS = ("dependencies", "build-dependencies")
 EDGE_KINDS = ("dependencies", "dev-dependencies", "build-dependencies")
+
+
+def library_manifest(crate):
+    return f"{crate}/Cargo.toml"
 
 
 def manifests():
@@ -100,48 +111,34 @@ def kinds_of(text, package):
 
 
 def workspace_dependencies(text):
-    """Workspace crates `text` links for a normal or build of itself."""
-    manifest = tomllib.loads(text)
-    found = set()
-    for kind, table in dependency_tables(manifest):
-        if kind not in SHIPPED_KINDS:
-            continue
-        for key, value in table.items():
-            name = package_name(key, value)
-            if name.startswith("prism-"):
-                found.add(name)
-    return sorted(found)
+    """Workspace crates `text` names in any dependency table, by kind."""
+    return sorted(
+        (name, kind) for kind, name in edges(text) if name.startswith("prism-")
+    )
 
 
 def manifest_fault(texts):
     """The first breach of the manifest rules, or None."""
-    for name in (OWN, NORMAL_USER, *DEV_USERS, "Cargo.toml"):
+    for name in (OWN, "Cargo.toml", *map(library_manifest, LIBRARY)):
         if name not in texts:
             return f"{name} must be in the census"
     members = tomllib.loads(texts["Cargo.toml"])["workspace"]["members"]
     if PACKAGE not in members:
         return f"{PACKAGE} is not a workspace member"
-    if workspace_dependencies(texts[OWN]) != [ONLY_DEPENDENCY]:
+    own = workspace_dependencies(texts[OWN])
+    if own != [(ONLY_DEPENDENCY, "dependencies")]:
         return (
-            f"{PACKAGE} depends on {workspace_dependencies(texts[OWN])}, "
-            f"not on {ONLY_DEPENDENCY} alone"
+            f"{PACKAGE} names {own} of this workspace; it may name "
+            f"{ONLY_DEPENDENCY} as a normal dependency and nothing else"
         )
-    for name, text in texts.items():
-        kinds = kinds_of(text, PACKAGE)
-        if name == OWN:
-            if kinds:
-                return f"{PACKAGE} depends on itself"
-            continue
-        if name == NORMAL_USER:
-            if kinds != {"dependencies"}:
-                return f"{NORMAL_USER} must depend on {PACKAGE} normally and nowhere else"
-            continue
-        if name in DEV_USERS:
-            if kinds != {"dev-dependencies"}:
-                return f"{name} must name {PACKAGE} under [dev-dependencies] and nowhere else"
-            continue
-        if kinds:
-            return f"{name} names {PACKAGE} as a dependency ({', '.join(sorted(kinds))})"
+    for crate in LIBRARY:
+        kinds = kinds_of(texts[library_manifest(crate)], PACKAGE)
+        shipped = sorted(kinds & set(BUILD_KINDS))
+        if shipped:
+            return (
+                f"{crate} names {PACKAGE} under {', '.join(shipped)}; "
+                "a library crate may name it under [dev-dependencies] only"
+            )
     return None
 
 
@@ -166,23 +163,18 @@ def tree(edges, package=None, manifest=None):
 
 def graph_fault():
     """Where the resolver disagrees with the manifest rules, or None."""
-    members = tomllib.loads((ROOT / "Cargo.toml").read_text())["workspace"]["members"]
-    for member in members:
-        if member == PACKAGE:
-            continue
-        if PACKAGE in tree("normal,build", package=member):
-            return f"the normal build of {member} contains {PACKAGE}"
-    for member in ("prism-isogeny", "prism-verify"):
-        if PACKAGE not in tree("dev", package=member):
-            return f"the dev graph of {member} does not contain {PACKAGE}"
-    if PACKAGE not in tree("normal", manifest=ROOT / "fuzz" / "Cargo.toml"):
-        return f"the fuzz crate's normal graph does not contain {PACKAGE}"
+    for crate in LIBRARY:
+        if PACKAGE in tree("normal,build", package=crate):
+            return f"a build of {crate} contains {PACKAGE}"
     own = sorted(
-        name for name in tree("normal,build", package=PACKAGE)
+        name for name in set(tree("normal,build,dev", package=PACKAGE))
         if name.startswith("prism-") and name != PACKAGE
     )
     if own != [ONLY_DEPENDENCY]:
-        return f"the resolved graph of {PACKAGE} is {own}, not {ONLY_DEPENDENCY} alone"
+        return (
+            f"the graph of {PACKAGE} over every edge kind holds {own}, "
+            f"not {ONLY_DEPENDENCY} alone"
+        )
     return None
 
 
@@ -191,42 +183,46 @@ def selftest():
     fault = manifest_fault(real)
     if fault is not None:
         raise SystemExit("selftest: the tree itself fails: " + fault)
+    verify = library_manifest("prism-verify")
+    isogeny = library_manifest("prism-isogeny")
+    field = library_manifest("prism-field")
     planted = {
-        "a shipped member renames the crate into its normal dependencies": {
-            "prism-verify/Cargo.toml": real["prism-verify/Cargo.toml"].replace(
+        "a library crate renames the vectors crate into its normal dependencies": {
+            verify: real[verify].replace(
                 "[dependencies]\n",
                 '[dependencies]\n'
-                'fixtures = { package = "prism-fixtures", workspace = true }\n',
+                'vectors = { package = "prism-vectors", workspace = true }\n',
                 1,
             ),
         },
-        "a target table pulls the crate into a normal build": {
-            "prism-signer/Cargo.toml": real["prism-signer/Cargo.toml"]
-            + "\n[target.'cfg(unix)'.dependencies]\n"
-            + 'prism-fixtures = { workspace = true }\n',
+        "a target table pulls the vectors crate into a library build": {
+            isogeny: real[isogeny]
+            + "\n[target.'cfg(unix)'.build-dependencies]\n"
+            + 'prism-vectors = { workspace = true }\n',
         },
-        "a user drops the dev-dependency": {
-            "prism-isogeny/Cargo.toml": real["prism-isogeny/Cargo.toml"].replace(
-                "prism-fixtures = { workspace = true }\n",
-                "",
+        "the field crate takes the vectors crate normally": {
+            field: real[field].replace(
+                "[dependencies]\n",
+                '[dependencies]\nprism-vectors = { workspace = true }\n',
                 1,
             ),
         },
-        "the fixtures crate gains another workspace crate through a renamed "
-        "target build-dependency": {
+        "the vectors crate takes the verifier as a dev-dependency": {
+            OWN: real[OWN]
+            + "\n[dev-dependencies]\n"
+            + 'prism-verify = { workspace = true }\n',
+        },
+        "the vectors crate takes the isogeny crate through a renamed target "
+        "build-dependency": {
             OWN: real[OWN]
             + "\n[target.'cfg(all())'.build-dependencies]\n"
             + 'isogeny = { package = "prism-isogeny", path = "../prism-isogeny" }\n',
         },
-        "the fuzz crate drops the crate": {
-            NORMAL_USER: real[NORMAL_USER].replace(
-                'prism-fixtures = { version = "0.1.0", path = "../prism-fixtures" }\n',
-                "",
-                1,
-            ),
+        "the vectors crate drops the field crate": {
+            OWN: real[OWN].replace("prism-field = { workspace = true }\n", "", 1),
         },
-        "the crate leaves the workspace": {
-            "Cargo.toml": real["Cargo.toml"].replace('    "prism-fixtures",\n', "", 1),
+        "the vectors crate leaves the workspace": {
+            "Cargo.toml": real["Cargo.toml"].replace('    "prism-vectors",\n', "", 1),
         },
     }
     for case, change in planted.items():
@@ -236,12 +232,12 @@ def selftest():
         if manifest_fault({**real, **change}) is None:
             raise SystemExit(f"selftest: not caught: {case}")
     if PACKAGE in tree("normal,build", package="prism-verify"):
-        raise SystemExit("selftest: the normal graph reader sees the crate where it is absent")
+        raise SystemExit("selftest: the build graph reader sees the crate where it is absent")
     if PACKAGE not in tree("dev", package="prism-verify"):
         raise SystemExit("selftest: the dev graph reader does not see the crate")
     print(
         f"selftest: {len(planted)} planted manifests refused; "
-        "the graph reader tells a dev edge from a normal one"
+        "the graph reader tells a dev edge from a build edge"
     )
 
 
@@ -250,7 +246,7 @@ def main():
         selftest()
         return
     if sys.argv[1:]:
-        raise SystemExit("usage: check_fixtures_isolation.py [--selftest]")
+        raise SystemExit("usage: check_vectors_isolation.py [--selftest]")
     fault = manifest_fault(manifests())
     if fault:
         raise SystemExit(fault)
@@ -258,9 +254,8 @@ def main():
     if fault:
         raise SystemExit(fault)
     print(
-        f"{PACKAGE}: a dev-dependency of prism-isogeny and prism-verify; "
-        f"a normal dependency of the fuzz crate; in no shipped build; "
-        f"depends on {ONLY_DEPENDENCY} alone"
+        f"{PACKAGE}: in no build of {', '.join(LIBRARY)}; "
+        f"its own graph, dev edges included, holds {ONLY_DEPENDENCY} alone"
     )
 
 

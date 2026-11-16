@@ -103,7 +103,7 @@ That is the cost of a refusal, not of an accepted verification, which
 does not exist at these primes.
 
 Both refusals are committed bytes at all five sets
-(`prism-verify/testdata/identity_refusals.tsv`), and the `Codomain` one
+(`prism-vectors/data/verify/identity_refusals.tsv`), and the `Codomain` one
 is timed. On the Raspberry Pi 4 floor device at `43d6e3e`, one thread,
 under the resident node's load:
 

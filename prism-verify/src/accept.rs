@@ -394,41 +394,31 @@ mod tests {
             L::ext_from_base(decimal::<L::Base>(&text))
         }
     }
-    fn hex(text: &str) -> Vec<u8> {
-        text.as_bytes()
-            .chunks_exact(2)
-            .map(|p| u8::from_str_radix(std::str::from_utf8(p).unwrap(), 16).unwrap())
-            .collect()
-    }
-    fn known<L: ParameterSet>(vector: &str, nulls: &str) {
-        let field = |name: &str| {
-            vector
-                .lines()
-                .find_map(|row| row.strip_prefix(name))
-                .unwrap()
-        };
-        let key = hex(field("A "));
+    fn known<L: ParameterSet>(primary: prism_vectors::corpus::Primary) {
+        let vector = primary.vector();
+        let nulls = prism_vectors::model::nulls(primary);
+        let key = vector.public_key().expect("the vector's public key");
         let id = KeyIdentity::<L>::decode(&key).unwrap();
         let s = ChallengeScalar::derive(
             &id,
-            field("message ").as_bytes(),
-            L::Salt::from_bytes(&hex(field("salt "))).unwrap(),
+            vector.message().expect("the vector's message"),
+            L::Salt::from_bytes(&vector.salt().expect("the vector's salt")).unwrap(),
         );
-        let f = |name: &str| L::ext_decode(&hex(field(name))).unwrap();
+        let f = |name| L::ext_decode(&vector.bytes(name).expect(name)).unwrap();
         let hint = basis_hint::<L>(id.coefficient()).unwrap();
         let even =
             even_basis::<L>(id.coefficient(), hint.index(), hint.coefficient_is_square()).unwrap();
         let lifted = lift::<L>(
             id.coefficient(),
             &even,
-            f("E "),
+            f("E"),
             AffinePoint {
-                x: f("Px "),
-                y: f("Py "),
+                x: f("Px"),
+                y: f("Py"),
             },
             AffinePoint {
-                x: f("Qx "),
-                y: f("Qy "),
+                x: f("Qx"),
+                y: f("Qy"),
             },
             s.as_bytes(),
         )
@@ -456,30 +446,12 @@ mod tests {
     }
     #[test]
     fn both_chains_match_every_sage_null_point() {
-        known::<P248>(
-            include_str!("../testdata/s5_lvl1.txt"),
-            include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl1_nulls.json"),
-        );
-        known::<P248>(
-            include_str!("../testdata/s5_lvl1b.txt"),
-            include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl1b_nulls.json"),
-        );
-        known::<P376>(
-            include_str!("../testdata/s5_lvl3.txt"),
-            include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl3_nulls.json"),
-        );
-        known::<P376>(
-            include_str!("../testdata/s5_lvl3b.txt"),
-            include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl3b_nulls.json"),
-        );
-        known::<P500>(
-            include_str!("../testdata/s5_lvl5.txt"),
-            include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl5_nulls.json"),
-        );
-        known::<P500>(
-            include_str!("../testdata/s5_lvl5b.txt"),
-            include_str!("../../prism-isogeny/testdata/s5_model/s5_lvl5b_nulls.json"),
-        );
+        use prism_vectors::corpus::WithCorpus;
+        prism_vectors::for_each_corpus_set!(Set, {
+            for primary in <Set as WithCorpus>::PRIMARY {
+                known::<Set>(primary);
+            }
+        });
     }
 
     /// xorshift64*: a fixed stream, so a failure names its case.
@@ -522,29 +494,29 @@ mod tests {
     /// The kernel from shared doublings against one ladder per coefficient,
     /// on the vector's own matrices and on `random` sets of scalars.
     fn kernels_agree<L: ParameterSet>(text: &str, name: &str, random: u32) {
-        let field = |row: &str| text.lines().find_map(|l| l.strip_prefix(row)).unwrap();
-        let key = hex(field("A "));
+        let vector = prism_vectors::corpus::Vector::new(text);
+        let key = vector.public_key().expect("the vector's public key");
         let id = KeyIdentity::<L>::decode(&key).unwrap();
         let s = ChallengeScalar::derive(
             &id,
-            field("message ").as_bytes(),
-            L::Salt::from_bytes(&hex(field("salt "))).unwrap(),
+            vector.message().expect("the vector's message"),
+            L::Salt::from_bytes(&vector.salt().expect("the vector's salt")).unwrap(),
         );
-        let f = |row: &str| L::ext_decode(&hex(field(row))).unwrap();
+        let f = |row| L::ext_decode(&vector.bytes(row).expect(row)).unwrap();
         let hint = basis_hint::<L>(id.coefficient()).unwrap();
         let even =
             even_basis::<L>(id.coefficient(), hint.index(), hint.coefficient_is_square()).unwrap();
         let lifted = lift::<L>(
             id.coefficient(),
             &even,
-            f("E "),
+            f("E"),
             AffinePoint {
-                x: f("Px "),
-                y: f("Py "),
+                x: f("Px"),
+                y: f("Py"),
             },
             AffinePoint {
-                x: f("Qx "),
-                y: f("Qy "),
+                x: f("Qx"),
+                y: f("Qy"),
             },
             s.as_bytes(),
         )
@@ -595,23 +567,20 @@ mod tests {
 
     #[test]
     fn the_shared_doublings_give_the_ladders_kernel_on_every_vector() {
-        let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata");
-        let mut files: Vec<_> = std::fs::read_dir(base.join("accept"))
-            .unwrap()
-            .map(|p| p.unwrap().path())
-            .filter(|p| p.extension().is_some_and(|e| e == "txt"))
-            .collect();
-        for n in ["1", "1b", "3", "3b", "5", "5b"] {
-            files.push(base.join(format!("s5_lvl{n}.txt")));
-        }
-        assert_eq!(files.len(), 113);
+        let files = prism_vectors::corpus::files();
+        assert_eq!(files.len(), prism_vectors::corpus::HONEST_VECTORS);
         for path in files {
             let text = std::fs::read_to_string(&path).unwrap();
+            let vector = prism_vectors::corpus::Vector::new(&text);
             let name = path.file_name().unwrap().to_string_lossy().into_owned();
             // Random sets on the six primary vectors; the rest check their
             // own two matrices.
-            let random = if name.starts_with("s5_lvl") { 6 } else { 0 };
-            let label = text.lines().find_map(|l| l.strip_prefix("level ")).unwrap();
+            let random = if prism_vectors::corpus::Primary::by_file_name(&name).is_some() {
+                6
+            } else {
+                0
+            };
+            let label = vector.level().expect("the vector's level");
             match crate::CommittedSet::from_label(label) {
                 Ok(crate::CommittedSet::P248) => kernels_agree::<P248>(&text, &name, random),
                 Ok(crate::CommittedSet::P376) => kernels_agree::<P376>(&text, &name, random),
@@ -643,18 +612,12 @@ mod tests {
 
     #[test]
     fn a_table_multiplies_as_the_ladder_does() {
-        let text = include_str!("../testdata/s5_lvl1.txt");
-        let f = |row: &str| {
-            P248::ext_decode(&hex(text
-                .lines()
-                .find_map(|l| l.strip_prefix(row))
-                .unwrap()))
-            .unwrap()
-        };
-        let curve = Montgomery::normalized(f("E "));
+        let vector = prism_vectors::corpus::Primary::Lvl1.vector();
+        let f = |row| P248::ext_decode(&vector.bytes(row).expect(row)).unwrap();
+        let curve = Montgomery::normalized(f("E"));
         let point = Jac {
-            x: f("Px "),
-            y: f("Py "),
+            x: f("Px"),
+            y: f("Py"),
             z: <P248 as ParameterSet>::Ext::one(),
         };
         let table = Doublings::new(curve, point, 248);

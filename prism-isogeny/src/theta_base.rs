@@ -252,12 +252,12 @@ mod tests {
 
     #[test]
     fn the_theta_base_change_matches_the_closed_form_files() {
-        agrees::<P248>(include_str!("../testdata/s5_model/s5_lvl1_matrices.json"));
-        agrees::<P248>(include_str!("../testdata/s5_model/s5_lvl1b_matrices.json"));
-        agrees::<P376>(include_str!("../testdata/s5_model/s5_lvl3_matrices.json"));
-        agrees::<P376>(include_str!("../testdata/s5_model/s5_lvl3b_matrices.json"));
-        agrees::<P500>(include_str!("../testdata/s5_model/s5_lvl5_matrices.json"));
-        agrees::<P500>(include_str!("../testdata/s5_model/s5_lvl5b_matrices.json"));
+        use prism_vectors::corpus::WithCorpus;
+        prism_vectors::for_each_corpus_set!(Set, {
+            for primary in <Set as WithCorpus>::PRIMARY {
+                agrees::<Set>(prism_vectors::model::matrices(primary));
+            }
+        });
     }
 
     /// The two blocks the search reads, from the eight entries of the

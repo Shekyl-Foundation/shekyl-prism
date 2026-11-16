@@ -7,7 +7,7 @@
 """Build the pinned PRISM tree and record one key-generation hint per level.
 
 The Rust crates do not link this tree. The output is
-`prism-verify/testdata/c_basis_hints.txt`: the canonical encoding of A and
+`prism-vectors/data/verify/c_basis_hints.txt`: the canonical encoding of A and
 the byte `ec_curve_to_basis_2f_to_hint` returned. A is the public key.
 
 The exporter supplies `randombytes` from a frozen seed, so a second run
@@ -26,7 +26,7 @@ from check_c_reference import PIN
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TREE = ROOT / "external" / "PRISM_v2"
 BUILD = pathlib.Path("/tmp/prism-v2-ref")
-OUT = ROOT / "prism-verify" / "testdata" / "c_basis_hints.txt"
+OUT = ROOT / "prism-vectors" / "data" / "verify" / "c_basis_hints.txt"
 EXPORTER = ROOT / "scripts" / "c" / "export_basis_hint.c"
 
 LEVELS = (

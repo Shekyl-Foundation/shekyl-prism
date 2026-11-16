@@ -4,7 +4,7 @@
 # All rights reserved.
 # BSD-3-Clause
 
-"""Every file in ``testdata/accept`` has an ``Ok`` row in the verdict list.
+"""Every file of the accept corpus has an ``Ok`` row in the verdict list.
 
 The Sage model does not run in the PR gate. Rust executes this corpus
 in the workspace acceptance tests. The committed list is what this job
@@ -17,8 +17,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-ACCEPT = ROOT / "prism-verify" / "testdata" / "accept"
-VERDICTS = ROOT / "prism-isogeny" / "testdata" / "s5_model" / "accept_verdicts.tsv"
+ACCEPT = ROOT / "prism-vectors" / "data" / "verify" / "accept"
+VERDICTS = ROOT / "prism-vectors" / "data" / "isogeny" / "s5_model" / "accept_verdicts.tsv"
 
 
 def load_rows(text: str) -> list[tuple[str, str, str]]:

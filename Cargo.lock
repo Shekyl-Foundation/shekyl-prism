@@ -79,6 +79,7 @@ name = "prism-bench"
 version = "0.1.0"
 dependencies = [
  "prism-field",
+ "prism-vectors",
  "prism-verify",
 ]
 
@@ -88,6 +89,7 @@ version = "0.1.0"
 dependencies = [
  "prism-field",
  "prism-signer",
+ "prism-vectors",
  "prism-verify",
  "sha3",
 ]
@@ -100,18 +102,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "prism-fixtures"
-version = "0.1.0"
-dependencies = [
- "prism-field",
-]
-
-[[package]]
 name = "prism-isogeny"
 version = "0.1.0"
 dependencies = [
  "prism-field",
- "prism-fixtures",
+ "prism-vectors",
 ]
 
 [[package]]
@@ -125,12 +120,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "prism-vectors"
+version = "0.1.0"
+dependencies = [
+ "prism-field",
+]
+
+[[package]]
 name = "prism-verify"
 version = "0.1.0"
 dependencies = [
  "prism-field",
- "prism-fixtures",
  "prism-isogeny",
+ "prism-vectors",
  "sha3",
 ]
 

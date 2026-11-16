@@ -6,7 +6,7 @@
 //! Curves, point orders, the torsion basis and the Weil pairing against
 //! Sage, at a set that has no corpus.
 //!
-//! `testdata/<set>_curves.tsv` is written by
+//! `<set>_curves.tsv` of `prism-vectors` is written by
 //! `scripts/sage/no_corpus_fixture.sage`. Each row is one supersingular
 //! Montgomery curve on a 2-isogeny walk from `A = 0`, with points whose
 //! orders Sage computed, the basis the verifier's index search names, and
@@ -20,12 +20,12 @@
 //! all of them, in a module of its own at the end of this file.
 
 use prism_field::{Field, ParameterSet, Salt};
-use prism_fixtures::curve_table::{CurveNumber, Point};
-use prism_fixtures::no_corpus::{curve_table, WithoutCorpus};
 use prism_isogeny::jac::Jac;
 use prism_isogeny::montgomery::{Montgomery, Xz};
 use prism_isogeny::pairing::weil;
 use prism_isogeny::torsion::{even_basis, has_order_p_plus_one};
+use prism_vectors::curve_table::{CurveNumber, Point};
+use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
 use prism_verify::{basis_hint, ChallengeScalar, KeyIdentity};
 
 /// One row of the file, at this set.
@@ -80,7 +80,7 @@ fn curves<L: WithoutCorpus>() -> Vec<Curve<L>> {
 const MESSAGES_PER_KEY: usize = 2;
 
 fn hex(text: &str) -> Vec<u8> {
-    prism_fixtures::hex::decode(text).expect("hex")
+    prism_vectors::hex::decode(text).expect("hex")
 }
 
 fn same<F: Field>(left: F, right: F) -> bool {

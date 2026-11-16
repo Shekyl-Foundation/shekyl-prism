@@ -8,7 +8,7 @@
 //!
 //! ```text
 //! cargo build --release --locked -p prism-verify --example verify_once
-//! target/release/examples/verify_once prism-verify/testdata/s5_lvl1.txt verify
+//! target/release/examples/verify_once prism-vectors/data/verify/s5_lvl1.txt verify
 //! target/release/examples/verify_once p664 refuse
 //! ```
 //!
@@ -36,7 +36,7 @@
 mod support;
 
 use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
-use prism_fixtures::no_corpus::{curve_table, WithoutCorpus};
+use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
 use prism_verify::{verify, CommittedSet, Set, VerifyError};
 use std::hint::black_box;
 use std::process::ExitCode;

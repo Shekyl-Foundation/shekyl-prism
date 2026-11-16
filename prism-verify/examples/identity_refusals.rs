@@ -3,7 +3,8 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! Print `testdata/identity_refusals.tsv`.
+//! Print the committed identity refusals, `identity_refusals.tsv` of
+//! `prism-vectors`.
 //!
 //! `cargo run --release --locked -p prism-verify --example identity_refusals`
 //! prints the file. `tests/identity_refusals.rs` holds the committed file
@@ -13,6 +14,8 @@
 mod identity;
 #[path = "../tests/support/refusal_vectors.rs"]
 mod refusal_vectors;
+#[path = "../tests/support/verdict.rs"]
+mod verdict;
 
 fn main() {
     print!("{}", refusal_vectors::file());

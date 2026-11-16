@@ -10,7 +10,9 @@ This directory is the research record for shekyl-prism. It exists so that the wo
 
 Records written before 2026-11-14 name the parameter sets by level: `NIST-I` or level I is `p248`, `NIST-III` or level III is `p376`, `NIST-V` or level V is `p500` (`docs/PARAMETER_SETS.md`). They are not rewritten.
 
-Raw evidence stays where it already lives: `docs/comparison/`, `docs/benchmarks/`, `prism-isogeny/testdata/s5_model/`, and the test vectors. The notebook points at it and never copies it.
+Raw evidence stays where it already lives: `docs/comparison/`, `docs/benchmarks/`, `prism-vectors/data/isogeny/s5_model/`, and the test vectors. The notebook points at it and never copies it.
+
+On 2026-11-16 the committed test data moved into the `prism-vectors` crate, byte for byte: `prism-verify/testdata/` is now `prism-vectors/data/verify/`, `prism-isogeny/testdata/` is `prism-vectors/data/isogeny/`, and `prism-compare/testdata/` is `prism-vectors/data/compare/`. Records written before that date name the old paths and are not rewritten; `prism-vectors/manifest/` holds the digests of every file before and after.
 
 ## Rules
 

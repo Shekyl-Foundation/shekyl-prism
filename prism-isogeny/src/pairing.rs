@@ -447,29 +447,15 @@ mod tests {
         use super::super::{mul, oracle, weil};
         use crate::jac::{add, dbl_iter, Jac};
         use crate::montgomery::Montgomery;
-        use prism_field::{Field, ParameterSet, P248, P324, P376, P500, P664};
-        use prism_fixtures::curve_table::Point as FixturePoint;
-        use prism_fixtures::no_corpus::{curve_table, WithoutCorpus};
+        use prism_field::{Field, ParameterSet, P324, P664};
+        use prism_vectors::corpus::{Vector, WithCorpus};
+        use prism_vectors::curve_table::Point as FixturePoint;
+        use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
 
-        const VECTORS: [&str; 6] = [
-            include_str!("../../prism-verify/testdata/s5_lvl1.txt"),
-            include_str!("../../prism-verify/testdata/s5_lvl1b.txt"),
-            include_str!("../../prism-verify/testdata/s5_lvl3.txt"),
-            include_str!("../../prism-verify/testdata/s5_lvl3b.txt"),
-            include_str!("../../prism-verify/testdata/s5_lvl5.txt"),
-            include_str!("../../prism-verify/testdata/s5_lvl5b.txt"),
-        ];
-
-        fn element<L: ParameterSet>(text: &str, name: &str) -> L::Ext {
-            let hex = text
-                .lines()
-                .find_map(|line| line.strip_prefix(name))
-                .expect("the vector has this row");
-            let bytes: Vec<u8> = hex
-                .as_bytes()
-                .chunks_exact(2)
-                .map(|pair| u8::from_str_radix(core::str::from_utf8(pair).unwrap(), 16).unwrap())
-                .collect();
+        fn element<L: ParameterSet>(vector: Vector<'_>, name: &'static str) -> L::Ext {
+            let bytes = vector
+                .bytes(name)
+                .unwrap_or_else(|err| panic!("{name}: {err}"));
             L::ext_decode(&bytes).expect("a committed element is canonical")
         }
 
@@ -480,16 +466,16 @@ mod tests {
         type Basis<L> = (Curve<L>, Point<L>, Point<L>);
 
         /// The response curve and its two points, a basis of the `2^e`-torsion.
-        fn basis<L: ParameterSet>(text: &str) -> Basis<L> {
+        fn basis<L: ParameterSet>(vector: Vector<'_>) -> Basis<L> {
             let at = |x, y| Jac {
-                x: element::<L>(text, x),
-                y: element::<L>(text, y),
+                x: element::<L>(vector, x),
+                y: element::<L>(vector, y),
                 z: L::Ext::one(),
             };
             (
-                Montgomery::normalized(element::<L>(text, "E ")),
-                at("Px ", "Py "),
-                at("Qx ", "Qy "),
+                Montgomery::normalized(element::<L>(vector, "E")),
+                at("Px", "Py"),
+                at("Qx", "Qy"),
             )
         }
 
@@ -736,15 +722,17 @@ mod tests {
         /// lets each basis keep its own type.
         macro_rules! every_basis {
             ($check:ident) => {{
-                $check::<P248>(0, basis::<P248>(VECTORS[0]));
-                $check::<P248>(1, basis::<P248>(VECTORS[1]));
-                $check::<P376>(2, basis::<P376>(VECTORS[2]));
-                $check::<P376>(3, basis::<P376>(VECTORS[3]));
-                $check::<P500>(4, basis::<P500>(VECTORS[4]));
-                $check::<P500>(5, basis::<P500>(VECTORS[5]));
-                // The sets without a corpus follow, each basis with the next
-                // number, so no two bases share one.
-                let mut numbers = VECTORS.len() as u64..;
+                // The six committed vectors keep the numbers they always had:
+                // primary order within each set, sets in corpus order. The
+                // sets without a corpus follow, so no two bases share one.
+                let mut number = 0u64;
+                prism_vectors::for_each_corpus_set!(Set, {
+                    for primary in <Set as WithCorpus>::PRIMARY {
+                        $check::<Set>(number, basis::<Set>(primary.vector()));
+                        number += 1;
+                    }
+                });
+                let mut numbers = number..;
                 for (basis, number) in sage_bases::<P324>().into_iter().zip(&mut numbers) {
                     $check::<P324>(number, basis);
                 }

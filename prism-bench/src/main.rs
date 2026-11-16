@@ -40,10 +40,9 @@ use std::process::ExitCode;
 use std::time::Instant;
 
 use prism_field::{Field, ParameterSet, Salt, FIELD_BACKEND, P248, P324, P376, P500, P664};
-use prism_verify::reference::{honest, refusal};
-use prism_verify::{
-    verify_set, ChallengeScalar, CommittedSet, KeyIdentity, Refusal, Set, VectorError, VerifyError,
-};
+use prism_vectors::corpus::{Malformed as MalformedVector, Primary, WithCorpus};
+use prism_vectors::refusals::{self, Error as RefusalError, Refusal, Verdict};
+use prism_verify::{verify_set, ChallengeScalar, CommittedSet, KeyIdentity, Set, VerifyError};
 
 /// Runs before the clock starts, to settle the frequency and the caches.
 const WARMUP: usize = 5;
@@ -52,7 +51,28 @@ const SAMPLES: usize = 31;
 
 /// The refusals timed at every set, in the order their rows are printed.
 /// `Codomain` is the one that does the work of both chains.
-const REFUSALS: [VerifyError; 2] = [VerifyError::Codomain, VerifyError::Kernel];
+const REFUSALS: [Verdict; 2] = [Verdict::Codomain, Verdict::Kernel];
+
+/// The verifier's error for a verdict of the committed refusal vectors.
+/// The vectors crate does not depend on the verifier, so it names a
+/// refusal by a type of its own.
+const fn error_of(verdict: Verdict) -> VerifyError {
+    match verdict {
+        Verdict::Kernel => VerifyError::Kernel,
+        Verdict::Codomain => VerifyError::Codomain,
+    }
+}
+
+/// The honest signature a set's accept row verifies: its first primary
+/// vector.
+const fn honest(set: CommittedSet) -> Primary {
+    let [primary, _] = match set {
+        CommittedSet::P248 => P248::PRIMARY,
+        CommittedSet::P376 => P376::PRIMARY,
+        CommittedSet::P500 => P500::PRIMARY,
+    };
+    primary
+}
 
 /// Call a function that is generic over the parameter set for a set named
 /// at run time.
@@ -82,8 +102,9 @@ fn main() -> ExitCode {
         }
     }
     for set in Set::ALL {
-        for error in REFUSALS {
-            match refused(set, error) {
+        for verdict in REFUSALS {
+            let error = error_of(verdict);
+            match refused(set, verdict) {
                 Ok(timing) => println!("set={set} outcome=refused error={error:?} {timing}"),
                 Err(err) => {
                     failed = true;
@@ -93,8 +114,8 @@ fn main() -> ExitCode {
         }
     }
     for set in Set::ALL {
-        let cost = refusal(set, VerifyError::Codomain)
-            .map_err(BenchError::Prepare)
+        let cost = refusals::row(set.name(), Verdict::Codomain)
+            .map_err(BenchError::Refusals)
             .and_then(|row| at_set!(set, salt_attempts(row)));
         match cost {
             Ok(cost) => println!("search set={set} {cost}"),
@@ -141,8 +162,12 @@ impl fmt::Display for Timing {
 
 /// Why a row produced no timing.
 enum BenchError {
-    /// The committed input could not be read, so there is nothing to time.
-    Prepare(VectorError),
+    /// The committed honest vector could not be read, so there is nothing
+    /// to time.
+    Vector(MalformedVector),
+    /// The committed refusal vectors could not be read, or have no row
+    /// for this set.
+    Refusals(RefusalError),
     /// The committed key of a row does not decode, so nothing was timed.
     Key(VerifyError),
     /// A timed verification did not end as pinned. This is what it
@@ -156,7 +181,8 @@ enum BenchError {
 impl fmt::Display for BenchError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Prepare(err) => write!(f, "{err}"),
+            Self::Vector(err) => write!(f, "{err}"),
+            Self::Refusals(err) => write!(f, "{err}"),
             Self::Key(err) => write!(f, "the committed key does not decode: {err}"),
             Self::Verdict(Ok(())) => f.write_str("accepted"),
             Self::Verdict(Err(err)) => write!(f, "{err}"),
@@ -203,23 +229,21 @@ fn measure<T: PartialEq>(pinned: &T, run: impl Fn() -> T) -> Result<Timing, T> {
 
 /// The accepted verification of the set's committed honest signature.
 fn accepted(set: CommittedSet) -> Result<Timing, BenchError> {
-    let sample = honest(set).map_err(BenchError::Prepare)?;
+    let sample = honest(set).vector();
+    let public_key = sample.public_key().map_err(BenchError::Vector)?;
+    let message = sample.message().map_err(BenchError::Vector)?;
+    let signature = sample.signature().map_err(BenchError::Vector)?;
     measure(&Ok(()), || {
-        verify_set(
-            set.set(),
-            &sample.public_key,
-            sample.message,
-            &sample.signature,
-        )
+        verify_set(set.set(), &public_key, message, &signature)
     })
     .map_err(BenchError::Verdict)
 }
 
-/// The verification of the set's committed response that is refused as
-/// `error`. It is not an accepted verification, and its row says so.
-fn refused(set: Set, error: VerifyError) -> Result<Timing, BenchError> {
-    let row = refusal(set, error).map_err(BenchError::Prepare)?;
-    measure(&Err(error), || {
+/// The verification of the set's committed response that is refused with
+/// `verdict`. It is not an accepted verification, and its row says so.
+fn refused(set: Set, verdict: Verdict) -> Result<Timing, BenchError> {
+    let row = refusals::row(set.name(), verdict).map_err(BenchError::Refusals)?;
+    measure(&Err(error_of(verdict)), || {
         verify_set(set, &row.public_key, &row.message, &row.signature)
     })
     .map_err(BenchError::Verdict)
@@ -309,10 +333,15 @@ fn salt_attempts<L: ParameterSet>(row: &Refusal) -> Result<SearchCost, BenchErro
 /// The element the field timings of a set start from: the key of the
 /// set's honest signature where there is one, as in every earlier record,
 /// and the key of its `Codomain` refusal where there is not.
-fn field_start(set: Set) -> Result<Vec<u8>, VectorError> {
+fn field_start(set: Set) -> Result<Vec<u8>, BenchError> {
     match set.committed() {
-        Ok(committed) => honest(committed).map(|sample| sample.public_key),
-        Err(_) => refusal(set, VerifyError::Codomain).map(|row| row.public_key.clone()),
+        Ok(committed) => honest(committed)
+            .vector()
+            .public_key()
+            .map_err(BenchError::Vector),
+        Err(_) => refusals::row(set.name(), Verdict::Codomain)
+            .map(|row| row.public_key.clone())
+            .map_err(BenchError::Refusals),
     }
 }
 

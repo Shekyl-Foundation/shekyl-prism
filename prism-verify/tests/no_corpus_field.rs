@@ -5,7 +5,7 @@
 
 //! Field arithmetic against Sage, at a set that has no corpus.
 //!
-//! `testdata/<set>_field.tsv` is written by
+//! `<set>_field.tsv` of `prism-vectors` is written by
 //! `scripts/sage/no_corpus_fixture.sage`. It holds every result in full
 //! for a grid of edge values, and for 10,000 random rows one SHA3-256
 //! digest for each operation in each field. The random inputs are not in
@@ -24,7 +24,7 @@
 //! all of them, in a module of its own at the end of this file.
 
 use prism_field::{Field, ParameterSet};
-use prism_fixtures::no_corpus::WithoutCorpus;
+use prism_vectors::no_corpus::WithoutCorpus;
 use sha3::{Digest, Sha3_256};
 
 /// The operations of one row, in the order the file writes them.
@@ -47,7 +47,7 @@ const EXT_EDGE_ROWS: usize = 9 * 7;
 const RANDOM_ROWS: usize = 10_000;
 
 fn hex(text: &str) -> Vec<u8> {
-    prism_fixtures::hex::decode(text).expect("hex")
+    prism_vectors::hex::decode(text).expect("hex")
 }
 
 /// The generator of the script: SplitMix64.

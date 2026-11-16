@@ -1,6 +1,6 @@
 [package]
 name = "prism-verify"
-description = "Pure PRISM verifier: canonical decoder, Baillie–PSW, no resample"
+description = "Pure-Rust PRISM verifier: canonical decoding, the salted prime-degree challenge, pairing check and both theta chains"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -17,7 +17,7 @@ prism-isogeny = { workspace = true }
 sha3 = { workspace = true }
 
 [dev-dependencies]
-prism-fixtures = { workspace = true }
+prism-vectors = { workspace = true }
 
 [lints]
 workspace = true

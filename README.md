@@ -22,7 +22,7 @@ verifier at reduced challenge widths.
 | `prism-signer` | Unix research API for an isolated deterministic C backend |
 | `prism-bench` | Timing: an accepted verification at the sets with a signer, and a refusal after the pairing check at all five |
 | `prism-compare` | Archived derivation and explicit research experiments; no production dependency |
-| `prism-fixtures` | Committed test fixtures read into typed values; a dev-dependency only |
+| `prism-vectors` | A public crate: every committed test vector and a documented reader for each family. Depends on `prism-field` alone, so the data can be used without a verifier; the library crates take it as a dev-dependency only |
 
 The [verifier specification](docs/VERIFIER_SPEC.md) defines the current
 research encoding, including the `e′=e−2` parameter choice. Signatures are
@@ -103,7 +103,7 @@ This fresh comparison does not rewrite committed known answers. Set
 The value is the `level` field the vectors carry: `NIST-III`, which is
 `p376`.
 The original model report is in
-[REPORT.md](prism-isogeny/testdata/s5_model/REPORT.md).
+[REPORT.md](prism-vectors/data/isogeny/s5_model/REPORT.md).
 
 The comparison experiments are `prism-compare` binaries behind the
 `experiments` feature. `sh scripts/run_comparison.sh <record> <driver>

@@ -13,7 +13,7 @@ libfuzzer-sys = "=0.4.13"
 prism-field = { version = "0.1.0", path = "../prism-field" }
 prism-verify = { version = "0.1.0", path = "../prism-verify" }
 # The committed fixtures the targets start from, read in one place.
-prism-fixtures = { version = "0.1.0", path = "../prism-fixtures" }
+prism-vectors = { version = "0.1.0", path = "../prism-vectors" }
 # `oracle` exposes the routines an optimized routine replaced, so a target
 # can compare the two.
 prism-isogeny = { version = "0.1.0", path = "../prism-isogeny", features = ["oracle"] }

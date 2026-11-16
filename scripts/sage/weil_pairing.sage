@@ -61,7 +61,7 @@ def main():
         evk = Fp2(weil_pairing_pari(Pvk, Qvk, order))
         esig = Fp2(weil_pairing_pari(s * Psig, s * Qsig, order))
         lines.append(f"{path.name}\t{enc(evk, fp_len)}\t{enc(esig, fp_len)}")
-    out = ROOT / "prism-verify" / "testdata" / "weil_pairing.tsv"
+    out = ROOT / "prism-vectors" / "data" / "verify" / "weil_pairing.tsv"
     out.write_text("\n".join(lines) + "\n")
     print(f"wrote {out.name} ({len(lines) - 1} vectors)", flush=True)
 

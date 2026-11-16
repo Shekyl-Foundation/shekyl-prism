@@ -18,7 +18,7 @@ oracle = []
 prism-field = { workspace = true }
 
 [dev-dependencies]
-prism-fixtures = { workspace = true }
+prism-vectors = { workspace = true }
 
 [lints]
 workspace = true

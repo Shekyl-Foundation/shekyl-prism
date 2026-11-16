@@ -3,7 +3,8 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! The rows of `testdata/identity_refusals.tsv`, built here.
+//! The rows of the committed identity refusals
+//! (`prism_vectors::refusals`), built here.
 //!
 //! At every set, the two responses of `identity.rs` under one curve as the
 //! key. The file is what this module renders. A test holds the two equal,
@@ -13,32 +14,25 @@
 //! the row of the same `set`, `vector` and `case` in
 //! `docs/benchmarks/negative-verdicts.tsv` describe the same input:
 //!
-//! - at a set with a corpus, the response curve of the committed honest
-//!   signature `prism_verify::reference::honest` returns, under that
+//! - at a set with a corpus, the response curve of the set's first
+//!   primary vector (`prism_vectors::corpus::WithCorpus`), under that
 //!   signature's message;
 //! - at a set without one, the model curve of the set's Sage file, under
 //!   the set's refusal message.
 //!
-//! The including file declares `identity` beside this module.
+//! The including file declares `identity` and `verdict` beside this
+//! module.
 
 use std::fmt::Write as _;
 
 use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
-use prism_fixtures::no_corpus::{curve_table, WithoutCorpus};
-use prism_verify::reference::{honest, REFUSAL_VERDICTS};
-use prism_verify::{CommittedSet, Response, Set, VerifyError};
+use prism_vectors::corpus::WithCorpus;
+use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
+use prism_vectors::refusals::Verdict;
+use prism_verify::{Response, Set, VerifyError};
 
 use super::identity::{first_prime_salt_counter, identity_response, Form};
-
-/// The file a set's honest timing sample is read from.
-/// `prism_verify::reference::honest` reads the same three.
-fn honest_file(set: CommittedSet) -> &'static str {
-    match set {
-        CommittedSet::P248 => "s5_lvl1.txt",
-        CommittedSet::P376 => "s5_lvl3.txt",
-        CommittedSet::P500 => "s5_lvl5.txt",
-    }
-}
+use super::verdict::error_of;
 
 /// One row, before it is text.
 pub struct Row {
@@ -60,13 +54,13 @@ impl Row {
         *error
     }
 
-    /// The text the file uses for the row's verdict.
-    fn verdict(&self) -> &'static str {
+    /// The file's verdict for the row: the one whose error is the form's.
+    pub fn verdict(&self) -> Verdict {
         let error = self.error();
-        REFUSAL_VERDICTS
+        Verdict::ALL
             .into_iter()
-            .find_map(|(text, verdict)| (verdict == error).then_some(text))
-            .expect("the file has a text for each form's refusal")
+            .find(|verdict| error_of(*verdict) == error)
+            .expect("the file has a verdict for each form's refusal")
     }
 
     fn render(&self) -> String {
@@ -75,7 +69,7 @@ impl Row {
             self.set,
             self.vector,
             self.form.name(),
-            self.verdict(),
+            self.verdict().text(),
             self.salt_counter,
             hex(&self.message),
             hex(&self.public_key),
@@ -113,13 +107,16 @@ fn both_forms<L: ParameterSet>(
     })
 }
 
-fn with_a_corpus<L: ParameterSet>(set: CommittedSet) -> [Row; 2] {
-    let sample = honest(set).expect("a committed honest signature");
-    let curve = Response::<L>::decode(&sample.signature)
+fn with_a_corpus<L: WithCorpus>(set: Set) -> [Row; 2] {
+    let [primary, _] = L::PRIMARY;
+    let sample = primary.vector();
+    let signature = sample.signature().expect("a committed honest signature");
+    let curve = Response::<L>::decode(&signature)
         .expect("the committed signature decodes")
         .curve;
-    let vector = format!("{}:E", honest_file(set));
-    both_forms::<L>(set.set(), &vector, curve, sample.message)
+    let vector = format!("{}:E", primary.file_name());
+    let message = sample.message().expect("the vector's message");
+    both_forms::<L>(set, &vector, curve, message)
 }
 
 fn without_a_corpus<L: WithoutCorpus>(set: Set) -> [Row; 2] {
@@ -137,10 +134,10 @@ pub fn rows() -> Vec<Row> {
     Set::ALL
         .into_iter()
         .flat_map(|set| match set {
-            Set::P248 => with_a_corpus::<P248>(CommittedSet::P248),
+            Set::P248 => with_a_corpus::<P248>(set),
             Set::P324 => without_a_corpus::<P324>(set),
-            Set::P376 => with_a_corpus::<P376>(CommittedSet::P376),
-            Set::P500 => with_a_corpus::<P500>(CommittedSet::P500),
+            Set::P376 => with_a_corpus::<P376>(set),
+            Set::P500 => with_a_corpus::<P500>(set),
             Set::P664 => without_a_corpus::<P664>(set),
         })
         .collect()

@@ -143,25 +143,25 @@ dependencies = [
 ]
 
 [[package]]
-name = "prism-fixtures"
+name = "prism-fuzz"
+version = "0.0.0"
+dependencies = [
+ "libfuzzer-sys",
+ "prism-field",
+ "prism-isogeny",
+ "prism-vectors",
+ "prism-verify",
+]
+
+[[package]]
+name = "prism-isogeny"
 version = "0.1.0"
 dependencies = [
  "prism-field",
 ]
 
 [[package]]
-name = "prism-fuzz"
-version = "0.0.0"
-dependencies = [
- "libfuzzer-sys",
- "prism-field",
- "prism-fixtures",
- "prism-isogeny",
- "prism-verify",
-]
-
-[[package]]
-name = "prism-isogeny"
+name = "prism-vectors"
 version = "0.1.0"
 dependencies = [
  "prism-field",

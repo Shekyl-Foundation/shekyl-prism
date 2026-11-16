@@ -19,7 +19,7 @@ LEVELS = (
     ("NIST-V", 500, 27),
 )
 
-OUT = pathlib.Path(__file__).resolve().parents[1] / "prism-verify" / "testdata" / "e0_endomorphisms.txt"
+OUT = pathlib.Path(__file__).resolve().parents[1] / "prism-vectors" / "data" / "verify" / "e0_endomorphisms.txt"
 
 
 def miller_rabin(n: int, rounds: int = 16) -> bool:
