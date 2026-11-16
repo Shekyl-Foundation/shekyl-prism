@@ -13,8 +13,8 @@
 //! Each public check owns a module: [`identity`] decodes the key,
 //! [`signature`] decodes the response and normalizes its sign, [`basis`]
 //! re-derives the C reference's basis index, [`challenge`] derives the
-//! challenge scalar, and [`prime`] decides its degree. [`checked`] runs them
-//! before the relation checks.
+//! challenge scalar, and [`degree_is_prime`] decides its degree. [`verify`]
+//! runs them before the relation checks.
 
 #![forbid(unsafe_code)]
 
