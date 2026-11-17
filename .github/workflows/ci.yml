@@ -269,6 +269,12 @@ jobs:
       # `prism-verify/op-count`.
       - name: The counter's own test
         run: cargo test -p prism-field --features prism-field/op-count --locked ops
+      # The tagged entry of the front crate refuses on the identifiers and
+      # the caller's list before it touches the bare bytes. The test
+      # requires the counter, so a plain `cargo test` skips it and this
+      # step is where it runs.
+      - name: A refusal by the tag layer costs no field operation
+        run: cargo test -p shekyl-prism --test tag_layer_counts --features prism-verify/op-count --locked
       - name: Counts and verdicts equal the committed records
         run: sh scripts/op_counts.sh --check
       - name: A second run gives the same records
@@ -414,8 +420,8 @@ jobs:
           cargo build --release --locked -p prism-compare --features experiments --bin replay
           python3 scripts/ci/check_replay_regression.py target/release/replay target/native
 
-  accept-list:
-    name: accept-list
+  accept-verdicts:
+    name: accept-verdicts
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -466,7 +472,7 @@ jobs:
       - hygiene
       - c-reference-pin
       - c-vectors
-      - accept-list
+      - accept-verdicts
       - native-signer
       - codeql
     if: always() && !cancelled()
@@ -491,7 +497,7 @@ jobs:
             hygiene=${{ needs.hygiene.result }}
             c-reference-pin=${{ needs['c-reference-pin'].result }}
             c-vectors=${{ needs['c-vectors'].result }}
-            accept-list=${{ needs['accept-list'].result }}
+            accept-verdicts=${{ needs['accept-verdicts'].result }}
             native-signer=${{ needs['native-signer'].result }}
             codeql=${{ needs.codeql.result }}
         run: python3 scripts/ci/aggregate.py
