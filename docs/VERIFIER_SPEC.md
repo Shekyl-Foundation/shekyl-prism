@@ -238,16 +238,26 @@ kept, and not a key built from every incoming message.
 ## Executable evidence
 
 - The two entries are held to the rule above on every input the tests
-  verify: `prism-verify/tests/support/entries.rs` runs both and fails
-  unless the rule holds, and the tests call the verifier through it. That
-  is the 113 honest signatures and the 2,724 negatives derived from the
-  six primary vectors (`tests/acceptance.rs`, which pins both counts),
-  the committed identity refusals at all five sets, and every refusal
-  built without a signer at all five sets. A faulty key with a faulty
-  signature, in every pairing of the faults that need no signer, is built
-  at each set with the refusal of each entry pinned
-  (`tests/entries_agree.rs`). No key refused as `Basis` is known, so that
-  half of case 3 is argued from the order of the code and not run.
+  of the front crate verify: `shekyl-prism/tests/support/entries.rs` runs
+  both and fails unless the rule holds, and those tests call the verifier
+  through it. That is the 113 honest signatures and the 2,724 negatives
+  derived from the six primary vectors (`shekyl-prism/tests/acceptance.rs`,
+  which pins both counts), the committed identity refusals at all five
+  sets, and every refusal built without a signer at all five sets. A
+  faulty key with a faulty signature, in every pairing of the faults that
+  need no signer, is built at each set with the refusal of each entry
+  pinned (`shekyl-prism/tests/entries_agree.rs`). No key refused as
+  `Basis` is known, so that half of case 3 is argued from the order of
+  the code and not run.
+- The inputs are built by `prism-testkit`, which depends on the verifier
+  and not on the front crate. The tests are in the front crate because a
+  test lives in the lowest crate that contains everything it exercises,
+  and no dependency edge points up, dev edges included
+  (`scripts/ci/check_no_upward_edge.py`). `cargo test -p prism-verify`
+  stands without the front crate: its unit tests, the Sage comparisons of
+  the sets without a corpus, and `prism-verify/tests/committed.rs`, where
+  `verify` accepts the 113 honest signatures and `verify_set` returns the
+  pinned error on the ten committed identity refusals.
 
 - All 113 committed honest signatures are executed through `verify`.
 - Both chains match every Sage theta-null point for the six primary vectors.
