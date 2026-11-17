@@ -15,6 +15,11 @@
 //! re-derives the C reference's basis index, [`challenge`] derives the
 //! challenge scalar, and [`degree_is_prime`] decides its degree. [`verify`]
 //! runs them before the relation checks.
+//!
+//! [`verify`] is one of two entries. [`prepared`] is the other: the same
+//! checks split by object, so a key is checked once and its basis is
+//! searched for once. The `shekyl-prism` crate's typed interface is built
+//! on that module.
 
 #![forbid(unsafe_code)]
 
@@ -24,6 +29,7 @@ pub mod challenge;
 pub mod identity;
 mod mark;
 mod model;
+pub mod prepared;
 mod prime;
 mod relation;
 #[cfg(feature = "research-reduced-width")]
@@ -41,6 +47,7 @@ use prism_field::ParameterSet;
 pub use basis::{basis_hint, search_bound, BasisHint, C_HINT_MAX_INDEX};
 pub use challenge::{ChallengeScalar, CHALLENGE_DOMAIN};
 pub use identity::KeyIdentity;
+pub use prepared::{checked_response, verify_prepared, PreparedKey};
 pub use prime::{challenge_degree, degree_is_prime, is_baillie_psw};
 pub use prism_field::Salt;
 pub use set::{

@@ -27,7 +27,7 @@ use prism_isogeny::torsion::EvenBasis;
 use prism_isogeny::torsion::{double_times, even_basis, starting_basis};
 
 use crate::accept::Lifted;
-use crate::basis::basis_hint;
+use crate::basis::{basis_hint, BasisHint};
 use crate::challenge::ChallengeScalar;
 use crate::identity::KeyIdentity;
 use crate::mark::Stage;
@@ -59,18 +59,58 @@ pub fn relate_points<L: ParameterSet>(
     q_sig: AffinePoint<L>,
     scalar: &[u8],
 ) -> Result<(), VerifyError> {
+    Stage::Torsion.enter();
+    let hint = if vk.is_zero() {
+        None
+    } else {
+        Some(basis_hint::<L>(vk)?)
+    };
+    relate_with::<L>(vk, hint, sig, p_sig, q_sig, scalar)
+}
+
+/// The relation for a key whose basis index is already known: the entry
+/// of [`crate::verify_prepared`]. It differs from [`relate_points`] in
+/// one thing, that it does not search for the index.
+pub(crate) fn relate_prepared<L: ParameterSet>(
+    vk: L::Ext,
+    hint: BasisHint,
+    response: &Response<L>,
+    scalar: &[u8],
+) -> Result<(), VerifyError> {
+    Stage::Torsion.enter();
+    relate_with::<L>(
+        vk,
+        Some(hint),
+        response.curve,
+        response.p,
+        response.q,
+        scalar,
+    )
+}
+
+/// Everything after the basis index is known. `hint` is `None` for the
+/// starting curve, which has no index, and the index of `vk` otherwise.
+fn relate_with<L: ParameterSet>(
+    vk: L::Ext,
+    hint: Option<BasisHint>,
+    sig: L::Ext,
+    p_sig: AffinePoint<L>,
+    q_sig: AffinePoint<L>,
+    scalar: &[u8],
+) -> Result<(), VerifyError> {
     // The starting curve keeps its `E[p+1]` basis: the degree-`q` witness
     // was built from that basis. A public key uses the canonical basis of
     // `E[2^e]`: `Q` is `difference(P, R)` after the cofactor.
-    Stage::Torsion.enter();
-    let (even, push) = if vk.is_zero() {
-        let basis = starting_basis::<L>().ok_or(VerifyError::Kernel)?;
-        (basis.even, [basis.r, basis.t, basis.difference])
-    } else {
-        let hint = basis_hint::<L>(vk)?;
-        let even = even_basis::<L>(vk, hint.index(), hint.coefficient_is_square())
-            .ok_or(VerifyError::Kernel)?;
-        (even, [even.p, even.q, even.difference])
+    let (even, push) = match hint {
+        None => {
+            let basis = starting_basis::<L>().ok_or(VerifyError::Kernel)?;
+            (basis.even, [basis.r, basis.t, basis.difference])
+        }
+        Some(hint) => {
+            let even = even_basis::<L>(vk, hint.index(), hint.coefficient_is_square())
+                .ok_or(VerifyError::Kernel)?;
+            (even, [even.p, even.q, even.difference])
+        }
     };
     if !on_curve::<L>(sig, p_sig.x, p_sig.y) || !on_curve::<L>(sig, q_sig.x, q_sig.y) {
         return Err(VerifyError::Kernel);

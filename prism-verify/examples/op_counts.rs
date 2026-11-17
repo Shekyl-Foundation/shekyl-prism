@@ -11,9 +11,12 @@
 //!     --features prism-verify/op-count
 //! ```
 //!
-//! `scripts/op_counts.sh` runs this and writes the two committed records.
-//! Lines starting `COUNT` are `docs/benchmarks/op-counts.txt`; lines
-//! starting `VERDICT` are `docs/benchmarks/negative-verdicts.tsv`. The
+//! `scripts/op_counts.sh` runs this and writes the three committed
+//! records. Lines starting `COUNT` are `docs/benchmarks/op-counts.txt`;
+//! lines starting `VERDICT` are `docs/benchmarks/negative-verdicts.tsv`;
+//! lines starting `TYPED` are `docs/benchmarks/op-counts-typed.txt`, the
+//! honest vectors again through the entry split by object
+//! (`prism_verify::prepared`). The
 //! feature is given on the command line and by no manifest. The example
 //! requires it, so a build without it, or with the field crate's feature
 //! alone, does not build this file instead of printing zeros.
@@ -28,7 +31,10 @@ mod support;
 use prism_field::ops::{self, Counts, Slot};
 use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
 use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
-use prism_verify::{verify, CommittedSet, Stage, VerifyError};
+use prism_verify::{
+    basis_hint, checked_response, verify, verify_prepared, CommittedSet, PreparedKey, Stage,
+    VerifyError,
+};
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
@@ -96,7 +102,73 @@ fn accept<L: ParameterSet>(path: &Path, text: &str, per_stage: bool) -> Result<S
     } else {
         println!("COUNT {kind} stage=total {}", fields(sum));
     }
+    typed::<L>(path, &key, &message, &response.encode(), sum)?;
     Ok(sum)
+}
+/// One part of the typed path, counted. Nothing may count outside a stage.
+fn part<T>(what: &str, run: impl FnOnce() -> T) -> Result<(T, Slot), String> {
+    let _ = ops::take();
+    let value = run();
+    let table = ops::take();
+    if table[Stage::Outside.slot()] != Slot::default() {
+        return Err(format!("{what} counted outside a stage"));
+    }
+    Ok((value, total(&table)))
+}
+fn plus(left: Slot, right: Slot) -> Slot {
+    Slot {
+        base: left.base.plus(right.base),
+        ext: left.ext.plus(right.ext),
+    }
+}
+/// The same honest vector through the split entry: the key's checks, the
+/// signature's checks, and the verification, each counted on its own.
+///
+/// These are the three functions `shekyl_prism::PublicKey::from_bytes`,
+/// `Signature::from_bytes` and `PublicKey::verify` call and add nothing
+/// to. Their sum must be the byte-level total less exactly one search for
+/// the key's basis index, counted here by itself: `verify` searches in
+/// its public checks and again in the relation, and a prepared key
+/// carries the index.
+fn typed<L: ParameterSet>(
+    path: &Path,
+    key: &[u8],
+    message: &[u8],
+    signature: &[u8],
+    byte_level: Slot,
+) -> Result<(), String> {
+    let refused = |what: &str, e: VerifyError| format!("{}: {what} gave {e:?}", name(path));
+    let (prepared, key_cost) = part("the key", || PreparedKey::<L>::prepare(key))?;
+    let prepared = prepared.map_err(|e| refused("the key", e))?;
+    let (response, signature_cost) = part("the signature", || checked_response::<L>(signature))?;
+    let response = response.map_err(|e| refused("the signature", e))?;
+    let (verdict, verify_cost) = part("the verification", || {
+        verify_prepared(&prepared, message, &response)
+    })?;
+    verdict.map_err(|e| refused("the verification", e))?;
+    // `basis_hint` marks no stage of its own, so it counts under whichever
+    // stage ran last; only its total is used.
+    let _ = ops::take();
+    let hint = basis_hint::<L>(prepared.coefficient());
+    let search = total(&ops::take());
+    if hint != Ok(prepared.hint()) {
+        return Err(format!("{}: the search gave {hint:?}", name(path)));
+    }
+    let sum = plus(plus(key_cost, signature_cost), verify_cost);
+    if plus(sum, search) != byte_level {
+        return Err(format!(
+            "{}: the typed path is not the byte-level entry less one basis search",
+            name(path)
+        ));
+    }
+    let kind = format!("set={} vector={}", L::NAME, name(path));
+    println!("TYPED {kind} part=key {}", fields(key_cost));
+    println!("TYPED {kind} part=signature {}", fields(signature_cost));
+    println!("TYPED {kind} part=verify {}", fields(verify_cost));
+    println!("TYPED {kind} part=sum {}", fields(sum));
+    println!("TYPED {kind} part=byte-level {}", fields(byte_level));
+    println!("TYPED {kind} part=one-basis-search {}", fields(search));
+    Ok(())
 }
 /// Every negative of one primary vector: its verdict and total cost, the
 /// per-stage counts of the first case of each refusal, and the dearest.

@@ -49,6 +49,12 @@ impl<'key, L: ParameterSet> KeyIdentity<'key, L> {
         })
     }
 
+    /// A key whose bytes [`Self::decode`] already accepted, with the
+    /// coefficient it decoded them to.
+    pub(crate) fn from_checked(bytes: &'key [u8], coefficient: L::Ext) -> Self {
+        Self { bytes, coefficient }
+    }
+
     /// The bytes the challenge hash absorbs. This *is* the key's identity,
     /// so nothing else may stand in for it.
     pub fn as_bytes(&self) -> &'key [u8] {
