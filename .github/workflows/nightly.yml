@@ -185,7 +185,13 @@ jobs:
   # runs the tests of all four packages against every mutant. Without it
   # a mutant would meet only the tests of the two packages named by `-p`.
   #
-  # That is about half a minute a mutant, and there are some 700: hours in
+  # The tool times its unmutated baseline on the two mutated packages
+  # alone and sets each mutant's time limit from that, five times by
+  # default. A mutant's run over four packages is about two and a half
+  # times the baseline, so the multiplier is raised to keep the margin a
+  # run over two packages had.
+  #
+  # That is over a minute for a mutant no test kills, and there are some 700: hours in
   # one job, against a 90-minute limit. The mutants are dealt round-robin
   # to eight jobs, so each gets its share of every file and runs for a
   # fraction of its limit. A dispatch with `mutants_shard` runs one of the
@@ -218,6 +224,7 @@ jobs:
           cargo mutants -p prism-verify -p prism-field \
             --test-package prism-field --test-package prism-verify \
             --test-package prism-testkit --test-package shekyl-prism \
+            --timeout-multiplier 12 \
             --no-shuffle --shard "${SHARD}/8" --sharding round-robin > mutants.txt
           code=$?
           set -e
