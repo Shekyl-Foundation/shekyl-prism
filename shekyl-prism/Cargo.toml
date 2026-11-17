@@ -1,0 +1,23 @@
+[package]
+name = "shekyl-prism"
+description = "PRISM signatures in pure Rust: the typed interface (keys and signatures valid by construction), with the layer crates under hazmat"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# No features. The operation counter and the reduced-width research code
+# are features of the layer crates, asked for on the command line and
+# enabled by no manifest; scripts/ci holds this crate to that.
+
+[dependencies]
+prism-field = { workspace = true }
+prism-isogeny = { workspace = true }
+prism-verify = { workspace = true }
+
+[dev-dependencies]
+prism-vectors = { workspace = true }
+
+[lints]
+workspace = true
