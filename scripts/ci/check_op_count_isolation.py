@@ -28,9 +28,12 @@ does. This check requires that:
    `prism_verify::stage` or `prism_verify::Stage`, and can name all three
    when it enables `prism-verify/op-count` and nothing else; and the two
    private modules the crates mark through (`prism_field::tally`,
-   `prism_verify::mark`) cannot be named in either build. This compiles an
-   isolated crate: it tests that the API is absent, and does not search
-   the source.
+   `prism_verify::mark`) cannot be named in either build. The same holds
+   through the front crate, whose `hazmat` module re-exports both crates:
+   `shekyl_prism::hazmat::field::ops` and `shekyl_prism::hazmat::verify::stage`
+   are absent by default and present when the feature is asked for. This
+   compiles an isolated crate: it tests that the API is absent, and does
+   not search the source.
 
 `--selftest` plants each breach of 1 and 2 in a copy of the manifests.
 
@@ -52,6 +55,7 @@ ROOT = Path(__file__).resolve().parents[2]
 FEATURE = "op-count"
 FIELD = "prism-field"
 VERIFY = "prism-verify"
+FRONT = "shekyl-prism"
 # What each of the two crates must declare the feature as.
 DECLARED = {FIELD: [], VERIFY: [f"{FIELD}/{FEATURE}"]}
 DEPENDENCY_KINDS = ("dependencies", "dev-dependencies", "build-dependencies")
@@ -219,16 +223,20 @@ REFUSED = (
     ("pub use prism_field::ops::take;\n", ABSENT),
     ("pub use prism_verify::stage;\n", ABSENT),
     ("pub use prism_verify::Stage;\n", ABSENT),
+    ("pub use shekyl_prism::hazmat::field::ops;\n", ABSENT),
+    ("pub use shekyl_prism::hazmat::verify::stage;\n", ABSENT),
     ("pub use prism_field::tally::tally;\n", PRIVATE),
     ("pub use prism_verify::mark::Stage;\n", PRIVATE),
 )
 # The same two, with the feature on.
-STILL_PRIVATE = REFUSED[4:]
+STILL_PRIVATE = REFUSED[6:]
 ALLOWED = (
     "pub use prism_field::ops::{enter, take, tally, Counts, Kind, Op, Slot, ENABLED, SLOTS};\n"
     "pub use prism_verify::stage;\n"
     "pub use prism_verify::Stage;\n"
     "pub const NAMES: usize = Stage::ALL.len();\n"
+    "pub use shekyl_prism::hazmat::field::ops::take as front_take;\n"
+    "pub use shekyl_prism::hazmat::verify::stage::Stage as FrontStage;\n"
 )
 
 
@@ -268,10 +276,12 @@ def api_fault():
         (tmp / "src").mkdir()
         field = json.dumps(str(ROOT / FIELD))
         verify = json.dumps(str(ROOT / VERIFY))
+        front = json.dumps(str(ROOT / FRONT))
         (tmp / "Cargo.toml").write_text(
             '[package]\nname="prism-op-count-api"\nversion="0.0.0"\nedition="2021"\n'
             f'[workspace]\n[features]\ncount=["{VERIFY}/{FEATURE}"]\n'
             f"[dependencies]\n{FIELD}={{path={field}}}\n{VERIFY}={{path={verify}}}\n"
+            f"{FRONT}={{path={front}}}\n"
         )
         # The consumer is its own workspace. It starts from the tree's lock
         # file, so cargo keeps the versions the tree is locked to and only
@@ -285,7 +295,10 @@ def api_fault():
             source.write_text(text)
             return subprocess.run(command + list(extra), env=env, text=True, capture_output=True)
 
-        default = build("pub use prism_field::Field;\npub use prism_verify::verify;\n")
+        default = build(
+            "pub use prism_field::Field;\npub use prism_verify::verify;\n"
+            "pub use shekyl_prism::hazmat::verify::verify as front_verify;\n"
+        )
         if default.returncode:
             return "a default consumer of both crates failed to build:\n" + rendered(default)
         for text, code in REFUSED:
@@ -320,6 +333,7 @@ def selftest():
         raise SystemExit("selftest: the tree itself fails: " + fault)
     field, verify = manifest_of(FIELD), manifest_of(VERIFY)
     bench, isogeny = manifest_of("prism-bench"), manifest_of("prism-isogeny")
+    front = manifest_of(FRONT)
 
     def plant(name, change):
         manifest = copy.deepcopy(real[name])
@@ -377,6 +391,10 @@ def selftest():
             plant(field, lambda m: m["features"].pop(FEATURE)),
         "the verifier drops the feature":
             plant(verify, lambda m: m["features"].pop(FEATURE)),
+        "the front crate declares the feature":
+            plant(front, feature(FEATURE, [f"{VERIFY}/{FEATURE}"])),
+        "the front crate enables it on the verifier":
+            plant(front, dependency(("dependencies",), VERIFY, on)),
         "a tool's feature is a string, not a list":
             plant(bench, feature("count", f"{VERIFY}/{FEATURE}")),
         "a dependency's features are a string, not a list":
