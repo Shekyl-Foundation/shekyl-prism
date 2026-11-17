@@ -183,7 +183,7 @@ jobs:
   # builders of prism-testkit, so they live in the testkit and in the front
   # crate (no crate's tests depend on a crate above it). `--test-package`
   # runs the tests of all four packages against every mutant. Without it
-  # a mutant would meet only the tests of the crate it is in.
+  # a mutant would meet only the tests of the two packages named by `-p`.
   #
   # That is about half a minute a mutant, and there are some 700: hours in
   # one job, against a 90-minute limit. The mutants are dealt round-robin
