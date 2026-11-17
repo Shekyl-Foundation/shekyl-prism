@@ -120,6 +120,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "prism-testkit"
+version = "0.1.0"
+dependencies = [
+ "prism-field",
+ "prism-isogeny",
+ "prism-vectors",
+ "prism-verify",
+]
+
+[[package]]
 name = "prism-vectors"
 version = "0.1.0"
 dependencies = [
@@ -134,7 +144,6 @@ dependencies = [
  "prism-isogeny",
  "prism-vectors",
  "sha3",
- "shekyl-prism",
 ]
 
 [[package]]
@@ -159,6 +168,7 @@ version = "0.1.0"
 dependencies = [
  "prism-field",
  "prism-isogeny",
+ "prism-testkit",
  "prism-vectors",
  "prism-verify",
 ]

@@ -65,7 +65,9 @@ obligation O14, and it stays open until a signer exists for these primes.
 
 The two sets are tested the same way, by the same code: one Sage script
 (`scripts/sage/no_corpus_fixture.sage`) and one set of tests
-(`prism-verify/tests/no_corpus_*.rs`), each run at both. What is
+(`prism-verify/tests/no_corpus_field.rs` and `no_corpus_curves.rs`, and
+`shekyl-prism/tests/no_corpus_refusals.rs` for the refusals, which run
+through both entries of the verifier), each run at both. What is
 checked, without a signature:
 
 - field arithmetic in `F_p` and `F_{p²}` against Sage, on edge values and

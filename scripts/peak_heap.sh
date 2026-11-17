@@ -28,7 +28,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 command -v valgrind >/dev/null || { echo 'valgrind is not installed' >&2; exit 2; }
-cargo build --release --locked -p prism-verify --example verify_once >&2
+cargo build --release --locked -p prism-testkit --example verify_once >&2
 bin=target/release/examples/verify_once
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT

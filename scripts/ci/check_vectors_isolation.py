@@ -25,7 +25,8 @@ constrained: they may depend on the vectors crate normally.
 1. the crate is a workspace member, and every member manifest is in the
    census (the subject exists);
 2. no library manifest names it under a normal or build table, including
-   a renamed package and a target-specific table;
+   a renamed package, a rename inherited from `[workspace.dependencies]`
+   and a target-specific table;
 3. its own manifest names no workspace crate but `prism-field`, in any
    table, again including renames and target-specific tables;
 4. `cargo tree` agrees: the crate is in no normal or build graph of a
@@ -73,13 +74,26 @@ def manifests():
     return {str(path.relative_to(ROOT)): path.read_text() for path in paths}
 
 
-def package_name(key, value):
-    """The package a dependency names, which is not always its table key."""
+def package_name(key, value, inherited=None):
+    """The package a dependency names, which is not always its table key.
+
+    A dependency written `key = { workspace = true }` is whatever the root
+    manifest's `[workspace.dependencies]` says `key` is, and that entry may
+    rename a package too.
+    """
     if isinstance(value, dict):
         named = value.get("package")
         if isinstance(named, str):
             return named
+        if value.get("workspace") is True and inherited is not None:
+            return package_name(key, inherited.get(key))
     return key
+
+
+def workspace_table(root_text):
+    """`[workspace.dependencies]` of the root manifest."""
+    table = tomllib.loads(root_text).get("workspace", {}).get("dependencies", {})
+    return table if isinstance(table, dict) else {}
 
 
 def dependency_tables(manifest):
@@ -100,24 +114,24 @@ def dependency_tables(manifest):
                 yield kind, table
 
 
-def edges(text):
+def edges(text, inherited):
     """`(kind, package)` for every dependency `text` declares."""
     manifest = tomllib.loads(text)
     found = []
     for kind, table in dependency_tables(manifest):
         for key, value in table.items():
-            found.append((kind, package_name(key, value)))
+            found.append((kind, package_name(key, value, inherited)))
     return found
 
 
-def kinds_of(text, package):
-    return {kind for kind, name in edges(text) if name == package}
+def kinds_of(text, package, inherited):
+    return {kind for kind, name in edges(text, inherited) if name == package}
 
 
-def workspace_dependencies(text):
+def workspace_dependencies(text, inherited):
     """Workspace crates `text` names in any dependency table, by kind."""
     return sorted(
-        (name, kind) for kind, name in edges(text) if of_workspace(name)
+        (name, kind) for kind, name in edges(text, inherited) if of_workspace(name)
     )
 
 
@@ -133,14 +147,15 @@ def manifest_fault(texts):
     members = tomllib.loads(texts["Cargo.toml"])["workspace"]["members"]
     if PACKAGE not in members:
         return f"{PACKAGE} is not a workspace member"
-    own = workspace_dependencies(texts[OWN])
+    inherited = workspace_table(texts["Cargo.toml"])
+    own = workspace_dependencies(texts[OWN], inherited)
     if own != [(ONLY_DEPENDENCY, "dependencies")]:
         return (
             f"{PACKAGE} names {own} of this workspace; it may name "
             f"{ONLY_DEPENDENCY} as a normal dependency and nothing else"
         )
     for crate in LIBRARY:
-        kinds = kinds_of(texts[library_manifest(crate)], PACKAGE)
+        kinds = kinds_of(texts[library_manifest(crate)], PACKAGE, inherited)
         shipped = sorted(kinds & set(BUILD_KINDS))
         if shipped:
             return (
@@ -154,6 +169,7 @@ def tree(edges, package=None, manifest=None):
     """Package names in one resolved graph. An empty print is a blind reader."""
     command = [
         "cargo", "tree", "--locked", "--prefix", "none", "-f", "{p}", "-e", edges,
+        "--target", "all",
     ]
     if manifest is not None:
         command += ["--manifest-path", str(manifest)]
@@ -238,6 +254,18 @@ def selftest():
             OWN: real[OWN]
             + "\n[target.'cfg(all())'.build-dependencies]\n"
             + 'isogeny = { package = "prism-isogeny", path = "../prism-isogeny" }\n',
+        },
+        "a library crate takes the vectors crate normally on one platform, "
+        "under a name the workspace table gives it": {
+            "Cargo.toml": real["Cargo.toml"].replace(
+                "[workspace.dependencies]\n",
+                '[workspace.dependencies]\n'
+                'data = { package = "prism-vectors", version = "0.1.0", path = "prism-vectors" }\n',
+                1,
+            ),
+            verify: real[verify]
+            + "\n[target.'cfg(windows)'.dependencies]\n"
+            + 'data = { workspace = true }\n',
         },
         "the vectors crate drops the field crate": {
             OWN: real[OWN].replace("prism-field = { workspace = true }\n", "", 1),

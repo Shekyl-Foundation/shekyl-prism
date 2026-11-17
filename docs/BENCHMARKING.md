@@ -115,13 +115,16 @@ documentation; both modules exist only with the feature. The feature is
 passed on the command line, in one spelling:
 
 ```sh
-cargo run --release --locked -p prism-verify --example op_counts \
+cargo run --release --locked -p prism-testkit --example op_counts \
     --features prism-verify/op-count
 ```
 
-`prism-verify`'s `op-count` turns on `prism-field`'s, and those two
-manifests are the only ones that may name it: no manifest enables it, in
-a default set, from another feature or on a dependency.
+The reporter is an example of `prism-testkit`, which builds the inputs it
+counts. `prism-verify`'s `op-count` turns on `prism-field`'s, and those
+two manifests are the only ones that declare it: no manifest enables it,
+in a default set, from another feature or on a dependency. The testkit's
+manifest names it once, as what the reporter requires
+(`required-features`), which asks for the feature and does not turn it on.
 `scripts/ci/check_op_count_isolation.py` holds that, and compiles a
 consumer to show the two modules cannot be named without it. The field
 crate's feature alone is not enough for a count: the counter would run
@@ -347,7 +350,7 @@ the index and nothing else.
 
 ### Memory of one verification
 
-`sh scripts/peak_heap.sh` runs the `verify_once` example under Valgrind's
+`sh scripts/peak_heap.sh` runs the `verify_once` example of `prism-testkit` under Valgrind's
 Massif on the six primary vectors: once decoding the vector only, once
 verifying it, with the heap measured to the byte, and once more with the
 stack sampled. (The script also measures a refusal at every set;

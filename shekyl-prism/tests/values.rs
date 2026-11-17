@@ -7,8 +7,8 @@
 //! round-trips, and equality and hashing are those of the encoding.
 //!
 //! That the typed path accepts and refuses what the byte-level entry
-//! does is held in `prism-verify/tests/support/entries.rs`, beside the
-//! generator of the negatives, on every input that crate's tests verify.
+//! does is held in `tests/support/entries.rs`, on every input the other
+//! test files of this crate verify.
 
 use std::collections::hash_map::DefaultHasher;
 use std::fs;

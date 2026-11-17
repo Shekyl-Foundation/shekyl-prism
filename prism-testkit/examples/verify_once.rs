@@ -7,7 +7,7 @@
 //! or of one response the verifier must refuse after its chain work.
 //!
 //! ```text
-//! cargo build --release --locked -p prism-verify --example verify_once
+//! cargo build --release --locked -p prism-testkit --example verify_once
 //! target/release/examples/verify_once prism-vectors/data/verify/s5_lvl1.txt verify
 //! target/release/examples/verify_once p664 refuse
 //! ```
@@ -17,7 +17,7 @@
 //!
 //! - `load` reads and decodes the vector and stops; `verify` then verifies
 //!   it once and exits non-zero unless it is accepted.
-//! - `build` builds the response `(P, P − Q)` of `tests/support/identity.rs`
+//! - `build` builds the response `(P, P − Q)` of `prism_testkit::identity`
 //!   and stops; `refuse` then verifies it once and exits non-zero unless
 //!   it is refused as `Codomain`. With a vector file the key is that
 //!   signature's response curve and the message is the vector's; with a
@@ -31,17 +31,12 @@
 //! runs both chains and stops at the codomain comparison, short of the
 //! image comparison an accepted verification goes on to.
 
-#[path = "../tests/support/mod.rs"]
-#[allow(dead_code)]
-mod support;
-
 use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
+use prism_testkit::{identity_response, set, vector, Form};
 use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
 use prism_verify::{verify, CommittedSet, Set, VerifyError};
 use std::hint::black_box;
 use std::process::ExitCode;
-use support::identity::{identity_response, Form};
-use support::{set, vector};
 
 fn run<L: ParameterSet>(text: &str, check: bool) -> bool {
     let (key, message, response) = vector::<L>(text);

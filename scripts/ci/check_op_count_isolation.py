@@ -35,7 +35,13 @@ does. This check requires that:
    compiles an isolated crate: it tests that the API is absent, and does
    not search the source.
 
-`--selftest` plants each breach of 1 and 2 in a copy of the manifests.
+5. the count reporter, the example `op_counts` of `prism-testkit`, has
+   `required-features = ["prism-verify/op-count"]`. That line asks for
+   the feature and does not turn it on: a default build skips the
+   reporter, and a build of it without the feature is refused by Cargo
+   instead of printing zeros. The testkit declares no feature of its own.
+
+`--selftest` plants each breach of 1, 2 and 5 in a copy of the manifests.
 
 The consumer is built with `--offline` from a copy of the tree's lock file,
 so the locked dependencies must be in the registry first
@@ -56,6 +62,9 @@ FEATURE = "op-count"
 FIELD = "prism-field"
 VERIFY = "prism-verify"
 FRONT = "shekyl-prism"
+# The crate whose example `REPORTER` writes the count records.
+TESTKIT = "prism-testkit"
+REPORTER = "op_counts"
 # What each of the two crates must declare the feature as.
 DECLARED = {FIELD: [], VERIFY: [f"{FIELD}/{FEATURE}"]}
 DEPENDENCY_KINDS = ("dependencies", "dev-dependencies", "build-dependencies")
@@ -157,6 +166,31 @@ def manifest_fault(parsed):
                     return f"{name}: [{where}] {key}: features is not a list of strings"
                 if any(names_feature(entry) for entry in enabled):
                     return f"{name}: [{where}] {key} enables {FEATURE}"
+    return reporter_fault(parsed)
+
+
+def reporter_fault(parsed):
+    """The first breach of rule 5, or None."""
+    name = manifest_of(TESTKIT)
+    if name not in parsed:
+        return f"{name} must be in the census"
+    manifest = parsed[name]
+    if "features" in manifest:
+        return f"{name} declares features; the testkit must declare none"
+    examples = manifest.get("example", [])
+    found = [
+        example for example in examples
+        if isinstance(example, dict) and example.get("name") == REPORTER
+    ] if isinstance(examples, list) else []
+    if len(found) != 1:
+        return f"{name} must declare the example `{REPORTER}` once"
+    required = [f"{VERIFY}/{FEATURE}"]
+    if found[0].get("required-features") != required:
+        return (
+            f"{name}: the example `{REPORTER}` must have required-features = "
+            f"{json.dumps(required)}, and has "
+            f"{json.dumps(found[0].get('required-features'))}"
+        )
     return None
 
 
@@ -334,6 +368,7 @@ def selftest():
     field, verify = manifest_of(FIELD), manifest_of(VERIFY)
     bench, isogeny = manifest_of("prism-bench"), manifest_of("prism-isogeny")
     front = manifest_of(FRONT)
+    testkit = manifest_of(TESTKIT)
 
     def plant(name, change):
         manifest = copy.deepcopy(real[name])
@@ -395,6 +430,17 @@ def selftest():
             plant(front, feature(FEATURE, [f"{VERIFY}/{FEATURE}"])),
         "the front crate enables it on the verifier":
             plant(front, dependency(("dependencies",), VERIFY, on)),
+        "the count reporter stops requiring the feature":
+            plant(testkit, lambda m: m["example"][0].pop("required-features")),
+        "the count reporter requires the field crate's feature alone":
+            plant(testkit, lambda m: m["example"][0].__setitem__(
+                "required-features", [f"{FIELD}/{FEATURE}"])),
+        "the count reporter is no longer declared":
+            plant(testkit, lambda m: m.pop("example")),
+        "the testkit declares a feature":
+            plant(testkit, feature("count", [])),
+        "the testkit enables it on the verifier":
+            plant(testkit, dependency(("dependencies",), VERIFY, on)),
         "a tool's feature is a string, not a list":
             plant(bench, feature("count", f"{VERIFY}/{FEATURE}")),
         "a dependency's features are a string, not a list":
@@ -423,7 +469,7 @@ def main():
         f"{FEATURE}: declared by {FIELD} and {VERIFY} alone and enabled by no "
         "manifest; in no member's default graph, and visible when requested; "
         "a default consumer cannot name the counter or the stages, and one "
-        "that asks for it can"
+        f"that asks for it can; the reporter of {TESTKIT} requires it"
     )
 
 

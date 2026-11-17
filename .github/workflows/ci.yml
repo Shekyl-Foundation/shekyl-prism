@@ -103,6 +103,14 @@ jobs:
         run: |
           python3 scripts/ci/check_vectors_isolation.py --selftest
           python3 scripts/ci/check_vectors_isolation.py
+      # A crate's tests may not depend on a crate above it: no manifest of
+      # the library or of the testkit names a crate later in the order
+      # field, vectors, isogeny, verify, testkit, front, in any table, dev
+      # tables included. The self-test plants each breach first.
+      - name: No dependency edge points up, dev edges included
+        run: |
+          python3 scripts/ci/check_no_upward_edge.py --selftest
+          python3 scripts/ci/check_no_upward_edge.py
       # The script reads the parameter sets out of the field crate's source.
       # Nothing else runs it, so a change to how the sets are declared
       # would break it unseen.
@@ -144,18 +152,20 @@ jobs:
           python3 scripts/ci/check_oracle_isolation.py
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
-      # The front crate is the interface and the vectors crate is public
-      # data: both deny missing documentation, and here a broken link or
-      # any other rustdoc warning fails too. Their doc tests run in the
-      # test jobs, which `cargo test --workspace` already includes.
-      - name: Documentation of the front crate and the vectors crate
+      # The front crate is the interface, the vectors crate is public data
+      # and the testkit is a library of test inputs: all three deny missing
+      # documentation, and here a broken link or any other rustdoc warning
+      # fails too. Their doc tests run in the test jobs, which
+      # `cargo test --workspace` already includes.
+      - name: Documentation of the front crate, the vectors crate and the testkit
         env:
           RUSTDOCFLAGS: -D warnings
-        run: cargo doc -p shekyl-prism -p prism-vectors --no-deps --locked
+        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit --no-deps --locked
       # The counter is compiled only when asked for, so its code and the
-      # reporter's counting path are linted in a pass of their own.
+      # reporter (an example of the testkit that requires the feature) are
+      # linted in a pass of their own.
       - name: Clippy, operation counter
-        run: cargo clippy -p prism-field -p prism-verify --features prism-verify/op-count --all-targets --locked -- -D warnings
+        run: cargo clippy -p prism-field -p prism-verify -p prism-testkit --features prism-verify/op-count --all-targets --locked -- -D warnings
       # The workspace run leaves the research feature off, so the real-backend
       # adapter and the experiment drivers need their own pass.
       - name: Clippy, comparison drivers
