@@ -52,7 +52,7 @@ def main():
     if verifier["features"].get("default") != []:
         raise SystemExit("verifier default features must be empty")
     front = tomllib.loads((ROOT / "shekyl-prism/Cargo.toml").read_text())
-    if front.get("features"):
+    if "features" in front:
         raise SystemExit("the front crate declares features; it must declare none")
     if FEATURE in verifier_features("shekyl-prism"):
         raise SystemExit("the front crate's build has the research feature on the verifier")

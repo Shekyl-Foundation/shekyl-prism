@@ -146,11 +146,12 @@ fn typed<L: ParameterSet>(
         verify_prepared(&prepared, message, &response)
     })?;
     verdict.map_err(|e| refused("the verification", e))?;
-    // `basis_hint` marks no stage of its own, so it counts under whichever
-    // stage ran last; only its total is used.
-    let _ = ops::take();
-    let hint = basis_hint::<L>(prepared.coefficient());
-    let search = total(&ops::take());
+    // `basis_hint` marks no stage of its own. It is counted under the
+    // stage the byte-level entry first runs it in, entered here by name.
+    let (hint, search) = part("the basis search", || {
+        ops::enter(Stage::Public.slot());
+        basis_hint::<L>(prepared.coefficient())
+    })?;
     if hint != Ok(prepared.hint()) {
         return Err(format!("{}: the search gave {hint:?}", name(path)));
     }
