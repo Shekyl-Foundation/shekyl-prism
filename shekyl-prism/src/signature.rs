@@ -9,6 +9,9 @@ use core::hash::{Hash, Hasher};
 use prism_field::ParameterSet;
 use prism_verify::{checked_response, CheckedResponse, VerifyError};
 
+use crate::tagged::{bare_of, tagged, Container};
+use crate::{SetId, TaggedError};
+
 /// A signature of the parameter set `S`, decoded and checked.
 ///
 /// A value of this type passed every check a signature can pass alone:
@@ -68,6 +71,35 @@ impl<S: ParameterSet> Signature<S> {
     /// this signature.
     pub fn to_bytes(&self) -> Vec<u8> {
         self.bytes.clone()
+    }
+
+    /// The length of a tagged signature of this set, in bytes: a
+    /// [`SetId`] and then the signature.
+    pub const TAGGED_LEN: usize = SetId::LEN + S::SIGNATURE_LEN;
+
+    /// The signature with its set's identifier in front: [`SetId`] and
+    /// then [`Self::as_bytes`]. A signature has one tagged encoding.
+    pub fn to_tagged(&self) -> Vec<u8> {
+        tagged::<S>(&self.bytes)
+    }
+
+    /// Read a tagged signature of this set. [`Self::to_tagged`] of the
+    /// result is `bytes`.
+    ///
+    /// # Errors
+    ///
+    /// The tag is judged first, and nothing after the first four bytes
+    /// is looked at until it has passed:
+    ///
+    /// - [`TaggedError::TooShort`]: fewer than four bytes;
+    /// - [`TaggedError::UnknownSet`]: the identifier names no built set;
+    /// - [`TaggedError::WrongSet`]: it names a set other than `S`.
+    ///
+    /// Then [`TaggedError::Verify`] with the error of
+    /// [`Self::from_bytes`] on what follows the identifier.
+    pub fn from_tagged(bytes: &[u8]) -> Result<Self, TaggedError> {
+        let bare = bare_of::<S>(Container::Signature, bytes)?;
+        Ok(Self::from_bytes(bare)?)
     }
 
     /// The decoded form the verifier's steps take.

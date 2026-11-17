@@ -90,11 +90,11 @@
 //! [`P248`], [`P324`], [`P376`], [`P500`] and [`P664`] are the five
 //! sets, each named for the bit length of its prime. All five are
 //! first-class here. Which of them a system accepts is that system's
-//! policy and is not encoded in this crate. [`ParameterSet`] is the trait
-//! they share; a user of this interface needs it to name a set in a
-//! generic function and to read a set's sizes, and
-//! [`PublicKey::LEN`] and [`Signature::LEN`] give the two sizes most
-//! callers want without it.
+//! policy: an [`AcceptList`], which this crate gives no default for.
+//! [`ParameterSet`] is the trait they share; a user of this interface
+//! needs it to name a set in a generic function and to read a set's
+//! sizes, and [`PublicKey::LEN`] and [`Signature::LEN`] give the two
+//! sizes most callers want without it.
 //!
 //! The set is part of the type, so a key and a signature of different
 //! sets do not meet. This compiles:
@@ -117,6 +117,58 @@
 //! }
 //! ```
 //!
+//! # Choosing a set at run time
+//!
+//! The types above serve a caller that names the prime in its source. A
+//! node reads keys and signatures from the wire or from stored state,
+//! where the bytes have to say which prime they are under and the node
+//! has to say which primes it accepts. Three things do that:
+//!
+//! - [`SetId`] is the identifier: the pair `(e, f)` of the prime
+//!   `p = f·2^e − 1`, in four bytes;
+//! - a tagged key or signature is a [`SetId`] and then the bare
+//!   encoding. [`PublicKey::to_tagged`] and [`Signature::to_tagged`]
+//!   write it, and [`PublicKey::from_tagged`] and
+//!   [`Signature::from_tagged`] read it at a set named in the source;
+//! - [`AcceptList`] is the caller's policy, and [`verify_tagged`] takes
+//!   one, reads the set from the bytes, and returns the set it accepted.
+//!
+//! ```
+//! use prism_vectors::corpus::Primary;
+//! use shekyl_prism::{
+//!     verify_tagged, AcceptList, PublicKey, SetId, Signature, TaggedError, P248, P500,
+//! };
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! // What a signer and a key's owner would publish: tagged bytes.
+//! let vector = Primary::Lvl1.vector();
+//! let key = PublicKey::<P248>::from_bytes(&vector.public_key()?)?.to_tagged();
+//! let signature = Signature::<P248>::from_bytes(&vector.signature()?)?.to_tagged();
+//! assert_eq!(key[..SetId::LEN], SetId::of::<P248>().to_bytes());
+//!
+//! // A verifier that accepts `p248` learns the set from the bytes.
+//! let accept = AcceptList::new(&[SetId::of::<P248>()])?;
+//! let set = verify_tagged(&accept, &key, vector.message()?, &signature)?;
+//! assert_eq!(set, SetId::of::<P248>());
+//!
+//! // One that accepts `p500` alone refuses the same bytes, and does no
+//! // arithmetic to decide it.
+//! let accept = AcceptList::new(&[SetId::of::<P500>()])?;
+//! assert_eq!(
+//!     verify_tagged(&accept, &key, vector.message()?, &signature),
+//!     Err(TaggedError::NotAccepted(SetId::of::<P248>()))
+//! );
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! There is no default list and no list of every set: a system that
+//! accepts more than one prime writes them out, and is then as strong as
+//! the weakest it wrote. The identifier says which prime bytes are
+//! under; it does not say the key's owner chose that prime, and it is
+//! not part of what a signature covers. [`AcceptList`] states what
+//! follows for a system that accepts more than one set.
+//!
 //! # The layers underneath
 //!
 //! [`hazmat`] re-exports the three crates this interface is built on:
@@ -132,21 +184,28 @@
 //!   on it. The repository's present signer, the `prism-signer` crate, is
 //!   a research wrapper around the C reference implementation: it exists
 //!   to produce test vectors and is not part of this interface.
-//! - **Choosing a set at run time.** A set identifier, containers that
-//!   carry it, and a list of accepted sets are the next part of this
-//!   interface.
+//! - **A key or signature whose set is chosen at run time, as a value.**
+//!   [`verify_tagged`] takes bytes and returns a verdict; a caller that
+//!   keeps a tagged key and checks many signatures under it reads the
+//!   identifier and uses [`PublicKey`] at that set.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+mod accept;
 pub mod hazmat;
 mod key;
+mod set_id;
 mod signature;
+mod tagged;
 
+pub use accept::{AcceptList, EmptyAcceptList};
 pub use key::PublicKey;
 pub use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
 pub use prism_verify::VerifyError;
+pub use set_id::{SetId, UnknownSetId};
 pub use signature::Signature;
+pub use tagged::{verify_tagged, Container, TaggedError};
 
 /// Bytes as lower-case hex, for the `Debug` of the two types.
 fn hex(bytes: &[u8], f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {

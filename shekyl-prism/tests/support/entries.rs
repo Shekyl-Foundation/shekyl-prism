@@ -18,6 +18,18 @@
 //!    signature before it searches for the key's basis, and the typed path
 //!    finishes the key first.
 //!
+//! It also runs the tagged entry, `shekyl_prism::verify_tagged`, on the
+//! same bytes with the set's identifier in front of the key and of the
+//! signature and an accept list of that one set, and fails the test
+//! unless:
+//!
+//! 4. the tagged entry returns the set exactly when the byte-level entry
+//!    accepts, and otherwise the byte-level entry's error, wrapped and
+//!    unaltered.
+//!
+//! So every input any test builds through this module is one more input
+//! on which tagged equals bare.
+//!
 //! [`verify`] and [`verify_set`] have the signatures of the functions of
 //! those names in `prism_verify` and return what the byte-level entry
 //! returned, so a test that calls them through this module tests what it
@@ -25,7 +37,7 @@
 
 use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
 use prism_verify::{Set, VerifyError};
-use shekyl_prism::{PublicKey, Signature};
+use shekyl_prism::{verify_tagged, AcceptList, PublicKey, SetId, Signature, TaggedError};
 
 /// What the two entries said of one input.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -96,7 +108,28 @@ fn typed<L: ParameterSet>(
     (key.verify(message, &signature), false)
 }
 
-/// Run both entries and hold the rule.
+/// `bare` with the identifier of `L` in front. Written out here, and not
+/// with `to_tagged`, because most inputs are not a key or a signature.
+pub fn tag<L: ParameterSet>(bare: &[u8]) -> Vec<u8> {
+    [&SetId::of::<L>().to_bytes()[..], bare].concat()
+}
+
+/// The tagged entry on the same three inputs, accepting the set `L` alone.
+fn tagged<L: ParameterSet>(
+    public_key: &[u8],
+    message: &[u8],
+    signature: &[u8],
+) -> Result<SetId, TaggedError> {
+    let accept = AcceptList::new(&[SetId::of::<L>()]).expect("one set");
+    verify_tagged(
+        &accept,
+        &tag::<L>(public_key),
+        message,
+        &tag::<L>(signature),
+    )
+}
+
+/// Run the entries and hold the rules.
 pub fn both<L: ParameterSet>(public_key: &[u8], message: &[u8], signature: &[u8]) -> Outcome {
     let byte = prism_verify::verify::<L>(public_key, message, signature);
     let (typed, key_refused) = typed::<L>(public_key, message, signature);
@@ -109,6 +142,12 @@ pub fn both<L: ParameterSet>(public_key: &[u8], message: &[u8], signature: &[u8]
         byte.is_ok(),
         typed.is_ok(),
         "{}: one entry accepts and the other refuses: {outcome:?}",
+        L::NAME
+    );
+    assert_eq!(
+        tagged::<L>(public_key, message, signature),
+        byte.map(|()| SetId::of::<L>()).map_err(TaggedError::Verify),
+        "{}: tagged is not bare",
         L::NAME
     );
     if key_refused {

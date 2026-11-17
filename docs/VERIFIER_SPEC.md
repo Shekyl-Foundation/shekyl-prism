@@ -235,8 +235,109 @@ byte-level entry runs the signature's cheap checks before it; the typed
 entry runs it when the key is built. That suits a key validated once and
 kept, and not a key built from every incoming message.
 
+## Tagged containers and the accept list
+
+A caller that names the prime in its source uses the entries above. A
+node that reads keys and signatures from the wire or from stored state
+needs the bytes to say which prime they are under, and has to say which
+primes it accepts. The front crate adds an identifier, a container that
+carries it, and a list.
+
+**The identifier**, `shekyl_prism::SetId`, is the pair `(e, f)` of the
+prime `p = f·2^e − 1`: `e` and then `f`, each a little-endian 16-bit
+integer, four bytes.
+
+| Set | `e` | `f` | Identifier bytes | Tagged key bytes | Tagged signature bytes |
+| --- | ---: | ---: | --- | ---: | ---: |
+| `p248` | 248 | 5 | `f8 00 05 00` | 68 | 356 |
+| `p324` | 324 | 3 | `44 01 03 00` | 86 | 462 |
+| `p376` | 376 | 65 | `78 01 41 00` | 100 | 532 |
+| `p500` | 500 | 27 | `f4 01 1b 00` | 132 | 708 |
+| `p664` | 664 | 17 | `98 02 11 00` | 172 | 940 |
+
+A `SetId` value names one of these five. Four bytes that name none of
+them do not become one; the refusal carries the `e` and `f` read. Each
+set has one identifier and each identifier one encoding.
+
+**A tagged public key** is the identifier and then the bare key of the
+section "Parameters and encoding". **A tagged signature** is the
+identifier and then the bare signature. Each is exactly that length:
+nothing may follow. The bare encodings are unchanged, and a tagged value
+has one encoding because the bare one has.
+
+**The accept list**, `shekyl_prism::AcceptList`, is the caller's policy:
+the sets it accepts, written out. It has no default and there is no list
+of every set; an empty list is refused where it is made.
+
+**The tagged entry**, `shekyl_prism::verify_tagged(accept, public_key,
+message, signature)`, takes a tagged key and a tagged signature and
+returns the set it accepted. It refuses at the tag layer first, in this
+order, each before the next:
+
+1. `TooShort`: an input is shorter than an identifier. The key is looked
+   at before the signature;
+2. `UnknownSet` for the key: its identifier names no built set;
+3. `UnknownSet` for the signature;
+4. `Mismatch`: the two identifiers differ. It names both;
+5. `NotAccepted`: the set is not in the caller's list.
+
+Then the two bare parts go to the byte-level entry of that set,
+unchanged, and its `VerifyError` comes back wrapped and unaltered. The
+byte-level entry is the one whose check order suits a key and a signature
+that arrive together: it checks the signature's encoding before it
+searches for the key's basis.
+
+The five refusals of the tag layer read at most the first four bytes of
+each input and cost no field operation, so no sender can make the entry
+work before the list has been consulted.
+
+**The typed readers.** `PublicKey::<S>::to_tagged` and
+`Signature::<S>::to_tagged` write the tagged form. `from_tagged` on
+either type reads it and refuses, before any check of the bare bytes,
+an input shorter than an identifier (`TooShort`), an identifier that
+names no set (`UnknownSet`), and an identifier of a set other than `S`
+(`WrongSet`); then the bare bytes are checked as `from_bytes` checks
+them.
+
+**What the identifier is not bound by.** The challenge transcript does
+not contain the identifier. What stops a key and a signature of one set
+being presented under another set's identifier is their length: the five
+sets' bare key lengths are pairwise different, and so are their bare
+signature lengths, so bytes of one set under another's identifier are
+refused by the byte-level entry as `Length`. That holds for these five
+primes. It would not hold for two primes whose encodings have equal
+lengths. A test fails if a set is added whose key length or signature
+length repeats another's, and adding such a set reopens the question of
+putting the identifier in the transcript (ledger O16).
+
+**What the identifier does not say.** It says which prime the bytes are
+under. It does not say the key's owner chose that prime. A system that
+accepts more than one set must bind the set to the key where the key is
+created or published, and must not let the identifier on a signature
+choose the set. A list of more than one set is as strong as its weakest
+member. A system that needs a signature bound to its set beyond what the
+length gives puts the identifier in the message it signs. The refusals
+`UnknownSet` and `NotAccepted` are different errors, and neither is a
+secret: both are facts about public bytes and a public policy.
+
 ## Executable evidence
 
+- Tagged equals bare: `shekyl-prism/tests/support/entries.rs` also runs
+  `verify_tagged` on every input it is given, with the set's identifier
+  in front of the key and of the signature and a list of that one set,
+  and fails unless it returns the set exactly when the byte-level entry
+  accepts and otherwise the byte-level entry's error, wrapped. That is
+  every input of the next item. The tag layer itself is tested in
+  `shekyl-prism/tests/tagged.rs`: all 25 ordered pairs of sets, a tag
+  over another set's bytes for each of the 20 unequal pairs, the six
+  honest primary vectors retagged under each of the four other
+  identifiers, the list with and without each set, 37 identifiers that
+  name nothing, every length below four, the refusal order with two
+  faults at once, and the pairwise different lengths.
+  `shekyl-prism/tests/tag_layer_counts.rs` shows with the operation
+  counter that every tag-layer refusal costs no field operation; it
+  requires the counter, so the `op-counts` job runs it and a plain
+  `cargo test` does not.
 - The two entries are held to the rule above on every input the tests
   of the front crate verify: `shekyl-prism/tests/support/entries.rs` runs
   both and fails unless the rule holds, and those tests call the verifier

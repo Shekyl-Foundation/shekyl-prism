@@ -32,7 +32,7 @@ REQUIRED = (
     "deny",
     "hygiene",
     "c-reference-pin",
-    "accept-list",
+    "accept-verdicts",
     "native-signer",
     "codeql",
 )

@@ -41,7 +41,14 @@ does. This check requires that:
    reporter, and a build of it without the feature is refused by Cargo
    instead of printing zeros. The testkit declares no feature of its own.
 
-`--selftest` plants each breach of 1, 2 and 5 in a copy of the manifests.
+6. the test `tag_layer_counts` of the front crate `shekyl-prism`, which
+   shows with the counter that the tag layer does no field arithmetic,
+   has the same `required-features` line, for the same reason: with the
+   counter off it would count nothing and pass. The front crate still
+   declares no feature (rule 2).
+
+`--selftest` plants each breach of 1, 2, 5 and 6 in a copy of the
+manifests.
 
 The consumer is built with `--offline` from a copy of the tree's lock file,
 so the locked dependencies must be in the registry first
@@ -65,6 +72,8 @@ FRONT = "shekyl-prism"
 # The crate whose example `REPORTER` writes the count records.
 TESTKIT = "prism-testkit"
 REPORTER = "op_counts"
+# The front crate's test that counts the tag layer's field operations.
+COUNTED_TEST = "tag_layer_counts"
 # What each of the two crates must declare the feature as.
 DECLARED = {FIELD: [], VERIFY: [f"{FIELD}/{FEATURE}"]}
 DEPENDENCY_KINDS = ("dependencies", "dev-dependencies", "build-dependencies")
@@ -166,7 +175,26 @@ def manifest_fault(parsed):
                     return f"{name}: [{where}] {key}: features is not a list of strings"
                 if any(names_feature(entry) for entry in enabled):
                     return f"{name}: [{where}] {key} enables {FEATURE}"
-    return reporter_fault(parsed)
+    return reporter_fault(parsed) or counted_test_fault(parsed)
+
+
+def requires_fault(name, manifest, kind, target):
+    """Why the `kind` target `target` does not require the feature, or None."""
+    targets = manifest.get(kind, [])
+    found = [
+        entry for entry in targets
+        if isinstance(entry, dict) and entry.get("name") == target
+    ] if isinstance(targets, list) else []
+    if len(found) != 1:
+        return f"{name} must declare the {kind} `{target}` once"
+    required = [f"{VERIFY}/{FEATURE}"]
+    if found[0].get("required-features") != required:
+        return (
+            f"{name}: the {kind} `{target}` must have required-features = "
+            f"{json.dumps(required)}, and has "
+            f"{json.dumps(found[0].get('required-features'))}"
+        )
+    return None
 
 
 def reporter_fault(parsed):
@@ -177,21 +205,15 @@ def reporter_fault(parsed):
     manifest = parsed[name]
     if "features" in manifest:
         return f"{name} declares features; the testkit must declare none"
-    examples = manifest.get("example", [])
-    found = [
-        example for example in examples
-        if isinstance(example, dict) and example.get("name") == REPORTER
-    ] if isinstance(examples, list) else []
-    if len(found) != 1:
-        return f"{name} must declare the example `{REPORTER}` once"
-    required = [f"{VERIFY}/{FEATURE}"]
-    if found[0].get("required-features") != required:
-        return (
-            f"{name}: the example `{REPORTER}` must have required-features = "
-            f"{json.dumps(required)}, and has "
-            f"{json.dumps(found[0].get('required-features'))}"
-        )
-    return None
+    return requires_fault(name, manifest, "example", REPORTER)
+
+
+def counted_test_fault(parsed):
+    """The first breach of rule 6, or None."""
+    name = manifest_of(FRONT)
+    if name not in parsed:
+        return f"{name} must be in the census"
+    return requires_fault(name, parsed[name], "test", COUNTED_TEST)
 
 
 def members():
@@ -437,6 +459,13 @@ def selftest():
                 "required-features", [f"{FIELD}/{FEATURE}"])),
         "the count reporter is no longer declared":
             plant(testkit, lambda m: m.pop("example")),
+        "the tag layer's counted test stops requiring the feature":
+            plant(front, lambda m: m["test"][0].pop("required-features")),
+        "the tag layer's counted test requires the field crate's feature alone":
+            plant(front, lambda m: m["test"][0].__setitem__(
+                "required-features", [f"{FIELD}/{FEATURE}"])),
+        "the tag layer's counted test is no longer declared":
+            plant(front, lambda m: m.pop("test")),
         "the testkit declares a feature":
             plant(testkit, feature("count", [])),
         "the testkit enables it on the verifier":
@@ -469,7 +498,8 @@ def main():
         f"{FEATURE}: declared by {FIELD} and {VERIFY} alone and enabled by no "
         "manifest; in no member's default graph, and visible when requested; "
         "a default consumer cannot name the counter or the stages, and one "
-        f"that asks for it can; the reporter of {TESTKIT} requires it"
+        f"that asks for it can; the reporter of {TESTKIT} and the counted "
+        f"test of {FRONT} require it"
     )
 
 

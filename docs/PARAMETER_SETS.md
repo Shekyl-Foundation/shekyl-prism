@@ -24,16 +24,27 @@ Five primes are ruled, and all five are in the code: three with vectors
 and a signer, and `p324` and `p664` on the verifier side only. Sizes are
 in bytes.
 
-| Set | Prime | `e` | `f` | Field element | Public key | Signature | Salt | In the code |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| `p248` | `5·2^248 − 1` | 248 | 5 | 32 | 64 | 352 | 32 | yes |
-| `p324` | `3·2^324 − 1` | 324 | 3 | 41 | 82 | 458 | 48 | yes, verifier side; accept path unproven (O14) |
-| `p376` | `65·2^376 − 1` | 376 | 65 | 48 | 96 | 528 | 48 | yes |
-| `p500` | `27·2^500 − 1` | 500 | 27 | 64 | 128 | 704 | 64 | yes |
-| `p664` | `17·2^664 − 1` | 664 | 17 | 84 | 168 | 936 | 96 | yes, verifier side; accept path unproven (O14) |
+| Set | Prime | `e` | `f` | Identifier | Field element | Public key | Signature | Salt | In the code |
+| --- | --- | ---: | ---: | --- | ---: | ---: | ---: | ---: | --- |
+| `p248` | `5·2^248 − 1` | 248 | 5 | `f8 00 05 00` | 32 | 64 | 352 | 32 | yes |
+| `p324` | `3·2^324 − 1` | 324 | 3 | `44 01 03 00` | 41 | 82 | 458 | 48 | yes, verifier side; accept path unproven (O14) |
+| `p376` | `65·2^376 − 1` | 376 | 65 | `78 01 41 00` | 48 | 96 | 528 | 48 | yes |
+| `p500` | `27·2^500 − 1` | 500 | 27 | `f4 01 1b 00` | 64 | 128 | 704 | 64 | yes |
+| `p664` | `17·2^664 − 1` | 664 | 17 | `98 02 11 00` | 84 | 168 | 936 | 96 | yes, verifier side; accept path unproven (O14) |
 
 - A public key is one element of `F_{p²}`, two field elements. A
   signature is five elements of `F_{p²}` and the salt.
+- The identifier is the pair `(e, f)`: `e` and then `f`, each a
+  little-endian 16-bit integer, four bytes. It is `shekyl_prism::SetId`,
+  and it goes in front of a key or a signature to make the tagged form
+  ([VERIFIER_SPEC.md](VERIFIER_SPEC.md), "Tagged containers and the
+  accept list"). The sizes in this table are of the bare forms; a tagged
+  key or signature is four bytes longer. The code takes `e` and `f` from
+  the set's definition and has no second table of them; a test pins the
+  five byte strings above.
+- No two sets have the same public-key length, and no two the same
+  signature length. The tagged form relies on that (same section of the
+  specification), and a test fails if a set is added that repeats one.
 - The salt is `e` rounded up to a multiple of 128 bits. The three sets
   with vectors already had those lengths; the rule is what fixes `p324`
   and `p664` (ruled 2026-11-14). `width_bits` is that rounding.
@@ -147,6 +158,18 @@ published. This repository's construction is modified (`e′ = e − 2`, the
 carried salt, the canonical encoding), and its own security argument is
 `SECURITY_ARGUMENT.md`, whose obligations are open. Nothing here is a
 security claim for this repository.
+
+## Which sets a system accepts
+
+All five sets are first-class in the library, and the library does not
+choose among them. A system that verifies tagged keys and signatures
+states the sets it accepts as a `shekyl_prism::AcceptList`, which has no
+default and no "all": the sets are written out one by one.
+
+A list of more than one set is as strong as its weakest member, because
+an attacker targets keys at the weakest prime listed. The table above is
+what each prime is currently assessed at, and is what to read before
+writing a list.
 
 ## Which set Shekyl uses
 

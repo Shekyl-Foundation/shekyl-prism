@@ -33,7 +33,8 @@
 //! signature is looked at. When exactly one of the two inputs is faulty
 //! the two entries name the same fault. When both are, they can name
 //! different ones; `docs/VERIFIER_SPEC.md` states the rule and
-//! `tests/support/entries.rs` holds it on every input the tests verify.
+//! `shekyl-prism/tests/support/entries.rs` holds it on every input the
+//! front crate's tests verify.
 
 use core::marker::PhantomData;
 
