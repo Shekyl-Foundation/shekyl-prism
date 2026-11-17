@@ -10,6 +10,11 @@ The isolated consumer must compile with the real verifier, fail specifically
 on importing its research module, then compile only with the explicit
 research feature. Production dependencies may not enable that feature or
 import prism-compare. This tests API absence, not just a source grep.
+
+The front crate `shekyl-prism` is production code under the same rules. It
+declares no feature at all, and the verifier in its resolved build graph
+has the research feature off; the graph reader is shown to see the feature
+when it is requested.
 """
 import json
 import os
@@ -22,11 +27,38 @@ ROOT = Path(__file__).resolve().parents[2]
 FEATURE = "research-reduced-width"
 
 
+def verifier_features(package, *extra):
+    """The features `prism-verify` has in the build graph of `package`."""
+    result = subprocess.run(
+        ["cargo", "tree", "--locked", "-p", package, "-e", "normal,build",
+         "--prefix", "none", "-f", "{p}\t{f}", *extra],
+        cwd=ROOT, text=True, capture_output=True,
+    )
+    if result.returncode:
+        raise SystemExit(f"cargo tree failed for {package}:\n" + result.stderr)
+    found = None
+    for line in result.stdout.splitlines():
+        node, _, listed = line.partition("\t")
+        if node.split()[:1] == ["prism-verify"]:
+            names = listed.replace(" (*)", "").split(",")
+            found = (found or set()) | {name for name in names if name}
+    if found is None:
+        raise SystemExit(f"prism-verify is not in the build graph of {package}")
+    return found
+
+
 def main():
     verifier = tomllib.loads((ROOT / "prism-verify/Cargo.toml").read_text())
     if verifier["features"].get("default") != []:
         raise SystemExit("verifier default features must be empty")
-    for name in ("prism-field", "prism-isogeny", "prism-verify", "prism-signer"):
+    front = tomllib.loads((ROOT / "shekyl-prism/Cargo.toml").read_text())
+    if "features" in front:
+        raise SystemExit("the front crate declares features; it must declare none")
+    if FEATURE in verifier_features("shekyl-prism"):
+        raise SystemExit("the front crate's build has the research feature on the verifier")
+    if FEATURE not in verifier_features("prism-verify", "--features", f"prism-verify/{FEATURE}"):
+        raise SystemExit("the graph reader does not see the research feature when it is requested")
+    for name in ("prism-field", "prism-isogeny", "prism-verify", "prism-signer", "shekyl-prism"):
         text = (ROOT / name / "Cargo.toml").read_text()
         manifest = tomllib.loads(text)
         for key, dep in manifest.get("dependencies", {}).items():
@@ -62,7 +94,11 @@ def main():
         enabled = subprocess.run(command + ["--features", "experiments"], env=env, text=True, capture_output=True)
         if enabled.returncode:
             raise SystemExit("explicit research consumer failed:\n" + enabled.stderr)
-    print("Default verifier API excludes research; explicit opt-in works; production manifests are isolated.")
+    print(
+        "Default verifier API excludes research; explicit opt-in works; production "
+        "manifests are isolated; the front crate declares no feature and builds "
+        "the verifier without it."
+    )
 
 
 if __name__ == "__main__":

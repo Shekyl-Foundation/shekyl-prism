@@ -94,8 +94,9 @@ jobs:
           python3 scripts/ci/check_op_count_isolation.py --selftest
           python3 scripts/ci/check_op_count_isolation.py
       # The crate that holds the committed test data is in no build of the
-      # three library crates, and has neither the verifier nor the isogeny
-      # crate in its own graph, dev edges included. The self-test plants
+      # three layer crates or of the front crate, and has none of the
+      # verifier, the isogeny crate and the front crate in its own graph,
+      # dev edges included. The self-test plants
       # each breach in a copy of the manifests first, so a check that had
       # gone blind fails here instead of passing.
       - name: No library build holds test data, and the vectors crate does not depend on what it tests
@@ -143,6 +144,14 @@ jobs:
           python3 scripts/ci/check_oracle_isolation.py
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      # The front crate is the interface and the vectors crate is public
+      # data: both deny missing documentation, and here a broken link or
+      # any other rustdoc warning fails too. Their doc tests run in the
+      # test jobs, which `cargo test --workspace` already includes.
+      - name: Documentation of the front crate and the vectors crate
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc -p shekyl-prism -p prism-vectors --no-deps --locked
       # The counter is compiled only when asked for, so its code and the
       # reporter's counting path are linted in a pass of their own.
       - name: Clippy, operation counter

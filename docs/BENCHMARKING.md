@@ -131,7 +131,7 @@ names `prism-field/op-count` is the counter's own test, which builds the
 field crate by itself.
 
 ```sh
-sh scripts/op_counts.sh           # rewrite the two records
+sh scripts/op_counts.sh           # rewrite the three records
 sh scripts/op_counts.sh --check   # what CI runs, on x86_64 and aarch64
 ```
 
@@ -147,6 +147,11 @@ sh scripts/op_counts.sh --check   # what CI runs, on x86_64 and aarch64
   `p664`, which have no vector: a response built from a public key alone
   that passes the pairing check, in two forms. `Basis` has no vector: no key whose basis
   index exceeds the search bound is known.
+- [benchmarks/op-counts-typed.txt](benchmarks/op-counts-typed.txt): each
+  of the 113 honest vectors again through the entry split by object, as
+  six rows: the key's checks, the signature's checks, the verification,
+  their sum, the byte-level total, and one basis search counted alone.
+  See [the entry split by object](#the-entry-split-by-object).
 
 Each record states a digest of the sources it was counted from. The
 commit is the one that last changed the record. Counts are taken in the
@@ -271,6 +276,74 @@ the Pi than on x86_64, which is where the smaller fall comes from. At
 level I the counted multiplications, squarings and inversions at these
 prices come to 68.9 ms of the 89.1 ms measured, 77%; the rest is
 additions, subtractions, base-field work and everything outside the field.
+
+### The entry split by object
+
+The typed interface (`shekyl-prism`) checks a key once, when it is built,
+and keeps the basis index the search found. The byte-level entry searches
+for that index twice on every call: once in its public checks, and again
+in the relation. The split entry searches once. This is the first
+measurement of what a prepared key saves, and the answer is: one basis
+search, which is very little.
+
+Ran: `scripts/op_counts.sh` counts each of the 113 honest vectors through
+`PreparedKey::prepare`, `checked_response` and `verify_prepared`, the
+three functions the typed interface calls and adds nothing to, and
+through `basis_hint` alone. The reporter fails unless, on every vector
+and in every field, the three parts and one basis search add up to the
+byte-level total. They do, on all 113. The record is
+[benchmarks/op-counts-typed.txt](benchmarks/op-counts-typed.txt), checked
+by CI with the other two.
+
+Extension-field counts on the first primary vector of each set
+(`s5_lvl1.txt`, `s5_lvl3.txt`, `s5_lvl5.txt`):
+
+| | part | mul | square | inv | sqrt | is_square |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| `p248` | key | 2 | 2 | 0 | 0 | 2 |
+| | signature | 6 | 3 | 3 | 3 | 0 |
+| | verification | 137,826 | 93,945 | 68 | 3 | 0 |
+| | **sum** | 137,834 | 93,950 | 71 | 6 | 2 |
+| | byte-level | 137,836 | 93,951 | 71 | 6 | 4 |
+| | one basis search | 2 | 1 | 0 | 0 | 2 |
+| `p376` | key | 4 | 4 | 0 | 0 | 3 |
+| | signature | 6 | 3 | 3 | 3 | 0 |
+| | verification | 212,068 | 147,271 | 73 | 3 | 0 |
+| | **sum** | 212,078 | 147,278 | 76 | 6 | 3 |
+| | byte-level | 212,082 | 147,281 | 76 | 6 | 6 |
+| | one basis search | 4 | 3 | 0 | 0 | 3 |
+| `p500` | key | 2 | 3 | 0 | 0 | 2 |
+| | signature | 6 | 3 | 3 | 3 | 0 |
+| | verification | 289,158 | 202,139 | 73 | 3 | 0 |
+| | **sum** | 289,166 | 202,145 | 76 | 6 | 2 |
+| | byte-level | 289,168 | 202,147 | 76 | 6 | 4 |
+| | one basis search | 2 | 2 | 0 | 0 | 2 |
+
+The search also makes base-field residuosity tests when the key's
+coefficient is a non-square: 10 at this `p376` key and 4 at this `p500`
+key, none at this `p248` key.
+
+Over all 113 keys one search is 2 to 14 multiplications, 1 to 7 squarings
+and 2 to 8 residuosity tests in the extension field, and up to 16 in the
+base field. A verification is about 232,000 multiplications and
+squarings at `p248` and about 491,000 at `p500`. So keeping the index saves under one part in ten thousand of
+the products. A residuosity test is dearer than a product, but two to
+eight of them do not change that picture. The key's own construction is
+the search and one squaring (the singular-curve test); the signature's
+construction is the same 6 multiplications, 3 squarings, 3 inversions and
+3 square roots on every vector, which is the model check.
+
+Derived, not measured: what else of a verification depends on the key
+alone and could be kept with it. The key's basis points and the order and
+span checks on them are part of the `torsion` stage (17,956 products at
+`p248`, 27,281 at `p376`, 36,154 at `p500`, which also holds the same
+checks on the signature's points), and one of the two Weil pairings of
+the `pairing` stage (22,202, 33,674 and 44,768 products for both) is of
+the key's basis alone. If about half of each stage is the key's, a key
+that kept its basis and its pairing value would save in the order of 8%
+of a verification. That is an estimate from stage totals, the split inside
+a stage has not been counted, and none of it is built: this part keeps
+the index and nothing else.
 
 ### Memory of one verification
 

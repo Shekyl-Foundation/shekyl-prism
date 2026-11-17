@@ -32,11 +32,14 @@
 //! all of them, in a module of its own at the end of this file, which
 //! states the numbers pinned for that set.
 
+#[path = "support/entries.rs"]
+mod entries;
 #[path = "support/identity.rs"]
 mod identity;
 #[path = "support/verdict.rs"]
 mod verdict;
 
+use entries::{verify, verify_set};
 use identity::{first_prime_salt_counter, identity_response, salt_of, Form};
 use prism_field::{Field, ParameterSet, Salt, P248, P324, P376, P500, P664};
 use prism_isogeny::jac::{dbl_iter, Jac};
@@ -45,8 +48,7 @@ use prism_vectors::curve_table::{CurveNumber, CurveRow};
 use prism_vectors::no_corpus::{curve_table, Model, WithoutCorpus};
 use prism_verify::signature::canonical_sign;
 use prism_verify::{
-    verify, verify_set, AffinePoint, ChallengeScalar, KeyIdentity, Response, Set as AnySet,
-    VerifyError,
+    AffinePoint, ChallengeScalar, KeyIdentity, Response, Set as AnySet, VerifyError,
 };
 
 /// The numbers a set's test module pins: the first salt counter of prime

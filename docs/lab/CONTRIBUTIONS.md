@@ -15,6 +15,7 @@ Status: living record, started 2026-11-13. Ruled by Rick 2026-11-13: AI particip
   - Claude Code, model `claude-fable-5-2`: from 2026-11-12, the rest of PR #15 (comparison drivers, experiments E1 to E6, records, the comparison report, the security-argument rewrite, review fixes; the branch's commits from `b98925f` to `3770c82`) and the check of these notes against the tree.
   - Which tool wrote each commit from 2026-11-07 to 2026-11-11, and the two commits Rick added to PR #15 (`bf163f3`, `cb9f6ec`): to be filled in by Rick.
 - **Other tools.** Commit `8f1f8bb`, pushed before PR #1, carries a Cursor co-author trailer; it is the only commit on `dev` that carries one. Pull-request review bots (CodeQL, Copilot) raised findings on #15; each is recorded with its verdict in that pull request.
+- **Coding agent (Grok, xAI, in Grok Build).** On 2026-11-17, the review of PR #29 at `4d05f0f` and the representation fix that followed: a prepared key keeps its bytes and its basis index, and the coefficient is decoded from those bytes.
 
 ## What git shows and does not show
 
@@ -39,3 +40,4 @@ To be kept current. As of 2026-11-13:
 | Hedged salt derivation | reviewer, on Rick's question 11-12 | coding agent | reviewer |
 | Operation-count metric as the machine-independent cost signal | reviewer, ruled by Rick 11-08; brief by reviewer 11-13 | coding agent (Claude Code) | CI on x86_64 and aarch64 |
 | Verifier cost: squaring, inversion-free Miller loop, shared chain inversion, scalar-multiplication reuse | reviewer named the four targets from a profile and the refusals to preserve | coding agent (Claude Code) chose the constructions (fraction-carrying Jacobian loop, one batch per chain, doubling tables per basis point) | the replaced routines kept as references; 2,712 negative verdicts pinned; Sage differential |
+| A prepared key stores its bytes and its basis index; the coefficient is decoded from the bytes | review of PR #29 at `4d05f0f` | coding agent (Grok, xAI, in Grok Build) | unit test `the_coefficient_is_the_bytes_and_the_index_is_that_search`; `scripts/op_counts.sh` |

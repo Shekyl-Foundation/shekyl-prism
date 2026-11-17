@@ -10,11 +10,12 @@
 keep it what it is:
 
 - **No build of a library crate contains test data.** The library crates
-  are `prism-field`, `prism-isogeny` and `prism-verify`. Each may name
-  `prism-vectors` as a dev-dependency and in no other kind.
+  are `prism-field`, `prism-isogeny`, `prism-verify` and the front crate
+  `shekyl-prism`. Each may name `prism-vectors` as a dev-dependency and in
+  no other kind.
 - **The vectors crate does not depend on the code it tests.** It has
-  neither `prism-verify` nor `prism-isogeny` in its graph, in any kind,
-  dev-dependencies included. A dev-dependency back onto the verifier
+  none of `prism-verify`, `prism-isogeny` and `shekyl-prism` in its
+  graph, in any kind, dev-dependencies included. A dev-dependency back onto the verifier
   would give the verifier's tests two copies of the verifier's types. Its
   only dependency on this workspace is `prism-field`.
 
@@ -44,7 +45,10 @@ PACKAGE = "prism-vectors"
 OWN = "prism-vectors/Cargo.toml"
 ONLY_DEPENDENCY = "prism-field"
 # The crates whose builds must not contain test data.
-LIBRARY = ("prism-field", "prism-isogeny", "prism-verify")
+LIBRARY = ("prism-field", "prism-isogeny", "prism-verify", "shekyl-prism")
+# A crate of this workspace, by its name: every member is `prism-*` but the
+# front crate.
+FRONT = "shekyl-prism"
 # Kinds that put a crate into a build of the package itself.
 BUILD_KINDS = ("dependencies", "build-dependencies")
 EDGE_KINDS = ("dependencies", "dev-dependencies", "build-dependencies")
@@ -113,8 +117,12 @@ def kinds_of(text, package):
 def workspace_dependencies(text):
     """Workspace crates `text` names in any dependency table, by kind."""
     return sorted(
-        (name, kind) for kind, name in edges(text) if name.startswith("prism-")
+        (name, kind) for kind, name in edges(text) if of_workspace(name)
     )
+
+
+def of_workspace(name):
+    return name.startswith("prism-") or name == FRONT
 
 
 def manifest_fault(texts):
@@ -168,7 +176,7 @@ def graph_fault():
             return f"a build of {crate} contains {PACKAGE}"
     own = sorted(
         name for name in set(tree("normal,build,dev", package=PACKAGE))
-        if name.startswith("prism-") and name != PACKAGE
+        if of_workspace(name) and name != PACKAGE
     )
     if own != [ONLY_DEPENDENCY]:
         return (
@@ -186,6 +194,7 @@ def selftest():
     verify = library_manifest("prism-verify")
     isogeny = library_manifest("prism-isogeny")
     field = library_manifest("prism-field")
+    front = library_manifest(FRONT)
     planted = {
         "a library crate renames the vectors crate into its normal dependencies": {
             verify: real[verify].replace(
@@ -206,6 +215,18 @@ def selftest():
                 '[dependencies]\nprism-vectors = { workspace = true }\n',
                 1,
             ),
+        },
+        "the front crate takes the vectors crate normally": {
+            front: real[front].replace(
+                "[dependencies]\n",
+                '[dependencies]\nprism-vectors = { workspace = true }\n',
+                1,
+            ),
+        },
+        "the vectors crate takes the front crate as a dev-dependency": {
+            OWN: real[OWN]
+            + "\n[dev-dependencies]\n"
+            + 'shekyl-prism = { workspace = true }\n',
         },
         "the vectors crate takes the verifier as a dev-dependency": {
             OWN: real[OWN]

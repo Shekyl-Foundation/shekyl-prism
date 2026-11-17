@@ -15,6 +15,8 @@
 //! - the verdict of each case is the one stated here, so a file that was
 //!   edited cannot relabel a row.
 
+#[path = "support/entries.rs"]
+mod entries;
 #[path = "support/identity.rs"]
 mod identity;
 #[path = "support/refusal_vectors.rs"]
@@ -22,8 +24,9 @@ mod refusal_vectors;
 #[path = "support/verdict.rs"]
 mod verdict;
 
+use entries::verify_set;
 use prism_vectors::refusals::{row, rows, Verdict, TEXT};
-use prism_verify::{verify_set, Set, VerifyError};
+use prism_verify::{Set, VerifyError};
 use verdict::error_of;
 
 /// The verdict of each case, by the name it has in the records, and the
