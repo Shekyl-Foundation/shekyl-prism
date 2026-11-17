@@ -7,10 +7,12 @@
 # (`report-red`), except a dispatched run, which reports only when asked.
 # The person who dispatched it is reading it.
 #
-# `mutants` and `coverage` are report-only until the first `dev` → `main`
-# cut: a surviving mutant or a coverage figure is written to the job
-# summary and does not fail the run. A tool that fails to install still
-# fails, and that failure is a red nightly.
+# `mutants`, `mutants-front` and `coverage` are report-only until the
+# first `dev` → `main` cut: a surviving mutant, a mutant that timed out or
+# a coverage figure is written to the job summary and does not fail the
+# run. A tool that fails to install still fails, and so does a mutants
+# shard whose tool did not test its mutants (the unmutated tests failing,
+# a usage or internal error, no result). Those are a red nightly.
 #
 # The schedule runs the default branch's copy of this file. The level III
 # floor-device measurement is not this workflow, and it is not started by
@@ -28,7 +30,11 @@ on:
         type: boolean
         default: false
       mutants_shard:
-        description: "Run one mutants shard (0 to 7) and no other job. Empty runs everything."
+        description: "Run one shard of `mutants` (0 to 11), then `mutants-summary`, and no other job."
+        type: string
+        default: ""
+      mutants_front_shard:
+        description: "Run one shard of `mutants-front` (0 to 3), then `mutants-summary`, and no other job."
         type: string
         default: ""
 
@@ -42,7 +48,7 @@ permissions:
 jobs:
   fuzz:
     name: fuzz (${{ matrix.target }})
-    if: ${{ inputs.mutants_shard == '' }}
+    if: ${{ inputs.mutants_shard == '' && inputs.mutants_front_shard == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
@@ -123,7 +129,7 @@ jobs:
 
   differential-prime:
     name: differential-prime
-    if: ${{ inputs.mutants_shard == '' }}
+    if: ${{ inputs.mutants_shard == '' && inputs.mutants_front_shard == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -145,7 +151,7 @@ jobs:
 
   big-endian:
     name: big-endian
-    if: ${{ inputs.mutants_shard == '' }}
+    if: ${{ inputs.mutants_shard == '' && inputs.mutants_front_shard == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -163,7 +169,7 @@ jobs:
 
   c-vectors-full:
     name: c-vectors-full
-    if: ${{ inputs.mutants_shard == '' }}
+    if: ${{ inputs.mutants_shard == '' && inputs.mutants_front_shard == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -191,19 +197,28 @@ jobs:
   # times the baseline, so the multiplier is raised to keep the margin a
   # run over two packages had.
   #
-  # That is over a minute for a mutant no test kills, and there are some 700: hours in
-  # one job, against a 90-minute limit. The mutants are dealt round-robin
-  # to eight jobs, so each gets its share of every file and runs for a
-  # fraction of its limit. A dispatch with `mutants_shard` runs one of the
-  # eight alone.
+  # A mutant no test kills runs every test: minutes, and there are over
+  # 800 mutants, which is hours in one job against a 90-minute limit. The
+  # mutants are dealt round-robin to twelve jobs, so each gets its share
+  # of every file. The count is chosen so the slowest shard is under 60
+  # minutes, and a shard measured above 70 is a reason to raise it
+  # (`docs/PRISM_CI_DESIGN.md`). A different count deals the mutants
+  # differently: one shard's lists compare with the same shard's only
+  # while the count stands, and `mutants-summary` has the lists whole.
+  #
+  # A dispatch with `mutants_shard` runs one of the twelve alone.
+  #
+  # What is red: the tool not testing its mutants. Missed mutants and
+  # timeouts are listed and do not fail (`scripts/ci/mutants_report.py`).
   mutants:
-    name: mutants (${{ matrix.shard }}/8)
+    name: mutants (${{ matrix.shard }}/12)
+    if: ${{ inputs.mutants_front_shard == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(inputs.mutants_shard != '' && format('[{0}]', inputs.mutants_shard) || '[0, 1, 2, 3, 4, 5, 6, 7]') }}
+        shard: ${{ fromJSON(inputs.mutants_shard != '' && format('[{0}]', inputs.mutants_shard) || '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]') }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
@@ -214,9 +229,10 @@ jobs:
           toolchain: 1.94.0
       - name: Install cargo-mutants 27.1.0
         run: python3 scripts/ci/install_pinned_tool.py cargo-mutants
-      # Report-only. The exit code is recorded and then discarded. The
-      # install step above still fails the job if the tool is not there.
-      - name: Surviving mutants
+      # This step does not judge: the tool's exit code is passed on, and
+      # the last step reads it once the output is kept.
+      - id: run
+        name: cargo mutants
         env:
           SHARD: ${{ matrix.shard }}
         run: |
@@ -225,22 +241,140 @@ jobs:
             --test-package prism-field --test-package prism-verify \
             --test-package prism-testkit --test-package shekyl-prism \
             --timeout-multiplier 12 \
-            --no-shuffle --shard "${SHARD}/8" --sharding round-robin > mutants.txt
-          code=$?
-          set -e
-          # The log keeps the figures; a step summary cannot be read back.
-          tail -n 80 mutants.txt
-          {
-            echo "## cargo mutants, shard ${SHARD} of 8"
-            echo "exit ${code} (report-only until dev → main)"
-            echo '```'
-            tail -n 80 mutants.txt
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+            --no-shuffle --shard "${SHARD}/12" --sharding round-robin > mutants.txt
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          tail -n 3 mutants.txt
+      # The four counts and the whole missed and timeout lists, in the log
+      # and in the summary.
+      - name: What it found
+        if: ${{ always() }}
+        env:
+          SHARD: ${{ matrix.shard }}
+          CODE: ${{ steps.run.outputs.code }}
+        run: |
+          python3 scripts/ci/mutants_report.py shard --out mutants.out \
+            --job mutants --shard "$SHARD" --of 12 --exit "${CODE:--1}"
+      # The tool's whole output directory: the four lists, what it set out
+      # to test, each mutant's outcome and time, and each mutant's diff
+      # and test log.
+      - name: Keep the output
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mutants-${{ matrix.shard }}
+          path: mutants.out
+          retention-days: 30
+          overwrite: true
+          if-no-files-found: error
+      - name: The shard tested its mutants
+        run: python3 scripts/ci/mutants_report.py verdict --out mutants.out
+
+  # The mutants of the front crate: the set identifier, the accept list,
+  # the tagged readers and the typed key and signature. Its own tests are
+  # the ones that can kill them, and the baseline runs those same tests,
+  # so the tool's default time limit stands.
+  #
+  # Cargo runs the crate's test binaries in name order and stops after
+  # the first that fails. `acceptance` is the first of them and walks the
+  # corpus, so a mutant costs about as much caught as missed: over a
+  # minute each, whichever test kills it. The tests are not renamed or
+  # filtered to change that. The mutants are dealt to four jobs instead,
+  # by the same rule as above: the slowest under 60 minutes.
+  #
+  # `tests/tag_layer_counts.rs` does not run here. It requires the
+  # operation counter, a feature no manifest enables, and a mutant that
+  # only it would catch is listed as missed. CI runs it in `op-counts`.
+  #
+  # A dispatch with `mutants_front_shard` runs one shard alone.
+  mutants-front:
+    name: mutants-front (${{ matrix.shard }}/4)
+    if: ${{ inputs.mutants_shard == '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(inputs.mutants_front_shard != '' && format('[{0}]', inputs.mutants_front_shard) || '[0, 1, 2, 3]') }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+      - name: Install cargo-mutants 27.1.0
+        run: python3 scripts/ci/install_pinned_tool.py cargo-mutants
+      # This step does not judge: the tool's exit code is passed on, and
+      # the last step reads it once the output is kept.
+      - id: run
+        name: cargo mutants
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          set +e
+          cargo mutants -p shekyl-prism --test-package shekyl-prism \
+            --no-shuffle --shard "${SHARD}/4" --sharding round-robin > mutants.txt
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          tail -n 3 mutants.txt
+      # The four counts and the whole missed and timeout lists, in the log
+      # and in the summary.
+      - name: What it found
+        if: ${{ always() }}
+        env:
+          SHARD: ${{ matrix.shard }}
+          CODE: ${{ steps.run.outputs.code }}
+        run: |
+          python3 scripts/ci/mutants_report.py shard --out mutants.out \
+            --job mutants-front --shard "$SHARD" --of 4 --exit "${CODE:--1}"
+      # The tool's whole output directory: the four lists, what it set out
+      # to test, each mutant's outcome and time, and each mutant's diff
+      # and test log.
+      - name: Keep the output
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mutants-front-${{ matrix.shard }}
+          path: mutants.out
+          retention-days: 30
+          overwrite: true
+          if-no-files-found: error
+      - name: The shard tested its mutants
+        run: python3 scripts/ci/mutants_report.py verdict --out mutants.out
+
+  # Every shard's lists as one: for each of the two jobs the shards found
+  # against the shards there are, the totals, and the missed and timeout
+  # mutants by file. A shard that was cancelled or kept nothing is named
+  # as absent, and the figures are then the present shards' alone. The
+  # merged lists are kept for 90 days, the shards' output for 30.
+  mutants-summary:
+    name: mutants-summary
+    needs: [mutants, mutants-front]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: mutants-*
+          path: shards
+      - name: All shards
+        run: python3 scripts/ci/mutants_report.py gather --dir shards --write lists
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: missed-mutants
+          path: lists
+          retention-days: 90
+          overwrite: true
+          if-no-files-found: error
 
   coverage:
     name: coverage
-    if: ${{ inputs.mutants_shard == '' }}
+    if: ${{ inputs.mutants_shard == '' && inputs.mutants_front_shard == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -270,7 +404,7 @@ jobs:
 
   report-red:
     name: report-red
-    needs: [fuzz, differential-prime, big-endian, c-vectors-full, mutants, coverage]
+    needs: [fuzz, differential-prime, big-endian, c-vectors-full, mutants, mutants-front, mutants-summary, coverage]
     # `failure()` is false for a job its own time limit cancelled. A
     # cancelled job is red and is reported.
     if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) && (github.event_name == 'schedule' || inputs.report) }}
