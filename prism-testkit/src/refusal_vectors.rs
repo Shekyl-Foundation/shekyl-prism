@@ -6,9 +6,10 @@
 //! The rows of the committed identity refusals
 //! (`prism_vectors::refusals`), built here.
 //!
-//! At every set, the two responses of `identity.rs` under one curve as the
-//! key. The file is what this module renders. A test holds the two equal,
-//! and `examples/identity_refusals.rs` prints the rendering.
+//! At every set, the two responses of [`crate::identity`] under one curve
+//! as the key. The file is what this module renders: a test of this crate
+//! holds the two equal, and `examples/identity_refusals.rs` prints the
+//! rendering.
 //!
 //! The curve is one the operation counts already cover, so a row here and
 //! the row of the same `set`, `vector` and `case` in
@@ -19,9 +20,6 @@
 //!   signature's message;
 //! - at a set without one, the model curve of the set's Sage file, under
 //!   the set's refusal message.
-//!
-//! The including file declares `identity` and `verdict` beside this
-//! module.
 
 use std::fmt::Write as _;
 
@@ -31,17 +29,24 @@ use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
 use prism_vectors::refusals::Verdict;
 use prism_verify::{Response, Set, VerifyError};
 
-use super::identity::{first_prime_salt_counter, identity_response, Form};
-use super::verdict::error_of;
+use crate::identity::{first_prime_salt_counter, identity_response, Form};
+use crate::verdict::error_of;
 
 /// One row, before it is text.
 pub struct Row {
+    /// The parameter set.
     pub set: Set,
+    /// The curve used as the key, as the file's `vector` column names it.
     pub vector: String,
+    /// Which pair answers for the key's basis.
     pub form: Form,
+    /// The counter the salt encodes.
     pub salt_counter: u64,
+    /// The message.
     pub message: Vec<u8>,
+    /// The public key bytes.
     pub public_key: Vec<u8>,
+    /// The signature bytes.
     pub signature: Vec<u8>,
 }
 
@@ -146,7 +151,7 @@ pub fn rows() -> Vec<Row> {
 /// What stands above the rows.
 const HEADER: &str = "\
 # Responses built from public data alone that the verifier must refuse.
-# Written by `cargo run --release --locked -p prism-verify --example identity_refusals`.
+# Written by `cargo run --release --locked -p prism-testkit --example identity_refusals`.
 # Do not edit: a test holds this file to what that command prints.
 #
 # Nothing in this file is accepted. Each row is a public key, a message and

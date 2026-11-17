@@ -23,17 +23,6 @@ sha3 = { workspace = true }
 
 [dev-dependencies]
 prism-vectors = { workspace = true }
-# The typed interface, for the tests that hold it equal to `verify` on
-# every input (`tests/support/entries.rs`). The front crate depends on
-# this one; a dev-dependency back is the one cycle Cargo allows, and only
-# the integration tests use it.
-shekyl-prism = { workspace = true }
 
 [lints]
 workspace = true
-
-# The reporter of the count records. It names the counter's API, which a
-# default build does not have.
-[[example]]
-name = "op_counts"
-required-features = ["op-count"]

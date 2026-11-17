@@ -7,7 +7,7 @@
 //! cost of every negative.
 //!
 //! ```text
-//! cargo run --release --locked -p prism-verify --example op_counts \
+//! cargo run --release --locked -p prism-testkit --example op_counts \
 //!     --features prism-verify/op-count
 //! ```
 //!
@@ -25,11 +25,9 @@
 //! (`ext_*`) or made directly in the base field (`base_*`). Hashing and the
 //! Baillie–PSW test do not use the field and are not in this metric.
 
-#[path = "../tests/support/mod.rs"]
-mod support;
-
 use prism_field::ops::{self, Counts, Slot};
 use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
+use prism_testkit::{files, identity_response, negatives, primary, set, vector, Form};
 use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
 use prism_verify::{
     basis_hint, checked_response, verify, verify_prepared, CommittedSet, PreparedKey, Stage,
@@ -38,8 +36,6 @@ use prism_verify::{
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
-use support::identity::{identity_response, Form};
-use support::{files, negatives, primary, set, vector};
 
 fn fields(counts: Slot) -> String {
     let one = |name: &str, c: Counts| {
@@ -245,7 +241,7 @@ fn refuse<L: ParameterSet>(path: &Path, text: &str, accepted: Slot) -> Result<()
 /// A set without a corpus has no honest vector, so no accepted count and
 /// no negatives derived from one. What can be counted is the refusal of a
 /// response built from a public key alone that passes the pairing check
-/// (`tests/support/identity.rs`): the key is the model curve of the set's
+/// (`prism_testkit::identity`): the key is the model curve of the set's
 /// Sage file, under the set's refusal message. The form refused as
 /// `Codomain` is the measured cost of the chain work at that prime. It is
 /// the cost of a refusal, not of a verification that accepts.

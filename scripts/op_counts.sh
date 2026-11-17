@@ -38,21 +38,24 @@ typed=docs/benchmarks/op-counts-typed.txt
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 # The counted sources: the three crates of the verifier, what pins their
-# dependencies, and the vectors crate with its data: every input a count
-# is taken on, and the curve and message the rows without a corpus name.
+# dependencies, the vectors crate with its data (every input a count is
+# taken on, and the curve and message the rows without a corpus name), and
+# the testkit, whose generator decides which negatives there are and whose
+# example is the reporter.
 # The digest is over each file's bytes and its path, so a file that moves
 # changes it. Tracked files and new files not
 # yet added, never ignored ones, so the digest is the same before and
 # after `git add`.
 git ls-files -co --exclude-standard -- \
     Cargo.toml Cargo.lock rust-toolchain.toml prism-field prism-isogeny prism-verify \
-    prism-vectors \
+    prism-vectors prism-testkit \
     | LC_ALL=C sort > "$work/files"
 test -s "$work/files"
 digest=$(xargs sha256sum < "$work/files" | sha256sum | cut -d' ' -f1)
 # The build goes to target/ whatever CARGO_TARGET_DIR says, as the run below
-# names that path.
-cargo build --release --locked --target-dir target -p prism-verify \
+# names that path. The reporter is built alone: a test built in the same
+# invocation would get the counter too, as Cargo unifies features.
+cargo build --release --locked --target-dir target -p prism-testkit \
     --example op_counts --features prism-verify/op-count >&2
 target/release/examples/op_counts > "$work/raw"
 {

@@ -3,60 +3,43 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! The committed honest vectors and the negatives derived from them.
+//! The negatives derived from one honest vector.
 //!
-//! One generator serves the acceptance tests and the operation-count
-//! reporter (`examples/op_counts.rs`), so both see the same inputs under
-//! the same names. Every case is deterministic in the vector's text.
+//! [`negatives`] takes the text of a committed vector and returns every
+//! input the records hold for it that a verifier must refuse, in a fixed
+//! order and under fixed names. The tests and the operation-count
+//! reporter (`examples/op_counts.rs`) both call it, so both see the same
+//! inputs under the same names. Every case is deterministic in the
+//! vector's text.
+//!
+//! A [`Case`] carries the refusals it may meet as data. Nothing here asks
+//! a verifier for a verdict: the cases are built with curve arithmetic and
+//! the challenge hash, and the verifier is what a test then runs on them.
 
-pub mod identity;
-
+use crate::identity;
+use crate::vectors::{set, vector};
 use prism_field::{Field, ParameterSet, Salt};
 use prism_isogeny::{
     jac::{add, dbl_iter, to_xz, Jac},
     montgomery::Montgomery,
     pairing::mul,
 };
-use prism_vectors::corpus::{Primary, Vector};
 use prism_verify::{
-    signature::canonical_sign, AffinePoint, ChallengeScalar, CommittedSet, KeyIdentity, Response,
-    VerifyError,
+    signature::canonical_sign, AffinePoint, ChallengeScalar, KeyIdentity, Response, VerifyError,
 };
-use std::path::PathBuf;
-
-/// Public key, message and decoded response of one vector file.
-pub fn vector<L: ParameterSet>(text: &str) -> (Vec<u8>, Vec<u8>, Response<L>) {
-    let parsed = Vector::new(text);
-    let public_key = parsed.public_key().expect("the vector's public key");
-    let message = parsed.message().expect("the vector's message").to_vec();
-    let signature = parsed.signature().expect("the vector's signature");
-    (
-        public_key,
-        message,
-        Response::decode(&signature).expect("the vector's signature decodes"),
-    )
-}
-/// The set a vector file names.
-pub fn set(text: &str) -> CommittedSet {
-    let level = Vector::new(text).level().expect("the vector's level");
-    CommittedSet::from_label(level).expect("the vector's level is a set")
-}
-/// Every committed honest vector, sorted by path.
-pub fn files() -> Vec<PathBuf> {
-    prism_vectors::corpus::files()
-}
-/// The six vectors the negatives are derived from, two keys per set.
-pub fn primary() -> Vec<PathBuf> {
-    Primary::ALL.map(Primary::path).to_vec()
-}
 
 /// One input that must be refused, and the refusals it may meet.
 pub struct Case {
+    /// The name of the case in the records, the same for every vector.
     pub name: String,
+    /// The public key bytes.
     pub key: Vec<u8>,
+    /// The message.
     pub message: Vec<u8>,
+    /// The signature bytes.
     pub signature: Vec<u8>,
-    /// More than one where the outcome depends on the vector.
+    /// The refusals a verifier may return. More than one where the outcome
+    /// depends on the vector.
     pub allowed: &'static [VerifyError],
 }
 
@@ -91,6 +74,16 @@ const TRANSLATE: &[VerifyError] = &[
 const EXCLUDED_MODEL: &[VerifyError] = &[VerifyError::Singular, VerifyError::Model];
 
 /// Every negative derived from one honest vector, in a fixed order.
+///
+/// `text` is a committed vector file of the set `L`. The number of cases
+/// grows with the salt, one for each of its bits: 326 at `p248`, and
+/// 2,724 over the six primary vectors.
+///
+/// # Panics
+///
+/// If `text` is not an honest vector of `L`: the construction decodes the
+/// key and the signature and takes square roots that exist on a response
+/// curve.
 pub fn negatives<L: ParameterSet>(text: &str) -> Vec<Case> {
     let (pk, msg, r) = vector::<L>(text);
     let curve = Montgomery::normalized(r.curve);

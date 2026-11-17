@@ -17,8 +17,8 @@
 //! - `(P, −Q)` is refused as `Kernel`, at the start of the chain work;
 //! - `(P, P − Q)` runs both chains and is refused as `Codomain`.
 //!
-//! This is its own file so that a test which has no committed vectors
-//! (`p324`) can use it without the rest of the support module.
+//! Nothing here reads a committed vector, so a set that has none (`p324`,
+//! `p664`) is served as well as one that has.
 
 use prism_field::{Field, ParameterSet, Salt};
 use prism_isogeny::jac::{add, lift_basis, Jac};
@@ -37,6 +37,7 @@ pub enum Form {
 }
 
 impl Form {
+    /// Both forms, in the order of the records.
     pub const ALL: [Self; 2] = [Self::NegatedQ, Self::Difference];
 
     /// The name of the case in the records.
@@ -65,6 +66,10 @@ const SALT_COUNTERS: u64 = 65_536;
 
 /// The first salt counter whose challenge degree is prime under `key` and
 /// `message`. Anyone can run this search: it needs the key, not a secret.
+///
+/// # Panics
+///
+/// If `key` does not decode as a public key of `L`.
 pub fn first_prime_salt_counter<L: ParameterSet>(key: &[u8], message: &[u8]) -> u64 {
     let identity = KeyIdentity::<L>::decode(key).expect("a key");
     (0..SALT_COUNTERS)
@@ -96,6 +101,10 @@ pub struct IdentityResponse<L: ParameterSet> {
 /// model of its class, with a basis index inside the bound. A response
 /// curve of an honest signature is one, and so is a fixture curve that the
 /// model check passes.
+///
+/// # Panics
+///
+/// If `coefficient` is not such a curve.
 pub fn identity_response<L: ParameterSet>(
     coefficient: L::Ext,
     message: &[u8],

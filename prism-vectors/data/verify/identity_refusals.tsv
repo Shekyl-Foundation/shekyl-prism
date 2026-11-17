@@ -1,5 +1,5 @@
 # Responses built from public data alone that the verifier must refuse.
-# Written by `cargo run --release --locked -p prism-verify --example identity_refusals`.
+# Written by `cargo run --release --locked -p prism-testkit --example identity_refusals`.
 # Do not edit: a test holds this file to what that command prints.
 #
 # Nothing in this file is accepted. Each row is a public key, a message and

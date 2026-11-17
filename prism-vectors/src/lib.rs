@@ -60,11 +60,11 @@
 //!   `p664`.
 //! - **Format:** `data/verify/identity_refusals.tsv`, tab-separated, with
 //!   a header that says how a row is made.
-//! - **From:** the verifier's own basis of a curve, built by the test
-//!   support of `prism-verify`.
+//! - **From:** the verifier's own basis of a curve, built by
+//!   `prism-testkit`.
 //! - **Regenerate:**
-//!   `cargo run --release --locked -p prism-verify --example identity_refusals`.
-//!   A test holds the file to that output.
+//!   `cargo run --release --locked -p prism-testkit --example identity_refusals`.
+//!   A test of that crate holds the file to that output.
 //!
 //! ## Sets without a corpus: [`no_corpus`], [`curve_table`]
 //!

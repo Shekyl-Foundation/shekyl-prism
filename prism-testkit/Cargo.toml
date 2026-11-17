@@ -1,0 +1,29 @@
+[package]
+name = "prism-testkit"
+description = "Test inputs for a PRISM verifier or signer: the negatives derived from the committed vectors, and responses built from public data alone"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# No features, and no dependency on the front crate `shekyl-prism`: the
+# front crate's tests depend on this one, and every edge points down.
+# `scripts/ci/check_no_upward_edge.py` holds that.
+[dependencies]
+prism-field = { workspace = true }
+prism-isogeny = { workspace = true }
+prism-verify = { workspace = true }
+prism-vectors = { workspace = true }
+
+[lints]
+workspace = true
+
+# The reporter of the count records. It names the counter's API, which a
+# default build does not have, so it is built only when the verifier's
+# feature is asked for on the command line:
+# `--features prism-verify/op-count`. No manifest enables that feature,
+# this one included: `required-features` asks, it does not turn on.
+[[example]]
+name = "op_counts"
+required-features = ["prism-verify/op-count"]

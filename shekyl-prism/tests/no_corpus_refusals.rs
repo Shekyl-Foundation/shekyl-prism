@@ -17,7 +17,7 @@
 //!
 //! The pairing check is also passed from public data, with no secret: a
 //! key's own curve as the response curve, and a pair of points whose
-//! pairing is the inverse of the key basis's (`support/identity.rs`). Such
+//! pairing is the inverse of the key basis's (`prism_testkit::identity`). Such
 //! a response has no isogeny behind it, and the verifier refuses it in the
 //! chain work that follows.
 //!
@@ -34,16 +34,12 @@
 
 #[path = "support/entries.rs"]
 mod entries;
-#[path = "support/identity.rs"]
-mod identity;
-#[path = "support/verdict.rs"]
-mod verdict;
 
 use entries::{verify, verify_set};
-use identity::{first_prime_salt_counter, identity_response, salt_of, Form};
 use prism_field::{Field, ParameterSet, Salt, P248, P324, P376, P500, P664};
 use prism_isogeny::jac::{dbl_iter, Jac};
 use prism_isogeny::montgomery::Montgomery;
+use prism_testkit::{error_of, first_prime_salt_counter, identity_response, salt_of, Form};
 use prism_vectors::curve_table::{CurveNumber, CurveRow};
 use prism_vectors::no_corpus::{curve_table, Model, WithoutCorpus};
 use prism_verify::signature::canonical_sign;
@@ -503,7 +499,7 @@ fn the_pairing_is_passed_from_public_data_and_the_chains_refuse<L: WithoutCorpus
         };
         let verdict = prism_vectors::refusals::Verdict::ALL
             .into_iter()
-            .find(|verdict| verdict::error_of(*verdict) == *refusal)
+            .find(|verdict| error_of(*verdict) == *refusal)
             .expect("a verdict for the form's refusal");
         let row = prism_vectors::refusals::row(L::NAME, verdict).expect("a committed row");
         let again =
