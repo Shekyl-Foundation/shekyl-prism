@@ -9,7 +9,8 @@ use core::hash::{Hash, Hasher};
 use prism_field::ParameterSet;
 use prism_verify::{verify_prepared, PreparedKey, VerifyError};
 
-use crate::Signature;
+use crate::tagged::{bare_of, tagged, Container};
+use crate::{SetId, Signature, TaggedError};
 
 /// A public key of the parameter set `S`, checked.
 ///
@@ -78,6 +79,37 @@ impl<S: ParameterSet> PublicKey<S> {
     /// The key's encoding, owned. [`Self::from_bytes`] of it is this key.
     pub fn to_bytes(&self) -> Vec<u8> {
         self.as_bytes().to_vec()
+    }
+
+    /// The length of a tagged key of this set, in bytes: a [`SetId`] and
+    /// then the key.
+    pub const TAGGED_LEN: usize = SetId::LEN + S::PUBLIC_KEY_LEN;
+
+    /// The key with its set's identifier in front: [`SetId`] and then
+    /// [`Self::as_bytes`]. This is the form to store or send where the
+    /// reader does not already know the set.
+    pub fn to_tagged(&self) -> Vec<u8> {
+        tagged::<S>(self.as_bytes())
+    }
+
+    /// Read a tagged key of this set. [`Self::to_tagged`] of the result
+    /// is `bytes`.
+    ///
+    /// # Errors
+    ///
+    /// The tag is judged first, and nothing after the first four bytes
+    /// is looked at until it has passed:
+    ///
+    /// - [`TaggedError::TooShort`]: fewer than four bytes;
+    /// - [`TaggedError::UnknownSet`]: the identifier names no built set;
+    /// - [`TaggedError::WrongSet`]: it names a set other than `S`.
+    ///
+    /// Then [`TaggedError::Verify`] with the error of
+    /// [`Self::from_bytes`] on what follows the identifier. The cost
+    /// note of [`Self::from_bytes`] applies from there.
+    pub fn from_tagged(bytes: &[u8]) -> Result<Self, TaggedError> {
+        let bare = bare_of::<S>(Container::PublicKey, bytes)?;
+        Ok(Self::from_bytes(bare)?)
     }
 
     /// Verify `signature` on `message` under this key.

@@ -23,5 +23,12 @@ prism-vectors = { workspace = true }
 # does not depend on this crate.
 prism-testkit = { workspace = true }
 
+# Shows with the operation counter that the tag layer does no field
+# arithmetic. It asks for the counter and does not turn it on: a plain
+# `cargo test` skips it, and CI's op-counts job names it.
+[[test]]
+name = "tag_layer_counts"
+required-features = ["prism-verify/op-count"]
+
 [lints]
 workspace = true
