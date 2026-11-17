@@ -33,10 +33,11 @@ crate names `prism-field` alone; this check does not repeat it.
 1. every crate of the order is a workspace member with a manifest (the
    subject exists);
 2. no manifest of the order names a workspace crate that is not earlier
-   in the order, in any table, including a renamed package and a
-   target-specific table;
+   in the order, in any table, including a renamed package, a rename
+   inherited from `[workspace.dependencies]` and a target-specific table;
 3. `cargo tree` agrees: the graph of each crate of the order, over normal,
-   build and dev edges, holds no workspace crate that is not earlier.
+   build and dev edges and for every target, holds no workspace crate that
+   is not earlier.
 
 `--selftest` plants each breach of 1 and 2 in a copy of the manifests, and
 checks that the graph reader sees a dev edge.
@@ -78,13 +79,26 @@ def manifests():
     return {str(path.relative_to(ROOT)): path.read_text() for path in paths}
 
 
-def package_name(key, value):
-    """The package a dependency names, which is not always its table key."""
+def package_name(key, value, inherited=None):
+    """The package a dependency names, which is not always its table key.
+
+    A dependency written `key = { workspace = true }` is whatever the root
+    manifest's `[workspace.dependencies]` says `key` is, and that entry may
+    rename a package too.
+    """
     if isinstance(value, dict):
         named = value.get("package")
         if isinstance(named, str):
             return named
+        if value.get("workspace") is True and inherited is not None:
+            return package_name(key, inherited.get(key))
     return key
+
+
+def workspace_table(root_text):
+    """`[workspace.dependencies]` of the root manifest."""
+    table = tomllib.loads(root_text).get("workspace", {}).get("dependencies", {})
+    return table if isinstance(table, dict) else {}
 
 
 def dependency_tables(manifest):
@@ -105,12 +119,12 @@ def dependency_tables(manifest):
                 yield kind, table
 
 
-def edges(text):
+def edges(text, inherited):
     """`(kind, package)` for every dependency `text` declares."""
     found = []
     for kind, table in dependency_tables(tomllib.loads(text)):
         for key, value in table.items():
-            found.append((kind, package_name(key, value)))
+            found.append((kind, package_name(key, value, inherited)))
     return found
 
 
@@ -131,9 +145,10 @@ def manifest_fault(texts):
         declared = tomllib.loads(texts[manifest_of(crate)])
         if declared.get("package", {}).get("name") != crate:
             return f"{manifest_of(crate)} is not the manifest of {crate}"
+    inherited = workspace_table(texts["Cargo.toml"])
     for crate in ORDER:
         below = allowed(crate)
-        for kind, name in edges(texts[manifest_of(crate)]):
+        for kind, name in edges(texts[manifest_of(crate)], inherited):
             if of_workspace(name) and name not in below:
                 return (
                     f"{crate} names {name} under [{kind}]: that edge points "
@@ -146,7 +161,7 @@ def tree(package, kinds):
     """Package names in one resolved graph. An empty print is a blind reader."""
     result = subprocess.run(
         ["cargo", "tree", "--locked", "--prefix", "none", "-f", "{p}", "-e", kinds,
-         "-p", package],
+         "--target", "all", "-p", package],
         cwd=ROOT, text=True, capture_output=True,
     )
     if result.returncode:
@@ -232,6 +247,18 @@ def selftest():
         "the front crate's tests take a tool": {
             manifest_of(FRONT): dev(FRONT, 'prism-bench = { path = "../prism-bench" }\n'),
         },
+        "the verifier's tests take the front crate on one platform, under "
+        "a name the workspace table gives it": {
+            "Cargo.toml": real["Cargo.toml"].replace(
+                "[workspace.dependencies]\n",
+                '[workspace.dependencies]\n'
+                'front = { package = "shekyl-prism", version = "0.1.0", path = "shekyl-prism" }\n',
+                1,
+            ),
+            manifest_of("prism-verify"): real[manifest_of("prism-verify")]
+            + "\n[target.'cfg(windows)'.dev-dependencies]\n"
+            + 'front = { workspace = true }\n',
+        },
         "the testkit leaves the workspace": {
             "Cargo.toml": real["Cargo.toml"].replace('    "prism-testkit",\n', "", 1),
         },
@@ -268,7 +295,11 @@ def main():
     if fault:
         raise SystemExit(fault)
     for crate in ORDER:
-        named = sorted({name for _, name in edges(texts[manifest_of(crate)]) if of_workspace(name)})
+        named = sorted({
+            name
+            for _, name in edges(texts[manifest_of(crate)], workspace_table(texts["Cargo.toml"]))
+            if of_workspace(name)
+        })
         print(f"{crate}: names {', '.join(named) if named else 'no workspace crate'}")
     print(
         "no edge points up: each of " + ", ".join(ORDER)
