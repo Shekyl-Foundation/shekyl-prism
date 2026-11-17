@@ -1,11 +1,29 @@
 # shekyl-prism
 
-Research implementation of the prime-degree §5 PRISM signature relation,
-with a salted Rust verifier and an experimental native signer with a
-32-byte caller randomness input (zeros in reproducible research runs).
-It is not a consensus crate or an adopted wallet authorization scheme.
-The exact protocol still needs cryptographic review; see
-[open security items](docs/SECURITY_REVIEW.md).
+PRISM signatures in pure Rust: an implementation of the prime-degree §5
+PRISM signature relation, with a salt. A signature is an isogeny of prime
+degree from the signer's public curve, and the degree is bound to the
+message by a hash. The repository holds a Rust verifier at five parameter
+sets, the committed test vectors it is held to, and the tools that
+measure it. It is written to be read, measured and extended by anyone
+working on the scheme, and to become the signature implementation Shekyl
+uses.
+
+## Status
+
+**Research code. Unreviewed. Not for protecting anything of value.**
+
+- The exact protocol still needs cryptographic review; see the
+  [open security items](docs/SECURITY_REVIEW.md). It is not a consensus
+  crate or an adopted wallet authorization scheme.
+- The repository is in **alpha on `dev`** until it has a solid verifier
+  and a signer in Rust. A **beta then goes to `main`**. Until then the
+  interface can change from one change to the next.
+- Verification is in Rust. Signing is not yet: the present signer is an
+  experimental wrapper around the C reference implementation, with a
+  32-byte caller randomness input (zeros in reproducible research runs).
+  It exists to produce test vectors.
+
 The [security argument draft](docs/SECURITY_ARGUMENT.md) maps the salted
 implementation to its algebraic premises, exact parameter bounds,
 second-preimage cost, and conditional SUF-CMA decomposition. The
@@ -14,15 +32,53 @@ protocol cost an attacker, what the salted one costs, and what the salt
 does not change, with both attacks run against the real signer and
 verifier at reduced challenge widths.
 
+## Quick start
+
+```rust
+use shekyl_prism::{PublicKey, Signature, P500};
+
+let key = PublicKey::<P500>::from_bytes(&key_bytes)?;
+let signature = Signature::<P500>::from_bytes(&signature_bytes)?;
+key.verify(message, &signature)?;
+```
+
+A key and a signature are checked when they are made, so a value of
+either type is valid by construction, and both carry their parameter set
+in their type. The crate documentation (`cargo doc -p shekyl-prism --open`)
+has examples that run against the committed vectors, and
+`shekyl-prism/examples/` has two programs: `verify` and `read_vector`.
+
+## The crates
+
+Three tiers. Depend on the first; read and extend the second; the third
+is what tests and measures them.
+
+**The interface**
+
+| Crate | Role |
+| --- | --- |
+| `shekyl-prism` | Typed keys and signatures, valid by construction, and verification. Every item is documented. The three crates below are re-exported under its `hazmat` module |
+
+**The low-level layer**: where the algorithm is. Public and documented, but
+its functions assume invariants that only the interface checks in full,
+and nothing in it is promised stable.
+
 | Crate | Role |
 | --- | --- |
 | `prism-field` | Five parameter sets (`p248`, `p324`, `p376`, `p500`, `p664`), scalar `fp2` 0.6.0 backend |
 | `prism-isogeny` | Montgomery and theta arithmetic, adapted chains and duals |
-| `prism-verify` | Canonical decoding, pairing, both chains and complete images |
+| `prism-verify` | Canonical decoding, pairing, both chains and complete images; the byte-level entry `verify` and the entry split by object that the interface is built on |
+
+**Supporting crates and tools**
+
+| Crate | Role |
+| --- | --- |
+| `prism-vectors` | A public crate: every committed test vector and a documented reader for each family. Depends on `prism-field` alone, so the data can be used without a verifier; the library crates take it as a dev-dependency only |
 | `prism-signer` | Unix research API for an isolated deterministic C backend |
 | `prism-bench` | Timing: an accepted verification at the sets with a signer, and a refusal after the pairing check at all five |
 | `prism-compare` | Archived derivation and explicit research experiments; no production dependency |
-| `prism-vectors` | A public crate: every committed test vector and a documented reader for each family. Depends on `prism-field` alone, so the data can be used without a verifier; the library crates take it as a dev-dependency only |
+
+## The protocol and its parameters
 
 The [verifier specification](docs/VERIFIER_SPEC.md) defines the current
 research encoding, including the `e′=e−2` parameter choice. Signatures are

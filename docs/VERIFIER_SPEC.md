@@ -175,7 +175,71 @@ either curve; enum ordering is not a global precedence promise.
 Verification has no RNG or secret inputs. Public arithmetic is variable
 time. The signer remains a separate crate and process backend.
 
+## The two entries
+
+The verifier has two entries, and they accept the same inputs.
+
+**The byte-level entry**, `prism_verify::verify::<L>(public_key, message,
+signature)`, takes three byte strings and runs every check on every call,
+in the order of the section above. It is the definition: its signature,
+its refusal order and its operation counts are held fixed, and the
+committed count records are taken through it.
+
+**The typed entry** is the interface of the `shekyl-prism` crate. It
+splits the same checks by the object they depend on:
+
+| Call | Checks | Refusals, in order |
+| --- | --- | --- |
+| `PublicKey::<S>::from_bytes` | every check on the key alone | `Length`, `Canonical`, `Origin`, `Singular`, `Basis` |
+| `Signature::<S>::from_bytes` | every check on the signature alone | `Length`, `Canonical`, `Sign`, `Singular` or `Model` |
+| `PublicKey::verify` | the checks that need key, message and signature | `Composite`, then `Kernel`, `Pairing`, `Codomain`, `Image` |
+
+A value of either type passed its checks, and there is no other way to
+make one. The key keeps the basis index its construction found, so the
+relation does not search for it again. The three calls are
+`PreparedKey::prepare`, `checked_response` and `verify_prepared` of
+`prism_verify::prepared`, which are low-level functions: the last assumes
+its response passed the second, and only the typed interface holds that
+in a type.
+
+The byte-level entry looks at both lengths, decodes the key, then decodes
+and checks the signature, and only then searches for the key's basis. The
+typed entry finishes the key, search included, before any signature
+exists. So, with the typed entry taken as its three calls in the order
+key, signature, verification, and its refusal as the first of them:
+
+1. the typed entry accepts exactly when the byte-level entry accepts;
+2. if `PublicKey::from_bytes` succeeds, the typed entry's refusal is the
+   byte-level entry's;
+3. if `PublicKey::from_bytes` fails, the byte-level entry also refuses,
+   and may name another error. The typed entry names the key's fault.
+   The byte-level entry names `Length` when the signature's length is
+   wrong, whatever the key is; and for a key whose only fault is `Basis`
+   it names any fault of the signature (`Canonical`, `Sign`, `Singular`,
+   `Model`) first.
+
+Case 3 needs a faulty key and a faulty signature together. When exactly
+one input is faulty the two entries name the same fault.
+
+The cost order differs with it. The basis search is the one check whose
+length the sender of a key chooses, up to the search bound. The
+byte-level entry runs the signature's cheap checks before it; the typed
+entry runs it when the key is built. That suits a key validated once and
+kept, and not a key built from every incoming message.
+
 ## Executable evidence
+
+- The two entries are held to the rule above on every input the tests
+  verify: `prism-verify/tests/support/entries.rs` runs both and fails
+  unless the rule holds, and the tests call the verifier through it. That
+  is the 113 honest signatures and the 2,724 negatives derived from the
+  six primary vectors (`tests/acceptance.rs`, which pins both counts),
+  the committed identity refusals at all five sets, and every refusal
+  built without a signer at all five sets. A faulty key with a faulty
+  signature, in every pairing of the faults that need no signer, is built
+  at each set with the refusal of each entry pinned
+  (`tests/entries_agree.rs`). No key refused as `Basis` is known, so that
+  half of case 3 is argued from the order of the code and not run.
 
 - All 113 committed honest signatures are executed through `verify`.
 - Both chains match every Sage theta-null point for the six primary vectors.
