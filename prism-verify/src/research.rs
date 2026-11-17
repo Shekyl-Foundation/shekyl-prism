@@ -40,7 +40,7 @@ pub fn verify_width<L: ParameterSet>(
     let scalar = ChallengeScalar::derive_width(
         &opened.identity,
         message,
-        opened.response.response().salt,
+        opened.checked.response().salt,
         bits,
     )
     .ok_or(VerifyError::Length)?;

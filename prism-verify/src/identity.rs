@@ -16,10 +16,13 @@ const SINGULAR_SQUARE: u64 = 4;
 /// A decoded public key: the Montgomery coefficient `A` of
 /// `E_vk : y^2 = x^3 + A x^2 + x`, together with the bytes that name it.
 ///
-/// This constructor checks the encoding and excluded coefficients. It is
-/// the challenge identity, not proof of a full rational torsion basis:
-/// the verifier checks that basis's order and span before pairing/chains.
-/// Both verification and index search hash these exact canonical bytes.
+/// [`Self::decode`] checks the encoding and the excluded coefficients.
+/// The coefficient is the decode of those bytes. [`Self::from_accepted_bytes`]
+/// reads them again for a caller that has already run `decode`, and does
+/// not check. This is the challenge identity, not proof of a full rational
+/// torsion basis: the verifier checks that basis's order and span before
+/// pairing and the chains. Both verification and the index search hash
+/// these exact canonical bytes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct KeyIdentity<'key, L: ParameterSet> {
     bytes: &'key [u8],
@@ -49,9 +52,14 @@ impl<'key, L: ParameterSet> KeyIdentity<'key, L> {
         })
     }
 
-    /// A key whose bytes [`Self::decode`] already accepted, with the
-    /// coefficient it decoded them to.
-    pub(crate) fn from_checked(bytes: &'key [u8], coefficient: L::Ext) -> Self {
+    /// The identity of bytes [`Self::decode`] has already accepted.
+    ///
+    /// The coefficient is [`ParameterSet::ext_decode`] of `bytes`. This
+    /// does not repeat [`Self::decode`]'s checks: the singular test squares,
+    /// and a second squaring would be a field operation the typed entry
+    /// does not pay. The only caller has run [`Self::decode`] on these bytes.
+    pub(crate) fn from_accepted_bytes(bytes: &'key [u8]) -> Self {
+        let coefficient = L::ext_decode(bytes).expect("accepted key bytes decode");
         Self { bytes, coefficient }
     }
 

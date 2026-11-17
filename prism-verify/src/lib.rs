@@ -129,24 +129,29 @@ pub fn verify<L: ParameterSet>(
 ) -> Result<(), VerifyError> {
     let opened = open::<L>(public_key, signature)?;
     mark::Stage::Challenge.enter();
-    let scalar =
-        ChallengeScalar::derive(&opened.identity, message, opened.response.response().salt);
+    let scalar = ChallengeScalar::derive(&opened.identity, message, opened.checked.response().salt);
     accept(&opened, &scalar)
 }
 
 /// A key and response that passed the checks shared by every verifier entry.
+///
+/// The basis index is not kept here. [`open`] searches for it so a missing
+/// basis is refused before the challenge, and the relation searches again:
+/// that second search is part of the byte-level entry's pinned cost.
+/// [`PreparedKey`] is the owned key that keeps the index and does not
+/// search a second time.
 pub(crate) struct Opened<'a, L: ParameterSet> {
     pub identity: KeyIdentity<'a, L>,
-    pub response: CheckedResponse<L>,
+    pub checked: CheckedResponse<L>,
 }
 
 /// Length, decode, sign, model, and basis. The signature's checks are
 /// [`prepared::response_checks`], the function the split entry runs. Both
-/// lengths come before either decode, so `Length` does not depend on which field is wrong and a short
-/// signature cannot surface as `Origin`. The sign test is a byte comparison
-/// on an element already decoded, so it comes before the basis search, whose
-/// length an attacker chooses with `A` — up to [`search_bound`] Legendre
-/// symbols.
+/// lengths come before either decode, so `Length` does not depend on which
+/// input is short and a short signature cannot surface as `Origin`. The
+/// sign test is a byte comparison on an element already decoded, so it
+/// comes before the basis search, whose length an attacker chooses with
+/// `A` — up to [`search_bound`] Legendre symbols.
 pub(crate) fn open<'a, L: ParameterSet>(
     public_key: &'a [u8],
     signature: &[u8],
@@ -156,9 +161,9 @@ pub(crate) fn open<'a, L: ParameterSet>(
         return Err(VerifyError::Length);
     }
     let identity = KeyIdentity::<L>::decode(public_key)?;
-    let response = prepared::response_checks::<L>(signature)?;
+    let checked = prepared::response_checks::<L>(signature)?;
     basis_hint::<L>(identity.coefficient())?;
-    Ok(Opened { identity, response })
+    Ok(Opened { identity, checked })
 }
 
 /// Primality, then the relation. The challenge hash has already run.
@@ -167,7 +172,7 @@ pub(crate) fn accept<L: ParameterSet>(
     scalar: &ChallengeScalar,
 ) -> Result<(), VerifyError> {
     prime_then::<L>(scalar, || {
-        relation::relate(&opened.identity, opened.response.response(), scalar)
+        relation::relate(&opened.identity, opened.checked.response(), scalar)
     })
 }
 
