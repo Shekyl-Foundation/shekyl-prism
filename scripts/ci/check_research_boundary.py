@@ -15,6 +15,10 @@ The front crate `shekyl-prism` is production code under the same rules. It
 declares no feature at all, and the verifier in its resolved build graph
 has the research feature off; the graph reader is shown to see the feature
 when it is requested.
+
+The testkit `prism-testkit` is not production code, but the front crate's
+tests are built with it, so it is held to the same two rules: no feature
+table, and the verifier in its default graph has the research feature off.
 """
 import json
 import os
@@ -56,9 +60,17 @@ def main():
         raise SystemExit("the front crate declares features; it must declare none")
     if FEATURE in verifier_features("shekyl-prism"):
         raise SystemExit("the front crate's build has the research feature on the verifier")
+    testkit = tomllib.loads((ROOT / "prism-testkit/Cargo.toml").read_text())
+    if "features" in testkit:
+        raise SystemExit("the testkit declares features; it must declare none")
+    if FEATURE in verifier_features("prism-testkit"):
+        raise SystemExit("the testkit's build has the research feature on the verifier")
     if FEATURE not in verifier_features("prism-verify", "--features", f"prism-verify/{FEATURE}"):
         raise SystemExit("the graph reader does not see the research feature when it is requested")
-    for name in ("prism-field", "prism-isogeny", "prism-verify", "prism-signer", "shekyl-prism"):
+    for name in (
+        "prism-field", "prism-isogeny", "prism-verify", "prism-signer", "shekyl-prism",
+        "prism-testkit",
+    ):
         text = (ROOT / name / "Cargo.toml").read_text()
         manifest = tomllib.loads(text)
         for key, dep in manifest.get("dependencies", {}).items():
@@ -96,8 +108,8 @@ def main():
             raise SystemExit("explicit research consumer failed:\n" + enabled.stderr)
     print(
         "Default verifier API excludes research; explicit opt-in works; production "
-        "manifests are isolated; the front crate declares no feature and builds "
-        "the verifier without it."
+        "manifests are isolated; the front crate and the testkit declare no "
+        "feature and build the verifier without it."
     )
 
 
