@@ -562,3 +562,62 @@ fn an_identifier_has_one_encoding() {
         "SetId(p376: e=376, f=65)"
     );
 }
+
+#[test]
+fn an_error_names_the_error_under_it_and_only_where_there_is_one() {
+    use std::error::Error;
+
+    // What a caller walking `source()` reaches: the refusal of the
+    // byte-level entry under `Verify`, the pair read under `UnknownSet`,
+    // and nothing under a refusal the tag layer made by itself.
+    let p248 = row::<P248>();
+    let p500 = row::<P500>();
+    let accept = list(&[p248.id]);
+
+    let verify = verify_tagged(&accept, &key(p248), b"", &signature(p248)).unwrap_err();
+    let TaggedError::Verify(inner) = verify else {
+        panic!("zeros were not refused by the verifier: {verify:?}");
+    };
+    assert_eq!(
+        verify
+            .source()
+            .and_then(|e| e.downcast_ref::<VerifyError>()),
+        Some(&inner)
+    );
+
+    let pair = UnknownSetId { e: 1, f: 1 };
+    let unknown = verify_tagged(
+        &accept,
+        &under(tag_of((pair.e, pair.f)), &[]),
+        b"",
+        &signature(p248),
+    )
+    .unwrap_err();
+    assert_eq!(
+        unknown,
+        TaggedError::UnknownSet {
+            container: Container::PublicKey,
+            id: pair
+        }
+    );
+    assert_eq!(
+        unknown
+            .source()
+            .and_then(|e| e.downcast_ref::<UnknownSetId>()),
+        Some(&pair)
+    );
+
+    let alone = [
+        verify_tagged(&accept, &[], b"", &signature(p248)).unwrap_err(),
+        verify_tagged(&accept, &key(p248), b"", &signature(p500)).unwrap_err(),
+        verify_tagged(&accept, &key(p500), b"", &signature(p500)).unwrap_err(),
+        PublicKey::<P500>::from_tagged(&key(p248)).unwrap_err(),
+    ];
+    assert!(matches!(alone[0], TaggedError::TooShort { .. }));
+    assert!(matches!(alone[1], TaggedError::Mismatch { .. }));
+    assert!(matches!(alone[2], TaggedError::NotAccepted(_)));
+    assert!(matches!(alone[3], TaggedError::WrongSet { .. }));
+    for error in alone {
+        assert!(error.source().is_none(), "{error:?} names a source");
+    }
+}
