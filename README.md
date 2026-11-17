@@ -44,9 +44,28 @@ key.verify(message, &signature)?;
 
 A key and a signature are checked when they are made, so a value of
 either type is valid by construction, and both carry their parameter set
-in their type. The crate documentation (`cargo doc -p shekyl-prism --open`)
-has examples that run against the committed vectors, and
-`shekyl-prism/examples/` has two programs: `verify` and `read_vector`.
+in their type.
+
+Where the bytes have to say which prime they are under, a key or a
+signature carries a four-byte set identifier in front, and the caller
+says which sets it accepts:
+
+```rust
+use shekyl_prism::{verify_tagged, AcceptList, SetId, P500};
+
+let accept = AcceptList::new(&[SetId::of::<P500>()])?;
+let set = verify_tagged(&accept, &tagged_key, message, &tagged_signature)?;
+```
+
+There is no default list and no list of every set. A list of more than
+one set is as strong as its weakest member, and the identifier does not
+say the key's owner chose that prime; `AcceptList`'s documentation says
+what follows from both.
+
+The crate documentation (`cargo doc -p shekyl-prism --open`) has
+examples that run against the committed vectors, and
+`shekyl-prism/examples/` has three programs: `verify`, `verify_tagged`
+and `read_vector`.
 
 ## The crates
 
@@ -57,7 +76,7 @@ is what tests and measures them.
 
 | Crate | Role |
 | --- | --- |
-| `shekyl-prism` | Typed keys and signatures, valid by construction, and verification. Every item is documented. The three crates below are re-exported under its `hazmat` module |
+| `shekyl-prism` | Typed keys and signatures, valid by construction, and verification; the set identifier, tagged keys and signatures, and verification under a caller's accept list. Every item is documented. The three crates below are re-exported under its `hazmat` module |
 
 **The low-level layer**: where the algorithm is. Public and documented, but
 its functions assume invariants that only the interface checks in full,
@@ -113,7 +132,7 @@ cargo run --release --locked -p prism-bench
 ```
 
 Workspace tests execute the actual verifier on the entire honest corpus;
-the accept-list script checks only provenance. The nightly fuzz corpora
+`scripts/ci/check_accept_verdicts.py` checks only provenance. The nightly fuzz corpora
 include honest signatures so that deep verification paths are reachable.
 
 ## Native signing
