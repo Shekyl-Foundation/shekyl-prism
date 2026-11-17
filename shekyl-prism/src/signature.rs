@@ -7,7 +7,7 @@ use core::fmt;
 use core::hash::{Hash, Hasher};
 
 use prism_field::ParameterSet;
-use prism_verify::{checked_response, Response, VerifyError};
+use prism_verify::{checked_response, CheckedResponse, VerifyError};
 
 /// A signature of the parameter set `S`, decoded and checked.
 ///
@@ -29,7 +29,7 @@ use prism_verify::{checked_response, Response, VerifyError};
 #[derive(Clone)]
 pub struct Signature<S: ParameterSet> {
     bytes: Vec<u8>,
-    response: Response<S>,
+    response: CheckedResponse<S>,
 }
 
 impl<S: ParameterSet> Signature<S> {
@@ -38,8 +38,9 @@ impl<S: ParameterSet> Signature<S> {
 
     /// Check `bytes` and make the signature.
     ///
-    /// None of these checks is dear: there is no search, and the work
-    /// does not depend on the bytes beyond their length.
+    /// None of these checks is dear: there is no search, so whoever chose
+    /// the bytes cannot make them cost more than a signature that passes
+    /// them all, and a refusal returns earlier.
     ///
     /// # Errors
     ///
@@ -70,7 +71,7 @@ impl<S: ParameterSet> Signature<S> {
     }
 
     /// The decoded form the verifier's steps take.
-    pub(crate) fn response(&self) -> &Response<S> {
+    pub(crate) fn response(&self) -> &CheckedResponse<S> {
         &self.response
     }
 }

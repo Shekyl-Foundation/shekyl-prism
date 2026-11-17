@@ -198,9 +198,17 @@ A value of either type passed its checks, and there is no other way to
 make one. The key keeps the basis index its construction found, so the
 relation does not search for it again. The three calls are
 `PreparedKey::prepare`, `checked_response` and `verify_prepared` of
-`prism_verify::prepared`, which are low-level functions: the last assumes
-its response passed the second, and only the typed interface holds that
-in a type.
+`prism_verify::prepared`. Those are low-level functions, and they hold
+the same thing in types of their own: a `PreparedKey` and a
+`CheckedResponse` can each be made only by the function that checks it,
+and `verify_prepared` takes nothing else.
+
+The two entries share their definitions. The signature's checks are one
+function, which the byte-level entry calls after its length checks and
+the key's decoding and the typed entry calls alone. Primality followed by
+the relation is one function, and the relation has one body. What differs
+is the order in which the shared pieces run, and whether the basis index
+is searched for or carried.
 
 The byte-level entry looks at both lengths, decodes the key, then decodes
 and checks the signature, and only then searches for the key's basis. The

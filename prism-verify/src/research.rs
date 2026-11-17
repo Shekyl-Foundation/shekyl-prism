@@ -37,9 +37,13 @@ pub fn verify_width<L: ParameterSet>(
     bits: u32,
 ) -> Result<(), VerifyError> {
     let opened = open::<L>(key, signature)?;
-    let scalar =
-        ChallengeScalar::derive_width(&opened.identity, message, opened.response.salt, bits)
-            .ok_or(VerifyError::Length)?;
+    let scalar = ChallengeScalar::derive_width(
+        &opened.identity,
+        message,
+        opened.response.response().salt,
+        bits,
+    )
+    .ok_or(VerifyError::Length)?;
     accept(&opened, &scalar)
 }
 

@@ -16,9 +16,14 @@
 //! - [`checked_response`]: every check that depends on the signature alone;
 //! - [`verify_prepared`]: the challenge, its degree and the relation.
 //!
-//! These are low-level. The typed interface of the `shekyl-prism` crate
-//! (`PublicKey`, `Signature`) is built on them and is where the invariants
-//! they assume are held by a type. Each function says which it assumes.
+//! These are low-level, and each takes and returns a type that holds what
+//! was checked: a [`PreparedKey`] and a [`CheckedResponse`] can only be
+//! made by the function that checks them. The typed interface of the
+//! `shekyl-prism` crate (`PublicKey`, `Signature`) wraps the two.
+//!
+//! The signature's checks, and primality followed by the relation, are
+//! each one function that [`crate::verify`] runs as well, so the two
+//! entries cannot come to check different things.
 //!
 //! # The order of refusals
 //!
@@ -99,24 +104,70 @@ impl<L: ParameterSet> PreparedKey<L> {
     }
 }
 
-/// Decode `signature` and run every check a signature can pass alone.
+/// A decoded signature that passed every check a signature can pass alone.
 ///
-/// `Length`, then `Canonical`, then `Sign`, then `Model` (or `Singular`,
-/// for a response curve that is singular): [`Response::decode`], the sign
-/// rule on `y(P)`, and the permitted model of the response curve. These
-/// are the checks [`crate::verify`] runs on the signature, in its order.
+/// The only way to make one is [`checked_response`], so a value of this
+/// type is a response of the right length, canonically encoded, whose
+/// first point has the normalized sign and whose curve is the one
+/// permitted model of its class. Those checks are what make an accepted
+/// signature's bytes unique. [`Response`] has public fields and records
+/// none of this; this type has one private field and no other
+/// constructor, and [`verify_prepared`] takes nothing else.
 ///
-/// The value returned is a plain [`Response`] with public fields. Nothing
-/// in its type records that it was checked: [`verify_prepared`] assumes
-/// it, and `shekyl_prism::Signature` is the type that holds it.
-pub fn checked_response<L: ParameterSet>(signature: &[u8]) -> Result<Response<L>, VerifyError> {
-    mark::Stage::Public.enter();
+/// Equality is not implemented, for the reason given at [`PreparedKey`].
+/// Compare [`Response::encode`] of [`Self::response`].
+#[derive(Clone, Copy)]
+pub struct CheckedResponse<L: ParameterSet> {
+    response: Response<L>,
+}
+
+/// The set's name and the encoding in hex.
+impl<L: ParameterSet> core::fmt::Debug for CheckedResponse<L> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "CheckedResponse<{}>(", L::NAME)?;
+        for byte in self.response.encode() {
+            write!(f, "{byte:02x}")?;
+        }
+        f.write_str(")")
+    }
+}
+
+impl<L: ParameterSet> CheckedResponse<L> {
+    /// The decoded response, to read. A copy of it changed by hand is a
+    /// [`Response`] again and has to be encoded and checked to come back.
+    pub fn response(&self) -> &Response<L> {
+        &self.response
+    }
+}
+
+/// The signature's checks, in one place: both entries run this function.
+///
+/// `Length`, then `Canonical` ([`Response::decode`]), then `Sign`, then
+/// `Singular` or `Model`. It marks no stage; each entry has entered the
+/// public stage before it.
+pub(crate) fn response_checks<L: ParameterSet>(
+    signature: &[u8],
+) -> Result<CheckedResponse<L>, VerifyError> {
     let response = Response::<L>::decode(signature)?;
     if !canonical_sign::<L>(response.p.y) {
         return Err(VerifyError::Sign);
     }
     model::check::<L>(response.curve)?;
-    Ok(response)
+    Ok(CheckedResponse { response })
+}
+
+/// Decode `signature` and run every check a signature can pass alone.
+///
+/// `Length`, then `Canonical`, then `Sign`, then `Model` (or `Singular`,
+/// for a response curve that is singular): [`Response::decode`], the sign
+/// rule on `y(P)`, and the permitted model of the response curve. These
+/// are the checks [`crate::verify`] runs on the signature, by the same
+/// function.
+pub fn checked_response<L: ParameterSet>(
+    signature: &[u8],
+) -> Result<CheckedResponse<L>, VerifyError> {
+    mark::Stage::Public.enter();
+    response_checks::<L>(signature)
 }
 
 /// The checks that need the key, the message and the response together:
@@ -124,28 +175,21 @@ pub fn checked_response<L: ParameterSet>(signature: &[u8]) -> Result<Response<L>
 ///
 /// `Composite`, then the relation's refusals (`Kernel`, `Pairing`,
 /// `Codomain`, `Image`). The basis index is the one `key` carries; it is
-/// not searched for again.
+/// not searched for again. Primality and then the relation is one
+/// function, which [`crate::verify`] runs too.
 ///
-/// # What this assumes
-///
-/// `response` passed the sign rule and the model check, which is what
-/// [`checked_response`] returns and what `shekyl_prism::Signature::from_bytes`
-/// establishes. This function does not repeat them, and what it returns
-/// for a response that did not pass them is not specified: those checks
-/// are what make an accepted signature's bytes unique, and the model
-/// check is also what refuses a singular response curve and the curves
-/// with extra automorphisms.
-///
-/// Nothing is assumed of `key` beyond its type.
+/// Both arguments are valid by their types: a [`PreparedKey`] and a
+/// [`CheckedResponse`] can each be made only by the function that checks
+/// them. This function assumes nothing else.
 pub fn verify_prepared<L: ParameterSet>(
     key: &PreparedKey<L>,
     message: &[u8],
-    response: &Response<L>,
+    response: &CheckedResponse<L>,
 ) -> Result<(), VerifyError> {
     mark::Stage::Challenge.enter();
+    let response = response.response();
     let scalar = ChallengeScalar::derive(&key.identity(), message, response.salt);
-    if !scalar.degree_is_prime::<L>() {
-        return Err(VerifyError::Composite);
-    }
-    relation::relate_prepared::<L>(key.coefficient, key.hint, response, scalar.as_bytes())
+    crate::prime_then::<L>(&scalar, || {
+        relation::relate_prepared::<L>(key.coefficient, key.hint, response, scalar.as_bytes())
+    })
 }
