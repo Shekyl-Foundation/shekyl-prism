@@ -3,6 +3,7 @@
 // All rights reserved.
 // BSD-3-Clause
 
+use core::cmp::Ordering;
 use core::fmt;
 use core::marker::PhantomData;
 
@@ -42,6 +43,13 @@ use prism_verify::Set;
 /// nothing in a signature binds it: see [`AcceptList`](crate::AcceptList)
 /// for what a system that accepts more than one set has to do.
 ///
+/// # Order
+///
+/// Identifiers increase with the prime. [`Ord`] compares `(e, f)` and
+/// then the set, so the order agrees with [`Eq`]. An
+/// [`AcceptList`](crate::AcceptList) keeps the sets it holds in this
+/// order.
+///
 /// # There is no list of all of them
 ///
 /// This interface has no constant, function or iterator that yields
@@ -61,46 +69,59 @@ use prism_verify::Set;
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SetId(Set);
 
-/// `(e, f)` of a set named as a type, each checked to fit its two bytes.
-const fn pair<S: ParameterSet>() -> (u16, u16) {
+/// The pair `(e, f)` and the bare lengths of one built set.
+///
+/// Both come from [`ParameterSet`]. The identifier and the lengths then
+/// have one definition each, and a set added to [`Set`] is named in one
+/// match.
+struct Parameters {
+    e: u16,
+    f: u16,
+    public_key_len: usize,
+    signature_len: usize,
+}
+
+/// `S` as [`Parameters`], with `e` and `f` checked to fit two bytes each.
+const fn parameters_of<S: ParameterSet>() -> Parameters {
     let (e, f) = (S::E, S::COFACTOR.value());
     assert!(
         e <= u16::MAX as u32 && f <= u16::MAX as u64,
         "a set identifier holds e and f in two bytes each"
     );
-    (e as u16, f as u16)
+    Parameters {
+        e: e as u16,
+        f: f as u16,
+        public_key_len: S::PUBLIC_KEY_LEN,
+        signature_len: S::SIGNATURE_LEN,
+    }
 }
 
-/// `(e, f)` of a set named as a value.
-const fn pair_of(set: Set) -> (u16, u16) {
+/// [`Parameters`] of a set named as a value.
+const fn parameters(set: Set) -> Parameters {
     match set {
-        Set::P248 => pair::<P248>(),
-        Set::P324 => pair::<P324>(),
-        Set::P376 => pair::<P376>(),
-        Set::P500 => pair::<P500>(),
-        Set::P664 => pair::<P664>(),
+        Set::P248 => parameters_of::<P248>(),
+        Set::P324 => parameters_of::<P324>(),
+        Set::P376 => parameters_of::<P376>(),
+        Set::P500 => parameters_of::<P500>(),
+        Set::P664 => parameters_of::<P664>(),
     }
 }
 
 /// The built set whose prime is `f·2^e − 1`, if there is one.
+///
+/// The sets are [`Set::ALL`]. A set added there is an identifier once
+/// [`parameters`] names it, and that match does not compile until it does.
 const fn built(e: u16, f: u16) -> Option<Set> {
-    const fn is(set: Set, e: u16, f: u16) -> bool {
-        let (set_e, set_f) = pair_of(set);
-        set_e == e && set_f == f
+    let mut index = 0;
+    while index < Set::ALL.len() {
+        let set = Set::ALL[index];
+        let these = parameters(set);
+        if these.e == e && these.f == f {
+            return Some(set);
+        }
+        index += 1;
     }
-    if is(Set::P248, e, f) {
-        Some(Set::P248)
-    } else if is(Set::P324, e, f) {
-        Some(Set::P324)
-    } else if is(Set::P376, e, f) {
-        Some(Set::P376)
-    } else if is(Set::P500, e, f) {
-        Some(Set::P500)
-    } else if is(Set::P664, e, f) {
-        Some(Set::P664)
-    } else {
-        None
-    }
+    None
 }
 
 /// The identifier of `S`, found when `S` is known: at compile time.
@@ -108,8 +129,8 @@ struct Of<S>(PhantomData<S>);
 
 impl<S: ParameterSet> Of<S> {
     const ID: SetId = {
-        let (e, f) = pair::<S>();
-        match built(e, f) {
+        let these = parameters_of::<S>();
+        match built(these.e, these.f) {
             Some(set) => SetId(set),
             None => panic!("this parameter set is not one the library is built with"),
         }
@@ -165,55 +186,61 @@ impl SetId {
     /// The identifier's encoding: `e` then `f`, each a little-endian
     /// `u16`. [`Self::from_bytes`] of it is this identifier.
     pub const fn to_bytes(self) -> [u8; Self::LEN] {
-        let (e, f) = pair_of(self.0);
-        let (e, f) = (e.to_le_bytes(), f.to_le_bytes());
+        let these = parameters(self.set());
+        let (e, f) = (these.e.to_le_bytes(), these.f.to_le_bytes());
         [e[0], e[1], f[0], f[1]]
     }
 
     /// The exponent `e` of `p = f·2^e − 1`.
     pub const fn e(self) -> u16 {
-        pair_of(self.0).0
+        parameters(self.set()).e
     }
 
     /// The odd cofactor `f` of `p = f·2^e − 1`.
     pub const fn f(self) -> u16 {
-        pair_of(self.0).1
+        parameters(self.set()).f
     }
 
     /// The set's name, such as `p248`: [`ParameterSet::NAME`].
     pub fn name(self) -> &'static str {
-        self.0.name()
+        self.set().name()
     }
 
     /// The length of a tagged public key of this set, in bytes: the
     /// identifier and the bare key.
     pub const fn tagged_public_key_len(self) -> usize {
-        Self::LEN
-            + match self.0 {
-                Set::P248 => P248::PUBLIC_KEY_LEN,
-                Set::P324 => P324::PUBLIC_KEY_LEN,
-                Set::P376 => P376::PUBLIC_KEY_LEN,
-                Set::P500 => P500::PUBLIC_KEY_LEN,
-                Set::P664 => P664::PUBLIC_KEY_LEN,
-            }
+        Self::LEN + parameters(self.set()).public_key_len
     }
 
     /// The length of a tagged signature of this set, in bytes: the
     /// identifier and the bare signature.
     pub const fn tagged_signature_len(self) -> usize {
-        Self::LEN
-            + match self.0 {
-                Set::P248 => P248::SIGNATURE_LEN,
-                Set::P324 => P324::SIGNATURE_LEN,
-                Set::P376 => P376::SIGNATURE_LEN,
-                Set::P500 => P500::SIGNATURE_LEN,
-                Set::P664 => P664::SIGNATURE_LEN,
-            }
+        Self::LEN + parameters(self.set()).signature_len
     }
 
     /// The low-level name the byte-level entry is selected by.
     pub(crate) const fn set(self) -> Set {
         self.0
+    }
+}
+
+/// Increasing prime: `(e, f)`, then the set.
+///
+/// [`Eq`] is identity of the set. The pair orders distinct primes, and
+/// the set is compared after it so two sets that shared a pair would
+/// still compare as [`Eq`] says.
+impl Ord for SetId {
+    fn cmp(&self, other: &Self) -> Ordering {
+        (self.e(), self.f())
+            .cmp(&(other.e(), other.f()))
+            .then_with(|| self.set().cmp(&other.set()))
+    }
+}
+
+/// The order of [`Ord`].
+impl PartialOrd for SetId {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
@@ -256,7 +283,8 @@ mod tests {
     use super::*;
 
     /// Each of the five has its own identifier, each identifier decodes
-    /// to its own set, and the pair is the set's `E` and cofactor.
+    /// to its own set, the pair is the set's `E` and cofactor, and the
+    /// identifiers increase with the prime.
     #[test]
     fn five_identifiers_distinct_and_each_decodes_to_its_own_set() {
         let ids = [
@@ -298,9 +326,11 @@ mod tests {
             assert_eq!((u32::from(id.e()), u64::from(id.f())), (e, f));
             assert_eq!(SetId::from_bytes(id.to_bytes()), Ok(id));
             assert_eq!(id.name(), set.name());
+            assert!(id.cmp(&id).is_eq());
             for (_, other, ..) in &ids[index + 1..] {
                 assert_ne!(id, *other);
                 assert_ne!(id.to_bytes(), other.to_bytes());
+                assert!(id < *other);
             }
         }
     }

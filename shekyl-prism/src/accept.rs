@@ -4,6 +4,7 @@
 // BSD-3-Clause
 
 use core::fmt;
+use std::collections::BTreeSet;
 
 use crate::SetId;
 
@@ -79,8 +80,8 @@ use crate::SetId;
 /// [`verify_tagged`]: crate::verify_tagged
 #[derive(Clone, PartialEq, Eq)]
 pub struct AcceptList {
-    /// Each once, by increasing prime.
-    sets: Vec<SetId>,
+    /// Each set once, in [`SetId`]'s order.
+    sets: BTreeSet<SetId>,
 }
 
 impl AcceptList {
@@ -102,18 +103,11 @@ impl AcceptList {
     /// assert_eq!(AcceptList::new(&[]), Err(EmptyAcceptList));
     /// ```
     pub fn new(sets: &[SetId]) -> Result<Self, EmptyAcceptList> {
-        let mut kept: Vec<SetId> = Vec::with_capacity(sets.len());
-        for set in sets {
-            if !kept.contains(set) {
-                kept.push(*set);
-            }
-        }
-        if kept.is_empty() {
+        let sets: BTreeSet<SetId> = sets.iter().copied().collect();
+        if sets.is_empty() {
             return Err(EmptyAcceptList);
         }
-        // By increasing prime, so equality does not see the order written.
-        kept.sort_by_key(|set| (set.e(), set.f()));
-        Ok(Self { sets: kept })
+        Ok(Self { sets })
     }
 
     /// Whether `set` is in the list.
@@ -122,7 +116,7 @@ impl AcceptList {
     }
 }
 
-/// The names of the sets in the list.
+/// The names of the sets in the list, in [`SetId`]'s order.
 impl fmt::Debug for AcceptList {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("AcceptList")?;
