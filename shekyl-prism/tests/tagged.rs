@@ -234,14 +234,15 @@ fn the_list_refuses_what_it_does_not_hold_and_nothing_else() {
 }
 
 #[test]
-fn a_set_written_twice_is_in_the_list_once() {
+fn a_list_is_the_sets_in_it_whatever_order_and_however_often_written() {
     let [a, b, ..] = ids();
     assert_eq!(list(&[a, a, b, a]), list(&[a, b]));
     assert_eq!(list(&[a, a]), list(&[a]));
+    assert_eq!(list(&[b, a]), list(&[a, b]));
     assert_ne!(list(&[a]), list(&[a, b]));
     assert_eq!(
         format!("{:?}", list(&[b, a, b])),
-        r#"AcceptList["p324", "p248"]"#
+        r#"AcceptList["p248", "p324"]"#
     );
 }
 

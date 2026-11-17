@@ -79,16 +79,16 @@ use crate::SetId;
 /// [`verify_tagged`]: crate::verify_tagged
 #[derive(Clone, PartialEq, Eq)]
 pub struct AcceptList {
-    /// In the order first written, each once.
+    /// Each once, by increasing prime.
     sets: Vec<SetId>,
 }
 
 impl AcceptList {
     /// The list of exactly `sets`.
     ///
-    /// A set written more than once is in the list once: two lists are
-    /// equal when they were written with the same sets in the same order
-    /// of first appearance.
+    /// A set written more than once is in the list once, and the order
+    /// they are written in does not matter: two lists are equal exactly
+    /// when they accept the same sets.
     ///
     /// # Errors
     ///
@@ -111,6 +111,8 @@ impl AcceptList {
         if kept.is_empty() {
             return Err(EmptyAcceptList);
         }
+        // By increasing prime, so equality does not see the order written.
+        kept.sort_by_key(|set| (set.e(), set.f()));
         Ok(Self { sets: kept })
     }
 

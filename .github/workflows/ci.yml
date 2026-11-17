@@ -165,7 +165,7 @@ jobs:
       # reporter (an example of the testkit that requires the feature) are
       # linted in a pass of their own.
       - name: Clippy, operation counter
-        run: cargo clippy -p prism-field -p prism-verify -p prism-testkit --features prism-verify/op-count --all-targets --locked -- -D warnings
+        run: cargo clippy -p prism-field -p prism-verify -p prism-testkit -p shekyl-prism --features prism-verify/op-count --all-targets --locked -- -D warnings
       # The workspace run leaves the research feature off, so the real-backend
       # adapter and the experiment drivers need their own pass.
       - name: Clippy, comparison drivers
