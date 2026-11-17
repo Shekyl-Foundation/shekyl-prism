@@ -30,8 +30,8 @@ use crate::accept::Lifted;
 use crate::basis::basis_hint;
 use crate::challenge::ChallengeScalar;
 use crate::identity::KeyIdentity;
+use crate::mark::Stage;
 use crate::signature::{AffinePoint, Response};
-use crate::stage::Stage;
 use crate::VerifyError;
 
 /// The isogeny relation for a key the public checks have already accepted.

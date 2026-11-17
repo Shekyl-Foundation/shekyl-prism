@@ -10,6 +10,11 @@ publish.workspace = true
 [features]
 default = []
 research-reduced-width = []
+# Counts field operations by stage, and makes the module `stage` and the
+# counter's module `prism_field::ops` public. Off by default and enabled by
+# no manifest: pass `--features prism-verify/op-count` on the command line.
+# `scripts/ci/check_op_count_isolation.py` holds that.
+op-count = ["prism-field/op-count"]
 
 [dependencies]
 prism-field = { workspace = true }
@@ -21,3 +26,9 @@ prism-vectors = { workspace = true }
 
 [lints]
 workspace = true
+
+# The reporter of the count records. It names the counter's API, which a
+# default build does not have.
+[[example]]
+name = "op_counts"
+required-features = ["op-count"]

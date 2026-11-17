@@ -90,8 +90,8 @@ future performance work.
 ## Operation counts
 
 The machine-independent cost of a verification is its count of field
-operations. `prism-field` counts calls through its `Field` trait when
-built with the `op-count` feature, and the verifier marks ten stages:
+operations. With the `op-count` feature of `prism-verify`, `prism-field`
+counts calls through its `Field` trait and the verifier marks ten stages:
 
 | Stage | What is counted there |
 | --- | --- |
@@ -107,6 +107,28 @@ built with the `op-count` feature, and the verifier marks ten stages:
 
 A stage is a purpose. Work that a later change moves keeps its stage, so
 two versions of the table compare row by row.
+
+The counter is measuring equipment and not part of the library. A default
+build has no counter, and neither `prism_field::ops` (the table) nor
+`prism_verify::stage` (the stage names) is in its API or its
+documentation; both modules exist only with the feature. The feature is
+passed on the command line, in one spelling:
+
+```sh
+cargo run --release --locked -p prism-verify --example op_counts \
+    --features prism-verify/op-count
+```
+
+`prism-verify`'s `op-count` turns on `prism-field`'s, and those two
+manifests are the only ones that may name it: no manifest enables it, in
+a default set, from another feature or on a dependency.
+`scripts/ci/check_op_count_isolation.py` holds that, and compiles a
+consumer to show the two modules cannot be named without it. The field
+crate's feature alone is not enough for a count: the counter would run
+and the verifier would mark no stage, so the reporter requires the
+verifier's feature and does not build without it. The one command that
+names `prism-field/op-count` is the counter's own test, which builds the
+field crate by itself.
 
 ```sh
 sh scripts/op_counts.sh           # rewrite the two records

@@ -9,9 +9,10 @@ publish.workspace = true
 
 [features]
 default = []
-# Counts field operations per thread (`ops`). Off by default and enabled by
-# no manifest: pass `--features prism-field/op-count` on the command line.
-# `scripts/ci/check_op_count_isolation.py` holds that.
+# Counts field operations per thread, and makes the module `ops` public.
+# Off by default. The only manifest that may name it is prism-verify's,
+# whose own `op-count` turns it on: pass `--features prism-verify/op-count`
+# on the command line. `scripts/ci/check_op_count_isolation.py` holds that.
 op-count = []
 
 [dependencies]

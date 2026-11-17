@@ -47,7 +47,7 @@ digest=$(xargs sha256sum < "$work/files" | sha256sum | cut -d' ' -f1)
 # The build goes to target/ whatever CARGO_TARGET_DIR says, as the run below
 # names that path.
 cargo build --release --locked --target-dir target -p prism-verify \
-    --example op_counts --features prism-field/op-count >&2
+    --example op_counts --features prism-verify/op-count >&2
 target/release/examples/op_counts > "$work/raw"
 {
     echo '# Field operations of one verification, by stage.'
