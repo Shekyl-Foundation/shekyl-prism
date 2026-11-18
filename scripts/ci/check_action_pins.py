@@ -7,7 +7,10 @@
 """Every `uses:` in a workflow is pinned to a 40-character commit SHA.
 
 A floating tag is not a pin. A workflow with no `uses:` line is not a
-workflow this gate can see, so that fails too.
+workflow this gate can see, so that fails too. A `uses` of another
+workflow in this repository is pinned by the commit that contains both:
+the called file is scanned on its own, and its third-party actions still
+need SHAs.
 """
 
 import argparse
@@ -19,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 WORKFLOWS = ROOT / ".github" / "workflows"
 USE = re.compile(r"^\s*-?\s*uses:\s*(\S+)")
 PINNED = re.compile(r"^[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+@[0-9a-f]{40}$")
+LOCAL = re.compile(r"^\./\.github/workflows/[A-Za-z0-9_.-]+\.yml$")
 
 
 def problems(text: str) -> list[str]:
@@ -33,7 +37,7 @@ def problems(text: str) -> list[str]:
             continue
         action = match.group(1)
         uses.append(action)
-        if not PINNED.match(action):
+        if not PINNED.match(action) and not LOCAL.match(action):
             errors.append(f"line {number}: {action} is not pinned to a commit")
     if not uses:
         errors.append("no uses: line")
@@ -43,11 +47,19 @@ def problems(text: str) -> list[str]:
 def selftest() -> int:
     good = "    - uses: actions/checkout@0123456789abcdef0123456789abcdef01234567 # v5\n"
     bad = "    - uses: actions/checkout@v5\n"
+    local = "    uses: ./.github/workflows/mutants-shard.yml\n"
+    escaped = "    uses: ./.github/workflows/../../outside.yml\n"
     if problems(good):
         print("selftest: a pinned action was refused", file=sys.stderr)
         return 1
+    if problems(local):
+        print("selftest: a local workflow was refused", file=sys.stderr)
+        return 1
     if not problems(bad):
         print("selftest: a tag pin passed", file=sys.stderr)
+        return 1
+    if not problems(escaped):
+        print("selftest: a path outside the workflows directory passed", file=sys.stderr)
         return 1
     if not problems("jobs: {}\n"):
         print("selftest: an empty workflow passed", file=sys.stderr)

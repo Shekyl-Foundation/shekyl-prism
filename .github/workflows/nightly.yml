@@ -8,11 +8,16 @@
 # The person who dispatched it is reading it.
 #
 # `mutants`, `mutants-front` and `coverage` are report-only until the
-# first `dev` → `main` cut: a surviving mutant, a mutant that timed out or
+# first `dev` → `main` cut: a surviving mutant, a mutant that timed out, or
 # a coverage figure is written to the job summary and does not fail the
-# run. A tool that fails to install still fails, and so does a mutants
-# shard whose tool did not test its mutants (the unmutated tests failing,
-# a usage or internal error, no result). Those are a red nightly.
+# run. A tool that fails to install still fails. So does a mutants shard
+# whose tool did not test its mutants, and so does `mutants-summary` when
+# a shard it received fails that same test. Those are a red nightly.
+#
+# `only` empty runs every job. `only` set to `mutants` or `mutants-front`
+# runs that job and `mutants-summary`. `shard` selects one index of the
+# named job. `dispatch` refuses any other combination. The shard counts
+# live in `scripts/ci/mutants_report.py`.
 #
 # The schedule runs the default branch's copy of this file. The level III
 # floor-device measurement is not this workflow, and it is not started by
@@ -29,12 +34,12 @@ on:
         description: "Open or comment on the tracking issue if a job is red."
         type: boolean
         default: false
-      mutants_shard:
-        description: "Run one shard of `mutants` (0 to 15), then `mutants-summary`, and no other job."
+      only:
+        description: "Empty runs every job. mutants or mutants-front runs that job and mutants-summary."
         type: string
         default: ""
-      mutants_front_shard:
-        description: "Run one shard of `mutants-front` (0 to 1), then `mutants-summary`, and no other job."
+      shard:
+        description: "With only set, one shard index of that job. Empty runs every shard of it."
         type: string
         default: ""
 
@@ -46,9 +51,40 @@ permissions:
   contents: read
 
 jobs:
+  # Names the run before any other job starts. A dispatch this file does
+  # not have fails here, and the outputs are still a matrix the skipped
+  # jobs can parse.
+  dispatch:
+    name: dispatch
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      mutants_shards: ${{ steps.plan.outputs.mutants_shards }}
+      mutants_of: ${{ steps.plan.outputs.mutants_of }}
+      mutants_run: ${{ steps.plan.outputs.mutants_run }}
+      front_shards: ${{ steps.plan.outputs.front_shards }}
+      front_of: ${{ steps.plan.outputs.front_of }}
+      front_run: ${{ steps.plan.outputs.front_run }}
+      other_jobs: ${{ steps.plan.outputs.other_jobs }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - id: plan
+        env:
+          ONLY: ${{ inputs.only || '' }}
+          SHARD: ${{ inputs.shard || '' }}
+        run: python3 scripts/ci/mutants_report.py plan --only "$ONLY" --shard "$SHARD"
+        continue-on-error: true
+      - name: The dispatch names a run this workflow has
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
   fuzz:
     name: fuzz (${{ matrix.target }})
-    if: ${{ inputs.mutants_shard == '' && inputs.mutants_front_shard == '' }}
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.other_jobs == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
@@ -129,7 +165,8 @@ jobs:
 
   differential-prime:
     name: differential-prime
-    if: ${{ inputs.mutants_shard == '' && inputs.mutants_front_shard == '' }}
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.other_jobs == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -151,7 +188,8 @@ jobs:
 
   big-endian:
     name: big-endian
-    if: ${{ inputs.mutants_shard == '' && inputs.mutants_front_shard == '' }}
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.other_jobs == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -169,7 +207,8 @@ jobs:
 
   c-vectors-full:
     name: c-vectors-full
-    if: ${{ inputs.mutants_shard == '' && inputs.mutants_front_shard == '' }}
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.other_jobs == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -184,175 +223,61 @@ jobs:
       - name: The committed vectors match
         run: bash scripts/ci/diff_vectors_data.sh
 
-  # The mutants are those of prism-verify and prism-field. The tests that
-  # kill most of the verifier's are not in prism-verify: they need the
-  # builders of prism-testkit, so they live in the testkit and in the front
-  # crate (no crate's tests depend on a crate above it). `--test-package`
-  # runs the tests of all four packages against every mutant. Without it
-  # a mutant would meet only the tests of the two packages named by `-p`.
+  # `mutants` and `mutants-front` are one procedure,
+  # `.github/workflows/mutants-shard.yml`. The shard count is `MUTANT_JOBS`
+  # in `scripts/ci/mutants_report.py`: `plan` deals the indexes, and `of`
+  # is that count passed through once, to `--shard` and to the report.
+  # What each job mutates is named here. Missed mutants and timeouts are
+  # report-only. A shard is red when the tool did not test its mutants.
+  # The sizes and why the layer job multiplies the time limit are
+  # `docs/PRISM_CI_DESIGN.md`.
   #
-  # The tool times its unmutated baseline on the two mutated packages
-  # alone and sets each mutant's time limit from that, five times by
-  # default. A mutant's run over four packages is about two and a half
-  # times the baseline, so the multiplier is raised to keep the margin a
-  # run over two packages had.
-  #
-  # A mutant no test kills runs every test: minutes, and there are over
-  # 800 mutants, which is hours in one job against a 90-minute limit. The
-  # mutants are dealt round-robin to sixteen jobs, so each gets its share
-  # of every file. The count is chosen so the slowest shard is under 60
-  # minutes, and a shard measured above 70 is a reason to raise it
-  # (`docs/PRISM_CI_DESIGN.md`). Runners differ: the unmutated baseline
-  # took 37 to 69 seconds across twelve shards of one run, and a shard's
-  # time follows it. The count is sized for the slow end. A different count deals the mutants
-  # differently: one shard's lists compare with the same shard's only
-  # while the count stands, and `mutants-summary` has the lists whole.
-  #
-  # A dispatch with `mutants_shard` runs one of the sixteen alone.
-  #
-  # What is red: the tool not testing its mutants. Missed mutants and
-  # timeouts are listed and do not fail (`scripts/ci/mutants_report.py`).
+  # The front crate's `acceptance` test is first and walks the corpus, so
+  # a mutant costs about as much caught as missed. The tests are not
+  # renamed for that; the job is dealt into more shards. `tag_layer_counts`
+  # needs the operation counter and does not run here.
   mutants:
-    name: mutants (${{ matrix.shard }}/16)
-    if: ${{ inputs.mutants_front_shard == '' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
+    name: mutants (${{ matrix.shard }}/${{ needs.dispatch.outputs.mutants_of }})
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.mutants_run == 'true' }}
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(inputs.mutants_shard != '' && format('[{0}]', inputs.mutants_shard) || '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]') }}
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-        with:
-          persist-credentials: false
-          submodules: false
-      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
-        with:
-          toolchain: 1.94.0
-      - name: Install cargo-mutants 27.1.0
-        run: python3 scripts/ci/install_pinned_tool.py cargo-mutants
-      # This step does not judge: the tool's exit code is passed on, and
-      # the last step reads it once the output is kept.
-      - id: run
-        name: cargo mutants
-        env:
-          SHARD: ${{ matrix.shard }}
-        run: |
-          set +e
-          cargo mutants -p prism-verify -p prism-field \
-            --test-package prism-field --test-package prism-verify \
-            --test-package prism-testkit --test-package shekyl-prism \
-            --timeout-multiplier 12 \
-            --no-shuffle --shard "${SHARD}/16" --sharding round-robin > mutants.txt
-          echo "code=$?" >> "$GITHUB_OUTPUT"
-          tail -n 3 mutants.txt
-      # The four counts and the whole missed and timeout lists, in the log
-      # and in the summary.
-      - name: What it found
-        if: ${{ always() }}
-        env:
-          SHARD: ${{ matrix.shard }}
-          CODE: ${{ steps.run.outputs.code }}
-        run: |
-          python3 scripts/ci/mutants_report.py shard --out mutants.out \
-            --job mutants --shard "$SHARD" --of 16 --exit "${CODE:--1}"
-      # The tool's whole output directory: the four lists, what it set out
-      # to test, each mutant's outcome and time, and each mutant's diff
-      # and test log.
-      - name: Keep the output
-        if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: mutants-${{ matrix.shard }}
-          path: mutants.out
-          retention-days: 30
-          overwrite: true
-          if-no-files-found: error
-      - name: The shard tested its mutants
-        run: python3 scripts/ci/mutants_report.py verdict --out mutants.out
+        shard: ${{ fromJSON(needs.dispatch.outputs.mutants_shards || '[0]') }}
+    uses: ./.github/workflows/mutants-shard.yml
+    with:
+      job: mutants
+      shard: ${{ matrix.shard }}
+      of: ${{ needs.dispatch.outputs.mutants_of }}
+      mutate: prism-verify prism-field
+      test: prism-field prism-verify prism-testkit shekyl-prism
+      timeout_multiplier: "12"
 
-  # The mutants of the front crate: the set identifier, the accept list,
-  # the tagged readers and the typed key and signature. Its own tests are
-  # the ones that can kill them, and the baseline runs those same tests,
-  # so the tool's default time limit stands.
-  #
-  # Cargo runs the crate's test binaries in name order and stops after
-  # the first that fails. `acceptance` is the first of them and walks the
-  # corpus, so a mutant costs about as much caught as missed: about a
-  # minute each, whichever test kills it. The tests are not renamed or
-  # filtered to change that. The mutants are dealt to two jobs instead,
-  # by the same rule as above: the slowest under 60 minutes.
-  #
-  # `tests/tag_layer_counts.rs` does not run here. It requires the
-  # operation counter, a feature no manifest enables, and a mutant that
-  # only it would catch is listed as missed. CI runs it in `op-counts`.
-  #
-  # A dispatch with `mutants_front_shard` runs one shard alone.
   mutants-front:
-    name: mutants-front (${{ matrix.shard }}/2)
-    if: ${{ inputs.mutants_shard == '' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
+    name: mutants-front (${{ matrix.shard }}/${{ needs.dispatch.outputs.front_of }})
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.front_run == 'true' }}
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(inputs.mutants_front_shard != '' && format('[{0}]', inputs.mutants_front_shard) || '[0, 1]') }}
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-        with:
-          persist-credentials: false
-          submodules: false
-      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
-        with:
-          toolchain: 1.94.0
-      - name: Install cargo-mutants 27.1.0
-        run: python3 scripts/ci/install_pinned_tool.py cargo-mutants
-      # This step does not judge: the tool's exit code is passed on, and
-      # the last step reads it once the output is kept.
-      - id: run
-        name: cargo mutants
-        env:
-          SHARD: ${{ matrix.shard }}
-        run: |
-          set +e
-          cargo mutants -p shekyl-prism --test-package shekyl-prism \
-            --no-shuffle --shard "${SHARD}/2" --sharding round-robin > mutants.txt
-          echo "code=$?" >> "$GITHUB_OUTPUT"
-          tail -n 3 mutants.txt
-      # The four counts and the whole missed and timeout lists, in the log
-      # and in the summary.
-      - name: What it found
-        if: ${{ always() }}
-        env:
-          SHARD: ${{ matrix.shard }}
-          CODE: ${{ steps.run.outputs.code }}
-        run: |
-          python3 scripts/ci/mutants_report.py shard --out mutants.out \
-            --job mutants-front --shard "$SHARD" --of 2 --exit "${CODE:--1}"
-      # The tool's whole output directory: the four lists, what it set out
-      # to test, each mutant's outcome and time, and each mutant's diff
-      # and test log.
-      - name: Keep the output
-        if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: mutants-front-${{ matrix.shard }}
-          path: mutants.out
-          retention-days: 30
-          overwrite: true
-          if-no-files-found: error
-      - name: The shard tested its mutants
-        run: python3 scripts/ci/mutants_report.py verdict --out mutants.out
+        shard: ${{ fromJSON(needs.dispatch.outputs.front_shards || '[0]') }}
+    uses: ./.github/workflows/mutants-shard.yml
+    with:
+      job: mutants-front
+      shard: ${{ matrix.shard }}
+      of: ${{ needs.dispatch.outputs.front_of }}
+      mutate: shekyl-prism
+      test: shekyl-prism
 
-  # Every shard's lists as one: for each of the two jobs the shards found
-  # against the shards there are, the totals, and the missed and timeout
-  # mutants by file. A shard that was cancelled or kept nothing is named
-  # as absent, and the figures are then the present shards' alone. The
-  # merged lists are kept for 90 days, the shards' output for 30.
+  # Figures for the jobs this run dealt. A present shard `verdict` rejects
+  # is named, left out, and fails this job. A shard that is absent is
+  # named and does not, by itself. The merged lists are uploaded only for
+  # a full nightly whose every shard was present and accepted, so a
+  # one-shard dispatch does not replace `missed-mutants`.
   mutants-summary:
     name: mutants-summary
-    needs: [mutants, mutants-front]
-    if: ${{ always() }}
+    needs: [dispatch, mutants, mutants-front]
+    if: ${{ always() && needs.dispatch.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -364,9 +289,29 @@ jobs:
         with:
           pattern: mutants-*
           path: shards
-      - name: All shards
-        run: python3 scripts/ci/mutants_report.py gather --dir shards --write lists
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      - id: gather
+        name: All shards
+        env:
+          RUN_MUTANTS: ${{ needs.dispatch.outputs.mutants_run }}
+          RUN_FRONT: ${{ needs.dispatch.outputs.front_run }}
+        run: |
+          set -euo pipefail
+          args=(python3 scripts/ci/mutants_report.py gather --dir shards --write lists)
+          if [ "$RUN_MUTANTS" = true ]; then
+            args+=(--expect mutants)
+          fi
+          if [ "$RUN_FRONT" = true ]; then
+            args+=(--expect mutants-front)
+          fi
+          "${args[@]}"
+          if compgen -G 'lists/*.txt' > /dev/null; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Keep the merged lists
+        if: steps.gather.outputs.publish == 'true' && needs.dispatch.outputs.other_jobs == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: missed-mutants
           path: lists
@@ -383,7 +328,8 @@ jobs:
   # twice the VM's time, because runners differ in speed by nearly as much.
   coverage:
     name: coverage
-    if: ${{ inputs.mutants_shard == '' && inputs.mutants_front_shard == '' }}
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.other_jobs == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -413,7 +359,7 @@ jobs:
 
   report-red:
     name: report-red
-    needs: [fuzz, differential-prime, big-endian, c-vectors-full, mutants, mutants-front, mutants-summary, coverage]
+    needs: [dispatch, fuzz, differential-prime, big-endian, c-vectors-full, mutants, mutants-front, mutants-summary, coverage]
     # `failure()` is false for a job its own time limit cancelled. A
     # cancelled job is red and is reported.
     if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) && (github.event_name == 'schedule' || inputs.report) }}
