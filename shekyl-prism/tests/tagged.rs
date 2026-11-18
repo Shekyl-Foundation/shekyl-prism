@@ -562,3 +562,124 @@ fn an_identifier_has_one_encoding() {
         "SetId(p376: e=376, f=65)"
     );
 }
+
+#[test]
+fn an_error_names_the_error_under_it_and_only_where_there_is_one() {
+    use std::error::Error;
+
+    // `source` is a property of the value. `Verify` and `UnknownSet`
+    // carry the error under them; a refusal the tag layer made itself
+    // carries none. A new variant does not compile here until it says which.
+    let p248 = SetId::of::<P248>();
+    let p500 = SetId::of::<P500>();
+    let pair = UnknownSetId { e: 27, f: 500 };
+    let inner = VerifyError::Composite;
+    let refusals = [
+        TaggedError::TooShort {
+            container: Container::Signature,
+            len: 3,
+        },
+        TaggedError::UnknownSet {
+            container: Container::PublicKey,
+            id: pair,
+        },
+        TaggedError::Mismatch {
+            public_key: p248,
+            signature: p500,
+        },
+        TaggedError::WrongSet {
+            expected: p500,
+            found: p248,
+        },
+        TaggedError::NotAccepted(p248),
+        TaggedError::Verify(inner),
+    ];
+    for error in refusals {
+        match &error {
+            TaggedError::Verify(found) => {
+                assert_eq!(
+                    error
+                        .source()
+                        .and_then(|source| source.downcast_ref::<VerifyError>()),
+                    Some(found)
+                );
+            }
+            TaggedError::UnknownSet { id, .. } => {
+                assert_eq!(
+                    error
+                        .source()
+                        .and_then(|source| source.downcast_ref::<UnknownSetId>()),
+                    Some(id)
+                );
+            }
+            TaggedError::TooShort { .. }
+            | TaggedError::Mismatch { .. }
+            | TaggedError::WrongSet { .. }
+            | TaggedError::NotAccepted(_) => {
+                assert!(error.source().is_none(), "{error:?} names a source");
+            }
+        }
+    }
+}
+
+#[test]
+fn every_refusal_says_what_was_refused_and_carries_what_it_read() {
+    // The message is what an operator reads beside a refused peer. Each
+    // names its input, and the set, the pair or the length it carries.
+    let p248 = SetId::of::<P248>();
+    let p500 = SetId::of::<P500>();
+
+    assert_eq!(Container::PublicKey.to_string(), "public key");
+    assert_eq!(Container::Signature.to_string(), "signature");
+    assert_eq!(
+        UnknownSetId { e: 27, f: 500 }.to_string(),
+        "no parameter set has e = 27 and f = 500"
+    );
+    assert_eq!(
+        EmptyAcceptList.to_string(),
+        "an accept list must hold at least one parameter set"
+    );
+
+    let said = [
+        (
+            TaggedError::TooShort {
+                container: Container::Signature,
+                len: 3,
+            },
+            "the tagged signature is 3 bytes, shorter than a set identifier",
+        ),
+        (
+            TaggedError::UnknownSet {
+                container: Container::PublicKey,
+                id: UnknownSetId { e: 27, f: 500 },
+            },
+            "the tagged public key: no parameter set has e = 27 and f = 500",
+        ),
+        (
+            TaggedError::Mismatch {
+                public_key: p248,
+                signature: p500,
+            },
+            "the public key is tagged p248 and the signature p500",
+        ),
+        (
+            TaggedError::WrongSet {
+                expected: p500,
+                found: p248,
+            },
+            "tagged p248, and p500 was expected",
+        ),
+        (
+            TaggedError::NotAccepted(p248),
+            "p248 is not in the accept list",
+        ),
+    ];
+    for (error, text) in said {
+        assert_eq!(error.to_string(), text);
+    }
+
+    // The verifier's refusal is passed on in the verifier's words.
+    let inner = VerifyError::Composite;
+    assert!(!inner.to_string().is_empty());
+    assert_eq!(TaggedError::Verify(inner).to_string(), inner.to_string());
+}

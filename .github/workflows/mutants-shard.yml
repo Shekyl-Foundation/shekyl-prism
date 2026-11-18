@@ -1,0 +1,166 @@
+# Copyright (c) 2025-2026, The Shekyl Foundation
+#
+# All rights reserved.
+# BSD-3-Clause
+#
+# One mutant shard. `of` is the dealing: it is the denominator of
+# `--shard` and the report's `--of`, so the two cannot drift. The
+# nightly names what is mutated and passes `of` through from
+# `scripts/ci/mutants_report.py`.
+
+name: mutants-shard
+
+on:
+  workflow_call:
+    inputs:
+      job:
+        description: "Which mutant job. Names the artifact and the report."
+        type: string
+        required: true
+      shard:
+        description: "This shard's index, from zero."
+        type: string
+        required: true
+      of:
+        description: "How many shards the job is dealt into."
+        type: string
+        required: true
+      mutate:
+        description: "Packages to mutate, separated by spaces. Each is one -p."
+        type: string
+        required: true
+      test:
+        description: "Packages whose tests run, separated by spaces. Each is one --test-package."
+        type: string
+        required: true
+      timeout_multiplier:
+        description: "Passed to --timeout-multiplier when set. Empty leaves the tool's default."
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  shard:
+    name: ${{ inputs.job }} (${{ inputs.shard }}/${{ inputs.of }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: The shard is one of the dealing
+        env:
+          JOB: ${{ inputs.job }}
+          SHARD: ${{ inputs.shard }}
+          OF: ${{ inputs.of }}
+          MUTATE: ${{ inputs.mutate }}
+          TEST: ${{ inputs.test }}
+          TIMEOUT_MULTIPLIER: ${{ inputs.timeout_multiplier }}
+        run: |
+          set -euo pipefail
+          case "$SHARD" in
+            ''|*[!0-9]*) echo "mutants: shard is not an index" >&2; exit 1 ;;
+          esac
+          case "$OF" in
+            ''|*[!0-9]*) echo "mutants: of is not a count" >&2; exit 1 ;;
+          esac
+          if [ "$OF" -lt 1 ] || [ "$SHARD" -ge "$OF" ]; then
+            echo "mutants: shard ${SHARD} is not in 0..${OF}" >&2
+            exit 1
+          fi
+          check_names() {
+            label=$1
+            value=$2
+            if [ -z "$value" ]; then
+              echo "mutants: ${label} names no package" >&2
+              exit 1
+            fi
+            read -r -a packages <<< "$value"
+            for package in "${packages[@]}"; do
+              case "$package" in
+                *[!A-Za-z0-9_-]*) echo "mutants: ${label} has '${package}'" >&2; exit 1 ;;
+              esac
+            done
+          }
+          check_names mutate "$MUTATE"
+          check_names test "$TEST"
+          if [ -n "$TIMEOUT_MULTIPLIER" ]; then
+            case "$TIMEOUT_MULTIPLIER" in
+              *[!0-9]*) echo "mutants: timeout multiplier is not a count" >&2; exit 1 ;;
+            esac
+          fi
+          if [ -z "$JOB" ]; then
+            echo "mutants: the job has no name" >&2
+            exit 1
+          fi
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+        with:
+          toolchain: 1.94.0
+      - name: Install cargo-mutants 27.1.0
+        run: python3 scripts/ci/install_pinned_tool.py cargo-mutants
+      # This step does not judge. The exit code is passed on, and verdict
+      # reads it once the output is kept.
+      #
+      # The tool's limit is ten minutes short of the job's. A shard that
+      # runs long is stopped here, as a failed step, and the steps below
+      # have those ten minutes to report and upload what it had written.
+      # They do not depend on what a runner still does for a job its own
+      # limit has cancelled.
+      - id: run
+        name: cargo mutants
+        timeout-minutes: 80
+        env:
+          SHARD: ${{ inputs.shard }}
+          OF: ${{ inputs.of }}
+          MUTATE: ${{ inputs.mutate }}
+          TEST: ${{ inputs.test }}
+          TIMEOUT_MULTIPLIER: ${{ inputs.timeout_multiplier }}
+        run: |
+          set +e
+          args=()
+          read -r -a mutate_packages <<< "$MUTATE"
+          read -r -a test_packages <<< "$TEST"
+          for package in "${mutate_packages[@]}"; do
+            args+=(-p "$package")
+          done
+          for package in "${test_packages[@]}"; do
+            args+=(--test-package "$package")
+          done
+          if [ -n "$TIMEOUT_MULTIPLIER" ]; then
+            args+=(--timeout-multiplier "$TIMEOUT_MULTIPLIER")
+          fi
+          args+=(--no-shuffle --shard "${SHARD}/${OF}" --sharding round-robin)
+          cargo mutants "${args[@]}" > mutants.txt
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          tail -n 3 mutants.txt
+      # The three steps below run whenever the tool was started: after it
+      # finished, after its limit stopped it, and after the job was
+      # cancelled while it ran. What it had written by then is kept, the
+      # record carries exit -1 when it did not finish, and verdict says so
+      # in the log. They are skipped only when the tool was never started.
+      - name: What it found
+        if: ${{ always() && steps.run.outcome != 'skipped' }}
+        env:
+          JOB: ${{ inputs.job }}
+          SHARD: ${{ inputs.shard }}
+          OF: ${{ inputs.of }}
+          CODE: ${{ steps.run.outputs.code }}
+        run: |
+          python3 scripts/ci/mutants_report.py shard --out mutants.out \
+            --job "$JOB" --shard "$SHARD" --of "$OF" --exit "${CODE:--1}"
+      - name: Keep the output
+        if: ${{ always() && steps.run.outcome != 'skipped' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ inputs.job }}-${{ inputs.shard }}
+          path: mutants.out
+          retention-days: 30
+          overwrite: true
+          if-no-files-found: error
+      - name: The shard tested its mutants
+        if: ${{ always() && steps.run.outcome != 'skipped' }}
+        run: python3 scripts/ci/mutants_report.py verdict --out mutants.out

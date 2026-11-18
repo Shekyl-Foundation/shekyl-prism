@@ -7,10 +7,17 @@
 # (`report-red`), except a dispatched run, which reports only when asked.
 # The person who dispatched it is reading it.
 #
-# `mutants` and `coverage` are report-only until the first `dev` → `main`
-# cut: a surviving mutant or a coverage figure is written to the job
-# summary and does not fail the run. A tool that fails to install still
-# fails, and that failure is a red nightly.
+# `mutants`, `mutants-front` and `coverage` are report-only until the
+# first `dev` → `main` cut: a surviving mutant, a mutant that timed out, or
+# a coverage figure is written to the job summary and does not fail the
+# run. A tool that fails to install still fails. So does a mutants shard
+# whose tool did not test its mutants, and so does `mutants-summary` when
+# a shard it received fails that same test. Those are a red nightly.
+#
+# `only` empty runs every job. `only` set to `mutants` or `mutants-front`
+# runs that job and `mutants-summary`. `shard` selects one index of the
+# named job. `dispatch` refuses any other combination. The shard counts
+# live in `scripts/ci/mutants_report.py`.
 #
 # The schedule runs the default branch's copy of this file. The level III
 # floor-device measurement is not this workflow, and it is not started by
@@ -27,8 +34,12 @@ on:
         description: "Open or comment on the tracking issue if a job is red."
         type: boolean
         default: false
-      mutants_shard:
-        description: "Run one mutants shard (0 to 7) and no other job. Empty runs everything."
+      only:
+        description: "Empty runs every job. mutants or mutants-front runs that job and mutants-summary."
+        type: string
+        default: ""
+      shard:
+        description: "With only set, one shard index of that job. Empty runs every shard of it."
         type: string
         default: ""
 
@@ -40,9 +51,40 @@ permissions:
   contents: read
 
 jobs:
+  # Names the run before any other job starts. A dispatch this file does
+  # not have fails here, and the outputs are still a matrix the skipped
+  # jobs can parse.
+  dispatch:
+    name: dispatch
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      mutants_shards: ${{ steps.plan.outputs.mutants_shards }}
+      mutants_of: ${{ steps.plan.outputs.mutants_of }}
+      mutants_run: ${{ steps.plan.outputs.mutants_run }}
+      front_shards: ${{ steps.plan.outputs.front_shards }}
+      front_of: ${{ steps.plan.outputs.front_of }}
+      front_run: ${{ steps.plan.outputs.front_run }}
+      other_jobs: ${{ steps.plan.outputs.other_jobs }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          submodules: false
+      - id: plan
+        env:
+          ONLY: ${{ inputs.only || '' }}
+          SHARD: ${{ inputs.shard || '' }}
+        run: python3 scripts/ci/mutants_report.py plan --only "$ONLY" --shard "$SHARD"
+        continue-on-error: true
+      - name: The dispatch names a run this workflow has
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
   fuzz:
     name: fuzz (${{ matrix.target }})
-    if: ${{ inputs.mutants_shard == '' }}
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.other_jobs == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
@@ -123,7 +165,8 @@ jobs:
 
   differential-prime:
     name: differential-prime
-    if: ${{ inputs.mutants_shard == '' }}
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.other_jobs == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -145,7 +188,8 @@ jobs:
 
   big-endian:
     name: big-endian
-    if: ${{ inputs.mutants_shard == '' }}
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.other_jobs == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -163,7 +207,8 @@ jobs:
 
   c-vectors-full:
     name: c-vectors-full
-    if: ${{ inputs.mutants_shard == '' }}
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.other_jobs == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -178,71 +223,115 @@ jobs:
       - name: The committed vectors match
         run: bash scripts/ci/diff_vectors_data.sh
 
-  # The mutants are those of prism-verify and prism-field. The tests that
-  # kill most of the verifier's are not in prism-verify: they need the
-  # builders of prism-testkit, so they live in the testkit and in the front
-  # crate (no crate's tests depend on a crate above it). `--test-package`
-  # runs the tests of all four packages against every mutant. Without it
-  # a mutant would meet only the tests of the two packages named by `-p`.
+  # `mutants` and `mutants-front` are one procedure,
+  # `.github/workflows/mutants-shard.yml`. The shard count is `MUTANT_JOBS`
+  # in `scripts/ci/mutants_report.py`: `plan` deals the indexes, and `of`
+  # is that count passed through once, to `--shard` and to the report.
+  # What each job mutates is named here. Missed mutants and timeouts are
+  # report-only. A shard is red when the tool did not test its mutants.
+  # The sizes and why the layer job multiplies the time limit are
+  # `docs/PRISM_CI_DESIGN.md`.
   #
-  # The tool times its unmutated baseline on the two mutated packages
-  # alone and sets each mutant's time limit from that, five times by
-  # default. A mutant's run over four packages is about two and a half
-  # times the baseline, so the multiplier is raised to keep the margin a
-  # run over two packages had.
-  #
-  # That is over a minute for a mutant no test kills, and there are some 700: hours in
-  # one job, against a 90-minute limit. The mutants are dealt round-robin
-  # to eight jobs, so each gets its share of every file and runs for a
-  # fraction of its limit. A dispatch with `mutants_shard` runs one of the
-  # eight alone.
+  # The front crate's `acceptance` test is first and walks the corpus, so
+  # a mutant costs about as much caught as missed. The tests are not
+  # renamed for that; the job is dealt into more shards. `tag_layer_counts`
+  # needs the operation counter and does not run here.
   mutants:
-    name: mutants (${{ matrix.shard }}/8)
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
+    name: mutants (${{ matrix.shard }}/${{ needs.dispatch.outputs.mutants_of }})
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.mutants_run == 'true' }}
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(inputs.mutants_shard != '' && format('[{0}]', inputs.mutants_shard) || '[0, 1, 2, 3, 4, 5, 6, 7]') }}
+        shard: ${{ fromJSON(needs.dispatch.outputs.mutants_shards || '[0]') }}
+    uses: ./.github/workflows/mutants-shard.yml
+    with:
+      job: mutants
+      shard: ${{ matrix.shard }}
+      of: ${{ needs.dispatch.outputs.mutants_of }}
+      mutate: prism-verify prism-field
+      test: prism-field prism-verify prism-testkit shekyl-prism
+      timeout_multiplier: "12"
+
+  mutants-front:
+    name: mutants-front (${{ matrix.shard }}/${{ needs.dispatch.outputs.front_of }})
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.front_run == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.dispatch.outputs.front_shards || '[0]') }}
+    uses: ./.github/workflows/mutants-shard.yml
+    with:
+      job: mutants-front
+      shard: ${{ matrix.shard }}
+      of: ${{ needs.dispatch.outputs.front_of }}
+      mutate: shekyl-prism
+      test: shekyl-prism
+
+  # Figures for the jobs this run dealt. A present shard `verdict` rejects
+  # is named, left out, and fails this job. A shard that is absent is
+  # named and does not, by itself. The merged lists are uploaded only for
+  # a full nightly whose every shard was present and accepted, so a
+  # one-shard dispatch does not replace `missed-mutants`.
+  mutants-summary:
+    name: mutants-summary
+    needs: [dispatch, mutants, mutants-front]
+    if: ${{ always() && needs.dispatch.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
           submodules: false
-      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          toolchain: 1.94.0
-      - name: Install cargo-mutants 27.1.0
-        run: python3 scripts/ci/install_pinned_tool.py cargo-mutants
-      # Report-only. The exit code is recorded and then discarded. The
-      # install step above still fails the job if the tool is not there.
-      - name: Surviving mutants
+          pattern: mutants-*
+          path: shards
+      - id: gather
+        name: All shards
         env:
-          SHARD: ${{ matrix.shard }}
+          RUN_MUTANTS: ${{ needs.dispatch.outputs.mutants_run }}
+          RUN_FRONT: ${{ needs.dispatch.outputs.front_run }}
         run: |
-          set +e
-          cargo mutants -p prism-verify -p prism-field \
-            --test-package prism-field --test-package prism-verify \
-            --test-package prism-testkit --test-package shekyl-prism \
-            --timeout-multiplier 12 \
-            --no-shuffle --shard "${SHARD}/8" --sharding round-robin > mutants.txt
-          code=$?
-          set -e
-          # The log keeps the figures; a step summary cannot be read back.
-          tail -n 80 mutants.txt
-          {
-            echo "## cargo mutants, shard ${SHARD} of 8"
-            echo "exit ${code} (report-only until dev → main)"
-            echo '```'
-            tail -n 80 mutants.txt
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          set -euo pipefail
+          args=(python3 scripts/ci/mutants_report.py gather --dir shards --write lists)
+          if [ "$RUN_MUTANTS" = true ]; then
+            args+=(--expect mutants)
+          fi
+          if [ "$RUN_FRONT" = true ]; then
+            args+=(--expect mutants-front)
+          fi
+          "${args[@]}"
+          if compgen -G 'lists/*.txt' > /dev/null; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Keep the merged lists
+        if: steps.gather.outputs.publish == 'true' && needs.dispatch.outputs.other_jobs == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: missed-mutants
+          path: lists
+          retention-days: 90
+          overwrite: true
+          if-no-files-found: error
 
+  # Every test of the workspace, instrumented. The front crate's corpus
+  # walks verify each input through three entries (bytes, typed, tagged),
+  # and instrumented they are most of this job: `acceptance` alone took 21
+  # of 45 minutes on the build VM at `85f165a`. At 30 minutes the job was
+  # cancelled inside that test (run 44208264477). A runner took 38
+  # minutes with the limit raised (run 44228767682). The limit is over
+  # twice the VM's time, because runners differ in speed by nearly as much.
   coverage:
     name: coverage
-    if: ${{ inputs.mutants_shard == '' }}
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.other_jobs == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
@@ -270,7 +359,7 @@ jobs:
 
   report-red:
     name: report-red
-    needs: [fuzz, differential-prime, big-endian, c-vectors-full, mutants, coverage]
+    needs: [dispatch, fuzz, differential-prime, big-endian, c-vectors-full, mutants, mutants-front, mutants-summary, coverage]
     # `failure()` is false for a job its own time limit cancelled. A
     # cancelled job is red and is reported.
     if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) && (github.event_name == 'schedule' || inputs.report) }}
