@@ -33,8 +33,9 @@ A present shard that fails it is named, left out of the figures, and
 fails this command. A shard that is absent is named and does not, by
 itself. With `--write`, the merged missed and timeout lists are written
 only when every expected job is present in full and none of its shards
-was rejected. `--expect` names those jobs; without it, the jobs found
-are the expected ones. It fails when it finds no shard.
+was rejected. The same text is written as `summary.md`, so the artifact
+says which shards it holds. `--expect` names those jobs; without it, the
+jobs found are the expected ones. It fails when it finds no shard.
 
 Text goes to standard output, and to the job summary when the runner
 names one.
@@ -367,6 +368,7 @@ def gather(root: Path, write: Path | None, expect: list[str] | None = None) -> i
             complete[job] = merged
     if write is not None and not rejected and len(complete) == len(expected):
         write.mkdir(parents=True, exist_ok=True)
+        (write / "summary.md").write_text("\n".join(lines) + "\n")
         for job, merged in complete.items():
             for name in ("missed", "timeout"):
                 body = "".join(f"{line}\n" for line in sorted(merged[name]))
@@ -479,6 +481,8 @@ def selftest() -> int:
             timeout = (written / "mutants-timeout.txt").read_text().splitlines()
             if missed != ["a.rs:2:1: y", "b.rs:1:1: z"] or timeout != ["b.rs:9:9: w"]:
                 failures.append("gather wrote the wrong lists")
+            if "All 2 shards." not in (written / "summary.md").read_text():
+                failures.append("the published summary does not name the dealing")
             partial = root / "partial"
             make(partial, "s0", 2, some, of=2)
             code, text = gather_text(partial, root / "partial-out")
