@@ -25,12 +25,15 @@ fail (exit codes 0, 2 and 3 of cargo-mutants 27.1.0: all caught, some
 missed, some timed out). Every other code fails: 1 is a usage error, 4 is
 a baseline that already fails, 70 an internal error, and a code this
 script has not met is not a pass. A directory without the four lists, a
-shard with no mutant in it, a shard index outside its dealing, and lists
-that do not add up to the mutants the tool set out to test fail as well.
+shard with no mutant in it, a shard index outside its dealing, a record
+or a `mutants.json` that cannot be read (a file cut short is one), and
+lists that do not add up to the mutants the tool set out to test fail as
+well.
 
 `gather` reads every shard directory under `--dir`. It uses `verdict`.
 A present shard that fails it is named, left out of the figures, and
-fails this command. A shard that is absent is named and does not, by
+fails this command; so is a shard record that cannot be read, and the
+shards that can be are still summed. A shard that is absent is named and does not, by
 itself. With `--write`, the merged missed and timeout lists are written
 only when every expected job is present in full and none of its shards
 was rejected. The same text is written as `summary.md`, so the artifact
@@ -86,6 +89,18 @@ OTHER = {
     6: "diff filter invalid",
     70: "internal error",
 }
+
+
+def read_json(path: Path) -> object:
+    """The JSON value in `path`, or None when it cannot be read as JSON.
+
+    A file cut short by a cancelled job is the case this is for. `null`
+    is no record either, so the two are not told apart.
+    """
+    try:
+        return json.loads(path.read_text())
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
 
 
 def read_lists(out: Path) -> dict[str, list[str]] | None:
@@ -156,12 +171,12 @@ def verdict_of(out: Path) -> list[str]:
     record_path = out / "shard.json"
     if not record_path.is_file():
         return ["no shard.json: the report step did not run"]
+    record = read_json(record_path)
     try:
-        record = json.loads(record_path.read_text())
         code = record["exit"]
         index = record["shard"]
         of = record["of"]
-    except (json.JSONDecodeError, KeyError, TypeError):
+    except (KeyError, TypeError):
         return ["shard.json is not a shard record"]
     errors = []
     if not isinstance(index, int) or not isinstance(of, int) or of < 1 or not 0 <= index < of:
@@ -178,9 +193,11 @@ def verdict_of(out: Path) -> list[str]:
     if not planned_path.is_file():
         errors.append("no mutants.json: the tool did not say what it set out to test")
     else:
-        planned = len(json.loads(planned_path.read_text()))
-        if planned != total:
-            errors.append(f"the tool set out to test {planned} mutants and the lists hold {total}")
+        planned = read_json(planned_path)
+        if not isinstance(planned, list):
+            errors.append("mutants.json is not a list of mutants: it was cut short, or it is not the tool's")
+        elif len(planned) != total:
+            errors.append(f"the tool set out to test {len(planned)} mutants and the lists hold {total}")
     return errors
 
 
@@ -261,22 +278,25 @@ def plan_command(only: str, shard: str) -> int:
     return 0
 
 
-def load_jobs(root: Path) -> dict[str, list[tuple[Path, dict]]]:
-    """Shard records under `root`, grouped by job. Raises `DispatchError` when one is unreadable."""
+def load_jobs(root: Path) -> tuple[dict[str, list[tuple[Path, dict]]], list[Path]]:
+    """Shard records under `root`, grouped by job, and the records that cannot be read.
+
+    An unreadable record names no job, so it cannot be counted with one.
+    It is returned apart, and the shards that can be read are still summed.
+    """
     jobs: dict[str, list[tuple[Path, dict]]] = defaultdict(list)
+    unreadable: list[Path] = []
     for record_path in sorted(root.rglob("shard.json")):
-        try:
-            record = json.loads(record_path.read_text())
-            job = record["job"]
-            if not isinstance(job, str):
-                raise TypeError
-            record["shard"]
-            record["of"]
-            record["exit"]
-        except (json.JSONDecodeError, KeyError, TypeError) as error:
-            raise DispatchError(f"{record_path} is not a shard record") from error
-        jobs[job].append((record_path.parent, record))
-    return jobs
+        record = read_json(record_path)
+        if (
+            not isinstance(record, dict)
+            or not isinstance(record.get("job"), str)
+            or any(key not in record for key in ("shard", "of", "exit"))
+        ):
+            unreadable.append(record_path)
+            continue
+        jobs[record["job"]].append((record_path.parent, record))
+    return jobs, unreadable
 
 
 def job_figures(shards: list[tuple[Path, dict]]) -> tuple[list[str], dict[str, list[str]] | None, bool]:
@@ -339,12 +359,8 @@ def job_figures(shards: list[tuple[Path, dict]]) -> tuple[list[str], dict[str, l
 
 
 def gather(root: Path, write: Path | None, expect: list[str] | None = None) -> int:
-    try:
-        found = load_jobs(root)
-    except DispatchError as error:
-        print(f"mutants: {error}", file=sys.stderr)
-        return 1
-    if not found:
+    found, unreadable = load_jobs(root)
+    if not found and not unreadable:
         print(f"mutants: no shard under {root}", file=sys.stderr)
         return 1
     expected = list(expect) if expect is not None else sorted(found)
@@ -353,7 +369,9 @@ def gather(root: Path, write: Path | None, expect: list[str] | None = None) -> i
         print(f"mutants: unexpected job {', '.join(unexpected)}", file=sys.stderr)
         return 1
     lines = ["# cargo mutants, all shards", ""]
-    rejected = False
+    rejected = bool(unreadable)
+    for record_path in unreadable:
+        lines += [f"`{record_path.relative_to(root)}` is not a shard record, so its shard is in no figure.", ""]
     complete: dict[str, dict[str, list[str]]] = {}
     for job in expected:
         lines += [f"## {job}", ""]
@@ -508,6 +526,26 @@ def selftest() -> int:
             shard(other / "s0", "other", 0, 1, 0)
             if gather(other, None, ["mutants"]) == 0:
                 failures.append("an unexpected job passed")
+            cut = root / "cut"
+            make(cut, "s0", 2, kept, of=2)
+            short = make(cut, "s1", 2, dropped, of=2)
+            (short / "mutants.json").write_text('[{"name": "dr')
+            if not any("mutants.json is not a list" in error for error in verdict_of(short)):
+                failures.append("a mutants.json cut short passed, or stopped the verdict")
+            (short / "mutants.json").write_text('{"mutants": 1}')
+            if not any("mutants.json is not a list" in error for error in verdict_of(short)):
+                failures.append("a mutants.json that is no list passed")
+            code, text = gather_text(cut, root / "cut-out")
+            if code == 0 or "kept.rs" not in text or "drop.rs" in text or "Shard 1 is not in the figures" not in text:
+                failures.append("a mutants.json cut short stopped the summary of the other shards")
+            torn = root / "torn"
+            make(torn, "s0", 2, kept, of=2)
+            (make(torn, "s1", 2, dropped, of=2) / "shard.json").write_text('{"job": "mut')
+            code, text = gather_text(torn, root / "torn-out")
+            if code == 0 or "kept.rs" not in text or "is not a shard record" not in text:
+                failures.append("a shard record cut short stopped the summary of the other shards")
+            if (root / "cut-out").exists() or (root / "torn-out").exists():
+                failures.append("a shard that could not be read was published")
             split = root / "split"
             make(split, "s0", 0, some, of=2)
             make(split, "s1", 0, some, of=3)

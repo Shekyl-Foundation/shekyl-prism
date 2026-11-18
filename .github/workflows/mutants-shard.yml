@@ -104,8 +104,15 @@ jobs:
         run: python3 scripts/ci/install_pinned_tool.py cargo-mutants
       # This step does not judge. The exit code is passed on, and verdict
       # reads it once the output is kept.
+      #
+      # The tool's limit is ten minutes short of the job's. A shard that
+      # runs long is stopped here, as a failed step, and the steps below
+      # have those ten minutes to report and upload what it had written.
+      # They do not depend on what a runner still does for a job its own
+      # limit has cancelled.
       - id: run
         name: cargo mutants
+        timeout-minutes: 80
         env:
           SHARD: ${{ inputs.shard }}
           OF: ${{ inputs.of }}
@@ -130,10 +137,11 @@ jobs:
           cargo mutants "${args[@]}" > mutants.txt
           echo "code=$?" >> "$GITHUB_OUTPUT"
           tail -n 3 mutants.txt
-      # These two run for a shard that was cancelled while the tool ran,
-      # its own time limit included: what the tool had written by then is
-      # kept, and the record carries exit -1. They are skipped only when
-      # the tool was never started.
+      # The three steps below run whenever the tool was started: after it
+      # finished, after its limit stopped it, and after the job was
+      # cancelled while it ran. What it had written by then is kept, the
+      # record carries exit -1 when it did not finish, and verdict says so
+      # in the log. They are skipped only when the tool was never started.
       - name: What it found
         if: ${{ always() && steps.run.outcome != 'skipped' }}
         env:
@@ -154,5 +162,5 @@ jobs:
           overwrite: true
           if-no-files-found: error
       - name: The shard tested its mutants
-        if: steps.run.outcome == 'success' || steps.run.outcome == 'failure'
+        if: ${{ always() && steps.run.outcome != 'skipped' }}
         run: python3 scripts/ci/mutants_report.py verdict --out mutants.out
