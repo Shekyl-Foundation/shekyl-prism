@@ -30,7 +30,7 @@ on:
         type: boolean
         default: false
       mutants_shard:
-        description: "Run one shard of `mutants` (0 to 11), then `mutants-summary`, and no other job."
+        description: "Run one shard of `mutants` (0 to 15), then `mutants-summary`, and no other job."
         type: string
         default: ""
       mutants_front_shard:
@@ -199,26 +199,28 @@ jobs:
   #
   # A mutant no test kills runs every test: minutes, and there are over
   # 800 mutants, which is hours in one job against a 90-minute limit. The
-  # mutants are dealt round-robin to twelve jobs, so each gets its share
+  # mutants are dealt round-robin to sixteen jobs, so each gets its share
   # of every file. The count is chosen so the slowest shard is under 60
   # minutes, and a shard measured above 70 is a reason to raise it
-  # (`docs/PRISM_CI_DESIGN.md`). A different count deals the mutants
+  # (`docs/PRISM_CI_DESIGN.md`). Runners differ: the unmutated baseline
+  # took 37 to 69 seconds across twelve shards of one run, and a shard's
+  # time follows it. The count is sized for the slow end. A different count deals the mutants
   # differently: one shard's lists compare with the same shard's only
   # while the count stands, and `mutants-summary` has the lists whole.
   #
-  # A dispatch with `mutants_shard` runs one of the twelve alone.
+  # A dispatch with `mutants_shard` runs one of the sixteen alone.
   #
   # What is red: the tool not testing its mutants. Missed mutants and
   # timeouts are listed and do not fail (`scripts/ci/mutants_report.py`).
   mutants:
-    name: mutants (${{ matrix.shard }}/12)
+    name: mutants (${{ matrix.shard }}/16)
     if: ${{ inputs.mutants_front_shard == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(inputs.mutants_shard != '' && format('[{0}]', inputs.mutants_shard) || '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]') }}
+        shard: ${{ fromJSON(inputs.mutants_shard != '' && format('[{0}]', inputs.mutants_shard) || '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]') }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
@@ -241,7 +243,7 @@ jobs:
             --test-package prism-field --test-package prism-verify \
             --test-package prism-testkit --test-package shekyl-prism \
             --timeout-multiplier 12 \
-            --no-shuffle --shard "${SHARD}/12" --sharding round-robin > mutants.txt
+            --no-shuffle --shard "${SHARD}/16" --sharding round-robin > mutants.txt
           echo "code=$?" >> "$GITHUB_OUTPUT"
           tail -n 3 mutants.txt
       # The four counts and the whole missed and timeout lists, in the log
@@ -253,7 +255,7 @@ jobs:
           CODE: ${{ steps.run.outputs.code }}
         run: |
           python3 scripts/ci/mutants_report.py shard --out mutants.out \
-            --job mutants --shard "$SHARD" --of 12 --exit "${CODE:--1}"
+            --job mutants --shard "$SHARD" --of 16 --exit "${CODE:--1}"
       # The tool's whole output directory: the four lists, what it set out
       # to test, each mutant's outcome and time, and each mutant's diff
       # and test log.
@@ -372,11 +374,17 @@ jobs:
           overwrite: true
           if-no-files-found: error
 
+  # Every test of the workspace, instrumented. The front crate's corpus
+  # walks verify each input through three entries (bytes, typed, tagged),
+  # and instrumented they are most of this job: `acceptance` alone took 21
+  # of 45 minutes on the build VM at `85f165a`. At 30 minutes the job was
+  # cancelled inside that test (run 44208264477). The limit is over twice
+  # the measured time, because runners differ in speed by nearly as much.
   coverage:
     name: coverage
     if: ${{ inputs.mutants_shard == '' && inputs.mutants_front_shard == '' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
