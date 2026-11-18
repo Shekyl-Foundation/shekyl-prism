@@ -130,8 +130,12 @@ jobs:
           cargo mutants "${args[@]}" > mutants.txt
           echo "code=$?" >> "$GITHUB_OUTPUT"
           tail -n 3 mutants.txt
+      # These two run for a shard that was cancelled while the tool ran,
+      # its own time limit included: what the tool had written by then is
+      # kept, and the record carries exit -1. They are skipped only when
+      # the tool was never started.
       - name: What it found
-        if: steps.run.outcome == 'success' || steps.run.outcome == 'failure'
+        if: ${{ always() && steps.run.outcome != 'skipped' }}
         env:
           JOB: ${{ inputs.job }}
           SHARD: ${{ inputs.shard }}
@@ -141,7 +145,7 @@ jobs:
           python3 scripts/ci/mutants_report.py shard --out mutants.out \
             --job "$JOB" --shard "$SHARD" --of "$OF" --exit "${CODE:--1}"
       - name: Keep the output
-        if: steps.run.outcome == 'success' || steps.run.outcome == 'failure'
+        if: ${{ always() && steps.run.outcome != 'skipped' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ inputs.job }}-${{ inputs.shard }}
