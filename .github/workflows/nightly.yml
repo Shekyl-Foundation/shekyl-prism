@@ -34,7 +34,7 @@ on:
         type: string
         default: ""
       mutants_front_shard:
-        description: "Run one shard of `mutants-front` (0 to 3), then `mutants-summary`, and no other job."
+        description: "Run one shard of `mutants-front` (0 to 1), then `mutants-summary`, and no other job."
         type: string
         default: ""
 
@@ -276,9 +276,9 @@ jobs:
   #
   # Cargo runs the crate's test binaries in name order and stops after
   # the first that fails. `acceptance` is the first of them and walks the
-  # corpus, so a mutant costs about as much caught as missed: over a
+  # corpus, so a mutant costs about as much caught as missed: about a
   # minute each, whichever test kills it. The tests are not renamed or
-  # filtered to change that. The mutants are dealt to four jobs instead,
+  # filtered to change that. The mutants are dealt to two jobs instead,
   # by the same rule as above: the slowest under 60 minutes.
   #
   # `tests/tag_layer_counts.rs` does not run here. It requires the
@@ -287,14 +287,14 @@ jobs:
   #
   # A dispatch with `mutants_front_shard` runs one shard alone.
   mutants-front:
-    name: mutants-front (${{ matrix.shard }}/4)
+    name: mutants-front (${{ matrix.shard }}/2)
     if: ${{ inputs.mutants_shard == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(inputs.mutants_front_shard != '' && format('[{0}]', inputs.mutants_front_shard) || '[0, 1, 2, 3]') }}
+        shard: ${{ fromJSON(inputs.mutants_front_shard != '' && format('[{0}]', inputs.mutants_front_shard) || '[0, 1]') }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
@@ -314,7 +314,7 @@ jobs:
         run: |
           set +e
           cargo mutants -p shekyl-prism --test-package shekyl-prism \
-            --no-shuffle --shard "${SHARD}/4" --sharding round-robin > mutants.txt
+            --no-shuffle --shard "${SHARD}/2" --sharding round-robin > mutants.txt
           echo "code=$?" >> "$GITHUB_OUTPUT"
           tail -n 3 mutants.txt
       # The four counts and the whole missed and timeout lists, in the log
@@ -326,7 +326,7 @@ jobs:
           CODE: ${{ steps.run.outputs.code }}
         run: |
           python3 scripts/ci/mutants_report.py shard --out mutants.out \
-            --job mutants-front --shard "$SHARD" --of 4 --exit "${CODE:--1}"
+            --job mutants-front --shard "$SHARD" --of 2 --exit "${CODE:--1}"
       # The tool's whole output directory: the four lists, what it set out
       # to test, each mutant's outcome and time, and each mutant's diff
       # and test log.

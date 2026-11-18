@@ -169,7 +169,7 @@ def gather(root: Path, write: Path | None) -> int:
         lines += [f"## {job}", ""]
         if absent:
             lines += [
-                f"**{len(found)} of {of} shards are here; the figures below are theirs alone.** "
+                f"**Shards here: {len(found)} of {of}. The figures below are theirs alone.** "
                 f"Not here: {', '.join(map(str, absent))}.",
                 "",
             ]
