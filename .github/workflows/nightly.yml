@@ -378,8 +378,9 @@ jobs:
   # walks verify each input through three entries (bytes, typed, tagged),
   # and instrumented they are most of this job: `acceptance` alone took 21
   # of 45 minutes on the build VM at `85f165a`. At 30 minutes the job was
-  # cancelled inside that test (run 44208264477). The limit is over twice
-  # the measured time, because runners differ in speed by nearly as much.
+  # cancelled inside that test (run 44208264477). A runner took 38
+  # minutes with the limit raised (run 44228767682). The limit is over
+  # twice the VM's time, because runners differ in speed by nearly as much.
   coverage:
     name: coverage
     if: ${{ inputs.mutants_shard == '' && inputs.mutants_front_shard == '' }}
