@@ -443,7 +443,8 @@ const fn is_odd_prime(candidate: u64) -> bool {
 ///
 /// `f` is odd and above one, `e` is above 64, and `p` is prime. The first
 /// two are checked when the set is compiled. That `p` is prime is not
-/// checked by any code here: it is part of the ruling that names the set.
+/// checked in this crate, which has no primality test: the tests of
+/// `prism-verify` run that crate's Baillie–PSW test on each set's `p`.
 pub trait ParameterSet:
     sealed::Sealed + Copy + Clone + Eq + core::fmt::Debug + Send + Sync + 'static
 {
