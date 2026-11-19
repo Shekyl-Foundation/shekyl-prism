@@ -30,10 +30,7 @@
 //! in [`PublicKey::from_bytes`], every check that depends on the
 //! signature alone runs in [`Signature::from_bytes`], and
 //! [`PublicKey::verify`] runs the rest. Both types carry their parameter
-//! set, so a key of one set is not given a signature of another. One
-//! check on the key alone is the exception and runs in
-//! [`PublicKey::verify`]: that the key's torsion points are a basis
-//! (see [`PublicKey`]).
+//! set, so a key of one set is not given a signature of another.
 //!
 //! This example reads one of the committed test vectors and verifies it.
 //! The vectors are in the `prism-vectors` crate of this repository.

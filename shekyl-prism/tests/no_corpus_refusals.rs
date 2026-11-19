@@ -23,10 +23,11 @@
 //!
 //! Reached: `Length`, `Canonical`, `Origin`, `Singular`, `Sign`, `Model`,
 //! `Composite`, `Kernel` (before the pairing and after it), `Pairing`,
-//! `Codomain`. Not reached: `Basis` (it needs a key with no basis index
-//! inside the bound, which nobody knows how to find) and `Image` (the
-//! codomains must agree first, and no response known to be buildable from
-//! public data gets them to).
+//! `Codomain`. Not reached here: `Basis` (a key whose named points are
+//! no basis is in `entries_agree.rs`; one with no basis index inside the
+//! bound nobody knows how to find) and `Image` (the codomains must agree
+//! first, and no response known to be buildable from public data gets
+//! them to).
 //!
 //! The checks are generic over the set. Each set without a corpus runs
 //! all of them, in a module of its own at the end of this file, which

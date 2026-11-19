@@ -16,17 +16,12 @@ use crate::{SetId, Signature, TaggedError};
 ///
 /// A value of this type passed every check a key can pass alone: its
 /// length, the canonical encoding of its field element, that it is
-/// neither the starting curve nor a singular curve, and that its torsion
-/// basis is found within the set's search bound. [`Self::from_bytes`] is
-/// the only way to make one.
+/// neither the starting curve nor a singular curve, that its torsion
+/// basis is found within the set's search bound, and that what is found
+/// is a basis. [`Self::from_bytes`] is the only way to make one.
 ///
-/// One check on the key alone is not among them: that the points found
-/// are a basis of the `2^e`-torsion is tested in [`Self::verify`], on
-/// every call. A key that fails it is read without error and verifies
-/// nothing (ledger O18 of `docs/lab/LEDGER.md`).
-///
-/// The key keeps what the basis search found, so [`Self::verify`] does
-/// not search again.
+/// The key keeps the basis that was found and tested, so
+/// [`Self::verify`] neither searches for it nor tests it again.
 ///
 /// # Equality
 ///
@@ -54,14 +49,19 @@ impl<S: ParameterSet> PublicKey<S> {
     ///   can sign;
     /// - [`VerifyError::Singular`]: not an elliptic curve;
     /// - [`VerifyError::Basis`]: no basis index within the set's search
-    ///   bound.
+    ///   bound, or the points the index names are not a basis of the
+    ///   curve's `2^e`-torsion. A curve whose torsion is not rational is
+    ///   refused here.
     ///
     /// # Cost
     ///
-    /// The last check is a search whose length is chosen by whoever chose
-    /// the bytes: up to `S::SEARCH_BOUND` candidates, each a test of
-    /// whether a field element is a square. This function runs it before
-    /// any signature has been looked at.
+    /// The last check is in two steps. The first is a search whose length
+    /// is chosen by whoever chose the bytes: up to `S::SEARCH_BOUND`
+    /// candidates, each a test of whether a field element is a square.
+    /// The second is the test of the basis found, which costs the same
+    /// for every key of a set and is the dearest thing here: about 3.9%
+    /// of a verification at `p248`. This function runs both before any
+    /// signature has been looked at, and [`Self::verify`] runs neither.
     ///
     /// That is the right order for a key that is validated once and then
     /// kept: a key read from stored state, used for many signatures. It

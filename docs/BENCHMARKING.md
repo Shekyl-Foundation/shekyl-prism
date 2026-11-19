@@ -283,11 +283,12 @@ additions, subtractions, base-field work and everything outside the field.
 ### The entry split by object
 
 The typed interface (`shekyl-prism`) checks a key once, when it is built,
-and keeps the basis index the search found. The byte-level entry searches
-for that index twice on every call: once in its public checks, and again
-in the relation. The split entry searches once. This is the first
-measurement of what a prepared key saves, and the answer is: one basis
-search, which is very little.
+and keeps what the checks found: the basis index, and the basis of
+`E[2^e]` that index names, tested. The byte-level entry searches for the
+index twice on every call, once in its public checks and again in the
+relation, and computes and tests the basis on every call. The split
+entry does each once, when the key is prepared, and a verification under
+a kept key does none of them.
 
 Ran: `scripts/op_counts.sh` counts each of the 113 honest vectors through
 `PreparedKey::prepare`, `checked_response` and `verify_prepared`, the
@@ -303,50 +304,57 @@ Extension-field counts on the first primary vector of each set
 
 | | part | mul | square | inv | sqrt | is_square |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| `p248` | key | 2 | 2 | 0 | 0 | 2 |
+| `p248` | key | 6,037 | 3,006 | 2 | 2 | 2 |
 | | signature | 6 | 3 | 3 | 3 | 0 |
-| | verification | 137,826 | 93,945 | 68 | 3 | 0 |
+| | verification | 131,791 | 90,941 | 66 | 1 | 0 |
 | | **sum** | 137,834 | 93,950 | 71 | 6 | 2 |
 | | byte-level | 137,836 | 93,951 | 71 | 6 | 4 |
 | | one basis search | 2 | 1 | 0 | 0 | 2 |
-| `p376` | key | 4 | 4 | 0 | 0 | 3 |
+| `p376` | key | 9,184 | 4,576 | 3 | 2 | 3 |
 | | signature | 6 | 3 | 3 | 3 | 0 |
-| | verification | 212,068 | 147,271 | 73 | 3 | 0 |
+| | verification | 202,888 | 142,699 | 70 | 1 | 0 |
 | | **sum** | 212,078 | 147,278 | 76 | 6 | 3 |
 | | byte-level | 212,082 | 147,281 | 76 | 6 | 6 |
 | | one basis search | 4 | 3 | 0 | 0 | 3 |
-| `p500` | key | 2 | 3 | 0 | 0 | 2 |
+| `p500` | key | 12,122 | 6,047 | 3 | 2 | 2 |
 | | signature | 6 | 3 | 3 | 3 | 0 |
-| | verification | 289,158 | 202,139 | 73 | 3 | 0 |
+| | verification | 277,038 | 196,095 | 70 | 1 | 0 |
 | | **sum** | 289,166 | 202,145 | 76 | 6 | 2 |
 | | byte-level | 289,168 | 202,147 | 76 | 6 | 4 |
 | | one basis search | 2 | 2 | 0 | 0 | 2 |
 
-The search also makes base-field residuosity tests when the key's
-coefficient is a non-square: 10 at this `p376` key and 4 at this `p500`
-key, none at this `p248` key.
+The sum and the byte-level total are what they were before the key held
+its basis: the work moved from the verification to the key and none was
+added or removed. The search also makes base-field residuosity tests
+when the key's coefficient is a non-square: 10 at this `p376` key and 4
+at this `p500` key, none at this `p248` key.
 
-Over all 113 keys one search is 2 to 14 multiplications, 1 to 7 squarings
-and 2 to 8 residuosity tests in the extension field, and up to 16 in the
-base field. A verification is about 232,000 multiplications and
-squarings at `p248` and about 491,000 at `p500`. So keeping the index saves under one part in ten thousand of
-the products. A residuosity test is dearer than a product, but two to
-eight of them do not change that picture. The key's own construction is
-the search and one squaring (the singular-curve test); the signature's
-construction is the same 6 multiplications, 3 squarings, 3 inversions and
-3 square roots on every vector, which is the model check.
+What a kept key saves on every signature is the key's row: the search, the three points of the basis, and the test that they are
+one. Over all 113 keys that is 9,043 to 9,061 multiplications and
+squarings at `p248`, 13,755 to 13,773 at `p376` and 18,167 to 18,184 at
+`p500`, which is 3.9%, 3.8% and 3.7% of the products of a byte-level
+verification, with two or three inversions and two square roots. Nearly
+all of it is the test: each of the two order checks doubles a point `e`
+times and again `e − 1` times, and the span check doubles two points
+`e − 1` times, about `6e` doublings in all. The search is 2 to 14
+multiplications of it. The signature's construction is the same 6
+multiplications, 3 squarings, 3 inversions and 3 square roots on every
+vector, which is the model check.
+
+The other side of it: building a key now costs that much, where it cost
+a search and one squaring. A caller that builds a key for every incoming
+message pays 3.9% of a verification before it has looked at a signature,
+for any bytes that decode and have an index. The byte-level entry is the
+one ordered for that caller.
 
 Derived, not measured: what else of a verification depends on the key
-alone and could be kept with it. The key's basis points and the order and
-span checks on them are part of the `torsion` stage (17,956 products at
-`p248`, 27,281 at `p376`, 36,154 at `p500`, which also holds the same
-checks on the signature's points), and one of the two Weil pairings of
-the `pairing` stage (22,202, 33,674 and 44,768 products for both) is of
-the key's basis alone. If about half of each stage is the key's, a key
-that kept its basis and its pairing value would save in the order of 8%
-of a verification. That is an estimate from stage totals, the split inside
-a stage has not been counted, and none of it is built: this part keeps
-the index and nothing else.
+alone and could be kept with it. One of the two Weil pairings of the
+`pairing` stage (22,202 products at `p248`, 33,674 at `p376` and 44,768
+at `p500` for both) is of the key's basis alone, and so is the lift of
+the basis to full points. A key that kept its pairing value would save
+in the order of a further 4% to 5% of a verification. That is an
+estimate from a stage total, the split inside the stage has not been
+counted, and none of it is built.
 
 ### Memory of one verification
 

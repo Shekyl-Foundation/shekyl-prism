@@ -8,14 +8,11 @@
 //!
 //! [`crate::verify`] takes three byte strings and runs every check on
 //! every call. A caller that verifies many signatures under one key pays
-//! for the key's checks each time, and the search for the key's basis is
-//! the dearest of them. The three functions here are the same checks cut
-//! where the inputs separate:
+//! for the key's checks each time, and the test that the key's points
+//! are a basis is the dearest of them. The three functions here are the
+//! same checks cut where the inputs separate:
 //!
-//! - [`PreparedKey::prepare`]: every check that depends on the key alone,
-//!   with one exception: that the points the basis index names are a
-//!   basis of the `2^e`-torsion is tested in [`verify_prepared`], at
-//!   each verification (ledger O18);
+//! - [`PreparedKey::prepare`]: every check that depends on the key alone;
 //! - [`checked_response`]: every check that depends on the signature alone;
 //! - [`verify_prepared`]: the challenge, its degree and the relation.
 //!
@@ -24,18 +21,23 @@
 //! made by the function that checks them. The typed interface of the
 //! `shekyl-prism` crate (`PublicKey`, `Signature`) wraps the two.
 //!
-//! The signature's checks, and primality followed by the relation, are
-//! each one function that [`crate::verify`] runs as well, so the two
-//! entries cannot come to check different things.
+//! The signature's checks, the test of the key's basis, and primality
+//! followed by the relation, are each one function that [`crate::verify`]
+//! runs as well, so the two entries cannot come to check different
+//! things.
 //!
 //! # The order of refusals
 //!
 //! [`crate::verify`] checks both lengths, decodes the key, then decodes
-//! and checks the signature, and only then searches for the key's basis.
-//! Here the key's checks, the search among them, are finished before the
-//! signature is looked at. When exactly one of the two inputs is faulty
-//! the two entries name the same fault. When both are, they can name
-//! different ones; `docs/VERIFIER_SPEC.md` states the rule and
+//! and checks the signature, and only then searches for the key's basis;
+//! it tests that basis after the challenge's primality and the
+//! signature's points, and names a failure `Kernel`. Here the key's
+//! checks, the search and the test among them, are finished before the
+//! signature is looked at, and a failure of the test is `Basis`. The two
+//! entries accept the same inputs. They name the same refusal whenever
+//! the key is one [`PreparedKey::prepare`] accepts; a key it refuses the
+//! other entry refuses too, and may name differently.
+//! `docs/VERIFIER_SPEC.md` states the rule and
 //! `shekyl-prism/tests/support/entries.rs` holds it on every input the
 //! front crate's tests verify.
 
@@ -46,54 +48,84 @@ use prism_field::ParameterSet;
 use crate::basis::{basis_hint, BasisHint};
 use crate::challenge::ChallengeScalar;
 use crate::identity::KeyIdentity;
+use crate::relation::KeyBasis;
 use crate::signature::{canonical_sign, Response};
 use crate::{mark, model, relation, VerifyError};
 
 /// A public key that passed every check a key can pass alone, with the
-/// basis index the search found.
+/// basis those checks found and tested.
 ///
 /// The only way to make one is [`Self::prepare`], so a value of this type
 /// is a key of the right length, canonically encoded, on neither excluded
-/// curve, whose basis index is within the search bound. It is not yet
-/// a key whose named points are a basis of the `2^e`-torsion: that test
-/// runs at each verification, and a key that fails it is prepared and
-/// never verifies (ledger O18).
+/// curve, whose basis index is within the search bound and whose named
+/// points are a basis of the `2^e`-torsion of its curve.
 ///
-/// What it stores is the key's bytes and that index. The coefficient is
-/// the decode of those bytes whenever it is read, so the challenge and the
-/// relation see one coefficient. The checks ran in [`Self::prepare`]; the
-/// read does not square again. The index is the one cached fact: the search
-/// that finds it is the check a sender can make long. The parameter set is
-/// not in the bytes; [`Self::prepare`] checked them against `L`, and the
-/// marker keeps that check in the type.
+/// What it stores is the key's bytes, that index and that basis. The
+/// coefficient is the decode of those bytes whenever it is read, so the
+/// challenge and the relation see one coefficient. The checks ran in
+/// [`Self::prepare`]; the read does not square again. The basis is kept
+/// because it is the thing the test was run on: the relation takes these
+/// three points as they are, and a basis computed again at verification
+/// would be a second value that nothing had tested. It is six field
+/// elements. The parameter set is not in the bytes; [`Self::prepare`]
+/// checked them against `L`, and the marker keeps that check in the type.
+///
+/// The three stored things are set in one place, [`Self::prepare`], from
+/// one decode of the bytes, and nothing changes any of them afterwards:
+/// the fields are private and no method takes `&mut self`.
 ///
 /// Equality is not implemented. The key is its encoding: compare
-/// [`Self::as_bytes`]. The index is a function of that encoding.
-#[derive(Clone, Debug)]
+/// [`Self::as_bytes`]. The index and the basis are functions of that
+/// encoding.
+#[derive(Clone)]
 pub struct PreparedKey<L: ParameterSet> {
     bytes: Vec<u8>,
     hint: BasisHint,
+    basis: KeyBasis<L>,
     set: PhantomData<L>,
 }
 
+/// The set's name, the encoding in hex and the basis index. The basis is
+/// a function of those and holds field elements, which do not print.
+impl<L: ParameterSet> core::fmt::Debug for PreparedKey<L> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "PreparedKey<{}>(", L::NAME)?;
+        for byte in &self.bytes {
+            write!(f, "{byte:02x}")?;
+        }
+        write!(f, ", {:?})", self.hint)
+    }
+}
+
 impl<L: ParameterSet> PreparedKey<L> {
-    /// Decode `public_key` and search for its basis.
+    /// Decode `public_key`, search for its basis, and test it.
     ///
     /// `Length`, then `Canonical`, then `Origin`, then `Singular`, then
-    /// `Basis`: [`KeyIdentity::decode`], then [`basis_hint`].
+    /// `Basis`: [`KeyIdentity::decode`], then [`basis_hint`], then the
+    /// test that the points the index names are a basis of the
+    /// `2^e`-torsion. `Basis` is either cause: no index, or no basis.
     ///
     /// The search costs up to [`crate::search_bound`] Legendre symbols,
-    /// and whoever chose the key chose how many. [`crate::verify`] runs
-    /// its cheap checks on the signature before that search; this function
-    /// has no signature to look at. Call it on a key that is kept, not
-    /// once for every incoming message.
+    /// and whoever chose the key chose how many. The basis and its test
+    /// cost the same for every key of a set: about `6e` doublings on the
+    /// key's curve, which at `p248` is some 6,000 multiplications and
+    /// 3,000 squarings in the extension field, 3.9% of the products of a
+    /// verification (`docs/BENCHMARKING.md`). [`crate::verify`] runs its
+    /// cheap checks on the signature before the search and the
+    /// challenge's primality before the test; this function has no
+    /// signature to look at. Call it on a key that is kept, not once for
+    /// every incoming message: a kept key pays this once, and every
+    /// verification under it is that much cheaper.
     pub fn prepare(public_key: &[u8]) -> Result<Self, VerifyError> {
         mark::Stage::Public.enter();
         let identity = KeyIdentity::<L>::decode(public_key)?;
         let hint = basis_hint::<L>(identity.coefficient())?;
+        mark::Stage::Torsion.enter();
+        let basis = KeyBasis::of_key(identity.coefficient(), hint)?;
         Ok(Self {
             bytes: public_key.to_vec(),
             hint,
+            basis,
             set: PhantomData,
         })
     }
@@ -199,9 +231,10 @@ pub fn checked_response<L: ParameterSet>(
 /// the challenge, the primality of its degree, and the relation.
 ///
 /// `Composite`, then the relation's refusals (`Kernel`, `Pairing`,
-/// `Codomain`, `Image`). The basis index is the one `key` carries; it is
-/// not searched for again. Primality and then the relation is one
-/// function, which [`crate::verify`] runs too.
+/// `Codomain`, `Image`). The key's basis is the one `key` carries: it is
+/// not searched for, computed or tested again, and `Kernel` here is a
+/// fault of the signature's points alone. Primality and then the relation
+/// is one function, which [`crate::verify`] runs too.
 ///
 /// Both arguments are valid by their types: a [`PreparedKey`] and a
 /// [`CheckedResponse`] can each be made only by the function that checks
@@ -214,13 +247,13 @@ pub fn verify_prepared<L: ParameterSet>(
     mark::Stage::Challenge.enter();
     let response = response.response();
     // One decode. The challenge hashes these bytes; the relation uses the
-    // coefficient that decode produced and the index stored for it.
+    // coefficient that decode produced and the basis stored beside them,
+    // which `prepare` built from the same bytes.
     let identity = key.identity();
     let coefficient = identity.coefficient();
-    let hint = key.hint();
     let scalar = ChallengeScalar::derive(&identity, message, response.salt);
     crate::prime_then::<L>(&scalar, || {
-        relation::relate_prepared::<L>(coefficient, hint, response, scalar.as_bytes())
+        relation::relate_prepared::<L>(coefficient, &key.basis, response, scalar.as_bytes())
     })
 }
 
@@ -231,18 +264,38 @@ mod tests {
     use crate::identity::KeyIdentity;
     use prism_field::{Field, ParameterSet, P248};
 
+    fn key() -> Vec<u8> {
+        prism_vectors::corpus::Primary::Lvl1
+            .vector()
+            .public_key()
+            .expect("the vector's public key")
+    }
+
     /// The coefficient a prepared key reports is the decode of its bytes,
     /// and the index it carries is the search of that coefficient.
     #[test]
     fn the_coefficient_is_the_bytes_and_the_index_is_that_search() {
-        let bytes = P248::ext_encode(<P248 as ParameterSet>::Ext::from_u64(3));
-        let prepared = PreparedKey::<P248>::prepare(&bytes).expect("3 prepares");
+        let bytes = key();
+        let prepared = PreparedKey::<P248>::prepare(&bytes).expect("an honest key");
         assert_eq!(prepared.as_bytes(), bytes.as_slice());
-        let identity = KeyIdentity::<P248>::decode(&bytes).expect("3 decodes");
+        let identity = KeyIdentity::<P248>::decode(&bytes).expect("an honest key");
         assert!(prepared.coefficient().same(identity.coefficient()));
         assert_eq!(
             basis_hint::<P248>(identity.coefficient()),
             Ok(prepared.hint())
+        );
+    }
+
+    /// `Debug` of a prepared key names the set and gives the encoding in
+    /// hex and the index: what the key is, and the one searched fact.
+    #[test]
+    fn a_prepared_key_prints_its_set_its_encoding_and_its_index() {
+        let bytes = key();
+        let prepared = PreparedKey::<P248>::prepare(&bytes).expect("an honest key");
+        let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+        assert_eq!(
+            format!("{prepared:?}"),
+            format!("PreparedKey<p248>({hex}, {:?})", prepared.hint())
         );
     }
 
