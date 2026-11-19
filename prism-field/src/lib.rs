@@ -216,8 +216,9 @@ pub trait Field: Copy {
     ///
     /// A square other than zero has two roots, `r` and `−r`. Which one is
     /// returned is fixed for a given input, and at a set's base field it
-    /// is the root that is even as an integer in `[0, p − 1]`. Code that
-    /// needs a particular root must choose it itself.
+    /// is the root that is even as an integer in `[0, p − 1]`. The trait
+    /// promises no more than that: a caller that relies on which root of
+    /// an extension-field element it gets relies on the implementation.
     fn sqrt(self) -> Option<Self>;
     /// Quadratic residuosity, including zero. `F_p` uses its Legendre
     /// symbol. `F_{p^2}` uses the norm to `F_p` and that symbol.
@@ -452,7 +453,8 @@ pub trait ParameterSet:
     ///
     /// The type has no public name and no operations but those of
     /// [`Field`], with [`Self::base_decode`] and [`Self::base_encode`] to
-    /// and from bytes.
+    /// and from bytes. It is named through the set, as
+    /// `<P248 as ParameterSet>::Base` or `L::Base`.
     type Base: Field;
     /// The extension field `F_{p²} = F_p[i]/(i² + 1)`: pairs `re + im·i`.
     ///
@@ -467,7 +469,7 @@ pub trait ParameterSet:
     /// streams do not use it.
     const NAME: &'static str;
     /// The exponent `e` in `p = f·2^e − 1`: the valuation of `p + 1` at
-    /// two. Curves over the set have rational `2^e`-torsion.
+    /// two.
     const E: u32;
     /// The odd cofactor `f` in `p + 1 = f·2^e`, with its prime factors.
     const COFACTOR: Cofactor;
@@ -664,9 +666,11 @@ macro_rules! parameter_set {
                 stringify!($f), "·2^", stringify!($e), " − 1`."
             )]
             ///
-            /// Its operations are those of [`Field`]. It is made from bytes
-            /// by [`ParameterSet::base_decode`] and from a small integer by
-            /// [`Field::from_u64`], and in no other way.
+            /// Its operations are those of [`Field`]. A value comes from
+            /// bytes by [`ParameterSet::base_decode`], from a small integer
+            /// by [`Field::from_u64`], from [`Field::zero`] and
+            /// [`Field::one`], or from arithmetic on such values. There is
+            /// no constructor from limbs and none that reduces its input.
             #[derive(Clone, Copy)]
             pub struct Base(Fp);
 
@@ -675,10 +679,12 @@ macro_rules! parameter_set {
                 "`: `F_p[i]/(i² + 1)` over its base field."
             )]
             ///
-            /// Its operations are those of [`Field`]. It is made from bytes
-            /// by [`ParameterSet::ext_decode`], from the base field by
-            /// [`ParameterSet::ext_from_base`] and [`ParameterSet::ext_i`],
-            /// and from a small integer by [`Field::from_u64`].
+            /// Its operations are those of [`Field`]. A value comes from
+            /// bytes by [`ParameterSet::ext_decode`], from the base field by
+            /// [`ParameterSet::ext_from_base`], from [`ParameterSet::ext_i`],
+            /// from a small integer by [`Field::from_u64`], from
+            /// [`Field::zero`] and [`Field::one`], or from arithmetic on
+            /// such values.
             #[derive(Clone, Copy)]
             pub struct Ext(Fp2);
 
