@@ -20,7 +20,7 @@ use crate::identity;
 use crate::vectors::{set, vector};
 use prism_field::{Field, ParameterSet, Salt};
 use prism_isogeny::{
-    jac::{add, dbl_iter, to_xz, Jac},
+    jac::{add, dbl, dbl_iter, recover_y, to_xz, Jac},
     montgomery::Montgomery,
     pairing::mul,
 };
@@ -66,6 +66,25 @@ fn normalize<L: ParameterSet>(mut r: Response<L>) -> Response<L> {
     r
 }
 
+/// A point of `curve` whose order is odd and above one: `[2^e]` of the
+/// first point with a small integer abscissa that the doublings do not
+/// kill. The curve's group is `(Z/(p+1))^2` and `p + 1 = f·2^e`, so what
+/// is left has order dividing `f`.
+fn odd_order_point<L: ParameterSet>(curve: Montgomery<L::Ext>) -> Jac<L::Ext> {
+    (2u64..64)
+        .find_map(|x| {
+            let x = L::Ext::from_u64(x);
+            let point = Jac {
+                x,
+                y: recover_y(curve, x)?,
+                z: L::Ext::one(),
+            };
+            let odd = dbl_iter(curve, point, L::E);
+            (!odd.is_infinity()).then_some(odd)
+        })
+        .expect("a response curve has a point of odd order with a small abscissa")
+}
+
 const TRANSLATE: &[VerifyError] = &[
     VerifyError::Pairing,
     VerifyError::Codomain,
@@ -76,8 +95,8 @@ const EXCLUDED_MODEL: &[VerifyError] = &[VerifyError::Singular, VerifyError::Mod
 /// Every negative derived from one honest vector, in a fixed order.
 ///
 /// `text` is a committed vector file of the set `L`. The number of cases
-/// grows with the salt, one for each of its bits: 326 at `p248`, and
-/// 2,724 over the six primary vectors.
+/// grows with the salt, one for each of its bits: 329 at `p248`, and
+/// 2,742 over the six primary vectors.
 ///
 /// # Panics
 ///
@@ -243,6 +262,27 @@ pub fn negatives<L: ParameterSet>(text: &str) -> Vec<Case> {
     other = r;
     other.q.y = other.q.y.add(L::Ext::one());
     push("q-off-curve".into(), other, &[VerifyError::Kernel]);
+    // On the curve, and not a basis of `E[2^e]`. A point of odd order
+    // added to `P` or to `Q` leaves the pair spanning the `2^e`-torsion
+    // and gives the point an order that is not `2^e`: the order test is
+    // the one check that refuses it. Without that test either is
+    // accepted whenever the added point's order divides the challenge
+    // scalar, as it does in `s5_lvl1.txt`. The third has order `2^e`
+    // twice and does not span.
+    let odd = odd_order_point::<L>(curve);
+    other = r;
+    other.p = affine::<L>(add(curve, point(r.p), odd));
+    push(
+        "p-plus-odd-order".into(),
+        normalize(other),
+        &[VerifyError::Kernel],
+    );
+    other = r;
+    other.q = affine::<L>(add(curve, point(r.q), odd));
+    push("q-plus-odd-order".into(), other, &[VerifyError::Kernel]);
+    other = r;
+    other.q = affine::<L>(add(curve, point(r.p), dbl(curve, point(r.q))));
+    push("q-beside-p".into(), other, &[VerifyError::Kernel]);
     // Every singular or extra-automorphism response model is excluded.
     for (name, a) in [
         ("zero", L::Ext::zero()),

@@ -9,7 +9,8 @@
     mutants_report.py plan    [--only JOB] [--shard K]
     mutants_report.py shard   --out mutants.out --job J --shard K --of N --exit CODE
     mutants_report.py verdict --out mutants.out
-    mutants_report.py gather  --dir DIR [--write DIR] [--expect JOB ...]
+    mutants_report.py gather  --dir DIR [--write DIR] [--expect JOB ...] [--explained FILE]
+    mutants_report.py record  --file FILE
 
 `plan` is the dispatch. `only` empty deals every mutant job and the rest
 of the nightly. `only` names one mutant job. `shard` selects one index of
@@ -40,6 +41,20 @@ was rejected. The same text is written as `summary.md`, so the artifact
 says which shards it holds. `--expect` names those jobs; without it, the
 jobs found are the expected ones. It fails when it finds no shard.
 
+`--explained` names the kept record of mutants that stay missed or
+timing out with a reason (`docs/lab/MUTANTS.toml`). For each job whose
+shards are all here, `gather` then says how many of its missed mutants
+and timeouts the record explains, how many it does not, by file, and
+which entries of the record match no mutant any more. A mutant is
+matched by its file and the tool's own words for it, without the line
+and column, and by count, since one function can have the same mutation
+twice. Nothing about the record fails the command except a record that
+cannot be read: the counts are printed.
+
+`record` reads the kept record and says how many entries it has. It
+fails on a record `gather` could not read, so a pull request that breaks
+the file is red there and not in the next nightly's summary.
+
 Text goes to standard output, and to the job summary when the runner
 names one.
 """
@@ -49,7 +64,8 @@ import json
 import os
 import sys
 import tempfile
-from collections import defaultdict
+import tomllib
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import NamedTuple
 
@@ -77,6 +93,94 @@ MUTANT_JOBS = (
     MutantJob("mutants", "mutants", 16),
     MutantJob("mutants-front", "front", 2),
 )
+
+
+class Explained(NamedTuple):
+    """One entry of the kept record: a mutant that stays, and why.
+
+    `mutation` is the tool's line for the mutant without `line:col: `, so
+    an edit above the mutant does not orphan the entry. `count` is how
+    many mutants of the file that text names.
+    """
+
+    job: str
+    file: str
+    mutation: str
+    outcome: str
+    count: int
+    reason: str
+
+
+class RecordError(Exception):
+    """The kept record is not one this script can read."""
+
+
+def load_explained(path: Path) -> list[Explained]:
+    """The entries of the kept record. Raises `RecordError` on a record that is not one."""
+    try:
+        document = tomllib.loads(path.read_text())
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as error:
+        raise RecordError(f"{path}: {error}") from error
+    entries = document.get("mutant", [])
+    if not isinstance(entries, list) or set(document) - {"mutant"}:
+        raise RecordError(f"{path}: the record is a list of [[mutant]] tables and nothing else")
+    names = [job.name for job in MUTANT_JOBS]
+    out = []
+    for number, entry in enumerate(entries, start=1):
+        where = f"{path}: entry {number}"
+        if not isinstance(entry, dict) or set(entry) != set(Explained._fields):
+            raise RecordError(f"{where} does not have exactly the fields {', '.join(Explained._fields)}")
+        text = {key: entry[key] for key in ("job", "file", "mutation", "outcome", "reason")}
+        if not all(isinstance(value, str) and value.strip() for value in text.values()):
+            raise RecordError(f"{where} has an empty field, or one that is not text")
+        if entry["job"] not in names:
+            raise RecordError(f"{where} names the job {entry['job']!r}")
+        if entry["outcome"] not in ("missed", "timeout"):
+            raise RecordError(f"{where} has the outcome {entry['outcome']!r}: missed or timeout")
+        if not isinstance(entry["count"], int) or isinstance(entry["count"], bool) or entry["count"] < 1:
+            raise RecordError(f"{where} has a count that is not a positive integer")
+        out.append(Explained(**entry))
+    keys = Counter((entry.job, entry.file, entry.mutation, entry.outcome) for entry in out)
+    twice = [key for key, count in keys.items() if count > 1]
+    if twice:
+        raise RecordError(f"{path}: an entry is written twice: {twice[0][1]}: {twice[0][2]}")
+    return out
+
+
+def mutant_key(line: str) -> tuple[str, str]:
+    """`path:line:col: what` as `(path, what)`. A line of another shape is its own key."""
+    parts = line.split(": ", 1)
+    if len(parts) != 2:
+        return line, ""
+    return parts[0].split(":", 1)[0], parts[1]
+
+
+def explained_lines(job: str, merged: dict[str, list[str]], record: list[Explained]) -> list[str]:
+    """How the kept record and one job's whole lists compare."""
+    lines = ["### Against the kept record", ""]
+    stale: list[str] = []
+    for outcome in ("missed", "timeout"):
+        found = Counter(mutant_key(line) for line in merged[outcome])
+        stated = {
+            (entry.file, entry.mutation): entry.count
+            for entry in record
+            if entry.job == job and entry.outcome == outcome
+        }
+        explained = sum(min(count, stated.get(key, 0)) for key, count in found.items())
+        left = {key: count - stated.get(key, 0) for key, count in found.items() if count > stated.get(key, 0)}
+        lines += [f"{outcome.capitalize()}: {explained} explained, {sum(left.values())} not.", ""]
+        by_path: dict[str, int] = defaultdict(int)
+        for (path, _), count in left.items():
+            by_path[path] += count
+        if by_path:
+            lines += [f"- `{path}`: {count}" for path, count in sorted(by_path.items())] + [""]
+        for key, count in sorted(stated.items()):
+            if found.get(key, 0) < count:
+                stale.append(f"{key[0]}: {key[1]} ({outcome}; {count} stated, {found.get(key, 0)} found)")
+    lines += [f"Entries of the record that match no mutant any more: {len(stale)}.", ""]
+    if stale:
+        lines += ["```"] + stale + ["```", ""]
+    return lines
 
 
 class DispatchError(Exception):
@@ -358,7 +462,19 @@ def job_figures(shards: list[tuple[Path, dict]]) -> tuple[list[str], dict[str, l
     return lines, complete, rejected
 
 
-def gather(root: Path, write: Path | None, expect: list[str] | None = None) -> int:
+def gather(
+    root: Path,
+    write: Path | None,
+    expect: list[str] | None = None,
+    explained: Path | None = None,
+) -> int:
+    record = None
+    if explained is not None:
+        try:
+            record = load_explained(explained)
+        except RecordError as error:
+            print(f"mutants: {error}", file=sys.stderr)
+            return 1
     found, unreadable = load_jobs(root)
     if not found and not unreadable:
         print(f"mutants: no shard under {root}", file=sys.stderr)
@@ -384,6 +500,11 @@ def gather(root: Path, write: Path | None, expect: list[str] | None = None) -> i
         rejected = rejected or job_rejected
         if merged is not None:
             complete[job] = merged
+        if record is not None:
+            if merged is not None:
+                lines += explained_lines(job, merged, record)
+            else:
+                lines += ["The kept record is compared with a job only when all its shards are here.", ""]
     if write is not None and not rejected and len(complete) == len(expected):
         write.mkdir(parents=True, exist_ok=True)
         (write / "summary.md").write_text("\n".join(lines) + "\n")
@@ -395,6 +516,17 @@ def gather(root: Path, write: Path | None, expect: list[str] | None = None) -> i
     if rejected:
         print("mutants: a shard did not test what it set out to test", file=sys.stderr)
         return 1
+    return 0
+
+
+def record_command(path: Path) -> int:
+    try:
+        record = load_explained(path)
+    except RecordError as error:
+        print(f"mutants: {error}", file=sys.stderr)
+        return 1
+    by_outcome = Counter(entry.outcome for entry in record for _ in range(entry.count))
+    print(f"{path}: {len(record)} entries, {by_outcome['missed']} missed and {by_outcome['timeout']} timeout")
     return 0
 
 
@@ -410,7 +542,12 @@ def selftest() -> int:
         shard(out, "mutants", int(name[-1]) if index is None else index, of, code)
         return out
 
-    def gather_text(directory: Path, write: Path | None = None, expect: list[str] | None = None):
+    def gather_text(
+        directory: Path,
+        write: Path | None = None,
+        expect: list[str] | None = None,
+        explained: Path | None = None,
+    ):
         captured: list[list[str]] = []
 
         def grab(lines: list[str]) -> None:
@@ -419,7 +556,7 @@ def selftest() -> int:
         previous = globals()["emit"]
         globals()["emit"] = grab
         try:
-            code = gather(directory, write, expect)
+            code = gather(directory, write, expect, explained)
         finally:
             globals()["emit"] = previous
         return code, "\n".join("\n".join(lines) for lines in captured)
@@ -546,6 +683,52 @@ def selftest() -> int:
                 failures.append("a shard record cut short stopped the summary of the other shards")
             if (root / "cut-out").exists() or (root / "torn-out").exists():
                 failures.append("a shard that could not be read was published")
+            record = root / "record.toml"
+            entry = (
+                '[[mutant]]\njob = "mutants"\nfile = "{file}"\nmutation = "{mutation}"\n'
+                'outcome = "{outcome}"\ncount = {count}\nreason = "It changes nothing."\n'
+            )
+            twins = root / "twins"
+            same = "a.rs:2:1: replace < with <= in f"
+            make(twins, "s0", 2, {"missed": [same, "a.rs:9:1: replace < with <= in f"]}, of=2)
+            make(twins, "s1", 3, {"missed": ["b.rs:1:1: delete ! in g"], "timeout": ["b.rs:9:9: w"]}, of=2)
+            record.write_text(
+                entry.format(file="a.rs", mutation="replace < with <= in f", outcome="missed", count=1)
+                + entry.format(file="b.rs", mutation="w", outcome="timeout", count=1)
+                + entry.format(file="c.rs", mutation="replace gone -> bool with true", outcome="missed", count=1)
+            )
+            code, text = gather_text(twins, None, None, record)
+            if code != 0:
+                failures.append("the kept record failed a run it only counts")
+            # One of the two same mutations is explained and one is not, the
+            # mutant of `b.rs` is in no entry, and the entry of `c.rs` is stale.
+            for wanted in (
+                "Missed: 1 explained, 2 not.",
+                "- `a.rs`: 1",
+                "- `b.rs`: 1",
+                "Timeout: 1 explained, 0 not.",
+                "match no mutant any more: 1.",
+                "c.rs: replace gone -> bool with true (missed; 1 stated, 0 found)",
+            ):
+                if wanted not in text:
+                    failures.append(f"the comparison with the kept record lacks {wanted!r}")
+            code, text = gather_text(partial, None, None, record)
+            if code != 0 or "only when all its shards are here" not in text or "explained," in text:
+                failures.append("a partial job was compared with the kept record")
+            for bad in (
+                "not toml [",
+                '[[mutant]]\njob = "mutants"\n',
+                entry.format(file="a.rs", mutation="m", outcome="caught", count=1),
+                entry.format(file="a.rs", mutation="m", outcome="missed", count=0),
+                entry.format(file="a.rs", mutation="m", outcome="missed", count=1).replace("mutants", "other"),
+                entry.format(file="a.rs", mutation="m", outcome="missed", count=1) * 2,
+                'title = "x"\n',
+            ):
+                record.write_text(bad)
+                if gather(twins, None, None, record) == 0:
+                    failures.append(f"a kept record that is not one passed: {bad[:30]!r}")
+            if gather(twins, None, None, root / "no-record.toml") == 0:
+                failures.append("a missing kept record passed")
             split = root / "split"
             make(split, "s0", 0, some, of=2)
             make(split, "s1", 0, some, of=3)
@@ -584,6 +767,9 @@ def main() -> int:
     every.add_argument("--dir", type=Path, required=True)
     every.add_argument("--write", type=Path)
     every.add_argument("--expect", action="append")
+    every.add_argument("--explained", type=Path)
+    kept = commands.add_parser("record")
+    kept.add_argument("--file", type=Path, required=True)
     args = parser.parse_args()
     if args.selftest:
         return selftest()
@@ -593,8 +779,10 @@ def main() -> int:
         return shard(args.out, args.job, args.shard, args.of, args.exit)
     if args.command == "verdict":
         return verdict(args.out)
+    if args.command == "record":
+        return record_command(args.file)
     if args.command == "gather":
-        return gather(args.dir, args.write, args.expect)
+        return gather(args.dir, args.write, args.expect, args.explained)
     parser.error("a command, or --selftest")
     return 2
 

@@ -1,4 +1,4 @@
-# Sources: sha256 9377855d6973ae1aae26815a1207a011bb71f14644657d33c9b2ac4b5423a94d
+# Sources: sha256 4d0a97e444b1dbaac402cce56470114fe0f9aa97d0478740313a63532580b60d
 set	vector	case	verdict	ext_mul	ext_square	ext_inv	ext_sqrt	ext_is_square
 p248	s5_lvl1.txt	both-y-negated	Sign	0	1	0	0	0
 p248	s5_lvl1.txt	q-negated	Pairing	33982	17569	13	6	4
@@ -314,6 +314,9 @@ p248	s5_lvl1.txt	model-moved-1	Model	3	3	2	2	0
 p248	s5_lvl1.txt	model-moved-1-negated	Model	0	2	0	0	0
 p248	s5_lvl1.txt	both-doubled-twice	Kernel	2091	1036	5	5	4
 p248	s5_lvl1.txt	q-off-curve	Kernel	111	46	5	5	4
+p248	s5_lvl1.txt	p-plus-odd-order	Kernel	2091	1036	5	5	4
+p248	s5_lvl1.txt	q-plus-odd-order	Kernel	4071	2026	5	5	4
+p248	s5_lvl1.txt	q-beside-p	Kernel	6049	3014	5	5	4
 p248	s5_lvl1.txt	curve-zero	Model	0	2	0	0	0
 p248	s5_lvl1.txt	curve-two	Singular	0	2	0	0	0
 p248	s5_lvl1.txt	curve-root-three	Model	0	2	0	0	0
@@ -640,6 +643,9 @@ p248	s5_lvl1b.txt	model-moved-1	Model	3	3	2	2	0
 p248	s5_lvl1b.txt	model-moved-1-negated	Model	0	2	0	0	0
 p248	s5_lvl1b.txt	both-doubled-twice	Kernel	2091	1036	5	5	4
 p248	s5_lvl1b.txt	q-off-curve	Kernel	111	46	5	5	4
+p248	s5_lvl1b.txt	p-plus-odd-order	Kernel	2091	1036	5	5	4
+p248	s5_lvl1b.txt	q-plus-odd-order	Kernel	4071	2026	5	5	4
+p248	s5_lvl1b.txt	q-beside-p	Kernel	6049	3014	5	5	4
 p248	s5_lvl1b.txt	curve-zero	Model	0	2	0	0	0
 p248	s5_lvl1b.txt	curve-two	Singular	0	2	0	0	0
 p248	s5_lvl1b.txt	curve-root-three	Model	0	2	0	0	0
@@ -1094,6 +1100,9 @@ p376	s5_lvl3.txt	model-moved-1	Model	0	2	0	0	0
 p376	s5_lvl3.txt	model-moved-1-negated	Model	3	3	2	2	0
 p376	s5_lvl3.txt	both-doubled-twice	Kernel	3192	1584	6	5	6
 p376	s5_lvl3.txt	q-off-curve	Kernel	188	82	6	5	6
+p376	s5_lvl3.txt	p-plus-odd-order	Kernel	3192	1584	6	5	6
+p376	s5_lvl3.txt	q-plus-odd-order	Kernel	6196	3086	6	5	6
+p376	s5_lvl3.txt	q-beside-p	Kernel	9198	4586	6	5	6
 p376	s5_lvl3.txt	curve-zero	Model	0	2	0	0	0
 p376	s5_lvl3.txt	curve-two	Singular	0	2	0	0	0
 p376	s5_lvl3.txt	curve-root-three	Model	0	2	0	0	0
@@ -1548,6 +1557,9 @@ p376	s5_lvl3b.txt	model-moved-1	Model	6	4	3	3	0
 p376	s5_lvl3b.txt	model-moved-1-negated	Model	0	2	0	0	0
 p376	s5_lvl3b.txt	both-doubled-twice	Kernel	3187	1580	5	5	4
 p376	s5_lvl3b.txt	q-off-curve	Kernel	183	78	5	5	4
+p376	s5_lvl3b.txt	p-plus-odd-order	Kernel	3187	1580	5	5	4
+p376	s5_lvl3b.txt	q-plus-odd-order	Kernel	6191	3082	5	5	4
+p376	s5_lvl3b.txt	q-beside-p	Kernel	9193	4582	5	5	4
 p376	s5_lvl3b.txt	curve-zero	Model	0	2	0	0	0
 p376	s5_lvl3b.txt	curve-two	Singular	0	2	0	0	0
 p376	s5_lvl3b.txt	curve-root-three	Model	0	2	0	0	0
@@ -2130,6 +2142,9 @@ p500	s5_lvl5.txt	model-moved-1	Model	0	2	0	0	0
 p500	s5_lvl5.txt	model-moved-1-negated	Model	3	3	2	2	0
 p500	s5_lvl5.txt	both-doubled-twice	Kernel	4144	2062	6	5	4
 p500	s5_lvl5.txt	q-off-curve	Kernel	148	64	6	5	4
+p500	s5_lvl5.txt	p-plus-odd-order	Kernel	4144	2062	6	5	4
+p500	s5_lvl5.txt	q-plus-odd-order	Kernel	8140	4060	6	5	4
+p500	s5_lvl5.txt	q-beside-p	Kernel	12134	6056	6	5	4
 p500	s5_lvl5.txt	curve-zero	Model	0	2	0	0	0
 p500	s5_lvl5.txt	curve-two	Singular	0	2	0	0	0
 p500	s5_lvl5.txt	curve-root-three	Model	0	2	0	0	0
@@ -2712,6 +2727,9 @@ p500	s5_lvl5b.txt	model-moved-1	Model	6	4	3	3	0
 p500	s5_lvl5b.txt	model-moved-1-negated	Model	0	2	0	0	0
 p500	s5_lvl5b.txt	both-doubled-twice	Kernel	4143	2060	5	5	4
 p500	s5_lvl5b.txt	q-off-curve	Kernel	147	62	5	5	4
+p500	s5_lvl5b.txt	p-plus-odd-order	Kernel	4143	2060	5	5	4
+p500	s5_lvl5b.txt	q-plus-odd-order	Kernel	8139	4058	5	5	4
+p500	s5_lvl5b.txt	q-beside-p	Kernel	12133	6054	5	5	4
 p500	s5_lvl5b.txt	curve-zero	Model	0	2	0	0	0
 p500	s5_lvl5b.txt	curve-two	Singular	0	2	0	0	0
 p500	s5_lvl5b.txt	curve-root-three	Model	0	2	0	0	0

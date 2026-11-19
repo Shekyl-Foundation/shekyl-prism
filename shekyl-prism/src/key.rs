@@ -20,6 +20,11 @@ use crate::{SetId, Signature, TaggedError};
 /// basis is found within the set's search bound. [`Self::from_bytes`] is
 /// the only way to make one.
 ///
+/// One check on the key alone is not among them: that the points found
+/// are a basis of the `2^e`-torsion is tested in [`Self::verify`], on
+/// every call. A key that fails it is read without error and verifies
+/// nothing (ledger O18 of `docs/lab/LEDGER.md`).
+///
 /// The key keeps what the basis search found, so [`Self::verify`] does
 /// not search again.
 ///

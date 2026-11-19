@@ -75,7 +75,7 @@ fn negative<L: ParameterSet>(text: &str, tally: &mut Tally) {
 /// The negatives derived from the six primary vectors: the rows of
 /// `docs/benchmarks/negative-verdicts.tsv` at the three sets with a
 /// corpus.
-const NEGATIVES: usize = 2_724;
+const NEGATIVES: usize = 2_742;
 #[test]
 fn malleability_and_message_mutations_are_refused() {
     let mut tally = Tally::default();

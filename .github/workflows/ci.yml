@@ -344,6 +344,7 @@ jobs:
           python3 scripts/differential_prime.py --selftest
           python3 scripts/ci/check_accept_verdicts.py --selftest
           python3 scripts/ci/mutants_report.py --selftest
+          python3 scripts/ci/mutants_report.py record --file docs/lab/MUTANTS.toml
 
   c-reference-pin:
     name: c-reference-pin

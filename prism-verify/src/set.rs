@@ -249,3 +249,32 @@ pub fn verify_set(
         Set::P664 => verify::<P664>(public_key, message, signature),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{CommittedSet, Set};
+
+    /// The salt of a set is its exponent `e` rounded up to a multiple of
+    /// 128 bits (`docs/PARAMETER_SETS.md`), and a committed set's is its
+    /// set's. A tool reads these to split a signature without naming the
+    /// set as a type.
+    #[test]
+    fn the_salt_length_is_the_exponent_rounded_up_to_128_bits() {
+        let rounded = |e: usize| e.div_ceil(128) * 128 / 8;
+        for (set, e, bytes) in [
+            (Set::P248, 248, 32),
+            (Set::P324, 324, 48),
+            (Set::P376, 376, 48),
+            (Set::P500, 500, 64),
+            (Set::P664, 664, 96),
+        ] {
+            assert_eq!(set.salt_len(), bytes, "{set:?}");
+            assert_eq!(rounded(e), bytes, "{set:?}");
+        }
+        assert_eq!(Set::ALL.len(), 5);
+        for committed in CommittedSet::ALL {
+            assert_eq!(committed.salt_len(), committed.set().salt_len());
+            assert!(committed.salt_len() >= 32, "{committed:?}");
+        }
+    }
+}

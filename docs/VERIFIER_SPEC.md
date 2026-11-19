@@ -65,10 +65,20 @@ A_bytes || salt || message)`, truncated to `e−3` bits with bit zero set.
 The leading key and salt lengths are fixed for the row. `q=2^(2e−5)−s²`.
 Public verification tests that single degree and never searches salts.
 
-The degree test remains deterministic Baillie–PSW: small-prime sieve,
-perfect square rejection, strong base-2 Miller–Rabin and strong
+The degree test remains deterministic Baillie–PSW: small-prime sieve
+(the primes below 100), strong base-2 Miller–Rabin and strong
 Lucas–Selfridge. It is a probable-prime predicate, not a certificate;
 adversarial adequacy remains unresolved.
+
+Selfridge's discriminant is the first of `5, −7, 9, −11, …` whose Jacobi
+symbol modulo the degree is `−1`, searched over 256 candidates. A shared
+factor, or no such candidate among the 256, is a refusal. There is no
+separate test for a perfect square: the Jacobi symbol modulo a square is
+never `−1`, so the search ends empty on every square and the Lucas step
+refuses it. A degree `2^(2e−5) − s²` with `s` odd is `7 (mod 8)` and is
+never a square, so the case does not arise in verification. No loop of
+the test ends on a computed value: each is counted, so no input and no
+single wrong operation makes the test fail to return.
 
 The [salt protocol contract](SALT_PROTOCOL.md) specifies the 32-byte caller
 randomness input and the secret-keyed cSHAKE salt schedule. Research signing
@@ -190,7 +200,7 @@ splits the same checks by the object they depend on:
 
 | Call | Checks | Refusals, in order |
 | --- | --- | --- |
-| `PublicKey::<S>::from_bytes` | every check on the key alone | `Length`, `Canonical`, `Origin`, `Singular`, `Basis` |
+| `PublicKey::<S>::from_bytes` | every check on the key alone, except that the points its basis index names are a basis of `E[2^e]`, which `PublicKey::verify` tests on every call and refuses as `Kernel` (ledger O18) | `Length`, `Canonical`, `Origin`, `Singular`, `Basis` |
 | `Signature::<S>::from_bytes` | every check on the signature alone | `Length`, `Canonical`, `Sign`, `Singular` or `Model` |
 | `PublicKey::verify` | the checks that need key, message and signature | `Composite`, then `Kernel`, `Pairing`, `Codomain`, `Image` |
 
@@ -341,7 +351,7 @@ secret: both are facts about public bytes and a public policy.
 - The two entries are held to the rule above on every input the tests
   of the front crate verify: `shekyl-prism/tests/support/entries.rs` runs
   both and fails unless the rule holds, and those tests call the verifier
-  through it. That is the 113 honest signatures and the 2,724 negatives
+  through it. That is the 113 honest signatures and the 2,742 negatives
   derived from the six primary vectors (`shekyl-prism/tests/acceptance.rs`,
   which pins both counts), the committed identity refusals at all five
   sets, and every refusal built without a signer at all five sets. A

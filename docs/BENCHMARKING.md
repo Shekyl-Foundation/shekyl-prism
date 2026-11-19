@@ -145,7 +145,7 @@ sh scripts/op_counts.sh --check   # what CI runs, on x86_64 and aarch64
   per-stage counts of the two refusals at each of `p324` and `p664`.
   There is no accepted count at either.
 - [benchmarks/negative-verdicts.tsv](benchmarks/negative-verdicts.tsv):
-  the verdict and total cost of each of the 2,724 negatives derived from
+  the verdict and total cost of each of the 2,742 negatives derived from
   the six primary vectors, and of two refusals at each of `p324` and
   `p664`, which have no vector: a response built from a public key alone
   that passes the pairing check, in two forms. `Basis` has no vector: no key whose basis

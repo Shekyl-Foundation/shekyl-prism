@@ -10,16 +10,31 @@
 //! integration test cannot.
 
 use super::{
-    challenge_degree, degree_is_prime, is_baillie_psw, miller_rabin_base2, strong_lucas_selfridge,
-    Mod, Nat, TRIAL_PRIMES,
+    challenge_degree, degree_is_prime, is_baillie_psw, jacobi, miller_rabin_base2,
+    selfridge_discriminant, strong_lucas_selfridge, Jacobi, Mod, Nat, TRIAL_PRIMES,
 };
 
 mod probe {
     //! Byte entry points for the two halves, so a test can show that a
-    //! pseudoprime for one half is refused by the other.
+    //! pseudoprime for one half is refused by the other, and for the two
+    //! steps of the Lucas half that have a value of their own to hold.
 
     use super::Nat;
     use prism_field::DegreeWidth;
+
+    /// Selfridge's `D` for `bytes`; the outer `None` is "too wide".
+    pub(super) fn selfridge_discriminant<W: DegreeWidth>(bytes: &[u8]) -> Option<Option<i32>> {
+        Nat::<W>::from_le_bytes(bytes).map(super::selfridge_discriminant)
+    }
+
+    /// `(a/n)` as `0`, `1` or `−1`.
+    pub(super) fn jacobi<W: DegreeWidth>(a: i32, n: &[u8]) -> Option<i8> {
+        Nat::<W>::from_le_bytes(n).map(|n| match super::jacobi(a, n) {
+            super::Jacobi::Zero => 0,
+            super::Jacobi::Residue => 1,
+            super::Jacobi::NonResidue => -1,
+        })
+    }
 
     pub(super) fn miller_rabin_base2<W: DegreeWidth>(bytes: &[u8]) -> bool {
         Nat::<W>::from_le_bytes(bytes).is_some_and(super::miller_rabin_base2)
@@ -119,22 +134,154 @@ macro_rules! self_test_at {
                 assert_eq!(TRIAL_PRIMES.len(), expected);
             }
 
+            /// Each half refuses a composite the other passes, and the
+            /// composite has no prime factor below 100, so the sieve does
+            /// not refuse it first: the verdict of the whole test on these
+            /// rests on one half alone.
+            ///
+            /// The inputs were found by search and confirmed against two
+            /// references, an independent implementation of both strong
+            /// tests and `sympy` 1.13.3 (`mr(n, [2])` and
+            /// `is_strong_lucas_prp(n)`). The smallest of each kind:
+            /// `42799 = 127·337` and `22499 = 149·151`.
             #[test]
-            fn base2_pseudoprimes_fail_the_lucas_half() {
-                for n in [2047u128, 3277, 4033, 4681, 8321] {
+            fn each_half_refuses_a_composite_the_other_passes_and_the_sieve_does_not_see() {
+                // Strong pseudoprimes to base 2. The Lucas half refuses.
+                for n in [42_799u128, 49_141, 88_357, 90_751, 104_653, 130_561] {
                     assert!(probe::miller_rabin_base2::<Width>(&le(n)), "{n}");
+                    assert!(!probe::strong_lucas_selfridge::<Width>(&le(n)), "{n}");
                     assert!(!is_baillie_psw(&le(n)), "{n}");
+                }
+                // Strong Lucas pseudoprimes with Selfridge's parameters. The
+                // base-2 half refuses.
+                for n in [22_499u128, 25_199, 40_309, 58_519, 75_077, 97_439] {
+                    assert!(probe::strong_lucas_selfridge::<Width>(&le(n)), "{n}");
+                    assert!(!probe::miller_rabin_base2::<Width>(&le(n)), "{n}");
+                    assert!(!is_baillie_psw(&le(n)), "{n}");
+                }
+                for n in [42_799u128, 49_141, 22_499, 25_199] {
+                    let least = (2..n).find(|d| n % d == 0).expect("composite");
+                    assert!(least > 100, "{n} has the factor {least}");
                 }
             }
 
+            /// The pseudoprimes the literature lists first. Each has a prime
+            /// factor below 100, so the whole test refuses them at the sieve
+            /// and they say nothing about which half would have: what is
+            /// held here is each half's own verdict.
             #[test]
-            fn strong_lucas_pseudoprimes_fail_the_miller_half() {
+            fn the_smallest_pseudoprimes_of_each_half_pass_that_half() {
+                for n in [2047u128, 3277, 4033, 4681, 8321] {
+                    assert!(probe::miller_rabin_base2::<Width>(&le(n)), "{n}");
+                    assert!(!probe::strong_lucas_selfridge::<Width>(&le(n)), "{n}");
+                    assert!(!is_baillie_psw(&le(n)), "{n}");
+                }
                 for n in [5459u128, 5777, 10877, 16109, 18971] {
                     assert!(probe::strong_lucas_selfridge::<Width>(&le(n)), "{n}");
+                    assert!(!probe::miller_rabin_base2::<Width>(&le(n)), "{n}");
                     assert!(!is_baillie_psw(&le(n)), "{n}");
                 }
                 // The standard Lucas test accepts 323. The strong test does not.
                 assert!(!probe::strong_lucas_selfridge::<Width>(&le(323)));
+            }
+
+            /// Selfridge's `D` is the first of `5, −7, 9, −11, …` with
+            /// Jacobi symbol `−1`. The values are `sympy`'s; the primes are
+            /// the least with each `D` up to `−23`. `9` is a square and is
+            /// never the answer.
+            #[test]
+            fn the_discriminant_is_the_first_of_the_sequence_with_symbol_minus_one() {
+                for (n, d) in [
+                    (103u128, 5),
+                    (101, -7),
+                    (109, -11),
+                    (331, 13),
+                    (179, -15),
+                    (751, 17),
+                    (1171, -19),
+                    (7459, -23),
+                    (22_499, -15),
+                    (42_799, 17),
+                    ((1 << 61) - 1, 17),
+                    ((1 << 89) - 1, -7),
+                ] {
+                    assert_eq!(
+                        probe::selfridge_discriminant::<Width>(&le(n)),
+                        Some(Some(d)),
+                        "{n}"
+                    );
+                }
+                // A shared factor ends the search: 105 = 3·5·7 meets 5 first.
+                assert_eq!(probe::selfridge_discriminant::<Width>(&le(105)), Some(None));
+            }
+
+            /// The Jacobi symbol against `sympy`'s, for numerators of both
+            /// signs up to the ends of an `i32`, zero among them.
+            #[test]
+            fn the_jacobi_symbol_is_sympys() {
+                const NUMERATORS: [i32; 17] = [
+                    0,
+                    1,
+                    2,
+                    -1,
+                    -2,
+                    5,
+                    -7,
+                    9,
+                    -11,
+                    13,
+                    -15,
+                    17,
+                    101,
+                    -303,
+                    515,
+                    i32::MAX,
+                    -i32::MAX,
+                ];
+                for (n, symbols) in [
+                    (
+                        101u128,
+                        [0, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, 0, 0, -1, 1, 1],
+                    ),
+                    (
+                        103,
+                        [0, 1, 1, -1, -1, -1, -1, 1, 1, 1, -1, 1, -1, -1, 0, 1, -1],
+                    ),
+                    (
+                        107,
+                        [0, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1, -1, 1, -1, 1, -1, 1],
+                    ),
+                    (
+                        22_499,
+                        [0, 1, -1, -1, 1, 1, 1, 1, 1, 1, -1, 1, 1, -1, 1, -1, 1],
+                    ),
+                    (
+                        42_799,
+                        [0, 1, 1, -1, -1, 1, 1, 1, 1, 1, 1, -1, 1, 1, 1, -1, 1],
+                    ),
+                    (
+                        (1 << 64) + 13,
+                        [0, 1, -1, 1, -1, 1, 1, 1, -1, 1, -1, -1, 1, -1, 1, 1, 1],
+                    ),
+                    (
+                        (1 << 127) - 1,
+                        [0, 1, 1, -1, -1, -1, 1, 1, -1, 1, -1, 1, -1, -1, 1, 1, -1],
+                    ),
+                ] {
+                    for (a, symbol) in NUMERATORS.into_iter().zip(symbols) {
+                        assert_eq!(probe::jacobi::<Width>(a, &le(n)), Some(symbol), "({a}/{n})");
+                    }
+                }
+            }
+
+            /// The Lucas half is asked about `n + 1`. For the one `n` whose
+            /// successor does not fit the width, every bit set, it refuses
+            /// and returns: that `n` is a multiple of three.
+            #[test]
+            fn the_lucas_half_refuses_the_integer_whose_successor_leaves_the_width() {
+                let all_ones = [0xffu8; WIDTH_BITS / 8];
+                assert!(!probe::strong_lucas_selfridge::<Width>(&all_ones));
+                assert!(!is_baillie_psw(&all_ones));
             }
 
             #[test]
@@ -176,11 +323,51 @@ macro_rules! self_test_at {
                 );
             }
 
+            /// A perfect square is refused, and by the Lucas half: no `D`
+            /// has Jacobi symbol `−1` modulo a square, so the search for
+            /// one ends empty. There is no test for squares beside it.
+            ///
+            /// `1093` and `3511` are the Wieferich primes, the only primes
+            /// below `6.7·10^15` whose square is a strong pseudoprime to
+            /// base 2: for those two the base-2 half passes and the Lucas
+            /// half is the whole refusal.
             #[test]
-            fn a_perfect_square_is_refused_before_either_half() {
-                for root in [3u128, 5, 101, 1_000_003, 4_294_967_291] {
-                    assert!(!is_baillie_psw(&le(root * root)), "{root}^2");
+            fn a_perfect_square_is_refused_by_the_lucas_half() {
+                for root in [3u128, 5, 101, 1093, 3511, 1_000_003, 4_294_967_291] {
+                    let square = le(root * root);
+                    assert!(!is_baillie_psw(&square), "{root}^2");
+                    assert!(!probe::strong_lucas_selfridge::<Width>(&square), "{root}^2");
+                    if root > 100 {
+                        // No factor below 100, so no shared factor either:
+                        // the search ran out of candidates.
+                        assert_eq!(
+                            probe::selfridge_discriminant::<Width>(&square),
+                            Some(None),
+                            "{root}^2"
+                        );
+                    }
                 }
+                for wieferich in [1093u128, 3511] {
+                    let square = le(wieferich * wieferich);
+                    assert!(probe::miller_rabin_base2::<Width>(&square), "{wieferich}^2");
+                }
+                // The base-2 half refuses the square of any other prime.
+                assert!(!probe::miller_rabin_base2::<Width>(&le(101 * 101)));
+            }
+
+            /// A challenge degree is `7 (mod 8)`, so none is a square: the
+            /// case above does not arise on the verifier's path.
+            #[test]
+            fn a_challenge_degree_is_seven_modulo_eight() {
+                for exponent in [3u32, 4, 9, 64, (WIDTH_BITS as u32) / 2] {
+                    for scalar in [1u8, 3, 5, 7] {
+                        let Some(degree) = challenge_degree(exponent, &[scalar]) else {
+                            continue;
+                        };
+                        assert_eq!(degree[0] & 7, 7, "e = {exponent}, s = {scalar}");
+                    }
+                }
+                assert!(challenge_degree(3, &[1]).is_some());
             }
 
             #[test]
@@ -365,6 +552,77 @@ mod narrow {
             );
         }
         wrapped
+    }
+
+    /// The remainder against `u128`'s, for a value below, equal to, and
+    /// above the modulus, and for multiples of it.
+    #[test]
+    fn the_remainder_is_u128s_on_both_sides_of_the_modulus() {
+        let mut stream = Stream(0x5052_4953_4D52);
+        for _ in 0..2_000 {
+            let modulus = (stream.wide() >> (stream.next() % 100)) | 1;
+            for value in [
+                0,
+                modulus - 1,
+                modulus,
+                modulus + 1,
+                modulus.wrapping_mul(3),
+                stream.wide(),
+                u128::MAX,
+            ] {
+                assert_eq!(
+                    self::value(nat::<Width128>(value).rem(nat(modulus))),
+                    value % modulus,
+                    "{value} mod {modulus}"
+                );
+            }
+        }
+    }
+
+    /// `split_twos` gives the odd part and the count of twos, and zero
+    /// comes back after the width's bits and no more.
+    #[test]
+    fn an_integer_is_its_odd_part_times_its_twos() {
+        let mut stream = Stream(0x5052_4953_4D54);
+        for twos in 0..128u32 {
+            let odd = (stream.wide() >> twos) | 1;
+            let (found, count) = nat::<Width128>(odd << twos).split_twos();
+            assert_eq!((value(found), count), (odd, twos), "{odd} · 2^{twos}");
+        }
+        assert_eq!(
+            Nat::<Width128>::ZERO.split_twos(),
+            (Nat::ZERO, <Width128 as DegreeWidth>::BITS as u32)
+        );
+        assert_eq!(
+            Nat::<Width64>::ZERO.split_twos(),
+            (Nat::ZERO, <Width64 as DegreeWidth>::BITS as u32)
+        );
+    }
+
+    /// Little-endian bytes without high zeros, and zero is one zero byte.
+    #[test]
+    fn the_bytes_of_an_integer_drop_its_high_zeros_and_zero_keeps_one() {
+        assert_eq!(Nat::<Width128>::ZERO.to_le_bytes(), [0]);
+        assert_eq!(nat::<Width128>(1).to_le_bytes(), [1]);
+        assert_eq!(nat::<Width128>(0x0100).to_le_bytes(), [0, 1]);
+        assert_eq!(
+            nat::<Width128>(1 << 64).to_le_bytes(),
+            [0, 0, 0, 0, 0, 0, 0, 0, 1]
+        );
+        assert_eq!(nat::<Width128>(u128::MAX).to_le_bytes(), [0xff; 16]);
+    }
+
+    /// `Debug` is big-endian hex with no leading zeros, and every limb
+    /// below the top one is written in full.
+    #[test]
+    fn an_integer_prints_as_big_endian_hex() {
+        let printed = |value: u128| format!("{:?}", nat::<Width128>(value));
+        assert_eq!(printed(0), "0x0");
+        assert_eq!(printed(0x2a), "0x2a");
+        assert_eq!(printed(u128::from(u64::MAX)), "0xffffffffffffffff");
+        assert_eq!(printed(1 << 64), "0x10000000000000000");
+        assert_eq!(printed((0xabc << 64) | 0x1f), "0xabc000000000000001f");
+        assert_eq!(format!("{:?}", Nat::<Width1024>::from_u64(7)), "0x7");
     }
 
     #[test]

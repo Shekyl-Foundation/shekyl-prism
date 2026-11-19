@@ -12,7 +12,10 @@
 //! the dearest of them. The three functions here are the same checks cut
 //! where the inputs separate:
 //!
-//! - [`PreparedKey::prepare`]: every check that depends on the key alone;
+//! - [`PreparedKey::prepare`]: every check that depends on the key alone,
+//!   with one exception: that the points the basis index names are a
+//!   basis of the `2^e`-torsion is tested in [`verify_prepared`], at
+//!   each verification (ledger O18);
 //! - [`checked_response`]: every check that depends on the signature alone;
 //! - [`verify_prepared`]: the challenge, its degree and the relation.
 //!
@@ -51,7 +54,10 @@ use crate::{mark, model, relation, VerifyError};
 ///
 /// The only way to make one is [`Self::prepare`], so a value of this type
 /// is a key of the right length, canonically encoded, on neither excluded
-/// curve, whose basis index is within the search bound.
+/// curve, whose basis index is within the search bound. It is not yet
+/// a key whose named points are a basis of the `2^e`-torsion: that test
+/// runs at each verification, and a key that fails it is prepared and
+/// never verifies (ledger O18).
 ///
 /// What it stores is the key's bytes and that index. The coefficient is
 /// the decode of those bytes whenever it is read, so the challenge and the
@@ -220,7 +226,7 @@ pub fn verify_prepared<L: ParameterSet>(
 
 #[cfg(test)]
 mod tests {
-    use super::PreparedKey;
+    use super::{checked_response, PreparedKey};
     use crate::basis_hint;
     use crate::identity::KeyIdentity;
     use prism_field::{Field, ParameterSet, P248};
@@ -238,5 +244,23 @@ mod tests {
             basis_hint::<P248>(identity.coefficient()),
             Ok(prepared.hint())
         );
+    }
+
+    /// `Debug` of a checked response names the set and gives the
+    /// encoding in hex: the bytes that were checked, which is the only
+    /// form in which two responses can be compared.
+    #[test]
+    fn a_checked_response_prints_its_set_and_its_encoding() {
+        let signature = prism_vectors::corpus::Primary::Lvl1
+            .vector()
+            .signature()
+            .expect("the vector's signature");
+        let checked = checked_response::<P248>(&signature).expect("an honest signature");
+        let hex: String = signature.iter().map(|byte| format!("{byte:02x}")).collect();
+        assert_eq!(
+            format!("{checked:?}"),
+            format!("CheckedResponse<p248>({hex})")
+        );
+        assert_eq!(hex.len(), 2 * <P248 as ParameterSet>::SIGNATURE_LEN);
     }
 }
