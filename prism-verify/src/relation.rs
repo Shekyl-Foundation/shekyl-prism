@@ -115,20 +115,14 @@ fn relate_with<L: ParameterSet>(
     if !on_curve::<L>(sig, p_sig.x, p_sig.y) || !on_curve::<L>(sig, q_sig.x, q_sig.y) {
         return Err(VerifyError::Kernel);
     }
-    let p_sig_x = Xz::affine(p_sig.x);
-    let q_sig_x = Xz::affine(q_sig.x);
-    if !order_e::<L>(sig, p_sig_x) || !order_e::<L>(sig, q_sig_x) {
+    // One predicate, asked of the signature's two points and then of the
+    // key's. The index search names abscissas on the key's curve and does
+    // not show what they generate: a key whose curve does not have its
+    // `2^e`-torsion rational passes the search and is refused here.
+    if !basis_e::<L>(sig, Xz::affine(p_sig.x), Xz::affine(q_sig.x)) {
         return Err(VerifyError::Kernel);
     }
-    if !span_e::<L>(sig, p_sig_x, q_sig_x) {
-        return Err(VerifyError::Kernel);
-    }
-    // The canonical search names abscissas; arbitrary public keys must
-    // still prove that the resulting signature basis is full rational torsion.
-    if !order_e::<L>(vk, even.p)
-        || !order_e::<L>(vk, even.difference)
-        || !span_e::<L>(vk, even.p, even.difference)
-    {
+    if !basis_e::<L>(vk, even.p, even.difference) {
         return Err(VerifyError::Kernel);
     }
     // Before either chain. A mismatch is `Pairing` on a public key and on
@@ -197,6 +191,19 @@ fn e_prime_surface<L: ParameterSet>(
     let curves = [Montgomery::normalized(vk), Montgomery::normalized(sig)];
     let points = pushed::<L>(vk, push, scalar);
     chain_surface(L::E - 2, curves, kernel, false, &points, true)
+}
+
+/// `p` and `q` are a basis of the `2^e`-torsion of the curve: each has
+/// order exactly `2^e`, and together they span it.
+///
+/// This is the whole of what the verifier asks of a pair of kernel
+/// points before it uses them, and it asks it the same way of the
+/// signature's pair and of the key's. The order test is not implied by
+/// the span test: a point with a component of odd order passes
+/// [`span_e`], and at `p248` a signature carrying one is otherwise
+/// accepted.
+fn basis_e<L: ParameterSet>(coefficient: L::Ext, p: Xz<L::Ext>, q: Xz<L::Ext>) -> bool {
+    order_e::<L>(coefficient, p) && order_e::<L>(coefficient, q) && span_e::<L>(coefficient, p, q)
 }
 
 /// Order exactly `2^e`.
@@ -401,7 +408,7 @@ mod e0_vectors {
 
 #[cfg(test)]
 mod s5_vectors {
-    use super::{e_prime_surface, on_curve, order_e, relate_points, span_e};
+    use super::{basis_e, e_prime_surface, on_curve, order_e, relate_points, span_e};
     use crate::basis::basis_hint;
     use crate::challenge::ChallengeScalar;
     use crate::identity::KeyIdentity;
@@ -412,7 +419,7 @@ mod s5_vectors {
     use prism_field::{Field, ParameterSet, Salt, P248, P376, P500};
     #[cfg(test)]
     use prism_isogeny::chain::SurfaceStop;
-    use prism_isogeny::jac::Jac;
+    use prism_isogeny::jac::{add, dbl, dbl_iter, recover_y, to_xz, Jac};
     use prism_isogeny::montgomery::{Montgomery, Xz};
     use prism_isogeny::pairing::{mul, weil};
     use prism_isogeny::torsion::{even_basis, has_order_p_plus_one, rational_basis};
@@ -790,6 +797,150 @@ mod s5_vectors {
                 assert_vk_basis::<Set>(primary.text());
             }
             second_key::<Set>(<Set as WithCorpus>::PRIMARY[1].text());
+        });
+    }
+
+    /// The answer to an honest signature with its two kernel points
+    /// replaced, the key, curve and scalar unchanged.
+    fn with_kernel<L: ParameterSet>(
+        sample: &Sample<L>,
+        p: Jac<L::Ext>,
+        q: Jac<L::Ext>,
+    ) -> Result<(), VerifyError> {
+        let at = |point: Jac<L::Ext>| {
+            let z = point.z.inv().expect("a finite point");
+            let z2 = z.square();
+            AffinePoint {
+                x: point.x.mul(z2),
+                y: point.y.mul(z2.mul(z)),
+            }
+        };
+        let coefficient = KeyIdentity::<L>::decode(&sample.key).unwrap().coefficient();
+        relate_points::<L>(
+            coefficient,
+            sample.response.curve,
+            at(p),
+            at(q),
+            &sample.scalar,
+        )
+    }
+
+    /// A point of the signature's curve whose order is odd and above one:
+    /// `[2^e]` of the first point with a small integer abscissa that the
+    /// doublings do not kill.
+    fn odd_order_point<L: ParameterSet>(curve: Montgomery<L::Ext>) -> Jac<L::Ext> {
+        (2u64..64)
+            .find_map(|x| {
+                let x = L::Ext::from_u64(x);
+                let point = Jac {
+                    x,
+                    y: recover_y(curve, x)?,
+                    z: L::Ext::one(),
+                };
+                let odd = dbl_iter(curve, point, L::E);
+                (!odd.is_infinity()).then_some(odd)
+            })
+            .expect("a point of odd order")
+    }
+
+    /// Six ways for the two points not to be a basis of `E[2^e]`, each
+    /// with the key, the curve and the scalar of an honest signature, and
+    /// each a pair of points that is on the curve.
+    fn malformed_kernels<L: ParameterSet>(text: &str) {
+        let sample = sample::<L>(text);
+        let curve = Montgomery::normalized(sample.response.curve);
+        let lift = |point: AffinePoint<L>| Jac {
+            x: point.x,
+            y: point.y,
+            z: L::Ext::one(),
+        };
+        let (p, q) = (lift(sample.response.p), lift(sample.response.q));
+        assert_eq!(with_kernel::<L>(&sample, p, q), Ok(()), "{}", L::NAME);
+        let odd = odd_order_point::<L>(curve);
+        let cases = [
+            // Order `2^e` times an odd number. The span test passes these:
+            // the order test alone refuses them.
+            ("P plus a point of odd order", add(curve, p, odd), q),
+            ("Q plus a point of odd order", p, add(curve, q, odd)),
+            // Order `2^(e−1)`.
+            ("[2]P for P", dbl(curve, p), q),
+            ("[2]Q for Q", p, dbl(curve, q)),
+            // Order `2^e` each, and the two do not span.
+            ("P + [2]Q for Q", p, add(curve, p, dbl(curve, q))),
+            ("P for Q", p, p),
+        ];
+        for (name, p, q) in cases {
+            assert_eq!(
+                with_kernel::<L>(&sample, p, q),
+                Err(VerifyError::Kernel),
+                "{}: {name}",
+                L::NAME
+            );
+        }
+        // What each test sees of the first, third and fifth, so the three
+        // kinds above are the three kinds they are named as.
+        let x = |point| to_xz(point);
+        let sig = sample.response.curve;
+        let with_odd = x(add(curve, p, odd));
+        assert!(!order_e::<L>(sig, with_odd) && span_e::<L>(sig, with_odd, x(q)));
+        assert!(!order_e::<L>(sig, x(dbl(curve, p))));
+        let beside = x(add(curve, p, dbl(curve, q)));
+        assert!(order_e::<L>(sig, beside) && !span_e::<L>(sig, x(p), beside));
+    }
+
+    #[test]
+    fn a_signature_whose_points_are_not_a_basis_of_the_torsion_is_refused_as_kernel() {
+        use prism_vectors::corpus::WithCorpus;
+        prism_vectors::for_each_corpus_set!(Set, {
+            malformed_kernels::<Set>(<Set as WithCorpus>::PRIMARY[0].text());
+        });
+    }
+
+    /// A key that passes every check made on the key alone, and is not a
+    /// key: the coefficient `a + i` of a curve whose `2^e`-torsion is not
+    /// rational. Decoding and the index search accept it, and each
+    /// verification under it is refused as `Kernel`, by the test of the
+    /// key's own basis, whatever the signature.
+    fn a_curve_without_the_torsion<L: ParameterSet>(text: &str) {
+        let sample = sample::<L>(text);
+        let mut refused = 0;
+        for real in 1u64..=24 {
+            let coefficient = L::Ext::from_u64(real).add(L::ext_i());
+            let bytes = L::ext_encode(coefficient);
+            let Ok(hint) = KeyIdentity::<L>::decode(&bytes)
+                .map(|identity| identity.coefficient())
+                .and_then(basis_hint::<L>)
+            else {
+                continue;
+            };
+            let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
+                .expect("the index names a point");
+            if basis_e::<L>(coefficient, even.p, even.difference) {
+                // A supersingular curve among the small ones would be a key.
+                continue;
+            }
+            assert_eq!(
+                relate_points::<L>(
+                    coefficient,
+                    sample.response.curve,
+                    sample.response.p,
+                    sample.response.q,
+                    &sample.scalar,
+                ),
+                Err(VerifyError::Kernel),
+                "{}: A = {real} + i",
+                L::NAME
+            );
+            refused += 1;
+        }
+        assert!(refused >= 20, "{}: {refused} of 24 curves", L::NAME);
+    }
+
+    #[test]
+    fn a_key_whose_curve_lacks_the_torsion_passes_the_key_checks_and_is_refused_as_kernel() {
+        use prism_vectors::corpus::WithCorpus;
+        prism_vectors::for_each_corpus_set!(Set, {
+            a_curve_without_the_torsion::<Set>(<Set as WithCorpus>::PRIMARY[0].text());
         });
     }
 
