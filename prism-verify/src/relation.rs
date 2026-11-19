@@ -24,7 +24,7 @@ use prism_isogeny::montgomery::{a24, ladder};
 use prism_isogeny::pairing::{neg_square_mod_pow2, pow, weil};
 #[cfg(test)]
 use prism_isogeny::torsion::EvenBasis;
-use prism_isogeny::torsion::{double_times, even_basis, starting_basis};
+use prism_isogeny::torsion::{double_times, even_basis};
 
 use crate::accept::Lifted;
 use crate::basis::{basis_hint, BasisHint};
@@ -49,9 +49,13 @@ pub fn relate<L: ParameterSet>(
     )
 }
 
-/// The same relation, including the starting curve. `verify` never calls
-/// this with a zero key: that key is [`VerifyError::Origin`] first. The
-/// `E0` vectors call it directly.
+/// The same relation, from the coefficient and the points. The starting
+/// curve is no key here either: a zero `vk` is [`VerifyError::Origin`],
+/// as it is in `verify`, which refuses it before it gets here.
+///
+/// The key's points are computed first and tested last of the checks
+/// before the pairing, after the signature's: that is the order this
+/// entry has always refused in, and its counts are the record.
 pub fn relate_points<L: ParameterSet>(
     vk: L::Ext,
     sig: L::Ext,
@@ -60,82 +64,158 @@ pub fn relate_points<L: ParameterSet>(
     scalar: &[u8],
 ) -> Result<(), VerifyError> {
     Stage::Torsion.enter();
-    let hint = if vk.is_zero() {
-        None
-    } else {
-        Some(basis_hint::<L>(vk)?)
-    };
-    relate_with::<L>(vk, hint, sig, p_sig, q_sig, scalar)
+    if vk.is_zero() {
+        return Err(VerifyError::Origin);
+    }
+    // A public key uses the canonical basis of `E[2^e]`: `Q` is
+    // `difference(P, R)` after the cofactor.
+    let named = NamedPoints::of_key(vk, basis_hint::<L>(vk)?).ok_or(VerifyError::Kernel)?;
+    response_points::<L>(sig, p_sig, q_sig)?;
+    let basis = named.checked().ok_or(VerifyError::Kernel)?;
+    relate_bases::<L>(&basis, sig, p_sig, q_sig, scalar)
 }
 
-/// The relation for a key whose basis index is already known: the entry
-/// of [`crate::verify_prepared`]. It differs from [`relate_points`] in
-/// one thing, that it does not search for the index.
+/// The relation for a key whose basis is already built and checked: the
+/// entry of [`crate::verify_prepared`]. It differs from [`relate_points`]
+/// in one thing, that it neither searches for the key's basis nor
+/// computes nor tests it: `basis` is all three, done once.
 pub(crate) fn relate_prepared<L: ParameterSet>(
-    vk: L::Ext,
-    hint: BasisHint,
+    basis: &KeyBasis<L>,
     response: &Response<L>,
     scalar: &[u8],
 ) -> Result<(), VerifyError> {
     Stage::Torsion.enter();
-    relate_with::<L>(
-        vk,
-        Some(hint),
-        response.curve,
-        response.p,
-        response.q,
-        scalar,
-    )
+    response_points::<L>(response.curve, response.p, response.q)?;
+    relate_bases::<L>(basis, response.curve, response.p, response.q, scalar)
 }
 
-/// Everything after the basis index is known. `hint` is `None` for the
-/// starting curve, which has no index, and the index of `vk` otherwise.
-fn relate_with<L: ParameterSet>(
-    vk: L::Ext,
-    hint: Option<BasisHint>,
+/// The points a basis index names on a key's curve, before anyone has
+/// asked whether they are a basis.
+///
+/// The index search finds abscissas on the curve and does not show what
+/// they generate: a key whose curve does not have its `2^e`-torsion
+/// rational passes the search and names points that are no basis. The
+/// one thing to do with a value of this type is [`Self::checked`].
+struct NamedPoints<L: ParameterSet> {
+    coefficient: L::Ext,
+    p: Xz<L::Ext>,
+    q: Xz<L::Ext>,
+    difference: Xz<L::Ext>,
+}
+
+impl<L: ParameterSet> NamedPoints<L> {
+    /// The points the index `hint` names on the curve of `coefficient`.
+    /// `None` when the index names no point or the points have no
+    /// difference.
+    fn of_key(coefficient: L::Ext, hint: BasisHint) -> Option<Self> {
+        let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())?;
+        Some(Self {
+            coefficient,
+            p: even.p,
+            q: even.q,
+            difference: even.difference,
+        })
+    }
+
+    /// The test, and the only way to a [`KeyBasis`].
+    fn checked(self) -> Option<KeyBasis<L>> {
+        basis_e::<L>(self.coefficient, self.p, self.difference).then_some(KeyBasis {
+            coefficient: self.coefficient,
+            p: self.p,
+            q: self.q,
+            difference: self.difference,
+        })
+    }
+}
+
+/// A key's basis of `E[2^e]`, tested, with the curve it is a basis on:
+/// `p` and `difference` each have order exactly `2^e` on the curve of
+/// `coefficient` and together span its torsion.
+///
+/// The fields are private to this module and the one way to a value is
+/// [`NamedPoints::checked`], so a `KeyBasis` is a basis by construction
+/// and code that takes one tests nothing again. `q` is the third point
+/// the lift needs, the one with `q = p − difference`.
+///
+/// It holds the coefficient the test was run with, and the relation and
+/// the lift read the key's curve from here and take no other. So the
+/// points cannot be used on a curve they were not tested on.
+#[derive(Clone, Copy)]
+pub(crate) struct KeyBasis<L: ParameterSet> {
+    coefficient: L::Ext,
+    p: Xz<L::Ext>,
+    q: Xz<L::Ext>,
+    difference: Xz<L::Ext>,
+}
+
+impl<L: ParameterSet> KeyBasis<L> {
+    /// Compute the points `hint` names on the curve of `coefficient` and
+    /// test them.
+    ///
+    /// [`VerifyError::Basis`] when they are not a basis of `E[2^e]`: the
+    /// key gives no usable basis, as it gives none when the search finds
+    /// no index.
+    pub(crate) fn of_key(coefficient: L::Ext, hint: BasisHint) -> Result<Self, VerifyError> {
+        NamedPoints::of_key(coefficient, hint)
+            .and_then(NamedPoints::checked)
+            .ok_or(VerifyError::Basis)
+    }
+
+    /// The coefficient of the curve this is a basis on.
+    pub(crate) fn coefficient(&self) -> L::Ext {
+        self.coefficient
+    }
+
+    /// `P`, of order `2^e`.
+    pub(crate) fn p(&self) -> Xz<L::Ext> {
+        self.p
+    }
+
+    /// The cleared point with abscissa `−x(P) − A` before the cofactor.
+    pub(crate) fn q(&self) -> Xz<L::Ext> {
+        self.q
+    }
+
+    /// `difference(p, q)`, the canonical second basis point.
+    pub(crate) fn difference(&self) -> Xz<L::Ext> {
+        self.difference
+    }
+}
+
+/// The signature's two points are on its curve and are a basis of its
+/// `2^e`-torsion. `Kernel` otherwise.
+fn response_points<L: ParameterSet>(
+    sig: L::Ext,
+    p_sig: AffinePoint<L>,
+    q_sig: AffinePoint<L>,
+) -> Result<(), VerifyError> {
+    if !on_curve::<L>(sig, p_sig.x, p_sig.y) || !on_curve::<L>(sig, q_sig.x, q_sig.y) {
+        return Err(VerifyError::Kernel);
+    }
+    if !basis_e::<L>(sig, Xz::affine(p_sig.x), Xz::affine(q_sig.x)) {
+        return Err(VerifyError::Kernel);
+    }
+    Ok(())
+}
+
+/// Everything after both bases are known to be bases: the pairing, then
+/// the chains.
+fn relate_bases<L: ParameterSet>(
+    basis: &KeyBasis<L>,
     sig: L::Ext,
     p_sig: AffinePoint<L>,
     q_sig: AffinePoint<L>,
     scalar: &[u8],
 ) -> Result<(), VerifyError> {
-    // The starting curve keeps its `E[p+1]` basis: the degree-`q` witness
-    // was built from that basis. A public key uses the canonical basis of
-    // `E[2^e]`: `Q` is `difference(P, R)` after the cofactor.
-    let (even, push) = match hint {
-        None => {
-            let basis = starting_basis::<L>().ok_or(VerifyError::Kernel)?;
-            (basis.even, [basis.r, basis.t, basis.difference])
-        }
-        Some(hint) => {
-            let even = even_basis::<L>(vk, hint.index(), hint.coefficient_is_square())
-                .ok_or(VerifyError::Kernel)?;
-            (even, [even.p, even.q, even.difference])
-        }
-    };
-    if !on_curve::<L>(sig, p_sig.x, p_sig.y) || !on_curve::<L>(sig, q_sig.x, q_sig.y) {
-        return Err(VerifyError::Kernel);
-    }
-    // One predicate, asked of the signature's two points and then of the
-    // key's. The index search names abscissas on the key's curve and does
-    // not show what they generate: a key whose curve does not have its
-    // `2^e`-torsion rational passes the search and is refused here.
-    if !basis_e::<L>(sig, Xz::affine(p_sig.x), Xz::affine(q_sig.x)) {
-        return Err(VerifyError::Kernel);
-    }
-    if !basis_e::<L>(vk, even.p, even.difference) {
-        return Err(VerifyError::Kernel);
-    }
-    // Before either chain. A mismatch is `Pairing` on a public key and on
-    // the starting curve alike; the degree-`q` witness calls the chain
-    // helper itself and does not come through here.
+    // Before either chain. The degree-`q` witness on the starting curve
+    // calls the chain helper itself and does not come through here.
     Stage::Pairing.enter();
-    let Some(lifted) = crate::accept::lift::<L>(vk, &even, sig, p_sig, q_sig, scalar) else {
+    let Some(lifted) = crate::accept::lift::<L>(basis, sig, p_sig, q_sig, scalar) else {
         return Err(VerifyError::Pairing);
     };
     if !pairing_holds::<L>(&lifted, scalar) {
         return Err(VerifyError::Pairing);
     }
-    let _ = push;
     crate::accept::check::<L>(&lifted, scalar)
 }
 
@@ -899,24 +979,65 @@ mod s5_vectors {
         });
     }
 
-    /// A key that [`PreparedKey::prepare`] accepts, and that is not a
-    /// key: the coefficient `a + i` of a curve whose `2^e`-torsion is not
-    /// rational. Decoding and the index search pass it. The relation
-    /// refuses it as `Kernel`, by the test of the key's own basis, given
-    /// a signature that is good in itself: here the points and the scalar
-    /// of an honest one. Through `verify` the challenge is hashed from
-    /// these key bytes, so most signatures are refused as `Composite`
-    /// before the relation is reached, and one that is not meets this.
+    /// How many of the coefficients `a + i`, `a` from 1 to 199, decode as
+    /// a key, pass the index search, and name points that are no basis of
+    /// `E[2^e]`: the curve of such a coefficient does not have its
+    /// `2^e`-torsion rational. Each is refused by [`PreparedKey::prepare`]
+    /// as `Basis`, and `prepare` accepts a coefficient of the range
+    /// exactly when it is outside the family and has an index.
+    fn keys_that_name_no_basis<L: ParameterSet>() -> usize {
+        let mut family = 0;
+        for real in 1u64..=199 {
+            let coefficient = L::Ext::from_u64(real).add(L::ext_i());
+            let bytes = L::ext_encode(coefficient);
+            KeyIdentity::<L>::decode(&bytes).expect("a + i decodes");
+            let named = basis_hint::<L>(coefficient).ok().map(|hint| {
+                let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
+                    .expect("the index names a point");
+                basis_e::<L>(coefficient, even.p, even.difference)
+            });
+            let prepared = PreparedKey::<L>::prepare(&bytes).map(|_| ());
+            match named {
+                Some(true) => assert_eq!(prepared, Ok(()), "{}: {real} + i", L::NAME),
+                Some(false) => {
+                    family += 1;
+                    assert_eq!(prepared, Err(VerifyError::Basis), "{}: {real} + i", L::NAME);
+                }
+                None => assert_eq!(prepared, Err(VerifyError::Basis), "{}: {real} + i", L::NAME),
+            }
+        }
+        family
+    }
+
+    /// A key that names no basis is refused when it is prepared, at every
+    /// set, so the split entry cannot reach the relation with one: there
+    /// is no `PreparedKey` to hand it. All 199 coefficients are in the
+    /// family at each of the five sets.
+    #[test]
+    fn a_key_whose_points_are_no_basis_is_refused_when_it_is_prepared() {
+        use prism_field::{P324, P664};
+        assert_eq!(keys_that_name_no_basis::<P248>(), 199);
+        assert_eq!(keys_that_name_no_basis::<P324>(), 199);
+        assert_eq!(keys_that_name_no_basis::<P376>(), 199);
+        assert_eq!(keys_that_name_no_basis::<P500>(), 199);
+        assert_eq!(keys_that_name_no_basis::<P664>(), 199);
+    }
+
+    /// The byte-level relation on such a key: `Kernel`, by the test of
+    /// the key's own basis, given a signature that is good in itself:
+    /// here the points and the scalar of an honest one. This is the one
+    /// place where that test is what refuses on this entry. Through
+    /// `verify` the challenge is hashed from the key's bytes, so most
+    /// signatures are refused as `Composite` before the relation is
+    /// reached, and one that is not meets this.
     fn a_curve_without_the_torsion<L: ParameterSet>(text: &str) {
         let sample = sample::<L>(text);
         let mut refused = 0;
         for real in 1u64..=24 {
             let coefficient = L::Ext::from_u64(real).add(L::ext_i());
-            let bytes = L::ext_encode(coefficient);
-            let Ok(prepared) = PreparedKey::<L>::prepare(&bytes) else {
+            let Ok(hint) = basis_hint::<L>(coefficient) else {
                 continue;
             };
-            let hint = prepared.hint();
             let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
                 .expect("the index names a point");
             if basis_e::<L>(coefficient, even.p, even.difference) {
@@ -940,8 +1061,31 @@ mod s5_vectors {
         assert!(refused >= 20, "{}: {refused} of 24 curves", L::NAME);
     }
 
+    /// The relation called directly with the starting curve for the key
+    /// refuses it as `Origin`, as `verify` does, whatever the signature:
+    /// here an honest one made under another key.
     #[test]
-    fn a_key_whose_curve_lacks_the_torsion_passes_the_key_checks_and_is_refused_as_kernel() {
+    fn the_relation_refuses_the_starting_curve_as_origin() {
+        use prism_vectors::corpus::WithCorpus;
+        prism_vectors::for_each_corpus_set!(Set, {
+            let sample = sample::<Set>(<Set as WithCorpus>::PRIMARY[0].text());
+            assert_eq!(
+                relate_points::<Set>(
+                    <Set as ParameterSet>::Ext::zero(),
+                    sample.response.curve,
+                    sample.response.p,
+                    sample.response.q,
+                    &sample.scalar,
+                ),
+                Err(VerifyError::Origin),
+                "{}",
+                Set::NAME
+            );
+        });
+    }
+
+    #[test]
+    fn the_byte_level_relation_refuses_a_key_whose_points_are_no_basis_as_kernel() {
         use prism_vectors::corpus::WithCorpus;
         prism_vectors::for_each_corpus_set!(Set, {
             a_curve_without_the_torsion::<Set>(<Set as WithCorpus>::PRIMARY[0].text());

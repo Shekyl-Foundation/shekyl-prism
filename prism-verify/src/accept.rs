@@ -5,6 +5,7 @@
 
 //! Two adapted chains and the complete image check of the Sage model.
 use crate::mark::Stage;
+use crate::relation::KeyBasis;
 use crate::{AffinePoint, VerifyError};
 use prism_field::{Field, ParameterSet};
 use prism_isogeny::dual_chain::{canonical_four, product_null, Couple, DualChain};
@@ -13,7 +14,6 @@ use prism_isogeny::modular::{challenge_matrices, Mat4, Residue};
 use prism_isogeny::montgomery::{Montgomery, Xz};
 use prism_isogeny::pairing::{mul, weil};
 use prism_isogeny::theta_base::base_change_theta;
-use prism_isogeny::torsion::EvenBasis;
 
 fn affine<L: ParameterSet>(point: AffinePoint<L>) -> Jac<L::Ext> {
     Jac {
@@ -218,15 +218,19 @@ pub(crate) struct Lifted<F> {
 ///
 /// Verifier only, variable time. Never call with a secret scalar.
 pub(crate) fn lift<L: ParameterSet>(
-    vk: L::Ext,
-    even: &EvenBasis<L::Ext>,
+    basis: &KeyBasis<L>,
     sig: L::Ext,
     p: AffinePoint<L>,
     q: AffinePoint<L>,
     scalar: &[u8],
 ) -> Option<Lifted<L::Ext>> {
-    let (vk_curve, p1, p2) =
-        lift_basis(Montgomery::normalized(vk), even.p, even.difference, even.q)?;
+    let vk = basis.coefficient();
+    let (vk_curve, p1, p2) = lift_basis(
+        Montgomery::normalized(vk),
+        basis.p(),
+        basis.difference(),
+        basis.q(),
+    )?;
     let curves = [Montgomery::normalized(vk), Montgomery::normalized(sig)];
     Stage::Scale.enter();
     let scaled = [
@@ -381,10 +385,7 @@ mod tests {
     use super::*;
     use crate::{basis_hint, ChallengeScalar, KeyIdentity, Salt};
     use prism_field::{P248, P324, P376, P500, P664};
-    use prism_isogeny::{
-        theta::{projectively_same, ThetaPoint},
-        torsion::even_basis,
-    };
+    use prism_isogeny::theta::{projectively_same, ThetaPoint};
 
     fn decimal<F: Field>(text: &str) -> F {
         let mut value = F::zero();
@@ -417,11 +418,9 @@ mod tests {
         );
         let f = |name| L::ext_decode(&vector.bytes(name).expect(name)).unwrap();
         let hint = basis_hint::<L>(id.coefficient()).unwrap();
-        let even =
-            even_basis::<L>(id.coefficient(), hint.index(), hint.coefficient_is_square()).unwrap();
+        let basis = KeyBasis::<L>::of_key(id.coefficient(), hint).unwrap();
         let lifted = lift::<L>(
-            id.coefficient(),
-            &even,
+            &basis,
             f("E"),
             AffinePoint {
                 x: f("Px"),
@@ -515,11 +514,9 @@ mod tests {
         );
         let f = |row| L::ext_decode(&vector.bytes(row).expect(row)).unwrap();
         let hint = basis_hint::<L>(id.coefficient()).unwrap();
-        let even =
-            even_basis::<L>(id.coefficient(), hint.index(), hint.coefficient_is_square()).unwrap();
+        let basis = KeyBasis::<L>::of_key(id.coefficient(), hint).unwrap();
         let lifted = lift::<L>(
-            id.coefficient(),
-            &even,
+            &basis,
             f("E"),
             AffinePoint {
                 x: f("Px"),

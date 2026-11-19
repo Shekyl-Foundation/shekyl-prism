@@ -200,13 +200,17 @@ splits the same checks by the object they depend on:
 
 | Call | Checks | Refusals, in order |
 | --- | --- | --- |
-| `PublicKey::<S>::from_bytes` | every check on the key alone, except that the points its basis index names are a basis of `E[2^e]`, which `PublicKey::verify` tests on every call and refuses as `Kernel` (ledger O18) | `Length`, `Canonical`, `Origin`, `Singular`, `Basis` |
+| `PublicKey::<S>::from_bytes` | every check on the key alone: length, encoding, the two excluded curves, the search for the basis index, and that the points the index names are a basis of `E[2^e]` | `Length`, `Canonical`, `Origin`, `Singular`, `Basis` |
 | `Signature::<S>::from_bytes` | every check on the signature alone | `Length`, `Canonical`, `Sign`, `Singular` or `Model` |
 | `PublicKey::verify` | the checks that need key, message and signature | `Composite`, then `Kernel`, `Pairing`, `Codomain`, `Image` |
 
 A value of either type passed its checks, and there is no other way to
-make one. The key keeps the basis index its construction found, so the
-relation does not search for it again. The three calls are
+make one. The key keeps the basis its construction found and tested, so
+the relation neither searches for it, computes it nor tests it again.
+`Basis` is the refusal of a key that gives no usable basis, by either
+cause: the search finds no index within the bound, or the points the
+index names are not a basis of `E[2^e]`, as on a curve whose
+`2^e`-torsion is not rational. The three calls are
 `PreparedKey::prepare`, `checked_response` and `verify_prepared` of
 `prism_verify::prepared`. Those are low-level functions, and they hold
 the same thing in types of their own: a `PreparedKey` and a
@@ -216,14 +220,17 @@ and `verify_prepared` takes nothing else.
 The two entries share their definitions. The signature's checks are one
 function, which the byte-level entry calls after its length checks and
 the key's decoding and the typed entry calls alone. Primality followed by
-the relation is one function, and the relation has one body. What differs
-is the order in which the shared pieces run, and whether the basis index
-is searched for or carried.
+the relation is one function, and the relation has one body. The test of
+the key's basis is one function too, the only way to the type both
+entries hand to the pairing. What differs is the order in which the
+shared pieces run, and whether the key's basis is built on the call or
+carried.
 
 The byte-level entry looks at both lengths, decodes the key, then decodes
-and checks the signature, and only then searches for the key's basis. The
-typed entry finishes the key, search included, before any signature
-exists. So, with the typed entry taken as its three calls in the order
+and checks the signature, and only then searches for the key's basis. It
+tests that basis later still: after the challenge and its primality, and
+after the signature's own points. The typed entry finishes the key, the
+search and the test included, before any signature exists. So, with the typed entry taken as its three calls in the order
 key, signature, verification, and its refusal as the first of them:
 
 1. the typed entry accepts exactly when the byte-level entry accepts;
@@ -232,18 +239,29 @@ key, signature, verification, and its refusal as the first of them:
 3. if `PublicKey::from_bytes` fails, the byte-level entry also refuses,
    and may name another error. The typed entry names the key's fault.
    The byte-level entry names `Length` when the signature's length is
-   wrong, whatever the key is; and for a key whose only fault is `Basis`
-   it names any fault of the signature (`Canonical`, `Sign`, `Singular`,
-   `Model`) first.
+   wrong, whatever the key is. For a key whose only fault is `Basis` it
+   names any fault of the signature (`Canonical`, `Sign`, `Singular`,
+   `Model`) first; and when the fault is that the named points are no
+   basis, it names `Composite` if the challenge degree is composite, and
+   otherwise `Kernel`, its name for points that are no basis on either
+   curve.
 
-Case 3 needs a faulty key and a faulty signature together. When exactly
-one input is faulty the two entries name the same fault.
+Case 3 covers every key the typed entry refuses. For the four faults of
+a key before `Basis` it needs a faulty signature as well: with a good
+signature both entries name the key's fault. A key refused as `Basis`
+is named differently by the byte-level entry whatever the signature is,
+since that entry has no `Basis` refusal later than the search.
 
 The cost order differs with it. The basis search is the one check whose
-length the sender of a key chooses, up to the search bound. The
-byte-level entry runs the signature's cheap checks before it; the typed
-entry runs it when the key is built. That suits a key validated once and
-kept, and not a key built from every incoming message.
+length the sender of a key chooses, up to the search bound, and the test
+of the basis is the dearest of the key's checks: about `6e` doublings
+on the key's curve, some 6,000 multiplications and 3,000 squarings in
+the extension field at `p248`, 3.9% of a verification's products
+(`docs/BENCHMARKING.md`). The byte-level entry runs the signature's
+cheap checks before the search and the challenge's primality before the
+test; the typed entry runs both when the key is built, and never again.
+That suits a key validated once and kept, and not a key built from every
+incoming message.
 
 ## Tagged containers and the accept list
 
@@ -357,9 +375,11 @@ secret: both are facts about public bytes and a public policy.
   sets, and every refusal built without a signer at all five sets. A
   faulty key with a faulty signature, in every pairing of the faults that
   need no signer, is built at each set with the refusal of each entry
-  pinned (`shekyl-prism/tests/entries_agree.rs`). No key refused as
-  `Basis` is known, so that half of case 3 is argued from the order of
-  the code and not run.
+  pinned (`shekyl-prism/tests/entries_agree.rs`). The `Basis` key there
+  is one whose named points are no basis, and 199 such keys at each of
+  the five sets are run through both entries with a signature good in
+  itself. No key refused as `Basis` for want of an index is known, so
+  that cause is argued from the order of the code and not run.
 - The inputs are built by `prism-testkit`, which depends on the verifier
   and not on the front crate. The tests are in the front crate because a
   test lives in the lowest crate that contains everything it exercises,

@@ -77,13 +77,23 @@ pub enum VerifyError {
     Sign,
     /// A response curve is not its least model, or has extra automorphisms.
     Model,
-    /// No basis index within [`search_bound`] meets the C search.
+    /// The key gives no usable basis of its `2^e`-torsion, by one of two
+    /// causes.
     ///
+    /// No basis index within [`search_bound`] meets the C search.
     /// The search is the reference's, including the indices its `start = 128`
     /// fallback covers, so this refuses only keys whose smallest index
     /// exceeds the set's [`search_bound`]. That function's comment gives
     /// the heuristic estimate of how rare that is.
     /// `docs/VERIFIER_SPEC.md` records the bound and what it costs.
+    ///
+    /// Or the search finds an index and the points it names are not a
+    /// basis: one of them has not order `2^e`, or the two do not span.
+    /// The search looks at abscissas and does not see this. It is so for
+    /// a curve whose `2^e`-torsion is not rational, which is no key.
+    /// [`PreparedKey::prepare`] refuses such a key with this error. The
+    /// byte-level [`verify`] reaches the same test later, in the
+    /// relation, and names it [`Self::Kernel`].
     Basis,
     /// `2^{2e′−1} − s_j^2` is not a Baillie–PSW prime, `e′ = e − 2`.
     Composite,
@@ -108,7 +118,7 @@ impl core::fmt::Display for VerifyError {
             Self::Singular => "a singular Montgomery curve",
             Self::Model => "the response curve is not the unique permitted model",
             Self::Sign => "y(P) is not the normalized representative",
-            Self::Basis => "no basis index within the search bound",
+            Self::Basis => "the key gives no basis of its torsion",
             Self::Composite => "the challenge degree is composite",
             Self::Kernel => "the curve, torsion, or adapted chain is invalid",
             Self::Pairing => "the Weil pairing does not match the challenge degree",

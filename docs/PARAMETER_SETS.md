@@ -137,9 +137,14 @@ x86_64 figures and the sender's cost of producing such a response are in
 [BENCHMARKING.md](BENCHMARKING.md), "The refusal after the pairing
 check, at all five sets".
 
-Not reached at either set: `Basis`, `Image`, and acceptance. `Image` is
-compared only after the codomains agree, and no response buildable from
-public data is known to get them to.
+Not reached at either set: `Image`, and acceptance. `Image` is compared
+only after the codomains agree, and no response buildable from public
+data is known to get them to. `Basis` is reached through the typed
+entry alone: a key whose named points are no basis of `E[2^e]` is
+refused as `Basis` when it is built, 199 such keys at each set, and the
+byte-level entry names the same keys `Composite` or `Kernel`
+(`shekyl-prism/tests/entries_agree.rs`). A key with no basis index
+inside the bound is not known at any set.
 
 ## What each prime is currently assessed at
 
