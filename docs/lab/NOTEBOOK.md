@@ -519,3 +519,61 @@ Correction (2026-11-18, structure). The review asked for one procedure, one fini
 Who: the code-quality review proposed the shape / coding agent implemented.
 Correction (2026-11-18, review findings). Three findings of the automated review were valid. (1) A shard that reached the job's 90-minute limit was cancelled with nothing kept: the tool's step now stops at 80 minutes. (2) The report, upload and verdict steps were skipped for a shard cancelled while the tool ran: they now run whenever the tool was started. (3) A `mutants.json` cut short raised in the verdict and stopped the summary of every shard, and an unreadable `shard.json` did the same: each now rejects its own shard and the others are summed. Ran: the front-crate job alone through the shared shard workflow at `d316102` (run 44252352442) gave 107 mutants, 78 caught, 0 missed, 0 timeout, 29 unviable, and wrote no merged lists, being a partial run. A dispatch with `only=mutants shard=99` was refused in the `dispatch` job (run 44252267305). One front-crate shard at `796b3af`, cancelled by hand five and a half minutes in (run 44254806547), uploaded its output: `shard.json` with exit -1 and lists holding the six mutants it had finished; `mutants-summary` then failed, naming a shard that did not test its mutants. The 80-minute stop was not produced on a runner: no shard runs that long.
 Who: the automated review found / agent verified, fixed and ran the checks above.
+
+## 2026-11-18 — Mutant triage T1: the shipped verifier's 38 missed mutants and 6 timeouts
+
+Question. Run 44228767682 left 147 missed mutants and 6 timeouts in `prism-verify` and `prism-field`. Of those, 38 missed and all 6 timeouts are in code the verifier ships (eight files). For each: is a test missing, is the code written so that the mutant need not exist, or does the mutant change nothing?
+Rule (the brief of 2026-11-18). Each ends as (1) a test that states a property and kills it, (2) a change after which it does not exist, or (3) a reason in `docs/lab/MUTANTS.toml` that it cannot be killed. None is excluded from the tool.
+
+Disposition, all 44 (line numbers are those of `8a21922`):
+
+| File | Mutant | Rule | Test, change or reason |
+| --- | --- | --- | --- |
+| `prime/mod.rs` | `miller_rabin_base2 -> true` | 1 | `each_half_refuses_a_composite_the_other_passes_and_the_sieve_does_not_see` |
+| `prime/mod.rs` | `is_perfect_square`: whole body `false`; `-` to `+`, `-` to `/`; `&` to `^`, `&` to `\|`; `delete !` three times; `&&` to `\|\|`; `>=` to `<` (10) | 2 | the function is removed; `a_perfect_square_is_refused_by_the_lucas_half` holds what replaces it |
+| `prime/mod.rs` | `rem`: `<` to `<=`, `<` to `==` (2), and `<` to `>` (timeout) | 2 | the early return is removed; `the_remainder_is_u128s_on_both_sides_of_the_modulus` |
+| `prime/mod.rs` | `selfridge_discriminant`: `>` to `>=` | 2 | the sequence is written from its index; `the_discriminant_is_the_first_of_the_sequence_with_symbol_minus_one` |
+| `prime/mod.rs` | `to_le_bytes`: `>` to `>=` | 1 | `the_bytes_of_an_integer_drop_its_high_zeros_and_zero_keeps_one` |
+| `prime/mod.rs` | `Debug for Nat`: body, and `!=` to `==` (2) | 1 | `an_integer_prints_as_big_endian_hex` |
+| `prime/mod.rs` | `sub_mod`: `<` to `<=` | 3 | at `self == rhs` both branches give zero |
+| `prime/mod.rs` | `rem_u32`: `\|` to `^` | 3 | the operands share no set bit |
+| `prime/mod.rs` | `jacobi`: `<` to `<=` | 3 | differs at `a == 0`, whose symbol is `Zero`, and `Zero` negated is `Zero` |
+| `prime/mod.rs` | `is_zero -> false` (timeout) | 2 | every loop is counted; the mutant is caught |
+| `prime/mod.rs` | `shr1`: `+` to `*` (timeout) | 2 | every loop is counted; the mutant is caught |
+| `prime/mod.rs` | `bit_len`: `+` to `*` (timeout) | 3 | not a hang: right and up to 64 times as slow; ten tests fail on it when run alone |
+| `relation.rs` | `order_e -> true`; `&&` to `\|\|` in `order_e` (2) | 1 | `a_signature_whose_points_are_not_a_basis_of_the_torsion_is_refused_as_kernel` |
+| `relation.rs` | `\|\|` to `&&` in `relate_with`, three places (3) | 2 | one predicate `basis_e` for both pairs; its own mutants are caught by the same test |
+| `accept.rs` | `same_x`: `&&` to `\|\|` twice, `\|\|` to `&&` (3) | 1 | `two_x_only_points_are_the_same_up_to_scale_and_the_null_pair_is_none` |
+| `accept.rs` | `Doublings::times`: `>` to `>=` | 2 | the length comparison is gone: a set bit the table lacks sends the scalar to the ladder |
+| `set.rs` | `Set::salt_len` and `CommittedSet::salt_len`, each `0` and `1` (4) | 1 | `the_salt_length_is_the_exponent_rounded_up_to_128_bits` |
+| `width.rs` | `<` to `<=` in `degree_limbs` and in `torsion_limbs` (2) | 3 | at equality both branches return the same number |
+| `prism-field/src/lib.rs` | `is_odd_prime`: `+=` to `*=` | 1 | `an_odd_prime_is_a_prime_other_than_two` |
+| `prism-field/src/lib.rs` | `is_odd_prime`: `\|\|` to `&&` (timeout) | 3 | makes 1 a prime, and `Cofactor::new`, a `const fn` run when a set is compiled, divides by it for ever |
+| `prism-field/src/lib.rs` | `Cofactor::value -> 0` (timeout) | 1 | the hang was the test helper's own division loop; it asserts `f` is odd first, and the mutant is caught |
+| `basis.rs` | `to_c_byte`: `\|` to `^` | 3 | the operands share no set bit |
+| `prepared.rs` | `Debug for CheckedResponse`: body | 1 | `a_checked_response_prints_its_set_and_its_encoding` |
+
+Rule 1: 14 missed and 1 timeout. Rule 2: 18 missed and 3 timeouts. Rule 3: 6 missed and 2 timeouts. That is 38 and 6.
+
+What the triage found that is more than a missing test.
+(a) The order test alone stands between a malleated signature and acceptance (Ran). An honest signature with a point of odd order added to `P` or to `Q` is on the curve and passes the span test. With `order_e` replaced by `true`, the verifier accepts it at `p248` and refuses it as `Pairing` at `p376` and `p500`. The shipped verifier refuses it as `Kernel` at all three. No test had a pair of points that is on the curve and not a basis; six such pairs at each set with a corpus are now refused as `Kernel`, and the test shows which of the order and span tests sees each kind. No relation check is redundant: none is recorded as such.
+(b) Neither leg of the primality test was held (Ran). The ten pseudoprimes in the tests (`2047, 3277, 4033, 4681, 8321` and `5459, 5777, 10877, 16109, 18971`) each have a prime factor below 100, so the sieve refused them and the whole test's verdict on them said nothing of either leg. Twelve with none were found by search below 3,000,000 with an independent implementation of both strong tests, and every verdict of the search was checked against `sympy` 1.13.3 (`mr(n, [2])`, `is_strong_lucas_prp(n)`): base-2 strong pseudoprimes `42799, 49141, 88357, 90751, 104653, 130561`, and strong Lucas pseudoprimes with Selfridge's parameters `22499, 25199, 40309, 58519, 75077, 97439`. The search found no composite that passes both. The brief's two candidates, `22499 = 149·151` and `42799 = 127·337`, are the smallest of each kind.
+(c) The key's own basis is checked at verification, not when the key is prepared (Ran). `a + i` for `a` from 1 to 199 at `p248`: all 199 decode and pass the index search, and all are refused as `Kernel` by the test of the key's basis, with the order of both points wrong and the span test passing. So a key can pass `PreparedKey::prepare` and fail on every signature. Nothing was changed; ledger O18.
+
+The square filter (Derived, then Ran). The Jacobi symbol modulo `m^2` is the square of the symbol modulo `m`: `0` or `+1`, never `−1`. The search for Selfridge's discriminant is bounded at 256 candidates, so on a square it ends at a shared factor or empty, and the Lucas leg refuses. That holds for every square, not only those of the Wieferich primes; `1093^2` and `3511^2` are the two below `6.7·10^15` that pass the base-2 leg, and both are refused that way (`sympy` agrees on both legs). A challenge degree `2^(2e−1) − s^2` with `s` odd is `7 (mod 8)` and is never a square. `is_perfect_square` was therefore removed and `docs/VERIFIER_SPEC.md` says what refuses a square. It held ten of the missed mutants and the one loop of the file with a search of its own.
+
+Loops of `prime/mod.rs` and what bounds each (Ran: read).
+- `is_perfect_square`, `while !bit.is_zero()`: ended on a computed value. Removed with the function.
+- `miller_rabin_base2` and `strong_lucas_selfridge`, `while odd_part.is_even()`: ended on a computed value, and did not end on zero. `n − 1` is never zero. `n + 1` is zero for the one `n` with every bit of the width set, which the sieve refuses before the Lucas leg (the width is a multiple of 64, so that `n` is a multiple of three), and which a direct call did not return from. Both are `Nat::split_twos`, counted over the width's bits, and the Lucas leg refuses on the carry.
+- `jacobi_nonneg`, `loop` with an inner `while numerator.is_even()`: ended on a computed value. Counted over 64 divisions, more than Euclid's algorithm takes for a numerator below `2^32` (Lamé: fewer than 48); the inner strip is `split_twos`. Running out returns `Zero`, which refuses.
+- Already counted, unchanged: `rem` and `pow` over a bit length read once; `Mod::new` over twice the width; `mont_mul` and `checked_square` over the limbs; `lucas_chain` over the bits of `k`; the two `for _ in 1..twos`; `selfridge_discriminant` over 256; `negated_inverse_limb` over six; the sieve over its table; `to_le_bytes` popping a vector it shortens each time.
+
+Cost (Ran, build VM, shared and loaded: load average 8 to 62 during the run, so the figures are a comparison and not a timing). `degree_check` built in release at `de3eb22` and at `86b1275`, the same 20,000 random scalars at `p248` and 4,000 at `p664`, nine runs each, alternating. Verdicts equal on all 24,000 (197 and 22 prime). Minimum of nine: `p248` 8.27 s before and 7.35 s after (0.89); `p664` 6.09 s and 5.59 s (0.92). The medians say the same. The early return of `rem` was reached twice at each step of the Lucas chain; the chain now reduces its two constants once.
+
+Conditions of the brief (Ran, build VM at `86b1275`). `cargo test --workspace --locked`: 259 passed, 0 failed, 2 ignored. `scripts/op_counts.sh`: the three records change in the `# Sources` line only, so no verdict of `negative-verdicts.tsv` and no operation count moved. `scripts/differential_prime.py`: no disagreement with `sympy` over 10,000 degrees at each of the five sets (seed `37b4fbd52cd135fec61e98e98530dc2d`). No new dependency, no `unsafe`.
+
+Mutation, the eight files (Ran, build VM at `c949467`, the tool's flags as the nightly's with `-f` for each file, five at a time): 607 mutants, 389 caught, 6 missed, 2 timeout, 210 unviable. The six and the two are the eight entries of `docs/lab/MUTANTS.toml`. Unexplained in the eight files: none.
+
+The kept record. `docs/lab/MUTANTS.toml`, one `[[mutant]]` for each mutant that stays, keyed by file and the tool's words without line and column, with a count. `mutants_report.py gather --explained` prints for each complete job how many missed mutants and timeouts the record explains, how many it does not, by file, and the entries that match nothing. The nightly's summary runs it. Nothing about the comparison is red.
+Who: Rick ruled (the brief of 2026-11-18) / agent implemented / the runs above.
+

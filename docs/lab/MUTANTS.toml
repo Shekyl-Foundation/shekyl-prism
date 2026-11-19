@@ -1,0 +1,152 @@
+# Mutants that stay, and why.
+#
+# The nightly mutates the code and runs the tests against each mutant. A
+# mutant no test fails on is "missed", and one whose tests do not finish
+# is a "timeout". This file lists the missed mutants and timeouts that are
+# left on purpose, each with a reason a reader can check.
+#
+# An entry is here for one of two reasons only:
+#
+#   - the mutant changes no behaviour, for any input, and the reason says
+#     why; or
+#   - it is a timeout whose hang is understood, and the reason says what
+#     hangs and why that is acceptable.
+#
+# A mutant that a test could kill gets the test, and a mutant that a
+# clearer way of writing the code would remove gets that change. Neither
+# is listed here. No mutant is excluded from the tool: every entry is
+# still generated, run and reported each night.
+#
+# `scripts/ci/mutants_report.py gather --explained` reads this file. The
+# nightly's summary says, for each job, how many missed mutants and
+# timeouts it explains, how many it does not, and which entries match no
+# mutant any more. An entry that matches none is stale and is removed.
+#
+# Fields, all required:
+#
+#   job       the nightly job, `mutants` or `mutants-front`
+#   file      the source file, as the tool prints it
+#   mutation  the tool's line for the mutant without `line:col: `, so an
+#             edit above the mutant does not orphan the entry
+#   outcome   `missed` or `timeout`
+#   count     how many mutants of the file that text names
+#   reason    the argument
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/prime/mod.rs"
+mutation = "replace < with <= in Nat<W>::sub_mod"
+outcome = "missed"
+count = 1
+reason = """
+`sub_mod` is `if self < rhs { self.add_mod(modulus - rhs, modulus) } else \
+{ self - rhs }`. The mutant differs only at `self == rhs`, where it takes \
+the first branch: `self + (modulus - self)` is `modulus`, and `add_mod` \
+subtracts `modulus` from a sum that reaches it, giving zero. The second \
+branch gives `self - self`, zero. Both operands are below `modulus` by the \
+function's contract, so `modulus - rhs` does not wrap.
+"""
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/prime/mod.rs"
+mutation = "replace | with ^ in Nat<W>::rem_u32"
+outcome = "missed"
+count = 1
+reason = """
+The expression is `(rest << 64) | limb` in a `u128`, with `limb` a `u64`. \
+The low 64 bits of `rest << 64` are zero and `limb` has no bit above them, \
+so no bit is set in both operands, and `|` and `^` agree wherever that holds.
+"""
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/prime/mod.rs"
+mutation = "replace < with <= in jacobi"
+outcome = "missed"
+count = 1
+reason = """
+`jacobi` negates the symbol of `|a|` when `a < 0` and `n` is 3 (mod 4). The \
+mutant differs only at `a == 0`. The symbol of zero is `Jacobi::Zero` for \
+every odd `n` above one, and `Zero.negate()` is `Zero`. The test \
+`the_jacobi_symbol_is_sympys` holds the symbol of zero at seven moduli.
+"""
+
+[[mutant]]
+job = "mutants"
+file = "prism-field/src/width.rs"
+mutation = "replace < with <= in degree_limbs"
+outcome = "missed"
+count = 1
+reason = """
+The function is the larger of `needed` and `FLOOR_DEGREE_LIMBS`, written as \
+`if needed < FLOOR { FLOOR } else { needed }`. At `needed == FLOOR` the two \
+branches return the same number. `usize::max` is not usable in a `const fn` \
+on the pinned toolchain, and a helper written here would carry the same \
+comparison.
+"""
+
+[[mutant]]
+job = "mutants"
+file = "prism-field/src/width.rs"
+mutation = "replace < with <= in torsion_limbs"
+outcome = "missed"
+count = 1
+reason = """
+As `degree_limbs`: the larger of `needed` and `FLOOR_TORSION_LIMBS`, and at \
+equality both branches return the same number.
+"""
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/basis.rs"
+mutation = "replace | with ^ in BasisHint::to_c_byte"
+outcome = "missed"
+count = 1
+reason = """
+The expression is `(index << 1) | bit`, with `bit` zero or one. The low bit \
+of `index << 1` is zero, so no bit is set in both operands, and `|` and `^` \
+agree. The form is kept because it is the C reference's, which the byte \
+has to equal.
+"""
+
+[[mutant]]
+job = "mutants"
+file = "prism-field/src/lib.rs"
+mutation = "replace || with && in is_odd_prime"
+outcome = "timeout"
+count = 1
+reason = """
+The mutant makes `is_odd_prime(1)` true. `Cofactor::new` then takes 1 as a \
+prime and divides the cofactor by it for as long as it is a multiple, which \
+is for ever. The test that hangs is \
+`a_cofactor_with_a_wrong_list_of_primes_cannot_be_built`, on the case \
+`(3, [1])`; `an_odd_prime_is_a_prime_other_than_two` fails on the same \
+mutant, in the same test binary, and the binary does not finish. \
+`Cofactor::new` is a `const fn` and every parameter set's cofactor is built \
+with it when the set is compiled, so in a build this hang is a build that \
+does not finish, not a verifier that does not return: no byte of a key, a \
+message or a signature reaches the function. The loop's end rests on its \
+divisor being at least two, which `is_odd_prime` is called to establish \
+two lines above it.
+"""
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/prime/mod.rs"
+mutation = "replace + with * in Nat<W>::bit_len"
+outcome = "timeout"
+count = 1
+reason = """
+Not a hang. `bit_len` returns `index * 64 * bits` for the top limb at \
+`index`, where it should return `index * 64 + bits`: zero for an integer of \
+one limb, and up to 64 times too many for a wider one. Every loop that runs \
+over a bit length is counted, reads a bit above the integer as zero, and \
+ends: it is right and up to 64 times as long. Ten of the seventeen tests of \
+`prime::tests::at_1024_bits` fail on this mutant within a second when run \
+alone (among them `every_integer_below_three_hundred_gets_the_right_verdict` \
+and `the_jacobi_symbol_is_sympys`), because an integer of one limb has \
+length zero. The tool reports a timeout because the corpus walks in the \
+same run are 64 times as slow and pass its time limit before the test \
+binary that fails has been run.
+"""
