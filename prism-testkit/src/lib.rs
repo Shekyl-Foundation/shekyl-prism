@@ -10,7 +10,7 @@
 //! builds them, and one dependency on it gives all of them:
 //!
 //! - [`negatives`]: every input the records derive from an honest
-//!   committed vector that a verifier must refuse. There are 2,724 over
+//!   committed vector that a verifier must refuse. There are 2,742 over
 //!   the six primary vectors, each with a name and the refusals it may
 //!   meet;
 //! - [`identity_response`]: a response built from a public key alone that
@@ -53,7 +53,7 @@
 //! use prism_vectors::corpus::Primary;
 //!
 //! let cases = negatives::<P248>(Primary::Lvl1.text());
-//! assert_eq!(cases.len(), 326);
+//! assert_eq!(cases.len(), 329);
 //!
 //! let first = &cases[0];
 //! assert_eq!(first.name, "both-y-negated");

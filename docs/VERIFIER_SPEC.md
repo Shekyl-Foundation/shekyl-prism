@@ -351,7 +351,7 @@ secret: both are facts about public bytes and a public policy.
 - The two entries are held to the rule above on every input the tests
   of the front crate verify: `shekyl-prism/tests/support/entries.rs` runs
   both and fails unless the rule holds, and those tests call the verifier
-  through it. That is the 113 honest signatures and the 2,724 negatives
+  through it. That is the 113 honest signatures and the 2,742 negatives
   derived from the six primary vectors (`shekyl-prism/tests/acceptance.rs`,
   which pins both counts), the committed identity refusals at all five
   sets, and every refusal built without a signer at all five sets. A
