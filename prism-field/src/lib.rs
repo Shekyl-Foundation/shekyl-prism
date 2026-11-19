@@ -1400,16 +1400,10 @@ mod tests {
 
     /// Every size a set states, computed here from `e` and `f` by the
     /// formula its documentation gives, and then compared with the row of
-    /// the table in the crate documentation.
-    fn sizes_follow_from_the_prime<L: ParameterSet>(
-        e: u32,
-        f: u64,
-        field: usize,
-        key: usize,
-        signature: usize,
-        salt: usize,
-        bound: u16,
-    ) {
+    /// the table in the crate documentation: the lengths in bytes of a
+    /// field element, a public key, a signature and a salt, and then the
+    /// search bound.
+    fn sizes_follow_from_the_prime<L: ParameterSet>(e: u32, f: u64, row: ([usize; 4], u16)) {
         let name = L::NAME;
         assert_eq!(name, format!("p{e}"));
         assert_eq!((L::E, L::COFACTOR.value()), (e, f), "{name}");
@@ -1443,13 +1437,10 @@ mod tests {
         // The row of the table.
         assert_eq!(
             (
-                L::FP_LEN,
-                L::PUBLIC_KEY_LEN,
-                L::SIGNATURE_LEN,
-                L::SALT_LEN,
+                [L::FP_LEN, L::PUBLIC_KEY_LEN, L::SIGNATURE_LEN, L::SALT_LEN],
                 L::SEARCH_BOUND
             ),
-            (field, key, signature, salt, bound),
+            row,
             "{name}"
         );
         // The lengths are the lengths of what the set makes.
@@ -1460,11 +1451,11 @@ mod tests {
 
     #[test]
     fn every_size_of_every_set_is_its_formula_in_e_and_f() {
-        sizes_follow_from_the_prime::<P248>(248, 5, 32, 64, 352, 32, 256);
-        sizes_follow_from_the_prime::<P324>(324, 3, 41, 82, 458, 48, 384);
-        sizes_follow_from_the_prime::<P376>(376, 65, 48, 96, 528, 48, 384);
-        sizes_follow_from_the_prime::<P500>(500, 27, 64, 128, 704, 64, 512);
-        sizes_follow_from_the_prime::<P664>(664, 17, 84, 168, 936, 96, 768);
+        sizes_follow_from_the_prime::<P248>(248, 5, ([32, 64, 352, 32], 256));
+        sizes_follow_from_the_prime::<P324>(324, 3, ([41, 82, 458, 48], 384));
+        sizes_follow_from_the_prime::<P376>(376, 65, ([48, 96, 528, 48], 384));
+        sizes_follow_from_the_prime::<P500>(500, 27, ([64, 128, 704, 64], 512));
+        sizes_follow_from_the_prime::<P664>(664, 17, ([84, 168, 936, 96], 768));
     }
 
     /// What the documentation of [`Field`] and of the extension's
