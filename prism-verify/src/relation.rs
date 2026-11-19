@@ -24,7 +24,7 @@ use prism_isogeny::montgomery::{a24, ladder};
 use prism_isogeny::pairing::{neg_square_mod_pow2, pow, weil};
 #[cfg(test)]
 use prism_isogeny::torsion::EvenBasis;
-use prism_isogeny::torsion::{double_times, even_basis, starting_basis};
+use prism_isogeny::torsion::{double_times, even_basis};
 
 use crate::accept::Lifted;
 use crate::basis::{basis_hint, BasisHint};
@@ -49,10 +49,9 @@ pub fn relate<L: ParameterSet>(
     )
 }
 
-/// The same relation, including the starting curve. `verify` never calls
-/// this with a zero key: that key is [`VerifyError::Origin`] first. A
-/// direct caller that does gets the starting curve's fixed basis for the
-/// key's, and the same checks after it.
+/// The same relation, from the coefficient and the points. The starting
+/// curve is no key here either: a zero `vk` is [`VerifyError::Origin`],
+/// as it is in `verify`, which refuses it before it gets here.
 ///
 /// The key's points are computed first and tested last of the checks
 /// before the pairing, after the signature's: that is the order this
@@ -65,15 +64,12 @@ pub fn relate_points<L: ParameterSet>(
     scalar: &[u8],
 ) -> Result<(), VerifyError> {
     Stage::Torsion.enter();
-    // The starting curve keeps its `E[p+1]` basis: the degree-`q` witness
-    // was built from that basis. A public key uses the canonical basis of
-    // `E[2^e]`: `Q` is `difference(P, R)` after the cofactor.
-    let named = if vk.is_zero() {
-        NamedPoints::of_starting_curve(vk)
-    } else {
-        NamedPoints::of_key(vk, basis_hint::<L>(vk)?)
+    if vk.is_zero() {
+        return Err(VerifyError::Origin);
     }
-    .ok_or(VerifyError::Kernel)?;
+    // A public key uses the canonical basis of `E[2^e]`: `Q` is
+    // `difference(P, R)` after the cofactor.
+    let named = NamedPoints::of_key(vk, basis_hint::<L>(vk)?).ok_or(VerifyError::Kernel)?;
     response_points::<L>(sig, p_sig, q_sig)?;
     let basis = named.checked().ok_or(VerifyError::Kernel)?;
     relate_bases::<L>(&basis, sig, p_sig, q_sig, scalar)
@@ -115,18 +111,6 @@ impl<L: ParameterSet> NamedPoints<L> {
         let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())?;
         Some(Self {
             coefficient,
-            p: even.p,
-            q: even.q,
-            difference: even.difference,
-        })
-    }
-
-    /// The even part of the starting curve's fixed basis. `zero` is the
-    /// coefficient the caller found to be zero.
-    fn of_starting_curve(zero: L::Ext) -> Option<Self> {
-        let even = starting_basis::<L>()?.even;
-        Some(Self {
-            coefficient: zero,
             p: even.p,
             q: even.q,
             difference: even.difference,
@@ -223,9 +207,8 @@ fn relate_bases<L: ParameterSet>(
     q_sig: AffinePoint<L>,
     scalar: &[u8],
 ) -> Result<(), VerifyError> {
-    // Before either chain. A mismatch is `Pairing` on a public key and on
-    // the starting curve alike; the degree-`q` witness calls the chain
-    // helper itself and does not come through here.
+    // Before either chain. The degree-`q` witness on the starting curve
+    // calls the chain helper itself and does not come through here.
     Stage::Pairing.enter();
     let Some(lifted) = crate::accept::lift::<L>(basis, sig, p_sig, q_sig, scalar) else {
         return Err(VerifyError::Pairing);
@@ -1078,13 +1061,11 @@ mod s5_vectors {
         assert!(refused >= 20, "{}: {refused} of 24 curves", L::NAME);
     }
 
-    /// The relation with the starting curve for the key. `verify` refuses
-    /// that key before it gets here; a direct call takes the curve's fixed
-    /// basis, which is one, and goes on to the pairing, where a signature
-    /// made under another key fails. So the answer is `Pairing`, and not
-    /// the `Kernel` of a key with no basis.
+    /// The relation called directly with the starting curve for the key
+    /// refuses it as `Origin`, as `verify` does, whatever the signature:
+    /// here an honest one made under another key.
     #[test]
-    fn the_starting_curve_has_a_basis_and_another_keys_signature_fails_its_pairing() {
+    fn the_relation_refuses_the_starting_curve_as_origin() {
         use prism_vectors::corpus::WithCorpus;
         prism_vectors::for_each_corpus_set!(Set, {
             let sample = sample::<Set>(<Set as WithCorpus>::PRIMARY[0].text());
@@ -1096,7 +1077,7 @@ mod s5_vectors {
                     sample.response.q,
                     &sample.scalar,
                 ),
-                Err(VerifyError::Pairing),
+                Err(VerifyError::Origin),
                 "{}",
                 Set::NAME
             );
