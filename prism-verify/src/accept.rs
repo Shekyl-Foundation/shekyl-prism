@@ -186,9 +186,16 @@ fn change<L: ParameterSet>(
     base_change_theta(result, zeta)
 }
 
-/// The same point of the Kummer line. `(0 : 0)` is no point: the chain's
-/// formulas return it when they fail, it cross-multiplies equal to
-/// everything, and it is equal to nothing here, itself included.
+/// The same point of the Kummer line. `(0 : 0)` is no point, and it is
+/// equal to nothing here, itself included, because it cross-multiplies
+/// equal to everything.
+///
+/// No caller passes it today. The image comes from
+/// `DualChain::dual_eval`, each of whose points has a nonzero coordinate
+/// or is infinity as `(1 : 0)`, and the expected point comes from `to_xz`,
+/// which gives `(X : Z^2)` with `Z` nonzero or `(1 : 0)`. The refusal is
+/// kept so that a change to either does not turn a failed evaluation
+/// into an accepted image.
 fn same_x<F: Field>(p: Xz<F>, q: Xz<F>) -> bool {
     !(p.x.is_zero() && p.z.is_zero() || q.x.is_zero() && q.z.is_zero())
         && p.x.mul(q.z).same(q.x.mul(p.z))

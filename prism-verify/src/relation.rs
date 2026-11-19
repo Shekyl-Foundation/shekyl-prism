@@ -412,6 +412,7 @@ mod s5_vectors {
     use crate::basis::basis_hint;
     use crate::challenge::ChallengeScalar;
     use crate::identity::KeyIdentity;
+    use crate::prepared::PreparedKey;
     use crate::prime::degree_is_prime;
     use crate::signature::{canonical_sign, AffinePoint, Response};
     use crate::verify;
@@ -896,23 +897,24 @@ mod s5_vectors {
         });
     }
 
-    /// A key that passes every check made on the key alone, and is not a
+    /// A key that [`PreparedKey::prepare`] accepts, and that is not a
     /// key: the coefficient `a + i` of a curve whose `2^e`-torsion is not
-    /// rational. Decoding and the index search accept it, and each
-    /// verification under it is refused as `Kernel`, by the test of the
-    /// key's own basis, whatever the signature.
+    /// rational. Decoding and the index search pass it. The relation
+    /// refuses it as `Kernel`, by the test of the key's own basis, given
+    /// a signature that is good in itself: here the points and the scalar
+    /// of an honest one. Through `verify` the challenge is hashed from
+    /// these key bytes, so most signatures are refused as `Composite`
+    /// before the relation is reached, and one that is not meets this.
     fn a_curve_without_the_torsion<L: ParameterSet>(text: &str) {
         let sample = sample::<L>(text);
         let mut refused = 0;
         for real in 1u64..=24 {
             let coefficient = L::Ext::from_u64(real).add(L::ext_i());
             let bytes = L::ext_encode(coefficient);
-            let Ok(hint) = KeyIdentity::<L>::decode(&bytes)
-                .map(|identity| identity.coefficient())
-                .and_then(basis_hint::<L>)
-            else {
+            let Ok(prepared) = PreparedKey::<L>::prepare(&bytes) else {
                 continue;
             };
+            let hint = prepared.hint();
             let even = even_basis::<L>(coefficient, hint.index(), hint.coefficient_is_square())
                 .expect("the index names a point");
             if basis_e::<L>(coefficient, even.p, even.difference) {
