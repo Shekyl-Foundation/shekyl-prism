@@ -66,8 +66,8 @@ use crate::{mark, model, relation, VerifyError};
 /// [`Self::prepare`]; the read does not square again. The basis is kept
 /// because it is the thing the test was run on: the relation takes these
 /// three points as they are, and a basis computed again at verification
-/// would be a second value that nothing had tested. It is six field
-/// elements. The parameter set is not in the bytes; [`Self::prepare`]
+/// would be a second value that nothing had tested. It is the
+/// coefficient and three points, seven field elements. The parameter set is not in the bytes; [`Self::prepare`]
 /// checked them against `L`, and the marker keeps that check in the type.
 ///
 /// The three stored things are set in one place, [`Self::prepare`], from
@@ -246,14 +246,13 @@ pub fn verify_prepared<L: ParameterSet>(
 ) -> Result<(), VerifyError> {
     mark::Stage::Challenge.enter();
     let response = response.response();
-    // One decode. The challenge hashes these bytes; the relation uses the
-    // coefficient that decode produced and the basis stored beside them,
-    // which `prepare` built from the same bytes.
+    // The challenge hashes the key's bytes. The relation takes the basis
+    // `prepare` built from those bytes, which carries the coefficient it
+    // was tested with.
     let identity = key.identity();
-    let coefficient = identity.coefficient();
     let scalar = ChallengeScalar::derive(&identity, message, response.salt);
     crate::prime_then::<L>(&scalar, || {
-        relation::relate_prepared::<L>(coefficient, &key.basis, response, scalar.as_bytes())
+        relation::relate_prepared::<L>(&key.basis, response, scalar.as_bytes())
     })
 }
 

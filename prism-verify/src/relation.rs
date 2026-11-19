@@ -76,7 +76,7 @@ pub fn relate_points<L: ParameterSet>(
     .ok_or(VerifyError::Kernel)?;
     response_points::<L>(sig, p_sig, q_sig)?;
     let basis = named.checked().ok_or(VerifyError::Kernel)?;
-    relate_bases::<L>(vk, &basis, sig, p_sig, q_sig, scalar)
+    relate_bases::<L>(&basis, sig, p_sig, q_sig, scalar)
 }
 
 /// The relation for a key whose basis is already built and checked: the
@@ -84,14 +84,13 @@ pub fn relate_points<L: ParameterSet>(
 /// in one thing, that it neither searches for the key's basis nor
 /// computes nor tests it: `basis` is all three, done once.
 pub(crate) fn relate_prepared<L: ParameterSet>(
-    vk: L::Ext,
     basis: &KeyBasis<L>,
     response: &Response<L>,
     scalar: &[u8],
 ) -> Result<(), VerifyError> {
     Stage::Torsion.enter();
     response_points::<L>(response.curve, response.p, response.q)?;
-    relate_bases::<L>(vk, basis, response.curve, response.p, response.q, scalar)
+    relate_bases::<L>(basis, response.curve, response.p, response.q, scalar)
 }
 
 /// The points a basis index names on a key's curve, before anyone has
@@ -137,6 +136,7 @@ impl<L: ParameterSet> NamedPoints<L> {
     /// The test, and the only way to a [`KeyBasis`].
     fn checked(self) -> Option<KeyBasis<L>> {
         basis_e::<L>(self.coefficient, self.p, self.difference).then_some(KeyBasis {
+            coefficient: self.coefficient,
             p: self.p,
             q: self.q,
             difference: self.difference,
@@ -144,19 +144,21 @@ impl<L: ParameterSet> NamedPoints<L> {
     }
 }
 
-/// A key's basis of `E[2^e]`, tested: `p` and `difference` each have
-/// order exactly `2^e` and together span the torsion.
+/// A key's basis of `E[2^e]`, tested, with the curve it is a basis on:
+/// `p` and `difference` each have order exactly `2^e` on the curve of
+/// `coefficient` and together span its torsion.
 ///
 /// The fields are private to this module and the one way to a value is
 /// [`NamedPoints::checked`], so a `KeyBasis` is a basis by construction
 /// and code that takes one tests nothing again. `q` is the third point
 /// the lift needs, the one with `q = p − difference`.
 ///
-/// It does not hold the curve. Whoever keeps one keeps it beside the
-/// coefficient it was built from: [`crate::PreparedKey`] sets both in one
-/// place, from one decode, and has no way to set either afterwards.
+/// It holds the coefficient the test was run with, and the relation and
+/// the lift read the key's curve from here and take no other. So the
+/// points cannot be used on a curve they were not tested on.
 #[derive(Clone, Copy)]
 pub(crate) struct KeyBasis<L: ParameterSet> {
+    coefficient: L::Ext,
     p: Xz<L::Ext>,
     q: Xz<L::Ext>,
     difference: Xz<L::Ext>,
@@ -173,6 +175,11 @@ impl<L: ParameterSet> KeyBasis<L> {
         NamedPoints::of_key(coefficient, hint)
             .and_then(NamedPoints::checked)
             .ok_or(VerifyError::Basis)
+    }
+
+    /// The coefficient of the curve this is a basis on.
+    pub(crate) fn coefficient(&self) -> L::Ext {
+        self.coefficient
     }
 
     /// `P`, of order `2^e`.
@@ -210,7 +217,6 @@ fn response_points<L: ParameterSet>(
 /// Everything after both bases are known to be bases: the pairing, then
 /// the chains.
 fn relate_bases<L: ParameterSet>(
-    vk: L::Ext,
     basis: &KeyBasis<L>,
     sig: L::Ext,
     p_sig: AffinePoint<L>,
@@ -221,7 +227,7 @@ fn relate_bases<L: ParameterSet>(
     // the starting curve alike; the degree-`q` witness calls the chain
     // helper itself and does not come through here.
     Stage::Pairing.enter();
-    let Some(lifted) = crate::accept::lift::<L>(vk, basis, sig, p_sig, q_sig, scalar) else {
+    let Some(lifted) = crate::accept::lift::<L>(basis, sig, p_sig, q_sig, scalar) else {
         return Err(VerifyError::Pairing);
     };
     if !pairing_holds::<L>(&lifted, scalar) {

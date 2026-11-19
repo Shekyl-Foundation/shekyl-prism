@@ -218,13 +218,13 @@ pub(crate) struct Lifted<F> {
 ///
 /// Verifier only, variable time. Never call with a secret scalar.
 pub(crate) fn lift<L: ParameterSet>(
-    vk: L::Ext,
     basis: &KeyBasis<L>,
     sig: L::Ext,
     p: AffinePoint<L>,
     q: AffinePoint<L>,
     scalar: &[u8],
 ) -> Option<Lifted<L::Ext>> {
+    let vk = basis.coefficient();
     let (vk_curve, p1, p2) = lift_basis(
         Montgomery::normalized(vk),
         basis.p(),
@@ -420,7 +420,6 @@ mod tests {
         let hint = basis_hint::<L>(id.coefficient()).unwrap();
         let basis = KeyBasis::<L>::of_key(id.coefficient(), hint).unwrap();
         let lifted = lift::<L>(
-            id.coefficient(),
             &basis,
             f("E"),
             AffinePoint {
@@ -517,7 +516,6 @@ mod tests {
         let hint = basis_hint::<L>(id.coefficient()).unwrap();
         let basis = KeyBasis::<L>::of_key(id.coefficient(), hint).unwrap();
         let lifted = lift::<L>(
-            id.coefficient(),
             &basis,
             f("E"),
             AffinePoint {
