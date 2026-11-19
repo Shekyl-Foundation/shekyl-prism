@@ -10,6 +10,7 @@
     mutants_report.py shard   --out mutants.out --job J --shard K --of N --exit CODE
     mutants_report.py verdict --out mutants.out
     mutants_report.py gather  --dir DIR [--write DIR] [--expect JOB ...] [--explained FILE]
+    mutants_report.py record  --file FILE
 
 `plan` is the dispatch. `only` empty deals every mutant job and the rest
 of the nightly. `only` names one mutant job. `shard` selects one index of
@@ -49,6 +50,10 @@ matched by its file and the tool's own words for it, without the line
 and column, and by count, since one function can have the same mutation
 twice. Nothing about the record fails the command except a record that
 cannot be read: the counts are printed.
+
+`record` reads the kept record and says how many entries it has. It
+fails on a record `gather` could not read, so a pull request that breaks
+the file is red there and not in the next nightly's summary.
 
 Text goes to standard output, and to the job summary when the runner
 names one.
@@ -514,6 +519,17 @@ def gather(
     return 0
 
 
+def record_command(path: Path) -> int:
+    try:
+        record = load_explained(path)
+    except RecordError as error:
+        print(f"mutants: {error}", file=sys.stderr)
+        return 1
+    by_outcome = Counter(entry.outcome for entry in record for _ in range(entry.count))
+    print(f"{path}: {len(record)} entries, {by_outcome['missed']} missed and {by_outcome['timeout']} timeout")
+    return 0
+
+
 def selftest() -> int:
     def make(root: Path, name: str, code: int, lists: dict[str, list[str]] | None, planned=None, of=8, index=None):
         out = root / name
@@ -752,6 +768,8 @@ def main() -> int:
     every.add_argument("--write", type=Path)
     every.add_argument("--expect", action="append")
     every.add_argument("--explained", type=Path)
+    kept = commands.add_parser("record")
+    kept.add_argument("--file", type=Path, required=True)
     args = parser.parse_args()
     if args.selftest:
         return selftest()
@@ -761,6 +779,8 @@ def main() -> int:
         return shard(args.out, args.job, args.shard, args.of, args.exit)
     if args.command == "verdict":
         return verdict(args.out)
+    if args.command == "record":
+        return record_command(args.file)
     if args.command == "gather":
         return gather(args.dir, args.write, args.expect, args.explained)
     parser.error("a command, or --selftest")

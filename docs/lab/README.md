@@ -7,6 +7,7 @@ This directory is the research record for shekyl-prism. It exists so that the wo
 | `NOTEBOOK.md` | Dated entries, oldest first. One entry per question asked of the code, the model or the literature. |
 | `LEDGER.md` | Every claim we may publish, with its evidence and status; every departure from ePrint 2026/443; the open obligations. |
 | `CONTRIBUTIONS.md` | Who did what, including the AI systems used. This is the source for the paper's disclosure. |
+| `MUTANTS.toml` | The mutants the nightly's mutation run leaves missed or timing out on purpose, each with the reason it changes no behaviour or what it hangs. Read by `scripts/ci/mutants_report.py`; the nightly's summary reports what it explains, what it does not, and its stale entries. |
 
 Records written before 2026-11-14 name the parameter sets by level: `NIST-I` or level I is `p248`, `NIST-III` or level III is `p376`, `NIST-V` or level V is `p500` (`docs/PARAMETER_SETS.md`). They are not rewritten.
 
