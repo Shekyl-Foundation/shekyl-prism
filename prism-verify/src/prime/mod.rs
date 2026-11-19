@@ -19,9 +19,22 @@
 //! held in, as long as it fits.
 //!
 //! The test is the one `docs/VERIFIER_SPEC.md` specifies: trial division by
-//! the primes below 100, a perfect-square filter, one strong Miller–Rabin
-//! test at base 2, then the strong Lucas test with Selfridge's parameters.
-//! No random bases, so the verdict is a function of `n` alone.
+//! the primes below 100, one strong Miller–Rabin test at base 2, then the
+//! strong Lucas test with Selfridge's parameters. No random bases, so the
+//! verdict is a function of `n` alone.
+//!
+//! A perfect square is refused by the Lucas half, with no filter of its
+//! own: see [`selfridge_discriminant`].
+//!
+//! # Every loop is counted
+//!
+//! No loop here ends on a value the arithmetic computes. Each runs a
+//! number of times fixed by the width, by a bit length read once before
+//! it starts, or by a constant, so a wrong operator gives a wrong verdict
+//! and never a verifier that does not return. The two that are searches
+//! by nature, the strip of the factors of two ([`Nat::split_twos`]) and
+//! Euclid's algorithm in [`jacobi_nonneg`], have a count they provably do
+//! not need in full and stop early inside it.
 
 use core::cmp::Ordering;
 
@@ -194,6 +207,23 @@ impl<W: DegreeWidth> Nat<W> {
         out
     }
 
+    /// `(odd, twos)` with `self = odd · 2^twos` and `odd` odd.
+    ///
+    /// Zero has no odd part. It comes back as zero with `twos` the whole
+    /// width, after as many steps as the width has bits and no more.
+    fn split_twos(self) -> (Self, u32) {
+        let mut odd = self;
+        let mut twos = 0u32;
+        for _ in 0..W::BITS {
+            if !odd.is_even() {
+                break;
+            }
+            odd = odd.shr1();
+            twos += 1;
+        }
+        (odd, twos)
+    }
+
     fn shr1(self) -> Self {
         let mut out = Self::ZERO;
         for index in 0..Self::LIMBS {
@@ -242,11 +272,12 @@ impl<W: DegreeWidth> Nat<W> {
         out
     }
 
-    /// `self mod modulus`.
+    /// `self mod modulus`, for a `modulus` above zero.
+    ///
+    /// One doubling and one addition for each bit of `self`, whatever the
+    /// two values are: a `self` already below `modulus` takes the same
+    /// path and comes back unchanged.
     fn rem(self, modulus: Self) -> Self {
-        if self < modulus {
-            return self;
-        }
         let mut rest = Self::ZERO;
         for index in (0..self.bit_len()).rev() {
             rest = rest.add_mod(rest, modulus);
@@ -290,35 +321,6 @@ impl<W: DegreeWidth> Nat<W> {
             .as_mut()
             .copy_from_slice(&wide.as_ref()[..Self::LIMBS]);
         Some(out)
-    }
-
-    /// `true` when `self` is the square of an integer.
-    ///
-    /// Digit-by-digit extraction in base 4: the loop walks the odd powers of
-    /// two downward and keeps the remainder, which is zero exactly for a
-    /// perfect square.
-    fn is_perfect_square(self) -> bool {
-        if self.is_zero() {
-            return true;
-        }
-        let mut rest = self;
-        let mut root = Self::ZERO;
-        // The highest even exponent at or below the top set bit.
-        let top = (self.bit_len() - 1) & !1;
-        let Some(mut bit) = Self::power_of_two(top) else {
-            return false;
-        };
-        while !bit.is_zero() {
-            let (trial, carry) = root.overflowing_add(bit);
-            if !carry && rest >= trial {
-                rest = rest.wrapping_sub(trial);
-                root = root.shr1().overflowing_add(bit).0;
-            } else {
-                root = root.shr1();
-            }
-            bit = bit.shr1().shr1();
-        }
-        rest.is_zero()
     }
 }
 
@@ -411,11 +413,6 @@ impl<W: DegreeWidth> Mod<W> {
         self.mont_mul(self.lift(left), right)
     }
 
-    /// `value · factor mod modulus` for a small signed factor.
-    fn mul_small(&self, value: Nat<W>, factor: i32) -> Nat<W> {
-        self.mul(value, reduce_i32(factor, self.modulus))
-    }
-
     /// `base^exponent mod modulus`, square and multiply from the top bit.
     fn pow(&self, base: Nat<W>, exponent: Nat<W>) -> Nat<W> {
         let base = self.lift(base);
@@ -483,7 +480,7 @@ impl Jacobi {
 
 fn jacobi<W: DegreeWidth>(a: i32, n: Nat<W>) -> Jacobi {
     // `(a/n) = (−1/n)·(|a|/n)`, and `(−1/n)` is `−1` exactly when `n ≡ 3 (mod 4)`.
-    let symbol = jacobi_nonneg(Nat::from_u64(u64::from(a.unsigned_abs())), n);
+    let symbol = jacobi_nonneg(a.unsigned_abs(), n);
     if a < 0 && n.rem_u32(4) == 3 {
         symbol.negate()
     } else {
@@ -491,21 +488,29 @@ fn jacobi<W: DegreeWidth>(a: i32, n: Nat<W>) -> Jacobi {
     }
 }
 
-fn jacobi_nonneg<W: DegreeWidth>(a: Nat<W>, n: Nat<W>) -> Jacobi {
-    let mut numerator = a;
+/// The divisions Euclid's algorithm is given for a numerator below `2^32`.
+///
+/// After the first division both values are below the numerator, and
+/// Euclid's algorithm on integers below `2^32` divides fewer than 48
+/// times (Lamé: at most `log_φ(√5 · 2^32)`). Removing the factors of two
+/// between divisions only shortens it.
+const JACOBI_DIVISIONS: usize = 64;
+
+/// `(a/n)` for an odd `n` and a numerator that fits 32 bits.
+fn jacobi_nonneg<W: DegreeWidth>(a: u32, n: Nat<W>) -> Jacobi {
+    let mut numerator = Nat::from_u64(u64::from(a));
     let mut modulus = n;
     let mut negated = false;
-    loop {
+    for _ in 0..JACOBI_DIVISIONS {
         numerator = numerator.rem(modulus);
         if numerator.is_zero() {
             return Jacobi::Zero;
         }
-        while numerator.is_even() {
-            numerator = numerator.shr1();
-            // `(2/m)` is `−1` for `m ≡ 3, 5 (mod 8)`.
-            if matches!(modulus.rem_u32(8), 3 | 5) {
-                negated = !negated;
-            }
+        let (odd, twos) = numerator.split_twos();
+        numerator = odd;
+        // `(2/m)` is `−1` for `m ≡ 3, 5 (mod 8)`, once for each factor of two.
+        if twos % 2 == 1 && matches!(modulus.rem_u32(8), 3 | 5) {
+            negated = !negated;
         }
         if numerator == Nat::one() {
             return Jacobi::from_negated(negated);
@@ -516,23 +521,45 @@ fn jacobi_nonneg<W: DegreeWidth>(a: Nat<W>, n: Nat<W>) -> Jacobi {
         }
         core::mem::swap(&mut numerator, &mut modulus);
     }
+    // Not reached: the divisions above are more than the algorithm takes.
+    // No symbol was found, and `Zero` is the answer that refuses.
+    Jacobi::Zero
 }
 
-/// Selfridge's discriminant: `D` from `5, −7, 9, −11, …` until the Jacobi
-/// symbol is `−1`. `None` when a shared factor turns up, which proves `n`
-/// composite.
+/// How many discriminants [`selfridge_discriminant`] tries.
+const DISCRIMINANT_CANDIDATES: i32 = 256;
+
+/// Selfridge's discriminant: the first `D` of `5, −7, 9, −11, …` whose
+/// Jacobi symbol is `−1`. `None` when a shared factor turns up, which
+/// proves `n` composite, and `None` when no candidate has that symbol.
 ///
-/// The sequence terminates for every `n` that is not a perfect square, and
-/// [`is_prime`] filters those out first. The bound keeps a direct call to
-/// [`strong_lucas_selfridge`] from looping on one.
+/// # This is what refuses a perfect square
+///
+/// The Jacobi symbol modulo `m^2` is the square of the symbol modulo
+/// `m`, so it is `0` or `+1` and never `−1`: for a perfect square the
+/// search ends at a shared factor or runs out of candidates, and either
+/// way the Lucas half refuses. Baillie–PSW as usually written tests for a
+/// square first, because an unbounded search does not end on one. This
+/// search is bounded, so the square needs no test of its own. A challenge
+/// degree `2^(2e−1) − s^2` with `s` odd is `7 (mod 8)` and is never a
+/// square, so on the verifier's path the case does not arise at all.
+///
+/// A non-square `n` gives `−1` for about half of the candidates. One that
+/// gives none in 256 is refused, and that is a refusal of a possible
+/// prime: none is known, and `docs/VERIFIER_SPEC.md` records the bound.
 fn selfridge_discriminant<W: DegreeWidth>(n: Nat<W>) -> Option<i32> {
-    const CANDIDATE_LIMIT: usize = 256;
-    let mut d = 5i32;
-    for _ in 0..CANDIDATE_LIMIT {
+    for index in 0..DISCRIMINANT_CANDIDATES {
+        // `5, −7, 9, −11, …`: the odd numbers from five, alternating in sign.
+        let magnitude = 5 + 2 * index;
+        let d = if index % 2 == 0 {
+            magnitude
+        } else {
+            -magnitude
+        };
         match jacobi(d, n) {
             Jacobi::NonResidue => return Some(d),
             Jacobi::Zero => return None,
-            Jacobi::Residue => d = if d > 0 { -(d + 2) } else { -d + 2 },
+            Jacobi::Residue => (),
         }
     }
     None
@@ -547,7 +574,10 @@ fn lucas_chain<W: DegreeWidth>(
 ) -> (Nat<W>, Nat<W>, Nat<W>) {
     let mut u = Nat::one();
     let mut v = Nat::one();
-    let mut q_power = reduce_i32(q, ctx.modulus);
+    // The two small constants of the sequence, reduced once.
+    let discriminant = reduce_i32(discriminant, ctx.modulus);
+    let q = reduce_i32(q, ctx.modulus);
+    let mut q_power = q;
     let bits = k.bit_len();
     if bits <= 1 {
         return (u, v, q_power);
@@ -565,12 +595,12 @@ fn lucas_chain<W: DegreeWidth>(
             // `2k → 2k+1`, with `P = 1`: halving the sums gives the step.
             let stepped_u = u.add_mod(v, ctx.modulus).half_mod(ctx.modulus);
             let stepped_v = ctx
-                .mul_small(u, discriminant)
+                .mul(u, discriminant)
                 .add_mod(v, ctx.modulus)
                 .half_mod(ctx.modulus);
             u = stepped_u;
             v = stepped_v;
-            q_power = ctx.mul_small(q_power, q);
+            q_power = ctx.mul(q_power, q);
         }
     }
     (u, v, q_power)
@@ -579,12 +609,7 @@ fn lucas_chain<W: DegreeWidth>(
 /// One strong Miller–Rabin test at base 2, for an odd `n` above three.
 fn miller_rabin_base2<W: DegreeWidth>(n: Nat<W>) -> bool {
     let below = n.wrapping_sub(Nat::one());
-    let mut odd_part = below;
-    let mut twos = 0u32;
-    while odd_part.is_even() {
-        odd_part = odd_part.shr1();
-        twos += 1;
-    }
+    let (odd_part, twos) = below.split_twos();
     let ctx = Mod::new(n);
     let mut witness = ctx.pow(Nat::from_u64(2), odd_part);
     if witness == Nat::one() || witness == below {
@@ -600,19 +625,20 @@ fn miller_rabin_base2<W: DegreeWidth>(n: Nat<W>) -> bool {
 }
 
 /// The strong Lucas test with Selfridge's parameters, for an odd `n` above
-/// three that is not a perfect square.
+/// three. A perfect square is refused: [`selfridge_discriminant`].
 fn strong_lucas_selfridge<W: DegreeWidth>(n: Nat<W>) -> bool {
     let Some(discriminant) = selfridge_discriminant(n) else {
         return false;
     };
     let q = (1 - discriminant) / 4;
-    let above = n.overflowing_add(Nat::one()).0;
-    let mut odd_part = above;
-    let mut twos = 0u32;
-    while odd_part.is_even() {
-        odd_part = odd_part.shr1();
-        twos += 1;
+    let (above, carry) = n.overflowing_add(Nat::one());
+    if carry {
+        // `n` is every bit of the width set: `2^W::BITS − 1`. The width is
+        // a multiple of 64, so that is a multiple of three, and `n + 1`
+        // does not fit the width to be tested.
+        return false;
     }
+    let (odd_part, twos) = above.split_twos();
     let ctx = Mod::new(n);
     // Accept when `U_d ≡ 0` or `V_{d·2^t} ≡ 0` for some `0 ≤ t < twos`.
     let (u, mut v, mut q_power) = lucas_chain(&ctx, odd_part, discriminant, q);
@@ -664,9 +690,6 @@ fn is_prime<W: DegreeWidth>(n: Nat<W>) -> bool {
     }
     // `n` is now coprime to every prime below 100 and larger than all of
     // them, which is what both halves below assume.
-    if n.is_perfect_square() {
-        return false;
-    }
     miller_rabin_base2(n) && strong_lucas_selfridge(n)
 }
 
