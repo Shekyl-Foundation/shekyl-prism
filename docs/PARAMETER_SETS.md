@@ -1,12 +1,14 @@
 # Parameter sets
 
-Status: current as of 2026-11-15. Ruled by Rick on 2026-11-14.
+Status: current as of 2026-11-19. Ruled by Rick on 2026-11-14.
 
 A parameter set is a prime `p = f·2^e − 1`. There is one algorithm, and
 each set is that algorithm over one prime. A set is named by its exponent:
-`p248`, `p376`, `p500`. In the code a set is a type (`P248`, `P376`,
-`P500` in `prism-field`). Its name, exponent and cofactor are constants
-of that type. Its salt length and its search bound are `e` rounded up
+`p248`, `p324`, `p376`, `p500`, `p664`. In the code a set is a type
+(`P248`, `P324`, `P376`, `P500`, `P664` in `prism-field`), and those five
+are the only ones: the trait a set implements is sealed, so a sixth is
+added in that crate and not beside it. Its name, exponent and cofactor are
+constants of that type. Its salt length and its search bound are `e` rounded up
 to a multiple of 128, in bytes and in candidates: `ParameterSet::WIDTH_BITS`.
 
 **No code reads this file.** In particular no code reads the category
@@ -47,7 +49,7 @@ in bytes.
   specification), and a test fails if a set is added that repeats one.
 - The salt is `e` rounded up to a multiple of 128 bits. The three sets
   with vectors already had those lengths; the rule is what fixes `p324`
-  and `p664` (ruled 2026-11-14). `width_bits` is that rounding.
+  and `p664` (ruled 2026-11-14). `ParameterSet::WIDTH_BITS` is that rounding.
 - Every size in the table is pinned by a test in `prism-field`.
 - A `p324` field element is 41 bytes, the first that is not a whole
   number of 8-byte limbs; its top byte is at most `0x2f`. A `p664` field
