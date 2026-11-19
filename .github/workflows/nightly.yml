@@ -296,7 +296,7 @@ jobs:
           RUN_FRONT: ${{ needs.dispatch.outputs.front_run }}
         run: |
           set -euo pipefail
-          args=(python3 scripts/ci/mutants_report.py gather --dir shards --write lists)
+          args=(python3 scripts/ci/mutants_report.py gather --dir shards --write lists --explained docs/lab/MUTANTS.toml)
           if [ "$RUN_MUTANTS" = true ]; then
             args+=(--expect mutants)
           fi
