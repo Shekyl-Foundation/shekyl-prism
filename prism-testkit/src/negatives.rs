@@ -265,9 +265,10 @@ pub fn negatives<L: ParameterSet>(text: &str) -> Vec<Case> {
     // On the curve, and not a basis of `E[2^e]`. A point of odd order
     // added to `P` or to `Q` leaves the pair spanning the `2^e`-torsion
     // and gives the point an order that is not `2^e`: the order test is
-    // the one check that refuses it, and without that test the first of
-    // these is accepted at `p248`. The third has order `2^e` twice and
-    // does not span.
+    // the one check that refuses it. Without that test either is
+    // accepted whenever the added point's order divides the challenge
+    // scalar, as it does in `s5_lvl1.txt`. The third has order `2^e`
+    // twice and does not span.
     let odd = odd_order_point::<L>(curve);
     other = r;
     other.p = affine::<L>(add(curve, point(r.p), odd));
