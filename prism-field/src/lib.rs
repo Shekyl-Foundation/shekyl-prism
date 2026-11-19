@@ -656,8 +656,8 @@ pub const FIELD_BACKEND: &str = "scalar";
 #[cfg(test)]
 mod tests {
     use super::{
-        width_bits, Cofactor, CofactorError, Field, ParameterSet, Salt, P248, P324, P376, P500,
-        P664,
+        is_odd_prime, width_bits, Cofactor, CofactorError, Field, ParameterSet, Salt, P248, P324,
+        P376, P500, P664,
     };
 
     fn hex(bytes: &[u8]) -> String {
@@ -717,6 +717,9 @@ mod tests {
     /// constructor the macro checks with, so the two cannot share a mistake.
     fn the_odd_primes_factor_the_cofactor<L: ParameterSet>() {
         let (f, primes) = (L::COFACTOR.value(), L::COFACTOR.odd_primes());
+        // Odd, and so not zero: the division below ends on an `f` that is
+        // not zero, and zero is a multiple of every prime.
+        assert_eq!(f % 2, 1, "{}: f is odd", L::NAME);
         let mut rest = f;
         assert!(!primes.is_empty(), "{}", L::NAME);
         assert!(primes.len() <= Cofactor::MAX_ODD_PRIMES, "{}", L::NAME);
@@ -800,6 +803,21 @@ mod tests {
             assert_eq!(built(value, primes), Err(reason), "{why}");
         }
         assert_eq!(Cofactor::MAX_ODD_PRIMES, 4);
+    }
+
+    /// `is_odd_prime` is "prime and not two", against the definition, for
+    /// every integer below 2,000: zero, one, two, the even numbers, the
+    /// squares and higher powers of primes, and the products of two.
+    #[test]
+    fn an_odd_prime_is_a_prime_other_than_two() {
+        for candidate in 0u64..2_000 {
+            let prime = candidate > 2 && (2..candidate).all(|d| candidate % d != 0);
+            assert_eq!(is_odd_prime(candidate), prime, "{candidate}");
+        }
+        // A divisor found only near the square root, and none found.
+        assert!(!is_odd_prime(65_521 * 65_521));
+        assert!(!is_odd_prime(65_519 * 65_521));
+        assert!(is_odd_prime(4_294_967_291));
     }
 
     /// The width of `f` in bits, which with `e` is the width of `p`.
