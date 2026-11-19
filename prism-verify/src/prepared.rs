@@ -220,7 +220,7 @@ pub fn verify_prepared<L: ParameterSet>(
 
 #[cfg(test)]
 mod tests {
-    use super::PreparedKey;
+    use super::{checked_response, PreparedKey};
     use crate::basis_hint;
     use crate::identity::KeyIdentity;
     use prism_field::{Field, ParameterSet, P248};
@@ -238,5 +238,23 @@ mod tests {
             basis_hint::<P248>(identity.coefficient()),
             Ok(prepared.hint())
         );
+    }
+
+    /// `Debug` of a checked response names the set and gives the
+    /// encoding in hex: the bytes that were checked, which is the only
+    /// form in which two responses can be compared.
+    #[test]
+    fn a_checked_response_prints_its_set_and_its_encoding() {
+        let signature = prism_vectors::corpus::Primary::Lvl1
+            .vector()
+            .signature()
+            .expect("the vector's signature");
+        let checked = checked_response::<P248>(&signature).expect("an honest signature");
+        let hex: String = signature.iter().map(|byte| format!("{byte:02x}")).collect();
+        assert_eq!(
+            format!("{checked:?}"),
+            format!("CheckedResponse<p248>({hex})")
+        );
+        assert_eq!(hex.len(), 2 * <P248 as ParameterSet>::SIGNATURE_LEN);
     }
 }
