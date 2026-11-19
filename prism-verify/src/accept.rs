@@ -64,15 +64,16 @@ impl<F: Field> Doublings<F> {
 
     /// `[scalar] X`, `scalar` little-endian. A zero scalar costs nothing.
     fn times(&self, scalar: &[u8]) -> Jac<F> {
-        if scalar.len() * 8 > self.table.len() {
-            // Wider than the table was built for. No caller does this.
-            return mul(self.curve, self.table[0], scalar);
-        }
         let mut result = Jac::infinity();
         for (place, byte) in scalar.iter().enumerate() {
             for bit in 0..8 {
                 if byte >> bit & 1 == 1 {
-                    result = add(self.curve, result, self.table[place * 8 + bit]);
+                    let Some(entry) = self.table.get(place * 8 + bit) else {
+                        // A set bit above the table. No caller has one, and
+                        // the ladder answers for a scalar of any width.
+                        return mul(self.curve, self.table[0], scalar);
+                    };
+                    result = add(self.curve, result, *entry);
                 }
             }
         }
@@ -185,6 +186,9 @@ fn change<L: ParameterSet>(
     base_change_theta(result, zeta)
 }
 
+/// The same point of the Kummer line. `(0 : 0)` is no point: the chain's
+/// formulas return it when they fail, it cross-multiplies equal to
+/// everything, and it is equal to nothing here, itself included.
 fn same_x<F: Field>(p: Xz<F>, q: Xz<F>) -> bool {
     !(p.x.is_zero() && p.z.is_zero() || q.x.is_zero() && q.z.is_zero())
         && p.x.mul(q.z).same(q.x.mul(p.z))
@@ -610,6 +614,43 @@ mod tests {
         }
     }
 
+    /// Equality of `x`-only points is equality up to a common factor,
+    /// with the points whose `x` or `z` is zero as points like any other,
+    /// and `(0 : 0)` equal to nothing.
+    #[test]
+    fn two_x_only_points_are_the_same_up_to_scale_and_the_null_pair_is_none() {
+        type F = <P248 as ParameterSet>::Ext;
+        let at = |x: u64, z: u64| Xz {
+            x: F::from_u64(x),
+            z: F::from_u64(z),
+        };
+        let null = at(0, 0);
+        // The same point, written twice and scaled.
+        for (left, right) in [
+            (at(3, 1), at(3, 1)),
+            (at(3, 1), at(21, 7)),
+            (at(6, 4), at(9, 6)),
+            // `x = 0`, the point `(0, 0)` of order two.
+            (at(0, 1), at(0, 5)),
+            // Infinity.
+            (at(1, 0), at(4, 0)),
+        ] {
+            assert!(same_x(left, right) && same_x(right, left));
+        }
+        for (left, right) in [
+            (at(3, 1), at(4, 1)),
+            (at(3, 1), at(3, 2)),
+            (at(0, 1), at(1, 0)),
+            (at(0, 1), at(1, 1)),
+            (at(1, 0), at(1, 1)),
+        ] {
+            assert!(!same_x(left, right) && !same_x(right, left));
+        }
+        for point in [at(3, 1), at(0, 1), at(1, 0), null] {
+            assert!(!same_x(null, point) && !same_x(point, null));
+        }
+    }
+
     #[test]
     fn a_table_multiplies_as_the_ladder_does() {
         let vector = prism_vectors::corpus::Primary::Lvl1.vector();
@@ -624,11 +665,24 @@ mod tests {
         assert!(table.times(&[]).is_infinity() && table.times(&[0; 31]).is_infinity());
         let mut stream = Stream(7);
         for len in [1usize, 2, 31, 32] {
-            // 32 bytes is wider than the table: the ladder is used as it is.
+            // 32 bytes is wider than the table: a set bit above it sends
+            // the whole scalar to the ladder.
             let scalar = stream.scalar(len);
             let (new, old) = (table.times(&scalar), mul(curve, point, &scalar));
             assert!(new.x.same(old.x) && new.y.same(old.y) && new.z.same(old.z));
         }
+        // The first bit above the table, alone and with the bits below it.
+        for low in [0u8, 0xff] {
+            let mut scalar = [low; 32];
+            scalar[31] = 1;
+            let (new, old) = (table.times(&scalar), mul(curve, point, &scalar));
+            assert!(new.x.same(old.x) && new.y.same(old.y) && new.z.same(old.z));
+        }
+        // Wider bytes with no bit above the table are the same scalar.
+        let scalar = stream.scalar(31);
+        let padded = [&scalar[..], &[0; 4]].concat();
+        let (short, long) = (table.times(&scalar), table.times(&padded));
+        assert!(short.x.same(long.x) && short.y.same(long.y) && short.z.same(long.z));
         let doubled = table.doubled(5);
         let old = dbl_iter(curve, point, 5);
         assert!(doubled.x.same(old.x) && doubled.y.same(old.y) && doubled.z.same(old.z));
