@@ -29,7 +29,6 @@ def main() -> None:
     found = re.findall(
         r'parameter_set!\(\s*p(\d+),\s*P\d+,\s*f = (\d+),'
         r'\s*odd_primes = \[[^\]]*\],\s*e = (\d+),'
-        r'\s*FpP\d+,\s*Fp2P\d+,'
         r'\s*\[(.*?)\]\s*\);',
         text,
         re.S,

@@ -286,8 +286,11 @@ REFUSED = (
 )
 # The same two, with the feature on.
 STILL_PRIVATE = REFUSED[6:]
+# With the feature on, a consumer can name these and no more of the
+# counter: what a caller of it uses, and not the call the field
+# implementations make into it.
 ALLOWED = (
-    "pub use prism_field::ops::{enter, take, tally, Counts, Kind, Op, Slot, ENABLED, SLOTS};\n"
+    "pub use prism_field::ops::{enter, take, Counts, Slot, SLOTS};\n"
     "pub use prism_verify::stage;\n"
     "pub use prism_verify::Stage;\n"
     "pub const NAMES: usize = Stage::ALL.len();\n"
