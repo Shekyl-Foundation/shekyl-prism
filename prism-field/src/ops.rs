@@ -6,8 +6,10 @@
 //! Counts of field operations, the machine-independent cost of a
 //! verification.
 //!
-//! This module exists only with the `op-count` feature: a default build
-//! has no counter, and no such module in its API. The field
+//! This is measuring equipment and not part of the library. The module
+//! exists only with the `op-count` feature: a default build has no
+//! counter, and no such module in its API. No manifest turns the feature
+//! on. The count run asks for it on the command line. The field
 //! implementations tally unconditionally all the same, through a function
 //! private to the crate that is empty without the feature. With it, each
 //! thread keeps its own table: one row per slot, and the caller says which
@@ -22,19 +24,22 @@
 /// Slots a caller may [`enter`]. Slot 0 is current after [`take`].
 pub const SLOTS: usize = 16;
 
-/// Whether this build counts. The module exists only in a build that
-/// does, so this is `true` wherever it can be named.
-pub const ENABLED: bool = true;
-
-pub use crate::tally::{Kind, Op};
+use crate::tally::{Kind, Op};
 
 /// Operations of one field in one slot.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Counts {
+    /// Calls of [`Field::mul`](crate::Field::mul).
     pub mul: u64,
+    /// Calls of [`Field::square`](crate::Field::square).
     pub square: u64,
+    /// Calls of [`Field::inv`](crate::Field::inv), an inversion of zero
+    /// among them.
     pub inv: u64,
+    /// Calls of [`Field::sqrt`](crate::Field::sqrt), whether or not a
+    /// root exists.
     pub sqrt: u64,
+    /// Calls of [`Field::is_square`](crate::Field::is_square).
     pub is_square: u64,
 }
 
@@ -55,7 +60,9 @@ impl Counts {
 /// One slot's counts in both fields.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Slot {
+    /// Calls on the base field `F_p`.
     pub base: Counts,
+    /// Calls on the extension field `F_{p²}`.
     pub ext: Counts,
 }
 
@@ -115,7 +122,7 @@ mod table {
 
 /// Count one operation in the current slot.
 #[inline(always)]
-pub fn tally(kind: Kind, op: Op) {
+pub(crate) fn tally(kind: Kind, op: Op) {
     table::tally(kind, op);
 }
 
@@ -145,12 +152,10 @@ mod tests {
         let b = Base::from_u64(5);
         enter(2);
         let _ = x.mul(x).mul(x);
-        // By the trait: the base field also has an inherent `square`, which
-        // a call on the concrete type would reach without being counted.
-        let _ = Field::square(x);
+        let _ = x.square();
         let _ = x.inv();
         let _ = b.mul(b);
-        let _ = Field::square(b);
+        let _ = b.square();
         enter(5);
         let _ = x.sqrt();
         let _ = x.is_square();

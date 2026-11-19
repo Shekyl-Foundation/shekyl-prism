@@ -152,15 +152,23 @@ jobs:
           python3 scripts/ci/check_oracle_isolation.py
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
-      # The front crate is the interface, the vectors crate is public data
-      # and the testkit is a library of test inputs: all three deny missing
-      # documentation, and here a broken link or any other rustdoc warning
-      # fails too. Their doc tests run in the test jobs, which
+      # The front crate is the interface, the vectors crate is public data,
+      # the testkit is a library of test inputs and the field crate is the
+      # first of the layer crates held to the same standard: all four deny
+      # missing documentation, and here a broken link or any other rustdoc
+      # warning fails too. Their doc tests run in the test jobs, which
       # `cargo test --workspace` already includes.
-      - name: Documentation of the front crate, the vectors crate and the testkit
+      - name: Documentation of the front crate, the vectors crate, the testkit and the field crate
         env:
           RUSTDOCFLAGS: -D warnings
-        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit --no-deps --locked
+        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit -p prism-field --no-deps --locked
+      # The counter's module is public only with its feature, so its
+      # documentation is built, and its missing documentation denied, in a
+      # pass of its own.
+      - name: Documentation of the field crate, operation counter
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc -p prism-field --features op-count --no-deps --locked
       # The counter is compiled only when asked for, so its code and the
       # reporter (an example of the testkit that requires the feature) are
       # linted in a pass of their own.
