@@ -200,7 +200,7 @@ splits the same checks by the object they depend on:
 
 | Call | Checks | Refusals, in order |
 | --- | --- | --- |
-| `PublicKey::<S>::from_bytes` | every check on the key alone | `Length`, `Canonical`, `Origin`, `Singular`, `Basis` |
+| `PublicKey::<S>::from_bytes` | every check on the key alone, except that the points its basis index names are a basis of `E[2^e]`, which `PublicKey::verify` tests on every call and refuses as `Kernel` (ledger O18) | `Length`, `Canonical`, `Origin`, `Singular`, `Basis` |
 | `Signature::<S>::from_bytes` | every check on the signature alone | `Length`, `Canonical`, `Sign`, `Singular` or `Model` |
 | `PublicKey::verify` | the checks that need key, message and signature | `Composite`, then `Kernel`, `Pairing`, `Codomain`, `Image` |
 

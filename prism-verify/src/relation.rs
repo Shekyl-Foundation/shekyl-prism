@@ -200,8 +200,10 @@ fn e_prime_surface<L: ParameterSet>(
 /// points before it uses them, and it asks it the same way of the
 /// signature's pair and of the key's. The order test is not implied by
 /// the span test: a point with a component of odd order passes
-/// [`span_e`], and at `p248` a signature carrying one is otherwise
-/// accepted.
+/// [`span_e`]. Nor is it implied by what follows: the two points are
+/// used only through their multiples by the challenge scalar `s`, so a
+/// component whose order divides `s` is gone before the pairing sees
+/// it, and without the order test a signature carrying one is accepted.
 fn basis_e<L: ParameterSet>(coefficient: L::Ext, p: Xz<L::Ext>, q: Xz<L::Ext>) -> bool {
     order_e::<L>(coefficient, p) && order_e::<L>(coefficient, q) && span_e::<L>(coefficient, p, q)
 }

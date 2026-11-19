@@ -12,7 +12,10 @@
 //! the dearest of them. The three functions here are the same checks cut
 //! where the inputs separate:
 //!
-//! - [`PreparedKey::prepare`]: every check that depends on the key alone;
+//! - [`PreparedKey::prepare`]: every check that depends on the key alone,
+//!   with one exception: that the points the basis index names are a
+//!   basis of the `2^e`-torsion is tested in [`verify_prepared`], at
+//!   each verification (ledger O18);
 //! - [`checked_response`]: every check that depends on the signature alone;
 //! - [`verify_prepared`]: the challenge, its degree and the relation.
 //!
@@ -51,7 +54,10 @@ use crate::{mark, model, relation, VerifyError};
 ///
 /// The only way to make one is [`Self::prepare`], so a value of this type
 /// is a key of the right length, canonically encoded, on neither excluded
-/// curve, whose basis index is within the search bound.
+/// curve, whose basis index is within the search bound. It is not yet
+/// a key whose named points are a basis of the `2^e`-torsion: that test
+/// runs at each verification, and a key that fails it is prepared and
+/// never verifies (ledger O18).
 ///
 /// What it stores is the key's bytes and that index. The coefficient is
 /// the decode of those bytes whenever it is read, so the challenge and the
