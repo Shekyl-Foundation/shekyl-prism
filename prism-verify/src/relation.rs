@@ -50,8 +50,9 @@ pub fn relate<L: ParameterSet>(
 }
 
 /// The same relation, including the starting curve. `verify` never calls
-/// this with a zero key: that key is [`VerifyError::Origin`] first. The
-/// `E0` vectors call it directly.
+/// this with a zero key: that key is [`VerifyError::Origin`] first. A
+/// direct caller that does gets the starting curve's fixed basis for the
+/// key's, and the same checks after it.
 ///
 /// The key's points are computed first and tested last of the checks
 /// before the pairing, after the signature's: that is the order this
@@ -1069,6 +1070,31 @@ mod s5_vectors {
             refused += 1;
         }
         assert!(refused >= 20, "{}: {refused} of 24 curves", L::NAME);
+    }
+
+    /// The relation with the starting curve for the key. `verify` refuses
+    /// that key before it gets here; a direct call takes the curve's fixed
+    /// basis, which is one, and goes on to the pairing, where a signature
+    /// made under another key fails. So the answer is `Pairing`, and not
+    /// the `Kernel` of a key with no basis.
+    #[test]
+    fn the_starting_curve_has_a_basis_and_another_keys_signature_fails_its_pairing() {
+        use prism_vectors::corpus::WithCorpus;
+        prism_vectors::for_each_corpus_set!(Set, {
+            let sample = sample::<Set>(<Set as WithCorpus>::PRIMARY[0].text());
+            assert_eq!(
+                relate_points::<Set>(
+                    <Set as ParameterSet>::Ext::zero(),
+                    sample.response.curve,
+                    sample.response.p,
+                    sample.response.q,
+                    &sample.scalar,
+                ),
+                Err(VerifyError::Pairing),
+                "{}",
+                Set::NAME
+            );
+        });
     }
 
     #[test]
