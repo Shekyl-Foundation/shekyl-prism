@@ -44,7 +44,9 @@ reason = """
 the first branch: `self + (modulus - self)` is `modulus`, and `add_mod` \
 subtracts `modulus` from a sum that reaches it, giving zero. The second \
 branch gives `self - self`, zero. Both operands are below `modulus` by the \
-function's contract, so `modulus - rhs` does not wrap.
+function's contract, so `modulus - rhs` does not wrap. At `self == rhs == 0` \
+the second operand is `modulus` itself and not below it; the sum is again \
+`modulus`, with no carry, and the same subtraction gives zero.
 """
 
 [[mutant]]
@@ -140,9 +142,10 @@ count = 1
 reason = """
 Not a hang. `bit_len` returns `index * 64 * bits` for the top limb at \
 `index`, where it should return `index * 64 + bits`: zero for an integer of \
-one limb, and up to 64 times too many for a wider one. Every loop that runs \
-over a bit length is counted, reads a bit above the integer as zero, and \
-ends: it is right and up to 64 times as long. Ten of the seventeen tests of \
+one limb, one too few when the top limb is 1, and otherwise up to 64 times \
+too many. Every loop that runs over a bit length is counted, reads a bit \
+above the integer as zero, and ends: with too many it is right and up to 64 \
+times as long, and with too few it gives a wrong value and still ends. Ten of the seventeen tests of \
 `prime::tests::at_1024_bits` fail on this mutant within a second when run \
 alone (among them `every_integer_below_three_hundred_gets_the_right_verdict` \
 and `the_jacobi_symbol_is_sympys`), because an integer of one limb has \
