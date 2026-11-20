@@ -26,19 +26,27 @@
 //! only for values that an earlier step has checked: a point that is on
 //! the curve, a response whose sign is the normalized one, a key that is
 //! not the starting curve. Each function's own documentation says what it
-//! assumes; where it names a check, the interface call that establishes
-//! it is named with it. That documentation is not yet complete in the
-//! three crates: until it is, read a function's callers before relying
-//! on it with a value the interface did not make.
+//! assumes, what it returns when the assumption fails, and which call
+//! establishes it. In `prism-field` and `prism-isogeny` the call named is
+//! the verifier's own check; in `prism-verify` it is the function of that
+//! crate to call first. The interface's calls are those functions:
+//! [`crate::PublicKey::from_bytes`] is
+//! [`verify::prepared::PreparedKey::prepare`],
+//! [`crate::Signature::from_bytes`] is
+//! [`verify::prepared::checked_response`], and
+//! [`crate::PublicKey::verify`] is [`verify::prepared::verify_prepared`].
 //!
 //! **Nothing here is promised stable.** These crates are changed as the
 //! research needs. A name, a signature or a module can move between any
 //! two versions, including while the interface above stays as it is.
 //!
-//! [`verify::verify`], the entry that takes three byte strings, is the
-//! one function here that checks everything itself. The typed interface
-//! accepts exactly what it accepts; `docs/VERIFIER_SPEC.md` in the
-//! repository states how their refusals correspond.
+//! [`verify::verify`], the entry that takes three byte strings, checks
+//! everything itself, and so does [`verify::set::verify_set`], which is
+//! the same function for a set named at run time. Nothing else here
+//! does. The typed interface accepts exactly what they accept; the crate
+//! documentation of [`verify`] has the table of checks, and
+//! `docs/VERIFIER_SPEC.md` in the repository states how the refusals of
+//! the two correspond.
 //!
 //! [`ParameterSet`]: field::ParameterSet
 
