@@ -224,7 +224,7 @@ fn relate_bases<L: ParameterSet>(
 /// `Q` is the cleared difference. `P − Q` for the lift is `R`, the cleared
 /// point whose full-point abscissa is `−x(P) − A`. A global sign on the
 /// lifted pair cancels in the pairing.
-fn pairing_holds<L: ParameterSet>(lifted: &Lifted<L::Ext>, scalar: &[u8]) -> bool {
+pub(crate) fn pairing_holds<L: ParameterSet>(lifted: &Lifted<L::Ext>, scalar: &[u8]) -> bool {
     Stage::Pairing.enter();
     let [r1, r2] = lifted.scaled;
     let [p_vk, q_vk] = lifted.vk;
