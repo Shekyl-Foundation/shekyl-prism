@@ -649,12 +649,16 @@ What the writing found.
 2. **The inherent `square`.** The counter's own test called `Field::square(x)` with a comment that a call on the concrete type would reach an uncounted `square`. That was true of the whole generated API. With the types private the comment is gone and the call is `x.square()`.
 3. **Which root.** The base field's `sqrt` returns the even root, and the test above holds it. For the extension field the documentation promises only that the choice is fixed for a given input. `prism-isogeny` takes square roots in six of its files (`torsion.rs`, `theta_step.rs`, `theta_base.rs`, `montgomery.rs`, `jac.rs`, `lib.rs`); whether any of them relies on which root it gets was not examined here and is for part 5b to state at each call.
 
-The anchor (Ran, build VM, at `0e91dd8`, whose crate sources are the committed ones).
+The anchor (Ran, build VM, at `0e91dd8`, and again in full at `1b52161` and at `c272031` after edits to the field crate's documentation and to the shape of one test; the figures are the same at all three, and the committed records are those of `c272031`'s sources).
 - `cargo test --workspace --locked`, and again with `--release`: 268 passed, 0 failed, 2 ignored, in 39 test binaries each time. `dev` at `532abcc` had 263; the five more are the two tests and two doc tests of `prism-field` and the modulus test.
 - The counter's own tests with its feature (3 passed) and the front crate's counted test (1 passed).
 - `sh scripts/op_counts.sh` regenerated the three records. `op-counts.txt`, `op-counts-typed.txt` and `negative-verdicts.tsv` each differ from `dev` in the digest line and in no other line, and `--check` passes. No operation count moved with the fields behind the crate's own types.
 - `cargo doc` with warnings denied: the four crates of the CI step, and `prism-field` with `op-count`.
 - A crate outside the workspace that implements each of the five sealed traits for a type of its own: every refusal is `E0277` on the sealed bound. One more line, `impl SetDegree for DegreeLimbs<1>`, is refused by the orphan rule before sealing is asked. So the `compile_fail` doc test fails for the reason it shows (Ran, development machine, `cargo check`).
 - No new dependency; `unsafe` stays forbidden.
+
+The code scanner (Ran, runners). The first push was red on one check: the scanner read the expected salt length passed to the size test, in a parameter named for the salt, as a hard-coded salt, five times. The test now takes a set's row of the table as one value. No alert on the head.
+
+Mutation run (Ran, build VM, `cargo mutants -p prism-field` with the four test packages of the nightly, at `0e91dd8` and at `dev` `532abcc`, a 1,200 s test timeout). 63 mutants on each tree: 19 caught, 23 missed, 1 timeout, 20 unviable, and the four lists are the same on both, mutant for mutant. The 23 missed are the 20 in `ops.rs` and the 1 in `tally.rs` that O17 holds for T2 (code behind the counter's feature, which this build leaves off) and the two comparisons in `width.rs` that `docs/lab/MUTANTS.toml` explains; the timeout is the `is_odd_prime` mutant of the same record. Nothing new, and the record gains no entry. A first run let the tool set its own timeout, 20 s from a 2 s baseline that runs the field crate's tests alone, and called 24 slow mutants timeouts; that run is not a result.
 
 Not done here. `prism-isogeny` and `prism-verify` have two documentation errors each with warnings denied, and 158 and 175 undocumented public items: parts 5b and 5c.
