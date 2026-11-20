@@ -3,29 +3,102 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! The parameter sets, each a prime `p = f·2^e − 1` instantiated with `fp2`,
-//! and the byte layout each of them encodes.
+//! The five parameter sets, each a prime `p = f·2^e − 1`, with the two
+//! fields over that prime and the byte layout each set encodes.
 //!
-//! A parameter set is a prime, and it is a type: [`P248`], [`P376`] and
-//! [`P500`], named by `e`. The encoding lengths and the salt below are part
-//! of that type's contract, so a `p248` encoding is refused by the `p500`
-//! decoder and no caller re-derives a length from a second constant.
+//! A parameter set is a prime, and it is a type: [`P248`], [`P324`],
+//! [`P376`], [`P500`] and [`P664`], named by `e`. Each implements
+//! [`ParameterSet`], which carries the fields `F_p` and `F_{p²}`, the
+//! encodings and every length as part of the type. A `p248` encoding is
+//! refused by the `p500` decoder, and no caller derives a length from a
+//! second constant. The trait is sealed: these five are the only sets.
 //!
-//! The salt's bit length and the number of candidates a torsion search
-//! tries are both [`width_bits`]: `e` rounded up to a multiple of 128.
+//! # The sets
+//!
+//! Lengths are in bytes. Each is a formula in `e` and `f`, given on the
+//! constant of [`ParameterSet`] that holds it.
+//!
+//! | Set | `e` | `f` | Field element | Public key | Signature | Salt | Search bound |
+//! |---|---|---|---|---|---|---|---|
+//! | [`P248`] | 248 | 5 | 32 | 64 | 352 | 32 | 256 |
+//! | [`P324`] | 324 | 3 | 41 | 82 | 458 | 48 | 384 |
+//! | [`P376`] | 376 | 65 | 48 | 96 | 528 | 48 | 384 |
+//! | [`P500`] | 500 | 27 | 64 | 128 | 704 | 64 | 512 |
+//! | [`P664`] | 664 | 17 | 84 | 168 | 936 | 96 | 768 |
+//!
+//! Every one of these primes is `7 (mod 8)`, since `e ≥ 3`. So `−1` is not
+//! a square in `F_p`, and `F_{p²}` is `F_p[i]` with `i² = −1`.
+//!
+//! # An example
+//!
+//! Name a set, read its sizes, encode and decode an element, and see an
+//! encoding that is not canonical refused.
+//!
+//! ```
+//! use prism_field::{Field, ParameterSet, P248};
+//!
+//! assert_eq!(P248::NAME, "p248");
+//! assert_eq!((P248::E, P248::COFACTOR.value()), (248, 5));
+//! assert_eq!(P248::FP_LEN, 32);
+//! assert_eq!(P248::PUBLIC_KEY_LEN, 64);
+//! assert_eq!(P248::SIGNATURE_LEN, 352);
+//!
+//! // An element of the base field, its bytes, and the element again.
+//! let seven = <P248 as ParameterSet>::Base::from_u64(7);
+//! let bytes = P248::base_encode(seven);
+//! assert_eq!(bytes.len(), P248::FP_LEN);
+//! assert_eq!((bytes[0], bytes[1]), (7, 0));
+//! let again = P248::base_decode(&bytes).expect("7 is below p");
+//! assert!(again.same(seven));
+//!
+//! // p = 5·2^248 − 1 is 0x04ff…ff. The integer p is not below p, so the
+//! // decoder refuses it: it would be a second encoding of zero.
+//! let mut p = [0xff_u8; 32];
+//! p[31] = 0x04;
+//! assert!(P248::base_decode(&p).is_none());
+//!
+//! // p − 1 is the largest integer it takes, and it is the element −1.
+//! let mut largest = p;
+//! largest[0] = 0xfe;
+//! let minus_one = P248::base_decode(&largest).expect("p − 1 is below p");
+//! assert!(minus_one.add(Field::one()).is_zero());
+//!
+//! // Any other length is refused whatever the bytes are.
+//! assert!(P248::base_decode(&bytes[..31]).is_none());
+//! ```
+//!
+//! # What is not here
+//!
 //! Nothing here records a security level, and nothing here names a set by
 //! the string committed vectors carry. The category a prime is assessed at
 //! moves with research and is documentation: `docs/PARAMETER_SETS.md`,
 //! which no code reads. The committed string lives with the corpus, in
 //! `prism-verify`.
 //!
-//! `fp2` 0.6.0 is MIT OR Apache-2.0. Its default feature is `test-utils`, so
-//! this crate turns default features off. Packed arithmetic stays off as well:
-//! `65·2^376 − 1` is 383 bits and is not strictly below `2^382`, so the
-//! feature's modulus rule does not hold for every set. One crate feature
-//! cannot turn it on for some sets and leave the others scalar.
+//! # The arithmetic
+//!
+//! The arithmetic is the `fp2` crate's (0.6.0, MIT OR Apache-2.0),
+//! instantiated once for each prime. Its types are private to this crate.
+//! What a set gives out as [`ParameterSet::Base`] and
+//! [`ParameterSet::Ext`] are this crate's own types over them, and the
+//! only operations those have are the ones [`Field`] and [`ParameterSet`]
+//! name.
+//!
+//! `fp2`'s default feature is `test-utils`, so this crate turns default
+//! features off. Packed arithmetic stays off as well: `65·2^376 − 1` is 383
+//! bits and is not strictly below `2^382`, so the feature's modulus rule
+//! does not hold for every set. One crate feature cannot turn it on for
+//! some sets and leave the others scalar.
+//!
+//! # The counter
+//!
+//! With the feature `op-count` the crate has one more public module,
+//! `ops`, which counts field operations per thread. It is measuring
+//! equipment and not part of the library: a default build has neither the
+//! module nor a counter.
 
 #![forbid(unsafe_code)]
+#![deny(missing_docs)]
 
 use fp2::define_fp2_from_type;
 use fp2::define_fp_core;
@@ -40,15 +113,27 @@ pub mod width;
 
 pub use width::{DegreeLimbs, DegreeWidth, Limbs, SetDegree};
 
+/// What closes a trait of this crate to implementations outside it.
+///
+/// The trait is public so that it can be a supertrait of a public trait,
+/// and the module is private, so no other crate can name it and therefore
+/// none can implement a trait that requires it.
+mod sealed {
+    pub trait Sealed {}
+}
+
 /// The bytes of one set's public salt.
 ///
 /// Each set owns a distinct type, [`ParameterSet::Salt`], whose array is
-/// exactly [`ParameterSet::SALT_LEN`] long. Every byte string of that length
-/// is valid.
-pub trait Salt: Copy + Eq + core::fmt::Debug {
-    const LEN: usize;
-
-    /// `None` unless `bytes` has length [`Self::LEN`].
+/// exactly [`ParameterSet::SALT_LEN`] long: `128·⌈e/128⌉ / 8` bytes. Every
+/// byte string of that length is a salt. There is nothing to refuse but a
+/// wrong length.
+///
+/// Sealed: a set's salt is part of the set, and the sets are the five this
+/// crate builds.
+pub trait Salt: sealed::Sealed + Copy + Eq + core::fmt::Debug {
+    /// `None` unless `bytes` has length [`ParameterSet::SALT_LEN`] of the
+    /// set this salt belongs to.
     fn from_bytes(bytes: &[u8]) -> Option<Self>;
 
     /// The bytes [`Self::from_bytes`] accepts.
@@ -58,33 +143,93 @@ pub trait Salt: Copy + Eq + core::fmt::Debug {
     fn zero() -> Self;
 
     /// Little-endian `counter` in the low `u64`, zero above that.
-    /// `None` when the salt is shorter than a `u64`. Signing derives salts
-    /// from the KDF; this is the probe layout Sage uses.
+    /// `None` when the salt is shorter than a `u64`, which it is at no
+    /// set: the shortest salt is 32 bytes. Signing derives salts from the
+    /// KDF; this is the probe layout Sage uses.
     fn from_counter(counter: u64) -> Option<Self>;
 }
 
-/// Field operations the isogeny step uses. `inv` of zero is `None`.
+/// The field operations the curve, isogeny and pairing code is written
+/// against.
+///
+/// Each set implements it twice: for its base field `F_p`
+/// ([`ParameterSet::Base`]) and for `F_{p²} = F_p[i]/(i² + 1)`
+/// ([`ParameterSet::Ext`]). Those ten types are the only implementations
+/// the library uses.
+///
+/// # What an implementation must hold
+///
+/// The type is a field of odd characteristic, and every value of the type
+/// is one element of it:
+///
+/// - [`Self::add`], [`Self::sub`], [`Self::mul`], [`Self::negate`] and
+///   [`Self::square`] are exact field arithmetic, and `square` is `mul` of
+///   a value with itself;
+/// - [`Self::same`] is equality of field elements, whatever the
+///   representation, and [`Self::is_zero`] is `same` with [`Self::zero`];
+/// - [`Self::inv`] is `None` for zero and the inverse for everything else;
+/// - [`Self::sqrt`] is `None` exactly when [`Self::is_square`] is false,
+///   and otherwise a value whose square is the input;
+/// - [`Self::is_square`] is true for zero.
+///
+/// Nothing here is promised to run in constant time. The set's fields
+/// branch on what an inversion or a square root finds, and the verifier
+/// that uses them works on public values only.
+///
+/// # Not sealed
+///
+/// Unlike [`ParameterSet`], this trait can be implemented outside the
+/// crate, and `prism-isogeny`'s tests do: they run the curve formulas over
+/// fields small enough to check by hand. An implementation of `Field`
+/// alone is not a parameter set and reaches no verifier.
+///
+/// # Counting
+///
+/// With the feature `op-count`, a set's fields count each call of `mul`,
+/// `square`, `inv`, `sqrt` and `is_square`. The other operations are not
+/// counted.
 pub trait Field: Copy {
+    /// The additive identity.
     fn zero() -> Self;
+    /// The multiplicative identity.
     fn one() -> Self;
+    /// The image of the integer `v` in the field.
+    ///
+    /// At a set's fields no reduction happens: every set has `e > 64`, so
+    /// `p` is above `2^64` and `v` is already below `p`. In `F_{p²}` the
+    /// result is `v + 0·i`.
     fn from_u64(v: u64) -> Self;
+    /// `self + rhs`.
     fn add(self, rhs: Self) -> Self;
+    /// `self − rhs`.
     fn sub(self, rhs: Self) -> Self;
+    /// `self · rhs`.
     fn mul(self, rhs: Self) -> Self;
     /// `self · self`, cheaper than [`Self::mul`] in the extension field.
     fn square(self) -> Self;
+    /// `−self`.
     fn negate(self) -> Self;
+    /// The inverse, or `None` for zero.
     fn inv(self) -> Option<Self>;
-    /// A square root, or `None` when this element is not a square.
+    /// A square root, or `None` when this element is not a square. The
+    /// root of zero is zero.
+    ///
+    /// A square other than zero has two roots, `r` and `−r`. Which one is
+    /// returned is fixed for a given input, and at a set's base field it
+    /// is the root that is even as an integer in `[0, p − 1]`. The trait
+    /// promises no more than that: a caller that relies on which root of
+    /// an extension-field element it gets relies on the implementation.
     fn sqrt(self) -> Option<Self>;
     /// Quadratic residuosity, including zero. `F_p` uses its Legendre
     /// symbol. `F_{p^2}` uses the norm to `F_p` and that symbol.
     fn is_square(self) -> bool;
+    /// Whether this is [`Self::zero`].
     fn is_zero(self) -> bool;
+    /// Whether the two are the same field element.
     fn same(self, rhs: Self) -> bool;
 }
 
-/// `e` rounded up to a multiple of 128.
+/// `e` rounded up to a multiple of 128: `128·⌈e/128⌉`.
 ///
 /// This is the bit length of the public salt and the number of candidates
 /// each torsion search tries. A parameter set carries no security
@@ -92,7 +237,7 @@ pub trait Field: Copy {
 /// rounds to 768.
 ///
 /// Panics if the rounding does not fit in `u32`.
-pub const fn width_bits(e: u32) -> u32 {
+pub(crate) const fn width_bits(e: u32) -> u32 {
     match e.div_ceil(128).checked_mul(128) {
         Some(bits) => bits,
         None => panic!("e rounded up to a multiple of 128 does not fit in u32"),
@@ -236,43 +381,131 @@ const fn is_odd_prime(candidate: u64) -> bool {
 
 /// One parameter set: a prime `p = f·2^e − 1`, its two fields and the
 /// lengths its encodings use.
-pub trait ParameterSet: Copy + Clone + Eq + core::fmt::Debug + Send + Sync + 'static {
+///
+/// Every constant here is a function of `e` and `f` alone, and its
+/// documentation gives the formula. The implementations are the five
+/// markers [`P248`], [`P324`], [`P376`], [`P500`] and [`P664`]; code that
+/// works at every set is generic over `L: ParameterSet` and reads the
+/// set's fields and sizes off `L`.
+///
+/// # Sealed
+///
+/// The trait cannot be implemented outside this crate. A set is a ruled
+/// prime: the verifier's identifier for a set, its committed vectors and
+/// its assessment in `docs/PARAMETER_SETS.md` all exist for these five and
+/// for no other. A foreign type that copied a built set's `E` and
+/// `COFACTOR` could otherwise pass for that set wherever a set is told
+/// apart by them. A sixth set is added here, by one more call of the
+/// macro at the foot of this file, and then in the places that list the
+/// sets: `prism-verify`'s `Set` and the front crate's `SetId`.
+///
+/// A copy of a built set under another name does not compile:
+///
+/// ```compile_fail
+/// use prism_field::{Cofactor, ParameterSet, P248};
+///
+/// #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// struct Copied;
+///
+/// // Refused: no crate but this one can give `Copied` the supertrait.
+/// impl ParameterSet for Copied {
+///     // Every item, taken from `P248`.
+/// #   type Base = <P248 as ParameterSet>::Base;
+/// #   type Ext = <P248 as ParameterSet>::Ext;
+/// #   const NAME: &'static str = P248::NAME;
+/// #   const E: u32 = P248::E;
+/// #   const COFACTOR: Cofactor = P248::COFACTOR;
+/// #   type Degree = <P248 as ParameterSet>::Degree;
+/// #   type TorsionLimbs = <P248 as ParameterSet>::TorsionLimbs;
+/// #   const CHAIN_STEPS: u32 = P248::CHAIN_STEPS;
+/// #   const CHALLENGE_BITS: u32 = P248::CHALLENGE_BITS;
+/// #   const FP_LEN: usize = P248::FP_LEN;
+/// #   const FP2_LEN: usize = P248::FP2_LEN;
+/// #   const PUBLIC_KEY_LEN: usize = P248::PUBLIC_KEY_LEN;
+/// #   const S_LEN: usize = P248::S_LEN;
+/// #   type Salt = <P248 as ParameterSet>::Salt;
+/// #   const WIDTH_BITS: u32 = P248::WIDTH_BITS;
+/// #   const SALT_LEN: usize = P248::SALT_LEN;
+/// #   const SEARCH_BOUND: u16 = P248::SEARCH_BOUND;
+/// #   const SIGNATURE_ELEMENTS: usize = P248::SIGNATURE_ELEMENTS;
+/// #   const SIGNATURE_LEN: usize = P248::SIGNATURE_LEN;
+/// #   fn fp_zero() -> Self::Base { P248::fp_zero() }
+/// #   fn ext_i() -> Self::Ext { P248::ext_i() }
+/// #   fn ext_from_base(re: Self::Base) -> Self::Ext { P248::ext_from_base(re) }
+/// #   fn ext_parts(value: Self::Ext) -> (Self::Base, Self::Base) { P248::ext_parts(value) }
+/// #   fn base_decode(bytes: &[u8]) -> Option<Self::Base> { P248::base_decode(bytes) }
+/// #   fn base_encode(value: Self::Base) -> Vec<u8> { P248::base_encode(value) }
+/// #   fn ext_decode(bytes: &[u8]) -> Option<Self::Ext> { P248::ext_decode(bytes) }
+/// #   fn ext_encode(value: Self::Ext) -> Vec<u8> { P248::ext_encode(value) }
+/// }
+/// ```
+///
+/// # What an implementation holds
+///
+/// `f` is odd and above one, `e` is above 64, and `p` is prime. The first
+/// two are checked when the set is compiled. That `p` is prime is not
+/// checked in this crate, which has no primality test: the tests of
+/// `prism-verify` run that crate's Baillie–PSW test on each set's `p`.
+pub trait ParameterSet:
+    sealed::Sealed + Copy + Clone + Eq + core::fmt::Debug + Send + Sync + 'static
+{
+    /// The base field `F_p`: the integers modulo `p`.
+    ///
+    /// The type has no public name and no operations but those of
+    /// [`Field`], with [`Self::base_decode`] and [`Self::base_encode`] to
+    /// and from bytes. It is named through the set, as
+    /// `<P248 as ParameterSet>::Base` or `L::Base`.
     type Base: Field;
+    /// The extension field `F_{p²} = F_p[i]/(i² + 1)`: pairs `re + im·i`.
+    ///
+    /// Curve coefficients and point coordinates live here. As with
+    /// [`Self::Base`], the type has the operations of [`Field`] and the
+    /// functions of this trait, and nothing else.
     type Ext: Field;
-    /// The set's name, `p` and then `e`: `p248`, `p376`, `p500`.
+    /// The set's name, `p` and then `e`: `p248`, `p324`, `p376`, `p500`,
+    /// `p664`.
     ///
     /// Display only. Committed vectors and the research signer's seed
     /// streams do not use it.
     const NAME: &'static str;
-    /// Valuation in `p = f·2^e − 1`.
+    /// The exponent `e` in `p = f·2^e − 1`: the valuation of `p + 1` at
+    /// two.
     const E: u32;
     /// The odd cofactor `f` in `p + 1 = f·2^e`, with its prime factors.
     const COFACTOR: Cofactor;
     /// The width of the integers the challenge degree's primality test
-    /// runs on at this set. A [`SetDegree`]: the 1,024-bit or 1,344-bit
-    /// width, not a width that exists only so a carry can be checked.
-    /// See [`width`].
+    /// runs on at this set: `max(16, ⌈(2e − 4)/64⌉)` limbs of 64 bits.
+    /// A [`SetDegree`]: the 1,024-bit or 1,344-bit width, not a width that
+    /// exists only so a carry can be checked. See [`width`].
     type Degree: SetDegree;
     /// The limbs of an integer modulo `2^e` at this set, which is what the
-    /// entries of the verifier's matrices are.
+    /// entries of the verifier's matrices are: `[u64; max(8, ⌈e/64⌉)]`.
     type TorsionLimbs: Limbs;
     /// Instantiated long-chain length `e′ = e − 2`. The short chain
     /// has length `CHAIN_STEPS − 1`; the rational torsion exponent is `E`.
     const CHAIN_STEPS: u32;
-    /// Actual challenge width `e′ − 1 = E − 3`, including the forced odd bit.
+    /// Actual challenge width `e′ − 1 = e − 3`, including the forced odd bit.
     const CHALLENGE_BITS: u32;
+    /// Bytes of one element of `F_p`: `⌈(e + b)/8⌉`, where `b` is the bit
+    /// length of `f` ([`Cofactor::bits`]) and so `e + b` is the bit length
+    /// of `p`.
     const FP_LEN: usize;
+    /// Bytes of one element of `F_{p²}`: `2 ·` [`Self::FP_LEN`], the real
+    /// part and then the imaginary part.
     const FP2_LEN: usize;
+    /// Bytes of a public key: [`Self::FP2_LEN`]. A key is one element of
+    /// `F_{p²}`, the Montgomery coefficient of its curve.
     const PUBLIC_KEY_LEN: usize;
-    /// Byte length of `s`, which is [`Self::CHALLENGE_BITS`] rounded up. It
-    /// is derived, not carried in the signature.
+    /// Byte length of the challenge scalar `s`: `⌈(e − 3)/8⌉`, which is
+    /// [`Self::CHALLENGE_BITS`] rounded up to bytes. It is derived, not
+    /// carried in the signature.
     const S_LEN: usize;
     /// This set's salt. Its length is [`Self::SALT_LEN`].
     type Salt: Salt;
-    /// [`width_bits`] of [`Self::E`]. The salt's bit length, and the
-    /// candidate limit of each torsion search.
+    /// `e` rounded up to a multiple of 128: `128·⌈e/128⌉`. The salt's bit
+    /// length, and the candidate limit of each torsion search.
     const WIDTH_BITS: u32;
-    /// Public salt length in bytes: [`Self::WIDTH_BITS`] / 8.
+    /// Public salt length in bytes: [`Self::WIDTH_BITS`] `/ 8`.
     const SALT_LEN: usize;
     /// Candidates each torsion search tries: [`Self::WIDTH_BITS`].
     ///
@@ -282,17 +515,43 @@ pub trait ParameterSet: Copy + Clone + Eq + core::fmt::Debug + Send + Sync + 'st
     /// the public-key search's, and it lives with that search.
     const SEARCH_BOUND: u16;
     /// Field elements a signature carries: `A_sig`, `x(P)`, `y(P)`, `x(Q)`,
-    /// `y(Q)`.
+    /// `y(Q)`. Five at every set.
     const SIGNATURE_ELEMENTS: usize;
+    /// Bytes of a signature: [`Self::SIGNATURE_ELEMENTS`] `·`
+    /// [`Self::FP2_LEN`] `+` [`Self::SALT_LEN`], the five elements and then
+    /// the salt.
     const SIGNATURE_LEN: usize;
 
+    /// Zero of the base field. The same element as
+    /// [`Field::zero`] of [`Self::Base`].
     fn fp_zero() -> Self::Base;
+    /// The element `i` of the extension field, with `i² = −1`.
     fn ext_i() -> Self::Ext;
+    /// The element `re + 0·i`: the base field inside the extension.
     fn ext_from_base(re: Self::Base) -> Self::Ext;
+    /// The real and imaginary parts `(re, im)` of `re + im·i`.
     fn ext_parts(value: Self::Ext) -> (Self::Base, Self::Base);
+    /// The element of `F_p` that `bytes` encodes, or `None`.
+    ///
+    /// An encoding is exactly [`Self::FP_LEN`] bytes, read as a
+    /// little-endian integer below `p`. Any other length is refused, and
+    /// so is an integer at or above `p`: every element has one encoding,
+    /// and a second spelling of it does not decode. The spare bits above
+    /// `p` in the top byte need no rule of their own, since setting one
+    /// gives an integer above `p`.
     fn base_decode(bytes: &[u8]) -> Option<Self::Base>;
+    /// The [`Self::FP_LEN`] bytes of `value`: the integer in `[0, p − 1]`,
+    /// little-endian. [`Self::base_decode`] of them is `value`.
     fn base_encode(value: Self::Base) -> Vec<u8>;
+    /// The element of `F_{p²}` that `bytes` encodes, or `None`.
+    ///
+    /// An encoding is exactly [`Self::FP2_LEN`] bytes: the real part and
+    /// then the imaginary part, each as [`Self::base_decode`] reads it.
+    /// Any other length is refused, and so is an encoding either half of
+    /// which [`Self::base_decode`] refuses.
     fn ext_decode(bytes: &[u8]) -> Option<Self::Ext>;
+    /// The [`Self::FP2_LEN`] bytes of `value`: [`Self::base_encode`] of
+    /// its real part and then of its imaginary part.
     fn ext_encode(value: Self::Ext) -> Vec<u8>;
 }
 
@@ -303,14 +562,15 @@ macro_rules! parameter_set {
         f = $f:literal,
         odd_primes = [$($odd_prime:literal),+ $(,)?],
         e = $e:literal,
-        $fp:ident,
-        $fp2:ident,
         [$($limb:expr),+ $(,)?]
     ) => {
-        pub mod $modname {
+        // Private: the marker is the set's public name, re-exported below.
+        // The field and salt types are reached through the marker's
+        // associated types and have no public path of their own.
+        mod $modname {
             use super::tally::{tally, Kind, Op};
             use super::{
-                candidate_bound, define_fp2_from_type, define_fp_core,
+                candidate_bound, define_fp2_from_type, define_fp_core, sealed,
                 width::{degree_bits, degree_limbs, torsion_limbs, DegreeLimbs, DegreeWidth},
                 width_bits, Cofactor, Field, ParameterSet, Salt,
             };
@@ -327,12 +587,16 @@ macro_rules! parameter_set {
             const WIDTH: u32 = width_bits($e);
             const SALT_BYTES: usize = WIDTH as usize / 8;
 
+            #[doc = concat!(
+                "The salt of `p", stringify!($e),
+                "`: `128·⌈e/128⌉ / 8` bytes, every value of which is a salt."
+            )]
             #[derive(Clone, Copy, Debug, PartialEq, Eq)]
             pub struct SaltBytes([u8; SALT_BYTES]);
 
-            impl Salt for SaltBytes {
-                const LEN: usize = SALT_BYTES;
+            impl sealed::Sealed for SaltBytes {}
 
+            impl Salt for SaltBytes {
                 fn from_bytes(bytes: &[u8]) -> Option<Self> {
                     Some(Self(bytes.try_into().ok()?))
                 }
@@ -370,16 +634,26 @@ macro_rules! parameter_set {
             // associated type below, before this comparison.
             const _: () = assert!(
                 degree_bits($e) <= <DegreeLimbs<{ degree_limbs($e) }> as DegreeWidth>::BITS,
-                "the set's width holds every value its primality test forms"
+                "the width fits every value its primality test forms"
             );
 
+            // What `fp2`'s macros generate for this prime: the two field
+            // types, with all of that crate's inherent constants and
+            // methods. They are generated in this module and not in one
+            // of their own because some of what `Fp2` is used through
+            // here is private to the module it is generated in. Nothing
+            // of them leaves this module: it is private, and no public
+            // signature names them. The public face of the two fields is
+            // `Base` and `Ext`, which have the operations of `Field` and
+            // no others, so no caller reaches an operation that is not
+            // counted or a constructor that skips the canonical decoder.
             define_fp_core!(
-                typename = $fp,
+                typename = Fp,
                 modulus = [$($limb),+],
             );
             define_fp2_from_type!(
-                typename = $fp2,
-                base_field = $fp,
+                typename = Fp2,
+                base_field = Fp,
                 use_sum_of_products = false,
             );
 
@@ -387,123 +661,161 @@ macro_rules! parameter_set {
                 mask == u32::MAX
             }
 
-            impl Field for $fp {
+            #[doc = concat!(
+                "The base field of `p", stringify!($e), "`: the integers modulo `",
+                stringify!($f), "·2^", stringify!($e), " − 1`."
+            )]
+            ///
+            /// Its operations are those of [`Field`]. A value comes from
+            /// bytes by [`ParameterSet::base_decode`], from a small integer
+            /// by [`Field::from_u64`], from [`Field::zero`] and
+            /// [`Field::one`], or from arithmetic on such values. There is
+            /// no constructor from limbs and none that reduces its input.
+            #[derive(Clone, Copy)]
+            pub struct Base(Fp);
+
+            #[doc = concat!(
+                "The extension field of `p", stringify!($e),
+                "`: `F_p[i]/(i² + 1)` over its base field."
+            )]
+            ///
+            /// Its operations are those of [`Field`]. A value comes from
+            /// bytes by [`ParameterSet::ext_decode`], from the base field by
+            /// [`ParameterSet::ext_from_base`], from [`ParameterSet::ext_i`],
+            /// from a small integer by [`Field::from_u64`], from
+            /// [`Field::zero`] and [`Field::one`], or from arithmetic on
+            /// such values.
+            #[derive(Clone, Copy)]
+            pub struct Ext(Fp2);
+
+            impl Field for Base {
                 fn zero() -> Self {
-                    Self::ZERO
+                    Self(Fp::ZERO)
                 }
                 fn one() -> Self {
-                    Self::ONE
+                    Self(Fp::ONE)
                 }
                 fn from_u64(v: u64) -> Self {
-                    let mut buf = vec![0u8; Self::ENCODED_LENGTH];
+                    let mut buf = vec![0u8; Fp::ENCODED_LENGTH];
                     let bytes = v.to_le_bytes();
                     buf[..bytes.len()].copy_from_slice(&bytes);
-                    let (value, mask) = Self::decode(&buf);
+                    let (value, mask) = Fp::decode(&buf);
                     assert!(mask_ok(mask), "u64 is canonical in this field");
-                    value
+                    Self(value)
                 }
                 fn add(self, rhs: Self) -> Self {
-                    self + rhs
+                    Self(self.0 + rhs.0)
                 }
                 fn sub(self, rhs: Self) -> Self {
-                    self - rhs
+                    Self(self.0 - rhs.0)
                 }
                 fn mul(self, rhs: Self) -> Self {
                     tally(Kind::Base, Op::Mul);
-                    self * rhs
+                    Self(self.0 * rhs.0)
                 }
                 fn square(self) -> Self {
                     tally(Kind::Base, Op::Square);
-                    <$fp>::square(self)
+                    Self(Fp::square(self.0))
                 }
                 fn negate(self) -> Self {
-                    -self
+                    Self(-self.0)
                 }
                 fn inv(self) -> Option<Self> {
                     tally(Kind::Base, Op::Inv);
-                    if mask_ok(self.is_zero()) {
+                    if mask_ok(self.0.is_zero()) {
                         None
                     } else {
-                        Some(self.invert())
+                        Some(Self(self.0.invert()))
                     }
                 }
                 fn sqrt(self) -> Option<Self> {
                     tally(Kind::Base, Op::Sqrt);
-                    let mut value = self;
+                    let mut value = self.0;
                     let mask = value.set_sqrt();
-                    if mask_ok(mask) { Some(value) } else { None }
+                    if mask_ok(mask) { Some(Self(value)) } else { None }
                 }
                 fn is_square(self) -> bool {
                     tally(Kind::Base, Op::IsSquare);
-                    self.legendre() >= 0
+                    self.0.legendre() >= 0
                 }
                 fn is_zero(self) -> bool {
-                    mask_ok($fp::is_zero(self))
+                    mask_ok(Fp::is_zero(self.0))
                 }
                 fn same(self, rhs: Self) -> bool {
-                    mask_ok(self.equals(&rhs))
+                    mask_ok(self.0.equals(&rhs.0))
                 }
             }
 
-            impl Field for $fp2 {
+            impl Field for Ext {
                 fn zero() -> Self {
-                    Self::ZERO
+                    Self(Fp2::ZERO)
                 }
                 fn one() -> Self {
-                    Self::ONE
+                    Self(Fp2::ONE)
                 }
                 fn from_u64(v: u64) -> Self {
-                    Self::new(&<$fp as Field>::from_u64(v), &<$fp>::ZERO)
+                    Self(Fp2::new(&<Base as Field>::from_u64(v).0, &Fp::ZERO))
                 }
                 fn add(self, rhs: Self) -> Self {
-                    self + rhs
+                    Self(self.0 + rhs.0)
                 }
                 fn sub(self, rhs: Self) -> Self {
-                    self - rhs
+                    Self(self.0 - rhs.0)
                 }
                 fn mul(self, rhs: Self) -> Self {
                     tally(Kind::Ext, Op::Mul);
-                    self * rhs
+                    Self(self.0 * rhs.0)
                 }
                 fn square(self) -> Self {
                     tally(Kind::Ext, Op::Square);
-                    <Self as fp2::traits::Fq>::square(self)
+                    Self(<Fp2 as fp2::traits::Fq>::square(self.0))
                 }
                 fn negate(self) -> Self {
-                    -self
+                    Self(-self.0)
                 }
                 fn inv(self) -> Option<Self> {
                     tally(Kind::Ext, Op::Inv);
-                    if mask_ok(self.is_zero()) {
+                    if mask_ok(self.0.is_zero()) {
                         None
                     } else {
-                        Some(self.invert())
+                        Some(Self(self.0.invert()))
                     }
                 }
                 fn sqrt(self) -> Option<Self> {
                     tally(Kind::Ext, Op::Sqrt);
-                    let mut value = self;
+                    let mut value = self.0;
                     let mask = value.set_sqrt();
-                    if mask_ok(mask) { Some(value) } else { None }
+                    if mask_ok(mask) { Some(Self(value)) } else { None }
                 }
                 fn is_square(self) -> bool {
                     tally(Kind::Ext, Op::IsSquare);
-                    self.legendre() >= 0
+                    self.0.legendre() >= 0
                 }
                 fn is_zero(self) -> bool {
-                    mask_ok($fp2::is_zero(self))
+                    mask_ok(Fp2::is_zero(self.0))
                 }
                 fn same(self, rhs: Self) -> bool {
-                    mask_ok(self.equals(&rhs))
+                    mask_ok(self.0.equals(&rhs.0))
                 }
             }
 
+            #[doc = concat!(
+                "The parameter set `p", stringify!($e), "`: the prime `p = ",
+                stringify!($f), "·2^", stringify!($e), " − 1`."
+            )]
+            ///
+            /// A marker with no value of interest: the set is the type, and
+            /// everything about it is read off its [`ParameterSet`]
+            /// implementation. The crate documentation has its sizes beside
+            /// those of the other sets.
             #[derive(Clone, Copy, Debug, PartialEq, Eq)]
             pub struct $set;
 
+            impl sealed::Sealed for $set {}
+
             impl ParameterSet for $set {
-                type Base = $fp;
-                type Ext = $fp2;
+                type Base = Base;
+                type Ext = Ext;
                 const NAME: &'static str = concat!("p", stringify!($e));
                 const E: u32 = $e;
                 const COFACTOR: Cofactor = COFACTOR;
@@ -512,9 +824,9 @@ macro_rules! parameter_set {
                 type TorsionLimbs = [u64; torsion_limbs($e)];
                 const CHAIN_STEPS: u32 = $e - 2;
                 const CHALLENGE_BITS: u32 = $e - 3;
-                const FP_LEN: usize = <$fp>::ENCODED_LENGTH;
-                const FP2_LEN: usize = <$fp2>::ENCODED_LENGTH;
-                const PUBLIC_KEY_LEN: usize = <$fp2>::ENCODED_LENGTH;
+                const FP_LEN: usize = Fp::ENCODED_LENGTH;
+                const FP2_LEN: usize = Fp2::ENCODED_LENGTH;
+                const PUBLIC_KEY_LEN: usize = Fp2::ENCODED_LENGTH;
                 type Salt = SaltBytes;
                 const S_LEN: usize = (Self::CHALLENGE_BITS as usize).div_ceil(8);
                 const WIDTH_BITS: u32 = WIDTH;
@@ -522,33 +834,33 @@ macro_rules! parameter_set {
                 const SEARCH_BOUND: u16 = candidate_bound(WIDTH);
                 const SIGNATURE_ELEMENTS: usize = 5;
                 const SIGNATURE_LEN: usize =
-                    Self::SIGNATURE_ELEMENTS * <$fp2>::ENCODED_LENGTH + Self::SALT_LEN;
+                    Self::SIGNATURE_ELEMENTS * Fp2::ENCODED_LENGTH + Self::SALT_LEN;
 
                 fn fp_zero() -> Self::Base {
-                    <$fp>::ZERO
+                    Base(Fp::ZERO)
                 }
                 fn ext_i() -> Self::Ext {
-                    <$fp2>::new(&<$fp>::ZERO, &<$fp>::ONE)
+                    Ext(Fp2::new(&Fp::ZERO, &Fp::ONE))
                 }
                 fn ext_from_base(re: Self::Base) -> Self::Ext {
-                    <$fp2>::new(&re, &<$fp>::ZERO)
+                    Ext(Fp2::new(&re.0, &Fp::ZERO))
                 }
                 fn ext_parts(value: Self::Ext) -> (Self::Base, Self::Base) {
-                    (value.x0(), value.x1())
+                    (Base(value.0.x0()), Base(value.0.x1()))
                 }
                 fn base_decode(bytes: &[u8]) -> Option<Self::Base> {
-                    let (value, mask) = <$fp>::decode(bytes);
-                    if mask_ok(mask) { Some(value) } else { None }
+                    let (value, mask) = Fp::decode(bytes);
+                    if mask_ok(mask) { Some(Base(value)) } else { None }
                 }
                 fn base_encode(value: Self::Base) -> Vec<u8> {
-                    value.encode().to_vec()
+                    value.0.encode().to_vec()
                 }
                 fn ext_decode(bytes: &[u8]) -> Option<Self::Ext> {
-                    let (value, mask) = <$fp2>::decode(bytes);
-                    if mask_ok(mask) { Some(value) } else { None }
+                    let (value, mask) = Fp2::decode(bytes);
+                    if mask_ok(mask) { Some(Ext(value)) } else { None }
                 }
                 fn ext_encode(value: Self::Ext) -> Vec<u8> {
-                    value.encode().to_vec()
+                    value.0.encode().to_vec()
                 }
             }
         }
@@ -562,8 +874,6 @@ parameter_set!(
     f = 5,
     odd_primes = [5],
     e = 248,
-    FpP248,
-    Fp2P248,
     [
         0xFFFFFFFFFFFFFFFFu64,
         0xFFFFFFFFFFFFFFFFu64,
@@ -578,8 +888,6 @@ parameter_set!(
     f = 3,
     odd_primes = [3],
     e = 324,
-    FpP324,
-    Fp2P324,
     [
         0xFFFFFFFFFFFFFFFFu64,
         0xFFFFFFFFFFFFFFFFu64,
@@ -596,8 +904,6 @@ parameter_set!(
     f = 65,
     odd_primes = [5, 13],
     e = 376,
-    FpP376,
-    Fp2P376,
     [
         0xFFFFFFFFFFFFFFFFu64,
         0xFFFFFFFFFFFFFFFFu64,
@@ -614,8 +920,6 @@ parameter_set!(
     f = 27,
     odd_primes = [3],
     e = 500,
-    FpP500,
-    Fp2P500,
     [
         0xFFFFFFFFFFFFFFFFu64,
         0xFFFFFFFFFFFFFFFFu64,
@@ -633,8 +937,6 @@ parameter_set!(
     f = 17,
     odd_primes = [17],
     e = 664,
-    FpP664,
-    Fp2P664,
     [
         0xFFFFFFFFFFFFFFFFu64,
         0xFFFFFFFFFFFFFFFFu64,
@@ -650,7 +952,11 @@ parameter_set!(
     ]
 );
 
-/// Packed arithmetic is not enabled. See the crate docs.
+/// The arithmetic `fp2` is built with here, as a label for benchmark
+/// output: `"scalar"`, one 64-bit limb at a time.
+///
+/// Packed arithmetic is not enabled, and the crate documentation says why.
+/// The value is a constant of the build and selects nothing.
 pub const FIELD_BACKEND: &str = "scalar";
 
 #[cfg(test)]
@@ -680,7 +986,6 @@ mod tests {
         assert_eq!(L::WIDTH_BITS, L::E.div_ceil(128) * 128);
         assert_eq!(L::SALT_LEN * 8, L::WIDTH_BITS as usize);
         assert_eq!(u32::from(L::SEARCH_BOUND), L::WIDTH_BITS);
-        assert_eq!(L::SALT_LEN, <L::Salt as Salt>::LEN);
         assert_eq!(L::CHAIN_STEPS, L::E - 2);
         assert_eq!(L::CHALLENGE_BITS, L::E - 3);
         assert_eq!(L::S_LEN, (L::CHALLENGE_BITS as usize).div_ceil(8));
@@ -751,6 +1056,7 @@ mod tests {
         assert_eq!(stated(P324::COFACTOR), (3, &[3][..]));
         assert_eq!(stated(P376::COFACTOR), (65, &[5, 13][..]));
         assert_eq!(stated(P500::COFACTOR), (27, &[3][..]));
+        assert_eq!(stated(P664::COFACTOR), (17, &[17][..]));
     }
 
     /// A cofactor exists only with exactly its prime factors. Each refusal
@@ -828,6 +1134,7 @@ mod tests {
         assert_eq!(bits(5, &[5]), Ok(3));
         assert_eq!(bits(27, &[3]), Ok(5));
         assert_eq!(bits(65, &[5, 13]), Ok(7));
+        assert_eq!(bits(17, &[17]), Ok(5));
     }
 
     /// Compare two little-endian byte strings of one length as integers.
@@ -1089,6 +1396,157 @@ mod tests {
         check::<P376>(48, 384);
         check::<P500>(64, 512);
         check::<P664>(96, 768);
+    }
+
+    /// Every size a set states, computed here from `e` and `f` by the
+    /// formula its documentation gives, and then compared with the row of
+    /// the table in the crate documentation: the lengths in bytes of a
+    /// field element, a public key, a signature and a salt, and then the
+    /// search bound.
+    fn sizes_follow_from_the_prime<L: ParameterSet>(e: u32, f: u64, row: ([usize; 4], u16)) {
+        let name = L::NAME;
+        assert_eq!(name, format!("p{e}"));
+        assert_eq!((L::E, L::COFACTOR.value()), (e, f), "{name}");
+        // The bit length of p = f·2^e − 1 is e plus the bit length of f:
+        // f·2^e is not a power of two, so taking one away keeps its length.
+        let bits = e + (u64::BITS - f.leading_zeros());
+        assert_eq!(L::COFACTOR.bits(), bits - e, "{name}");
+        assert_eq!(L::FP_LEN, bits.div_ceil(8) as usize, "{name}");
+        assert_eq!(L::FP2_LEN, 2 * L::FP_LEN, "{name}");
+        assert_eq!(L::PUBLIC_KEY_LEN, L::FP2_LEN, "{name}");
+        assert_eq!(L::CHAIN_STEPS, e - 2, "{name}");
+        assert_eq!(L::CHALLENGE_BITS, e - 3, "{name}");
+        assert_eq!(L::S_LEN, (e as usize - 3).div_ceil(8), "{name}");
+        assert_eq!(L::WIDTH_BITS, 128 * e.div_ceil(128), "{name}");
+        assert_eq!(L::SALT_LEN, L::WIDTH_BITS as usize / 8, "{name}");
+        assert_eq!(u32::from(L::SEARCH_BOUND), L::WIDTH_BITS, "{name}");
+        assert_eq!(L::SIGNATURE_ELEMENTS, 5, "{name}");
+        assert_eq!(L::SIGNATURE_LEN, 5 * L::FP2_LEN + L::SALT_LEN, "{name}");
+        // The two widths: max(16, ⌈(2e − 4)/64⌉) and max(8, ⌈e/64⌉) limbs.
+        let degree = (2 * e as usize - 4).div_ceil(64).max(16);
+        assert_eq!(
+            <L::Degree as crate::DegreeWidth>::BITS,
+            64 * degree,
+            "{name}"
+        );
+        assert_eq!(
+            <L::TorsionLimbs as crate::Limbs>::COUNT,
+            (e as usize).div_ceil(64).max(8),
+            "{name}"
+        );
+        // The row of the table.
+        assert_eq!(
+            (
+                [L::FP_LEN, L::PUBLIC_KEY_LEN, L::SIGNATURE_LEN, L::SALT_LEN],
+                L::SEARCH_BOUND
+            ),
+            row,
+            "{name}"
+        );
+        // The lengths are the lengths of what the set makes.
+        assert_eq!(L::base_encode(L::fp_zero()).len(), L::FP_LEN, "{name}");
+        assert_eq!(L::ext_encode(L::ext_i()).len(), L::FP2_LEN, "{name}");
+        assert_eq!(L::Salt::zero().as_bytes().len(), L::SALT_LEN, "{name}");
+    }
+
+    #[test]
+    fn every_size_of_every_set_is_its_formula_in_e_and_f() {
+        sizes_follow_from_the_prime::<P248>(248, 5, ([32, 64, 352, 32], 256));
+        sizes_follow_from_the_prime::<P324>(324, 3, ([41, 82, 458, 48], 384));
+        sizes_follow_from_the_prime::<P376>(376, 65, ([48, 96, 528, 48], 384));
+        sizes_follow_from_the_prime::<P500>(500, 27, ([64, 128, 704, 64], 512));
+        sizes_follow_from_the_prime::<P664>(664, 17, ([84, 168, 936, 96], 768));
+    }
+
+    /// What the documentation of [`Field`] and of the extension's
+    /// functions says, at one set: the parts of an element and their
+    /// order in its encoding, the image of an integer, and which elements
+    /// have a root.
+    fn the_fields_do_what_their_documentation_says<L: ParameterSet>() {
+        let name = L::NAME;
+        let base = L::Base::from_u64;
+        let (zero, one) = (L::Base::zero(), L::Base::one());
+        assert!(L::fp_zero().same(zero), "{name}");
+        assert!(zero.is_zero() && !one.is_zero(), "{name}");
+        assert!(base(0).same(zero) && base(1).same(one), "{name}");
+        assert!(zero.inv().is_none(), "{name}");
+        assert!(one.negate().add(one).is_zero(), "{name}");
+
+        // i² = −1, and the parts of a + b·i are (a, b), encoded a first.
+        let i = L::ext_i();
+        assert!(i.square().same(L::Ext::one().negate()), "{name}");
+        let (a, b) = (base(3), base(0x0102_0304_0506_0708));
+        let value = L::ext_from_base(a).add(i.mul(L::ext_from_base(b)));
+        let (re, im) = L::ext_parts(value);
+        assert!(re.same(a) && im.same(b), "{name}");
+        assert_eq!(
+            L::ext_encode(value),
+            [L::base_encode(a), L::base_encode(b)].concat(),
+            "{name}: the real part and then the imaginary part"
+        );
+        let (re, im) = L::ext_parts(L::Ext::from_u64(77));
+        assert!(re.same(base(77)) && im.is_zero(), "{name}");
+        let (re, im) = L::ext_parts(L::ext_from_base(a));
+        assert!(re.same(a) && im.is_zero(), "{name}");
+        assert!(L::Ext::zero().inv().is_none(), "{name}");
+
+        // Zero is a square and its root is zero.
+        assert!(zero.is_square(), "{name}");
+        assert!(zero.sqrt().expect("zero has a root").is_zero(), "{name}");
+        assert!(L::Ext::zero().is_square(), "{name}");
+        assert!(L::Ext::zero().sqrt().expect("a root").is_zero(), "{name}");
+
+        // In the base field: a root exists exactly for a square, it
+        // squares to the input, and it is the even one of the two.
+        let (mut squares, mut others) = (0, 0);
+        for v in 1..=64u64 {
+            let x = base(v);
+            match x.sqrt() {
+                Some(root) => {
+                    assert!(x.is_square(), "{name}: {v}");
+                    assert!(root.square().same(x), "{name}: {v}");
+                    assert_eq!(L::base_encode(root)[0] & 1, 0, "{name}: {v}");
+                    assert_eq!(L::base_encode(root.negate())[0] & 1, 1, "{name}: {v}");
+                    squares += 1;
+                }
+                None => {
+                    assert!(!x.is_square(), "{name}: {v}");
+                    // −1 is not a square, so −v is one when v is not.
+                    assert!(x.negate().is_square(), "{name}: {v}");
+                    others += 1;
+                }
+            }
+        }
+        assert!(squares > 0 && others > 0, "{name}: both kinds were met");
+
+        // In the extension: the same, without a rule for which root.
+        // Every element of the base field is a square there.
+        let (mut squares, mut others) = (0, 0);
+        for v in 1..=64u64 {
+            let x = L::ext_from_base(base(v)).add(i);
+            assert!(L::ext_from_base(base(v)).is_square(), "{name}: {v}");
+            match x.sqrt() {
+                Some(root) => {
+                    assert!(x.is_square(), "{name}: {v} + i");
+                    assert!(root.square().same(x), "{name}: {v} + i");
+                    squares += 1;
+                }
+                None => {
+                    assert!(!x.is_square(), "{name}: {v} + i");
+                    others += 1;
+                }
+            }
+        }
+        assert!(squares > 0 && others > 0, "{name}: both kinds were met");
+    }
+
+    #[test]
+    fn the_fields_of_every_set_do_what_their_documentation_says() {
+        the_fields_do_what_their_documentation_says::<P248>();
+        the_fields_do_what_their_documentation_says::<P324>();
+        the_fields_do_what_their_documentation_says::<P376>();
+        the_fields_do_what_their_documentation_says::<P500>();
+        the_fields_do_what_their_documentation_says::<P664>();
     }
 
     fn hex_bytes(text: &str) -> Vec<u8> {

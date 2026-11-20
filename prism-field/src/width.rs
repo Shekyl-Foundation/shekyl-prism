@@ -19,6 +19,7 @@
 //! [`ParameterSet::TorsionLimbs`]: crate::ParameterSet::TorsionLimbs
 //! [`ParameterSet::Degree`]: crate::ParameterSet::Degree
 
+use crate::sealed::Sealed;
 use core::fmt::Debug;
 use core::ops::{Index, IndexMut};
 
@@ -26,14 +27,20 @@ use core::ops::{Index, IndexMut};
 pub const LIMB_BITS: usize = u64::BITS as usize;
 
 /// Little-endian 64-bit limbs of one fixed length: `[u64; N]`.
+///
+/// Sealed, and implemented for the arrays `[u64; N]` alone. The integer
+/// arithmetic built on it indexes `COUNT` limbs and relies on the array
+/// being exactly that long.
 pub trait Limbs:
-    Copy + Eq + AsRef<[u64]> + AsMut<[u64]> + Index<usize, Output = u64> + IndexMut<usize>
+    Sealed + Copy + Eq + AsRef<[u64]> + AsMut<[u64]> + Index<usize, Output = u64> + IndexMut<usize>
 {
     /// Every limb zero.
     const ZERO: Self;
     /// How many limbs.
     const COUNT: usize;
 }
+
+impl<const N: usize> Sealed for [u64; N] {}
 
 impl<const N: usize> Limbs for [u64; N] {
     const ZERO: Self = [0; N];
@@ -46,7 +53,10 @@ impl<const N: usize> Limbs for [u64; N] {
 /// Stable Rust cannot write `[u64; N + 2]` for a generic `N`, so a width
 /// names each array it uses. [`Self::CONSISTENT`] holds the three lengths
 /// to each other when the width is used.
-pub trait DegreeWidth: Copy + Eq + Debug + 'static {
+///
+/// Sealed: the widths are the four limb counts this module names, each a
+/// [`DegreeLimbs`]. A wider one is added here.
+pub trait DegreeWidth: Sealed + Copy + Eq + Debug + 'static {
     /// An integer: `COUNT` limbs.
     type Limbs: Limbs;
     /// A full product of two integers: `2 · COUNT` limbs.
@@ -73,6 +83,8 @@ pub trait DegreeWidth: Copy + Eq + Debug + 'static {
 /// the subset a parameter set may name.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DegreeLimbs<const LIMBS: usize>;
+
+impl<const LIMBS: usize> Sealed for DegreeLimbs<LIMBS> {}
 
 /// Limb count of the 64-bit width.
 ///
@@ -121,7 +133,8 @@ degree_width!(
 /// The 64-bit and 128-bit widths exist so the carry out of the top limb
 /// can be checked. A set does not name them. Adding a wider set means
 /// naming its limb count, implementing [`DegreeWidth`] for it, and
-/// implementing this trait for it.
+/// implementing this trait for it, all in this module: the trait is
+/// sealed, as [`DegreeWidth`] is.
 pub trait SetDegree: DegreeWidth {}
 
 impl SetDegree for DegreeLimbs<DEGREE_LIMBS_1024> {}
@@ -132,7 +145,7 @@ impl SetDegree for DegreeLimbs<DEGREE_LIMBS_1344> {}
 /// Narrowing each set to what [`degree_bits`] asks for is a later change.
 /// Until then a set whose degree fits in 1,024 bits names that width, and
 /// [`degree_limbs`] does not return a count below this one.
-pub const FLOOR_DEGREE_LIMBS: usize = DEGREE_LIMBS_1024;
+pub(crate) const FLOOR_DEGREE_LIMBS: usize = DEGREE_LIMBS_1024;
 
 /// The bits an integer needs to hold every value the primality test of a
 /// set with exponent `e` forms: `2e − 4`.
@@ -150,7 +163,7 @@ pub const fn degree_bits(e: u32) -> usize {
 
 /// The limbs of the width a set with exponent `e` uses: enough for
 /// [`degree_bits`], and not below [`FLOOR_DEGREE_LIMBS`].
-pub const fn degree_limbs(e: u32) -> usize {
+pub(crate) const fn degree_limbs(e: u32) -> usize {
     let needed = degree_bits(e).div_ceil(LIMB_BITS);
     if needed < FLOOR_DEGREE_LIMBS {
         FLOOR_DEGREE_LIMBS
@@ -166,11 +179,11 @@ pub const fn degree_limbs(e: u32) -> usize {
 /// eight limbs when the widest exponent was 500, and the four sets below
 /// `p664` keep eight. As with [`FLOOR_DEGREE_LIMBS`], narrowing them is a
 /// later change.
-pub const FLOOR_TORSION_LIMBS: usize = 8;
+pub(crate) const FLOOR_TORSION_LIMBS: usize = 8;
 
 /// The limbs of a residue modulo `2^e`: enough for `e` bits, and not below
 /// [`FLOOR_TORSION_LIMBS`].
-pub const fn torsion_limbs(e: u32) -> usize {
+pub(crate) const fn torsion_limbs(e: u32) -> usize {
     let needed = (e as usize).div_ceil(LIMB_BITS);
     if needed < FLOOR_TORSION_LIMBS {
         FLOOR_TORSION_LIMBS

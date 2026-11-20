@@ -730,3 +730,82 @@ mod narrow {
         assert!((30..150).contains(&primes), "{primes} primes of 3,000");
     }
 }
+
+/// The modulus of each parameter set is a prime, as far as this test can
+/// tell: `p = f·2^e − 1`, built here from `e` and `f` alone, passes
+/// Baillie–PSW, and it is the modulus the field uses. Nothing else in the
+/// workspace tests that a set's `p` is prime. The field crate cannot: the
+/// primality test is in this crate, above it.
+///
+/// Baillie–PSW is a probable-prime test with no known composite that
+/// passes it. This is not a proof of primality.
+mod moduli {
+    use super::is_baillie_psw;
+    use prism_field::width::DEGREE_LIMBS_1024;
+    use prism_field::{DegreeLimbs, Field, ParameterSet, P248, P324, P376, P500, P664};
+
+    /// Every modulus is below 2^1024: the widest, `p664`, has 669 bits.
+    type Width = DegreeLimbs<DEGREE_LIMBS_1024>;
+
+    /// `f·2^e − 1`, little-endian, one byte longer than a field element.
+    fn modulus(f: u64, e: u32, len: usize) -> Vec<u8> {
+        let mut bytes = vec![0u8; len + 1];
+        let (byte, bit) = ((e / 8) as usize, e % 8);
+        for (offset, part) in (u128::from(f) << bit).to_le_bytes().iter().enumerate() {
+            if *part != 0 {
+                bytes[byte + offset] = *part;
+            }
+        }
+        // Minus one: the bytes below bit `e` are zero and become all ones.
+        for value in &mut bytes {
+            let (lower, borrow) = value.overflowing_sub(1);
+            *value = lower;
+            if !borrow {
+                break;
+            }
+        }
+        bytes
+    }
+
+    /// Three times a little-endian integer whose top byte has room.
+    fn tripled(bytes: &[u8]) -> Vec<u8> {
+        let mut carry = 0u16;
+        let out: Vec<u8> = bytes
+            .iter()
+            .map(|byte| {
+                let wide = 3 * u16::from(*byte) + carry;
+                carry = wide >> 8;
+                wide.to_le_bytes()[0]
+            })
+            .collect();
+        assert_eq!(carry, 0, "the spare byte takes the carry");
+        out
+    }
+
+    fn the_modulus_is_prime<L: ParameterSet>() {
+        let p = modulus(L::COFACTOR.value(), L::E, L::FP_LEN);
+        // The field's −1 is p − 1: this is the modulus the arithmetic uses.
+        let mut minus_one = L::base_encode(L::Base::one().negate());
+        minus_one.push(0);
+        assert_eq!(minus_one[0], 0xfe, "{}", L::NAME);
+        minus_one[0] = 0xff;
+        assert_eq!(
+            minus_one,
+            p,
+            "{}: the field's modulus is f·2^e − 1",
+            L::NAME
+        );
+        assert!(is_baillie_psw::<Width>(&p), "{}: p is prime", L::NAME);
+        // The test can refuse an integer of this size and shape.
+        assert!(!is_baillie_psw::<Width>(&tripled(&p)), "{}: 3p", L::NAME);
+    }
+
+    #[test]
+    fn the_modulus_of_every_set_passes_the_primality_test() {
+        the_modulus_is_prime::<P248>();
+        the_modulus_is_prime::<P324>();
+        the_modulus_is_prime::<P376>();
+        the_modulus_is_prime::<P500>();
+        the_modulus_is_prime::<P664>();
+    }
+}
