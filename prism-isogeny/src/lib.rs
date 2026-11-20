@@ -82,10 +82,14 @@
 //! - [`torsion::rational_basis`] and [`torsion::starting_basis`]: a
 //!   basis of the whole `(p+1)`-torsion. The verifier needs the
 //!   `2^e`-torsion only.
-//! - `pairing::oracle`, behind the feature `oracle`: the affine Miller
-//!   loop that [`pairing::weil`] replaced, kept as its reference and
-//!   compiled only for the comparison. Nothing shipped enables the
-//!   feature.
+//! - Two things behind the feature `oracle`, which nothing shipped
+//!   enables and a default build does not contain:
+//!   - `pairing::oracle`: the affine Miller loop that [`pairing::weil`]
+//!     replaced, kept as its reference and compared with it;
+//!   - `weierstrass`: a model of a split (2,2)-isogeny as a pair of Vélu
+//!     2-isogenies on short-Weierstrass curves, which was the crate's
+//!     first content. Nothing calls it; it is kept, documented and
+//!     tested, for a reader who wants to use or check it.
 //!
 //! # Where this is in the paper
 //!
@@ -150,5 +154,5 @@ pub mod theta;
 pub mod theta_base;
 mod theta_step;
 pub mod torsion;
-#[cfg(test)]
-mod weierstrass;
+#[cfg(any(test, feature = "oracle"))]
+pub mod weierstrass;

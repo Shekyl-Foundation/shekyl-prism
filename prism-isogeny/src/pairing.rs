@@ -165,7 +165,8 @@ pub fn weil<F: Field>(curve: Montgomery<F>, p: Jac<F>, q: Jac<F>, log_order: u32
 /// not otherwise. No shipped manifest enables that feature. The fuzz
 /// crate does, to run the comparison on arbitrary inputs.
 /// `scripts/ci/check_oracle_isolation.py` holds the feature out of the
-/// verifier's default feature graph and out of the manifests it reads.
+/// default feature graph of the verifier and of the front crate, and out
+/// of every tracked manifest but the fuzz crate's.
 #[cfg(any(test, feature = "oracle"))]
 pub mod oracle {
     use super::{on_curve, to_affine, Aff};
