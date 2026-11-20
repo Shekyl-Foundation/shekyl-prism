@@ -86,7 +86,7 @@ and nothing in it is promised stable.
 | --- | --- |
 | `prism-field` | Five parameter sets (`p248`, `p324`, `p376`, `p500`, `p664`), scalar `fp2` 0.6.0 backend |
 | `prism-isogeny` | Montgomery and theta arithmetic, adapted chains and duals |
-| `prism-verify` | Canonical decoding, pairing, both chains and complete images; the byte-level entry `verify` and the entry split by object that the interface is built on |
+| `prism-verify` | Canonical decoding, pairing, both chains and complete images; the byte-level entry `verify` and the entry split by object that the interface is built on. Its crate documentation has the table of checks: each refusal, in order, and what it costs |
 
 **Supporting crates and tools**
 

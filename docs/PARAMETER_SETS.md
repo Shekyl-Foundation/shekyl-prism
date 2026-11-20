@@ -58,7 +58,7 @@ in bytes.
 - The search bound is the same rounding, counted in candidates: 256, 384,
   384, 512 and 768.
   The public-key search is the one search with a failure estimate, and
-  that estimate lives on `prism_verify::search_bound`. The rational basis
+  that estimate is in the documentation of `prism_verify::basis`. The rational basis
   and the starting basis share the limit and have no estimate.
 - Two integers the verifier computes with are sized by the set, as types
   the set names. The challenge degree's primality test runs on
