@@ -175,14 +175,32 @@ pub(crate) fn basis_abscissa<L: ParameterSet>(
 ///
 /// # What it assumes
 ///
-/// Nothing is tested. `None` when the discriminant is not a square,
-/// which does not happen for two points of the curve itself.
+/// That `p` and `q` are finite points of the curve itself, with
+/// different abscissas. Nothing is tested.
+///
+/// # When that fails
+///
+/// `Some` is not evidence of a point. A caller that needs one refuses a
+/// result with `Z = 0`.
+///
+/// - An input with `Z = 0`, which is infinity or `(0 : 0)`: the scaling
+///   is zero, the three forms vanish, and the result is `Some((0 : 0))`,
+///   which is no point and reads as infinity.
+/// - The same abscissa twice, `Q = ±P`: `Bzz` is zero and so is the
+///   result's `Z`. By the root it is `(2·Bxz : 0)`, the point at infinity
+///   that `P − P` is, or `(0 : 0)`.
+/// - `None` when the discriminant is not a square, which does not happen
+///   for two points of the curve itself.
 ///
 /// # Who establishes it in the verifier
 ///
 /// The verifier calls this only inside [`even_basis`], on coordinates
-/// that function computed, and then tests the result's order and
-/// independence (`basis_e` in `prism-verify`).
+/// that function computed, and nothing there keeps them from being
+/// degenerate: a point that the cofactor clears to infinity gives
+/// `(0 : 0)` here. The verifier then tests the result's order and
+/// independence (`basis_e` in `prism-verify`), and the order test
+/// requires `[2^(e−1)]` of the point not to be infinity, which no result
+/// with `Z = 0` passes.
 pub fn difference<L: ParameterSet>(
     coefficient: L::Ext,
     p: Xz<L::Ext>,
@@ -675,6 +693,24 @@ mod tests {
             "{}",
             L::NAME
         );
+    }
+
+    /// `difference` returns `Some` with `Z = 0` where it has no point to
+    /// return: `(0 : 0)` for an input at infinity, and a value with
+    /// `Z = 0` for the same abscissa twice.
+    #[test]
+    fn the_difference_of_degenerate_inputs_has_z_zero() {
+        use super::difference;
+        use crate::montgomery::Xz;
+        type Ext = <P248 as ParameterSet>::Ext;
+        let coefficient = Ext::zero();
+        let point = Xz::affine(Ext::from_u64(2));
+        for (p, q) in [(Xz::infinity(), point), (point, Xz::infinity())] {
+            let got = difference::<P248>(coefficient, p, q).expect("zero has a root");
+            assert!(got.x.is_zero() && got.z.is_zero());
+        }
+        let twice = difference::<P248>(coefficient, point, point).expect("a square");
+        assert!(twice.z.is_zero());
     }
 
     #[test]
