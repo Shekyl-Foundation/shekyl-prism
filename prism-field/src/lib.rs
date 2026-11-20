@@ -215,10 +215,24 @@ pub trait Field: Copy {
     /// root of zero is zero.
     ///
     /// A square other than zero has two roots, `r` and `−r`. Which one is
-    /// returned is fixed for a given input, and at a set's base field it
-    /// is the root that is even as an integer in `[0, p − 1]`. The trait
-    /// promises no more than that: a caller that relies on which root of
-    /// an extension-field element it gets relies on the implementation.
+    /// returned is fixed for a given input.
+    ///
+    /// At a parameter set's two fields the choice is promised, because
+    /// the verifier's result depends on it (`prism-isogeny`'s
+    /// `torsion::difference`):
+    ///
+    /// - in the base field, the root that is even as an integer in
+    ///   `[0, p − 1]`;
+    /// - in the extension field, the root `re + im·i` whose `re` is even
+    ///   as an integer in `[0, p − 1]` when `re` is not zero, and whose
+    ///   `im` is even when `re` is zero.
+    ///
+    /// `p` is odd, so exactly one of `r` and `−r` satisfies each rule.
+    /// The second is the rule of the C reference's `fp2_sqrt`.
+    ///
+    /// The trait itself promises no rule: an implementation outside this
+    /// crate chooses its own, and generic code that depends on the root
+    /// depends on the field it is given.
     fn sqrt(self) -> Option<Self>;
     /// Quadratic residuosity, including zero. `F_p` uses its Legendre
     /// symbol. `F_{p^2}` uses the norm to `F_p` and that symbol.
@@ -429,7 +443,6 @@ const fn is_odd_prime(candidate: u64) -> bool {
 /// #   const SEARCH_BOUND: u16 = P248::SEARCH_BOUND;
 /// #   const SIGNATURE_ELEMENTS: usize = P248::SIGNATURE_ELEMENTS;
 /// #   const SIGNATURE_LEN: usize = P248::SIGNATURE_LEN;
-/// #   fn fp_zero() -> Self::Base { P248::fp_zero() }
 /// #   fn ext_i() -> Self::Ext { P248::ext_i() }
 /// #   fn ext_from_base(re: Self::Base) -> Self::Ext { P248::ext_from_base(re) }
 /// #   fn ext_parts(value: Self::Ext) -> (Self::Base, Self::Base) { P248::ext_parts(value) }
@@ -461,6 +474,10 @@ pub trait ParameterSet:
     /// Curve coefficients and point coordinates live here. As with
     /// [`Self::Base`], the type has the operations of [`Field`] and the
     /// functions of this trait, and nothing else.
+    ///
+    /// Its [`Field::sqrt`] returns a promised root: real part even, or
+    /// imaginary part even when the real part is zero. The second basis
+    /// point of every key is defined through it.
     type Ext: Field;
     /// The set's name, `p` and then `e`: `p248`, `p324`, `p376`, `p500`,
     /// `p664`.
@@ -522,9 +539,6 @@ pub trait ParameterSet:
     /// the salt.
     const SIGNATURE_LEN: usize;
 
-    /// Zero of the base field. The same element as
-    /// [`Field::zero`] of [`Self::Base`].
-    fn fp_zero() -> Self::Base;
     /// The element `i` of the extension field, with `i² = −1`.
     fn ext_i() -> Self::Ext;
     /// The element `re + 0·i`: the base field inside the extension.
@@ -836,9 +850,6 @@ macro_rules! parameter_set {
                 const SIGNATURE_LEN: usize =
                     Self::SIGNATURE_ELEMENTS * Fp2::ENCODED_LENGTH + Self::SALT_LEN;
 
-                fn fp_zero() -> Self::Base {
-                    Base(Fp::ZERO)
-                }
                 fn ext_i() -> Self::Ext {
                     Ext(Fp2::new(&Fp::ZERO, &Fp::ONE))
                 }
@@ -1444,7 +1455,7 @@ mod tests {
             "{name}"
         );
         // The lengths are the lengths of what the set makes.
-        assert_eq!(L::base_encode(L::fp_zero()).len(), L::FP_LEN, "{name}");
+        assert_eq!(L::base_encode(L::Base::zero()).len(), L::FP_LEN, "{name}");
         assert_eq!(L::ext_encode(L::ext_i()).len(), L::FP2_LEN, "{name}");
         assert_eq!(L::Salt::zero().as_bytes().len(), L::SALT_LEN, "{name}");
     }
@@ -1466,7 +1477,6 @@ mod tests {
         let name = L::NAME;
         let base = L::Base::from_u64;
         let (zero, one) = (L::Base::zero(), L::Base::one());
-        assert!(L::fp_zero().same(zero), "{name}");
         assert!(zero.is_zero() && !one.is_zero(), "{name}");
         assert!(base(0).same(zero) && base(1).same(one), "{name}");
         assert!(zero.inv().is_none(), "{name}");
@@ -1519,8 +1529,9 @@ mod tests {
         }
         assert!(squares > 0 && others > 0, "{name}: both kinds were met");
 
-        // In the extension: the same, without a rule for which root.
-        // Every element of the base field is a square there.
+        // In the extension: the same. The rule for which root is tested
+        // on its own below. Every element of the base field is a square
+        // there.
         let (mut squares, mut others) = (0, 0);
         for v in 1..=64u64 {
             let x = L::ext_from_base(base(v)).add(i);
@@ -1538,6 +1549,85 @@ mod tests {
             }
         }
         assert!(squares > 0 && others > 0, "{name}: both kinds were met");
+    }
+
+    /// Whether `value`, an integer in `[0, p − 1]`, is even.
+    fn is_even<L: ParameterSet>(value: L::Base) -> bool {
+        L::base_encode(value)[0] & 1 == 0
+    }
+
+    /// The rule of the extension field's square root: real part even, or
+    /// imaginary part even when the real part is zero.
+    fn is_the_promised_root<L: ParameterSet>(root: L::Ext) -> bool {
+        let (re, im) = L::ext_parts(root);
+        if re.is_zero() {
+            is_even::<L>(im)
+        } else {
+            is_even::<L>(re)
+        }
+    }
+
+    /// `sqrt(r²)` is whichever of `r` and `−r` the rule names, and never
+    /// the other.
+    fn the_root_of_a_square_is_the_promised_one<L: ParameterSet>(r: L::Ext, what: &str) {
+        let name = L::NAME;
+        let root = r.square().sqrt().expect("a square has a root");
+        assert!(root.same(r) || root.same(r.negate()), "{name}: {what}");
+        assert!(is_the_promised_root::<L>(root), "{name}: {what}");
+        if !r.is_zero() {
+            assert!(
+                !is_the_promised_root::<L>(root.negate()),
+                "{name}: {what}: the rule names one root, not both"
+            );
+        }
+    }
+
+    /// The three shapes a root can have, each with both signs of each
+    /// part: a general element, a real one, and a purely imaginary one.
+    /// The last is the root of a real non-residue, the only case in
+    /// which the rule reads the imaginary part.
+    fn the_extension_field_returns_the_promised_root<L: ParameterSet>() {
+        let i = L::ext_i();
+        let real = |v: u64| L::ext_from_base(L::Base::from_u64(v));
+        let (mut real_part_decides, mut imaginary_part_decides) = (0, 0);
+        for a in 1..=24u64 {
+            for b in 1..=24u64 {
+                for r in [
+                    real(a).add(i.mul(real(b))),
+                    real(a).sub(i.mul(real(b))),
+                    real(a).negate().add(i.mul(real(b))),
+                ] {
+                    the_root_of_a_square_is_the_promised_one::<L>(r, "general");
+                    real_part_decides += 1;
+                }
+            }
+            the_root_of_a_square_is_the_promised_one::<L>(real(a), "real");
+            real_part_decides += 1;
+            // (a·i)² = −a², a real non-residue: its roots are ±a·i.
+            let imaginary = i.mul(real(a));
+            assert!(
+                !L::ext_parts(imaginary.square()).0.is_square(),
+                "{}",
+                L::NAME
+            );
+            the_root_of_a_square_is_the_promised_one::<L>(imaginary, "imaginary");
+            let (re, _) = L::ext_parts(imaginary.square().sqrt().expect("a root"));
+            assert!(re.is_zero(), "{}: the root of −a² is imaginary", L::NAME);
+            imaginary_part_decides += 1;
+        }
+        assert_eq!((real_part_decides, imaginary_part_decides), (1752, 24));
+        // −1 itself: its roots are i and −i, and −i = (p − 1)·i is the even one.
+        let root = L::Ext::one().negate().sqrt().expect("−1 is a square");
+        assert!(root.same(i.negate()), "{}: sqrt(−1) is −i", L::NAME);
+    }
+
+    #[test]
+    fn the_extension_field_of_every_set_returns_the_promised_root() {
+        the_extension_field_returns_the_promised_root::<P248>();
+        the_extension_field_returns_the_promised_root::<P324>();
+        the_extension_field_returns_the_promised_root::<P376>();
+        the_extension_field_returns_the_promised_root::<P500>();
+        the_extension_field_returns_the_promised_root::<P664>();
     }
 
     #[test]
