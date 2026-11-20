@@ -1,4 +1,4 @@
-# Sources: sha256 2cff277c00b036a3e49522b34d41c85fb279d6d9fdce91a549ac169b74c79d2f
+# Sources: sha256 59c60d3b72f4c1bacc1fdfc66411ec2533410c30a758747cee1c756c647f5865
 set	vector	case	verdict	ext_mul	ext_square	ext_inv	ext_sqrt	ext_is_square
 p248	s5_lvl1.txt	both-y-negated	Sign	0	1	0	0	0
 p248	s5_lvl1.txt	q-negated	Pairing	33982	17569	13	6	4
