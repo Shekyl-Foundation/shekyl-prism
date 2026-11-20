@@ -792,3 +792,5 @@ Anchor. (Ran, build VM, at `acfa020`, the head of the source changes; the commit
 
 Not done here. The tool binaries (T3). The feature-gated mutation pass (T2). Mutation coverage of `prism-isogeny` (O20). Any change to what is accepted or refused, or to the order of checks. Signer work.
 
+Rulings on this part (Rick, 2026-11-20, after the reviewer's read of the pull request at `bdf2db0`, which asked for no change). The two sentences added to the specification stay: it was incomplete on two refusals, and stating them is the correction. O23, the ten refusals no test reaches: before the beta, after the signer exists; each needs an input that reaches it or an argument that none can. O24, the longest basis search and the challenge hash against the message's length: before the beta, by a measured worst case in the benchmark record and not by a change of design. O25, the binary nothing runs: before the beta, with T3, as recorded. Signer work does not start from this part: a refresh of the signer plan comes before its first brief.
+
