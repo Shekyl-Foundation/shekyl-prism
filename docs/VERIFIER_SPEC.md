@@ -212,8 +212,8 @@ no input is known for the last.
 `Ok(())` is returned only after every image comparison passes.
 
 The crate documentation of `prism-verify` has the refusals one to a
-row, in the order the byte-level entry makes them, with which of them
-the tests reach.
+row, in the order the byte-level entry makes them. Which of those rows
+a test reaches is ledger O23.
 
 Verification has no RNG or secret inputs. Public arithmetic is variable
 time. The signer remains a separate crate and process backend.

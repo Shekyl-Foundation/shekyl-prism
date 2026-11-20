@@ -564,29 +564,51 @@ mod tests {
         }
     }
 
+    /// How many random scalar sets a primary vector's kernel comparison tries.
+    /// Every other honest vector compares its own two matrices and stops.
+    const RANDOM_SETS_ON_A_PRIMARY: u32 = 6;
+
+    /// Every committed honest vector. `$set` is the parameter set its
+    /// `level` names, one of the three sets with a corpus.
+    macro_rules! for_each_honest_vector {
+        ($text:ident, $name:ident, $set:ident, $body:block) => {{
+            let files = prism_vectors::corpus::files();
+            assert_eq!(files.len(), prism_vectors::corpus::HONEST_VECTORS);
+            for path in files {
+                let $text = std::fs::read_to_string(&path).unwrap();
+                let $name = path.file_name().unwrap().to_string_lossy().into_owned();
+                let label = prism_vectors::corpus::Vector::new(&$text)
+                    .level()
+                    .expect("the vector's level");
+                match crate::set::CommittedSet::from_label(label) {
+                    Ok(crate::set::CommittedSet::P248) => {
+                        type $set = P248;
+                        $body
+                    }
+                    Ok(crate::set::CommittedSet::P376) => {
+                        type $set = P376;
+                        $body
+                    }
+                    Ok(crate::set::CommittedSet::P500) => {
+                        type $set = P500;
+                        $body
+                    }
+                    Err(_) => panic!("{}: label {label}", $name),
+                }
+            }
+        }};
+    }
+
     #[test]
     fn the_shared_doublings_give_the_ladders_kernel_on_every_vector() {
-        let files = prism_vectors::corpus::files();
-        assert_eq!(files.len(), prism_vectors::corpus::HONEST_VECTORS);
-        for path in files {
-            let text = std::fs::read_to_string(&path).unwrap();
-            let vector = prism_vectors::corpus::Vector::new(&text);
-            let name = path.file_name().unwrap().to_string_lossy().into_owned();
-            // Random sets on the six primary vectors; the rest check their
-            // own two matrices.
+        for_each_honest_vector!(text, name, Set, {
             let random = if prism_vectors::corpus::Primary::by_file_name(&name).is_some() {
-                6
+                RANDOM_SETS_ON_A_PRIMARY
             } else {
                 0
             };
-            let label = vector.level().expect("the vector's level");
-            match crate::set::CommittedSet::from_label(label) {
-                Ok(crate::set::CommittedSet::P248) => kernels_agree::<P248>(&text, &name, random),
-                Ok(crate::set::CommittedSet::P376) => kernels_agree::<P376>(&text, &name, random),
-                Ok(crate::set::CommittedSet::P500) => kernels_agree::<P500>(&text, &name, random),
-                Err(_) => panic!("{name}: label {label}"),
-            }
-        }
+            kernels_agree::<Set>(&text, &name, random);
+        });
     }
 
     /// The pairing check and then the chains, as the relation runs them:
@@ -635,21 +657,9 @@ mod tests {
     /// is not free.
     #[test]
     fn the_verdict_does_not_depend_on_the_sign_of_the_lifted_basis() {
-        let files = prism_vectors::corpus::files();
-        assert_eq!(files.len(), prism_vectors::corpus::HONEST_VECTORS);
-        for path in files {
-            let text = std::fs::read_to_string(&path).unwrap();
-            let name = path.file_name().unwrap().to_string_lossy().into_owned();
-            let label = prism_vectors::corpus::Vector::new(&text)
-                .level()
-                .expect("the vector's level");
-            match crate::set::CommittedSet::from_label(label) {
-                Ok(crate::set::CommittedSet::P248) => the_sign_of_the_lift::<P248>(&text, &name),
-                Ok(crate::set::CommittedSet::P376) => the_sign_of_the_lift::<P376>(&text, &name),
-                Ok(crate::set::CommittedSet::P500) => the_sign_of_the_lift::<P500>(&text, &name),
-                Err(_) => panic!("{name}: label {label}"),
-            }
-        }
+        for_each_honest_vector!(text, name, Set, {
+            the_sign_of_the_lift::<Set>(&text, &name);
+        });
     }
 
     #[test]

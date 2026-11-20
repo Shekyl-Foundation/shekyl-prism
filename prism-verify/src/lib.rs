@@ -119,24 +119,14 @@
 //!   refused both, and the relation's second search of the same key
 //!   finds what the first found.
 //! - Row 20: `s` is odd, so `−s²` is a unit.
-//! - Rows 25 and 27: the change of basis fails only when the pairing of
-//!   row 23 squares to `−3`, and it is a fourth root of unity
-//!   (`accept.rs`, at `change`).
+//! - Rows 25 and 27: the change of theta basis is refused only when the
+//!   pairing of the order-four basis squares to `−3`. That pairing is a
+//!   fourth root of unity, so its square is `±1`.
 //!
-//! ## Which rows the tests reach
-//!
-//! Found by marking every place the library makes a refusal and running
-//! the workspace's tests, without the two that need the C reference
-//! built (`docs/lab/NOTEBOOK.md`, library part 5c):
-//! rows 1 to 11, 13, 15 to 17, 19, 26, 29 and 32 are reached. Row 26 is
-//! reached by the committed negative `identity-response-q-negated`,
-//! which passes the pairing and has no long chain.
-//!
-//! No test reaches row 12's refusal, row 14, row 18, rows 21 to 24, row
-//! 28, or rows 30 and 31, and no input is known that would. They refuse
-//! values the earlier rows leave no known way to produce, and are kept
-//! so that a value this crate did not expect is refused and not used.
-//! What each would cost its sender is therefore not measured.
+//! Some rows of the table refuse a value the earlier rows leave no known
+//! way to produce. They stay, so that a value this crate did not expect
+//! is refused and not used. The ledger names them
+//! (`docs/lab/LEDGER.md`, O23).
 //!
 //! # The prepared entry's order
 //!
@@ -326,8 +316,7 @@ pub enum VerifyError {
     ///
     /// A signature whose two points are a basis and pass the pairing can
     /// still end here: the committed negative `identity-response-q-negated`
-    /// does, at row 26. Of the cases after the pairing it is the only one
-    /// any test reaches.
+    /// does, at row 26.
     Kernel,
     /// `e(R₁, R₂) ≠ e(P₁, P₂)^q`, with `R_i = [s]` of the signature
     /// points (row 19). This pins the determinant of the basis change. It
