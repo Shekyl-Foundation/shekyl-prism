@@ -30,32 +30,34 @@ use crate::theta_step::{apply_isomorphism, BasisChange};
 
 /// `(a : b)` for a Montgomery coefficient, the pair `(A, C)` the C curve stores.
 #[derive(Clone, Copy, Debug)]
-pub struct ProjectiveCoefficient<F> {
-    pub a: F,
-    pub c: F,
+pub(crate) struct ProjectiveCoefficient<F> {
+    pub(crate) a: F,
+    pub(crate) c: F,
 }
 
 /// The two Montgomery curves a split theta null point determines.
 #[derive(Clone, Copy, Debug)]
-pub struct EllipticProduct<F> {
-    pub first: ProjectiveCoefficient<F>,
-    pub second: ProjectiveCoefficient<F>,
+pub(crate) struct EllipticProduct<F> {
+    pub(crate) first: ProjectiveCoefficient<F>,
+    pub(crate) second: ProjectiveCoefficient<F>,
 }
 
 /// A point of `E1 × E2` in x-only coordinates.
 #[derive(Clone, Copy, Debug)]
-pub struct CouplePoint<F> {
-    pub first: Xz<F>,
-    pub second: Xz<F>,
+pub(crate) struct CouplePoint<F> {
+    pub(crate) first: Xz<F>,
+    pub(crate) second: Xz<F>,
 }
 
 /// The splitting isomorphism and the null point written in its coordinates.
 #[derive(Clone, Copy, Debug)]
-pub struct Splitting<F> {
+pub(crate) struct Splitting<F> {
     /// Which of the ten even structures vanished. Verification expects 8.
-    pub index: usize,
-    pub matrix: BasisChange<F>,
-    pub null_point: ThetaPoint<F>,
+    /// The chain reads the matrix and the null point; the tests read this.
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(crate) index: usize,
+    pub(crate) matrix: BasisChange<F>,
+    pub(crate) null_point: ThetaPoint<F>,
 }
 
 /// `0, 1, i, −1, −i`, the codes in `FP2_CONSTANTS`.
@@ -173,7 +175,7 @@ fn splitting_matrix<F: Field>(index: usize, i: F) -> BasisChange<F> {
 /// whose vanishing structure is some other index is a refusal even when
 /// exactly one structure vanishes. `None` accepts whichever single index
 /// vanishes.
-pub fn splitting_compute<F: Field>(
+pub(crate) fn splitting_compute<F: Field>(
     null_point: ThetaPoint<F>,
     i: F,
     expected: Option<usize>,
@@ -231,7 +233,7 @@ fn fourth_ratio<F: Field>(x: F, y: F) -> Option<ProjectiveCoefficient<F>> {
 
 /// The Montgomery product of a theta null point that is already a product
 /// point (`x t = y z`), after splitting's isomorphism.
-pub fn elliptic_product<F: Field>(null_point: ThetaPoint<F>) -> Option<EllipticProduct<F>> {
+pub(crate) fn elliptic_product<F: Field>(null_point: ThetaPoint<F>) -> Option<EllipticProduct<F>> {
     if !is_product(null_point)
         || null_point.x.is_zero()
         || null_point.y.is_zero()
@@ -247,7 +249,7 @@ pub fn elliptic_product<F: Field>(null_point: ThetaPoint<F>) -> Option<EllipticP
 
 /// `(P1, P2)` on that product. A point that is not itself a product point,
 /// or the zero point, is a refusal.
-pub fn montgomery_couple<F: Field>(
+pub(crate) fn montgomery_couple<F: Field>(
     structure: ThetaPoint<F>,
     point: ThetaPoint<F>,
 ) -> Option<CouplePoint<F>> {

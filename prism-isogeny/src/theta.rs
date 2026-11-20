@@ -10,23 +10,43 @@
 
 //! Theta coordinates for a (2,2)-isogeny step.
 //!
-//! A theta point is four coordinates `(x : y : z : t)`. Doubling is the
+//! A theta point is four projective coordinates `(x : y : z : t)`: the
+//! level-2 theta coordinates of a point of a principally polarized
+//! abelian surface, in the order of the C reference's `theta_point_t`.
+//! On a product of two Montgomery curves, before any change of basis,
+//! the point `((X₁ : Z₁), (X₂ : Z₂))` is
+//! `(X₁X₂ : X₁Z₂ : Z₁X₂ : Z₁Z₂)`. The theta null point is the image of
+//! zero, and it names the surface together with its theta structure.
+//! Doubling is the
 //! squared-theta map of the C reference: square, Hadamard, scale by the
 //! dual theta constants, Hadamard, scale by the primal constants.
+//!
+//! Only [`ThetaPoint`] and [`projectively_same`] are public. The rest is
+//! used by the steps and the chains of this crate and by nothing else.
 
 use prism_field::Field;
 
-/// One point of a theta structure.
+/// One point in the theta coordinates of some theta structure.
+///
+/// Plain data with no invariant. The fields are public; nothing ties a
+/// value to the structure it is a point of, and nothing checks that it
+/// is a point of any. The coordinates are projective, and `(0:0:0:0)` is
+/// no point: [`projectively_same`] refuses it, and the chains refuse it
+/// where they produce it.
 #[derive(Clone, Copy, Debug)]
 pub struct ThetaPoint<F> {
+    /// The first coordinate.
     pub x: F,
+    /// The second coordinate.
     pub y: F,
+    /// The third coordinate.
     pub z: F,
+    /// The fourth coordinate.
     pub t: F,
 }
 
 /// `(x+y+z+t, x−y+z−t, x+y−z−t, x−y−z+t)`.
-pub fn hadamard<F: Field>(point: ThetaPoint<F>) -> ThetaPoint<F> {
+pub(crate) fn hadamard<F: Field>(point: ThetaPoint<F>) -> ThetaPoint<F> {
     let sum_xy = point.x.add(point.y);
     let diff_xy = point.x.sub(point.y);
     let sum_zt = point.z.add(point.t);
@@ -49,7 +69,7 @@ fn square_coords<F: Field>(point: ThetaPoint<F>) -> ThetaPoint<F> {
 }
 
 /// Square each coordinate, then [`hadamard`].
-pub fn to_squared_theta<F: Field>(point: ThetaPoint<F>) -> ThetaPoint<F> {
+pub(crate) fn to_squared_theta<F: Field>(point: ThetaPoint<F>) -> ThetaPoint<F> {
     hadamard(square_coords(point))
 }
 
@@ -59,18 +79,19 @@ pub fn to_squared_theta<F: Field>(point: ThetaPoint<F>) -> ThetaPoint<F> {
 /// are the same products of the null point itself. Names follow the C
 /// structure: `YZT0` is the dual scale of `x`, `yzt0` the primal scale of `x`.
 #[derive(Clone, Copy, Debug)]
-pub struct ThetaConstants<F> {
-    pub dual_x: F,
-    pub dual_y: F,
-    pub dual_z: F,
-    pub dual_t: F,
-    pub primal_x: F,
-    pub primal_y: F,
-    pub primal_z: F,
-    pub primal_t: F,
+pub(crate) struct ThetaConstants<F> {
+    dual_x: F,
+    dual_y: F,
+    dual_z: F,
+    dual_t: F,
+    primal_x: F,
+    primal_y: F,
+    primal_z: F,
+    primal_t: F,
 }
 
 impl<F: Field> ThetaPoint<F> {
+    /// The point `(coords[0] : coords[1] : coords[2] : coords[3])`.
     pub fn from_coords(coords: [F; 4]) -> Self {
         Self {
             x: coords[0],
@@ -80,17 +101,23 @@ impl<F: Field> ThetaPoint<F> {
         }
     }
 
-    pub fn coords(self) -> [F; 4] {
+    /// The four coordinates, `[x, y, z, t]`.
+    pub(crate) fn coords(self) -> [F; 4] {
         [self.x, self.y, self.z, self.t]
     }
 
     /// Coordinate `index` modulo 4, the selection `choose_index_theta_point` makes.
-    pub fn coord(self, index: usize) -> F {
+    pub(crate) fn coord(self, index: usize) -> F {
         self.coords()[index % 4]
     }
 }
 
 /// Two theta points name the same point when one is a scalar multiple of the other.
+///
+/// False when either is `(0:0:0:0)`, which is no point and would
+/// otherwise be a multiple of everything. This compares coordinates and
+/// nothing else: the two must be in the same theta structure for the
+/// answer to mean anything, and that is the caller's.
 pub fn projectively_same<F: Field>(left: ThetaPoint<F>, right: ThetaPoint<F>) -> bool {
     let left = left.coords();
     let right = right.coords();
@@ -102,7 +129,7 @@ pub fn projectively_same<F: Field>(left: ThetaPoint<F>, right: ThetaPoint<F>) ->
 
 impl<F: Field> ThetaConstants<F> {
     /// Precompute from the null point, as `theta_precomputation` does.
-    pub fn from_null(null_point: ThetaPoint<F>) -> Self {
+    pub(crate) fn from_null(null_point: ThetaPoint<F>) -> Self {
         let dual = to_squared_theta(null_point);
         let dual_xy = dual.x.mul(dual.y);
         let dual_zt = dual.z.mul(dual.t);
@@ -131,7 +158,10 @@ fn scale_with<F: Field>(point: ThetaPoint<F>, x: F, y: F, z: F, t: F) -> ThetaPo
 }
 
 /// `[2] point` on the theta structure with these constants.
-pub fn double_point<F: Field>(constants: ThetaConstants<F>, point: ThetaPoint<F>) -> ThetaPoint<F> {
+pub(crate) fn double_point<F: Field>(
+    constants: ThetaConstants<F>,
+    point: ThetaPoint<F>,
+) -> ThetaPoint<F> {
     let squared = square_coords(to_squared_theta(point));
     let scaled = scale_with(
         squared,
@@ -150,7 +180,7 @@ pub fn double_point<F: Field>(constants: ThetaConstants<F>, point: ThetaPoint<F>
 }
 
 /// `[2^exp] point`.
-pub fn double_iter<F: Field>(
+pub(crate) fn double_iter<F: Field>(
     constants: ThetaConstants<F>,
     mut point: ThetaPoint<F>,
     exp: u32,
@@ -162,7 +192,7 @@ pub fn double_iter<F: Field>(
 }
 
 /// A product theta point satisfies `x t = y z`.
-pub fn is_product<F: Field>(point: ThetaPoint<F>) -> bool {
+pub(crate) fn is_product<F: Field>(point: ThetaPoint<F>) -> bool {
     point.x.mul(point.t).same(point.y.mul(point.z))
 }
 

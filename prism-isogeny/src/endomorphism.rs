@@ -8,6 +8,10 @@
 //! `i(x, y) = (−x, i·y)` and `π` is the Frobenius, which on `F_{p^2}` is
 //! conjugation. `i^2 = −1` and `π^2 = [−p]`, so the norm of this element is
 //! `a^2 + b^2 + p(c^2 + d^2)`.
+//!
+//! Not on the verifier's path, which refuses the starting curve as a
+//! key. The verifier's tests use it to build the graph of an
+//! endomorphism of `E0`, with no signer.
 
 use prism_field::{Field, ParameterSet};
 
@@ -73,7 +77,13 @@ fn small_scalar<L: ParameterSet>(
     mul_le::<L>(curve, image, &bytes)
 }
 
-/// `α(point)` for `α = a + bi + cπ + diπ`. `a` and `b` are little-endian.
+/// `α(point)` for `α = a + bi + cπ + diπ`. `a` and `b` are little-endian
+/// bytes of any length.
+///
+/// `point` must be on `E0`, the curve `y^2 = x^3 + x`. That is not
+/// tested: the maps are applied to the coordinates of whatever is
+/// passed, and for a point of another curve the result is not a point of
+/// anything. Variable time, for public scalars only.
 pub fn apply<L: ParameterSet>(
     point: Jac<L::Ext>,
     a: &[u8],
@@ -95,7 +105,12 @@ pub fn apply<L: ParameterSet>(
         .unwrap_or_else(Jac::infinity)
 }
 
-/// `[scalar] point` on `E0`, scalar little-endian.
+/// `[scalar] point` on `E0`, scalar little-endian bytes of any length.
+/// Double-and-add from the high bit, after the leading zero bits are
+/// dropped.
+///
+/// `point` must be on `E0`; not tested. Variable time, for public
+/// scalars only.
 pub fn multiply<L: ParameterSet>(point: Jac<L::Ext>, scalar_le: &[u8]) -> Jac<L::Ext> {
     mul_le::<L>(Montgomery::normalized(L::Ext::zero()), point, scalar_le)
 }

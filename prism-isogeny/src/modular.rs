@@ -26,7 +26,11 @@
 
 use prism_field::{Limbs, ParameterSet};
 
-/// An integer modulo `2^e` for the exponent `e` of `L`, little-endian.
+/// An integer modulo `2^e` for the exponent `e` of `L`.
+///
+/// The invariant is that the value is reduced: every bit at or above `e`
+/// is zero. The limbs are private and every constructor and operation
+/// reduces, so two residues are equal exactly when `==` says so.
 #[derive(Clone, Copy, PartialEq)]
 pub struct Residue<L: ParameterSet> {
     limb: L::TorsionLimbs,
@@ -49,7 +53,8 @@ impl<L: ParameterSet> Residue<L> {
     /// lose the top of every residue; it stops compiling here.
     const HOLDS_THE_EXPONENT: () = assert!(L::E as usize <= Self::LIMBS * u64::BITS as usize);
 
-    /// Reduce a public little-endian scalar modulo `2^e`.
+    /// A little-endian integer of any length, reduced modulo `2^e`.
+    /// Nothing is refused: the bytes above the modulus are dropped.
     pub fn from_le_bytes(bytes: &[u8]) -> Self {
         let mut out = Self::zero();
         for (i, byte) in bytes.iter().take(Self::LIMBS * 8).enumerate() {
@@ -59,6 +64,7 @@ impl<L: ParameterSet> Residue<L> {
         out
     }
 
+    /// The value as `⌈e/8⌉` little-endian bytes.
     pub fn to_le_bytes(self) -> Vec<u8> {
         self.limb
             .as_ref()
@@ -68,6 +74,7 @@ impl<L: ParameterSet> Residue<L> {
             .collect()
     }
 
+    /// Zero.
     pub fn zero() -> Self {
         let () = Self::HOLDS_THE_EXPONENT;
         Self {
@@ -75,10 +82,13 @@ impl<L: ParameterSet> Residue<L> {
         }
     }
 
+    /// One.
     pub fn one() -> Self {
         Self::from_u64(1)
     }
 
+    /// `value` modulo `2^e`. Every parameter set has `e > 64`, so at a
+    /// set this is `value` itself.
     pub fn from_u64(value: u64) -> Self {
         let mut out = Self::zero();
         out.limb[0] = value;
@@ -86,8 +96,10 @@ impl<L: ParameterSet> Residue<L> {
         out
     }
 
-    /// Decimal, reduced modulo `2^e`.
-    pub fn from_dec(text: &str) -> Self {
+    /// Decimal, reduced modulo `2^e`. For the tests' fixtures: a byte
+    /// that is not a digit is not refused.
+    #[cfg(test)]
+    fn from_dec(text: &str) -> Self {
         let ten = Self::from_u64(10);
         let mut acc = Self::zero();
         for byte in text.bytes() {
@@ -133,6 +145,7 @@ impl<L: ParameterSet> Residue<L> {
         self.add(rhs.negate())
     }
 
+    /// `−self` modulo `2^e`.
     pub fn negate(self) -> Self {
         let mut out = self;
         let mut carry = 1u128;
@@ -145,6 +158,8 @@ impl<L: ParameterSet> Residue<L> {
         out
     }
 
+    /// `self · rhs` modulo `2^e`.
+    ///
     /// The product modulo `2^(64·LIMBS)`, then reduced: the limbs of a
     /// row that would land past the last limb are never formed.
     pub fn multiply(self, rhs: Self) -> Self {
@@ -166,7 +181,11 @@ impl<L: ParameterSet> Residue<L> {
         out
     }
 
-    /// Inverse of an odd residue. `None` when this is even.
+    /// Inverse of an odd residue. `None` when this is even, and then
+    /// only: every odd residue has an inverse modulo `2^e`.
+    ///
+    /// The loop is counted: it runs `⌈log₂ e⌉` times, a number fixed by
+    /// the set.
     pub fn inv(self) -> Option<Self> {
         if !self.is_odd() {
             return None;
@@ -186,12 +205,17 @@ impl<L: ParameterSet> Residue<L> {
 }
 
 /// A 4×4 matrix over [`Residue`], row then column.
+///
+/// The entries are private and the only way to a value is
+/// [`challenge_matrices`], so a `Mat4` is one of the three matrices of
+/// some odd challenge.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Mat4<L: ParameterSet> {
     row: [[Residue<L>; 4]; 4],
 }
 
 impl<L: ParameterSet> Mat4<L> {
+    /// The entries, row then column.
     pub fn rows(self) -> [[Residue<L>; 4]; 4] {
         self.row
     }
@@ -279,8 +303,17 @@ fn phi_hat<L: ParameterSet>(s: Residue<L>, q: Residue<L>) -> Mat4<L> {
     }
 }
 
-/// `(Φ, M1, M2)` modulo `2^e`, from the challenge scalar.
-/// `None` when `s` is even, so it has no inverse modulo `2^e`.
+/// `(Φ, M1, M2)` modulo `2^e`, from the challenge scalar: the matrices
+/// of the module's documentation, with `q = −s²`.
+///
+/// `None` when `s` is even, so it has no inverse modulo `2^e`, and then
+/// only. The tests check that `M1` and `M2` satisfy the symplectic
+/// identities, and that their kernel halves are related as the module's
+/// documentation says, on the challenges they run, at every set.
+///
+/// The verifier's challenge has its low bit set where it is derived, so
+/// this does not refuse there; if it did, the verifier would refuse with
+/// `Kernel`.
 pub fn challenge_matrices<L: ParameterSet>(s: Residue<L>) -> Option<(Mat4<L>, Mat4<L>, Mat4<L>)> {
     let t = s.inv()?;
     let zero = Residue::zero();

@@ -15,42 +15,97 @@
 //! `difference(P, R)` computed after the cofactor is cleared. Clearing the
 //! difference of the uncleared points is a different point on about half
 //! of keys, and it is not the C basis.
+//!
+//! # What these functions do not test
+//!
+//! All of this is x-only arithmetic ([`crate::montgomery`]): it runs the
+//! same on any coefficient and any abscissa, of the curve or of its
+//! twist, and returns well-formed points. That the points are a basis is
+//! true only when the curve has its `2^e`-torsion rational and the index
+//! is the one the search finds for that curve. The functions that
+//! *compute* points ([`even_basis`], [`difference`],
+//! [`mul_odd_then_double`], [`double_times`]) test none of it. The
+//! functions that *test* ([`has_order_p_plus_one`], and the two the
+//! searches use) say so. The verifier tests what [`even_basis`] returns
+//! with its own `basis_e` before using it, and holds the result in a type
+//! that can be made no other way (`KeyBasis` in `prism-verify`).
 
 use prism_field::{Cofactor, Field, ParameterSet};
 
 use crate::jac::xdbl_iter;
 use crate::montgomery::{a24, ladder, Montgomery, Xz};
 
-/// `(P, R, Q)` in x-only coordinates, each of order dividing `2^e`.
+/// `(P, R, Q)` in x-only coordinates: what [`even_basis`] computed.
 ///
 /// `Q` is [`difference`] of the cleared `P` and `R`. `full_difference` is
 /// the difference of the points before the cofactor, and clearing that
 /// point is not `Q`.
+///
+/// Plain data with no invariant. The fields are public, and a value says
+/// nothing about the orders of its points: on a curve whose group order
+/// is not `(p+1)²` the "cleared" points need not have order dividing
+/// `2^e`, and on any curve they need not be independent. The name is the
+/// intent. Whoever uses one as a basis tests it.
 #[derive(Clone, Copy, Debug)]
 pub struct EvenBasis<F> {
-    /// Order dividing `2^e`, after multiplication by `f`.
+    /// `[f]` of `full_p`.
     pub p: Xz<F>,
-    /// Cleared point with full-point abscissa `−x(P) − A`.
+    /// `[f]` of `full_q`. This is `R`, not the second basis point.
     pub q: Xz<F>,
-    /// `difference(p, q)`, the canonical second basis point.
+    /// `difference(p, q)`, the canonical second basis point `Q`.
     pub difference: Xz<F>,
-    /// The same `P` and `R` before that multiplication, and their difference.
+    /// The point the basis index names, before multiplication by `f`.
     pub full_p: Xz<F>,
+    /// The point with abscissa `−x(full_p) − A`.
     pub full_q: Xz<F>,
+    /// `difference(full_p, full_q)`.
     pub full_difference: Xz<F>,
 }
 
-/// A basis `(R, T)` of `E[p+1]`, with `R − T`.
+/// A basis `(R, T)` of `E[p+1]`, with `R − T`: what [`rational_basis`]
+/// or [`starting_basis`] found.
 ///
-/// `[f]R`, `[f]T` and `[f](R−T)` are [`EvenBasis`]. Both points have order
-/// `p+1`, their even parts generate `E[2^e]`, and their odd parts generate
-/// `E[f]`.
+/// The invariant is that both points have order `p+1`, that their even
+/// parts generate `E[2^e]`, and that their odd parts generate `E[f]`,
+/// on the curve the basis was found on. The fields are private and those
+/// two functions are the only way to a value; each returns one only
+/// after testing all three. The value does not carry its curve, so using
+/// it on another is the caller's mistake to avoid.
+///
+/// Not on the verifier's path. The verifier's tests use it to build
+/// inputs on the starting curve.
 #[derive(Clone, Copy, Debug)]
 pub struct RationalBasis<F> {
-    pub r: Xz<F>,
-    pub t: Xz<F>,
-    pub difference: Xz<F>,
-    pub even: EvenBasis<F>,
+    r: Xz<F>,
+    t: Xz<F>,
+    difference: Xz<F>,
+    even: EvenBasis<F>,
+}
+
+impl<F: Copy> RationalBasis<F> {
+    /// `R`.
+    pub fn r(&self) -> Xz<F> {
+        self.r
+    }
+
+    /// `T`.
+    pub fn t(&self) -> Xz<F> {
+        self.t
+    }
+
+    /// [`difference`] of `R` and `T`.
+    pub fn difference(&self) -> Xz<F> {
+        self.difference
+    }
+
+    /// `[f]R` as `p`, `[f]T` as `q`, `[f]` of the difference as
+    /// `difference`, and the three uncleared points as the `full_`
+    /// fields. Unlike the value [`even_basis`] returns, `difference`
+    /// here is the cleared difference, not the difference of the cleared
+    /// points.
+    pub fn even(&self) -> EvenBasis<F> {
+        self.even
+    }
 }
 
 fn conjugate<L: ParameterSet>(value: L::Ext) -> L::Ext {
@@ -58,8 +113,13 @@ fn conjugate<L: ParameterSet>(value: L::Ext) -> L::Ext {
     L::ext_from_base(re).sub(L::ext_i().mul(L::ext_from_base(im)))
 }
 
-/// `x(P)` for the index the basis search settled on.
-pub fn basis_abscissa<L: ParameterSet>(
+/// `x(P)` for the index the basis search settled on: `−A / (1 + index·i)`
+/// when `A` is a square, and `index·A` when it is not.
+///
+/// `None` only when `1 + index·i` is zero, which no 16-bit index makes
+/// it at a parameter set. `coefficient_is_square` is trusted: with the
+/// wrong flag this is the other formula's abscissa.
+pub(crate) fn basis_abscissa<L: ParameterSet>(
     coefficient: L::Ext,
     index: u16,
     coefficient_is_square: bool,
@@ -73,7 +133,56 @@ pub fn basis_abscissa<L: ParameterSet>(
     }
 }
 
-/// Deterministic `P − Q` on a normalized Montgomery curve, as `difference_point`.
+/// One of `x(P − Q)` and `x(P + Q)` on the curve `y^2 = x^3 + A x^2 + x`,
+/// chosen by a fixed rule: the reference's `difference_point`.
+///
+/// The two are the roots in `X/Z` of `Bzz·X² − 2·Bxz·XZ + Bxx·Z² = 0`,
+/// where `Bxx`, `Bxz` and `Bzz` are the biquadratic forms of the curve at
+/// the two points. The result is `(Bxz + √(Bxz² − Bxx·Bzz) : Bzz)`.
+///
+/// # The square root is part of the protocol
+///
+/// The other root gives the other of the two points. A signer and a
+/// verifier that took different roots here would hold different second
+/// basis points for the same key. The root taken is the one
+/// [`Field::sqrt`] returns at a parameter set's extension field: real
+/// part even, or imaginary part even when the real part is zero
+/// (`prism_field::ParameterSet::Ext`, tested there at every set). That
+/// is the rule of the reference's `fp2_sqrt`.
+///
+/// # The coordinates are part of it too
+///
+/// The forms are scaled before the root is taken, by
+/// `C̄²·C·P̄z²·Q̄z²` with `C = 1` here. That scaling does not make the
+/// choice independent of how the two points are written. The result is
+/// a function of the four coordinates passed, and for the same two
+/// points in another projective scaling it is the other of the two
+/// candidates about half the time: the rule reads the parity of the
+/// root, and multiplying the root by a factor from the base field
+/// changes that parity as often as not. Measured on 1,980 rescalings of
+/// 66 pairs of points at each of `p248` and `p500`, the point was the
+/// same for 999 and for 972.
+///
+/// So "the difference of `P` and `Q`" is defined only together with the
+/// coordinates of `P` and `Q`. [`even_basis`] passes the coordinates the
+/// cofactor ladder returns, unnormalized, and a key's second basis point
+/// is defined by that. The C reference does the same: its basis
+/// functions set both points to `(x : 1)`, multiply each by the cofactor
+/// with its Montgomery ladder, and pass the results to
+/// `difference_point` with nothing between. That this crate's ladder
+/// returns the reference's coordinates is observed, on the keys of the
+/// committed vectors, and not proved.
+///
+/// # What it assumes
+///
+/// Nothing is tested. `None` when the discriminant is not a square,
+/// which does not happen for two points of the curve itself.
+///
+/// # Who establishes it in the verifier
+///
+/// The verifier calls this only inside [`even_basis`], on coordinates
+/// that function computed, and then tests the result's order and
+/// independence (`basis_e` in `prism-verify`).
 pub fn difference<L: ParameterSet>(
     coefficient: L::Ext,
     p: Xz<L::Ext>,
@@ -106,6 +215,10 @@ pub fn difference<L: ParameterSet>(
     bzz = bzz.mul(scale);
 
     let disc = bxz.square().sub(bxx.mul(bzz));
+    // The point that leaves this function depends on which root this is:
+    // the other one gives `x(P + Q)` where this gives `x(P − Q)`, or the
+    // reverse. The choice is part of the protocol and is the extension
+    // field's rule: see "The square root is part of the protocol" above.
     let root = disc.sqrt()?;
     Some(Xz {
         x: bxz.add(root),
@@ -121,7 +234,32 @@ fn clear_cofactor<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::Ext>) -> Op
     Some(ladder(constant, bits, point))
 }
 
-/// The order-`2^e` basis named by `index`.
+/// The points the basis index names on the curve of `coefficient`: the
+/// index point and the point above `(0, 0)`, each multiplied by the odd
+/// cofactor `f`, and the [`difference`] of the two results.
+///
+/// `None` when [`difference`] finds no root, for the uncleared points or
+/// the cleared ones.
+///
+/// # What it assumes
+///
+/// That the curve is one whose `2^e`-torsion is rational, and that
+/// `index` and `coefficient_is_square` are what the basis search found
+/// for it. Neither is tested here.
+///
+/// # When that fails
+///
+/// It still returns three points. On a curve without the torsion, or
+/// with an index the search would not have chosen, they are not a basis
+/// of anything, and nothing in the value says so.
+///
+/// # Who establishes it in the verifier
+///
+/// `prism-verify` computes the index and the flag itself (`basis_hint`),
+/// takes the result as points that have only been *named*
+/// (`NamedPoints`), and makes a basis of them only through `basis_e`:
+/// `p` and `difference` each of order exactly `2^e`, and their
+/// `[2^(e−1)]` multiples distinct.
 pub fn even_basis<L: ParameterSet>(
     coefficient: L::Ext,
     index: u16,
@@ -149,7 +287,13 @@ pub fn even_basis<L: ParameterSet>(
     })
 }
 
-/// Multiply by `odd`, then double `doubles` times.
+/// `[odd · 2^doubles] point`, x-only: the ladder by `odd`, then
+/// `doubles` doublings. `odd` may be any integer; the name is how the
+/// callers use it.
+///
+/// `None` only where 4 has no inverse, which is in no field of a
+/// parameter set. What [`crate::montgomery::ladder`] assumes of the point
+/// is assumed here.
 pub fn mul_odd_then_double<L: ParameterSet>(
     coefficient: L::Ext,
     point: Xz<L::Ext>,
@@ -175,6 +319,11 @@ fn same_x<F: Field>(left: Xz<F>, right: Xz<F>) -> bool {
 }
 
 /// `[p+1]X = O`, and `[(p+1)/ℓ]X ≠ O` for `ℓ = 2` and every prime divisor of `f`.
+///
+/// That is order exactly `p+1`, of the x-coordinate: the point is on the
+/// curve or on its twist, and this does not say which. On a curve whose
+/// group is `(Z/(p+1))²` the twist has no such point, because its group
+/// is `(Z/(p−1))²` and `gcd(p+1, p−1) = 2`.
 pub fn has_order_p_plus_one<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::Ext>) -> bool {
     let f = L::COFACTOR.value();
     let killed = |odd, doubles| {
@@ -198,7 +347,10 @@ pub fn has_order_p_plus_one<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::E
 /// `E[2^e] ≅ (Z/2^e)^2`, so `E[2]` has three nonzero points and they are the
 /// nonzero vectors of `(Z/2)^2`. Two distinct ones are a basis of that
 /// vector space, and therefore the two points generate `E[2^e]`.
-pub fn even_parts_generate<L: ParameterSet>(
+///
+/// That the two points have order dividing `2^e` is the caller's: this
+/// tests their `[2^{e−1}]` multiples and nothing else.
+pub(crate) fn even_parts_generate<L: ParameterSet>(
     coefficient: L::Ext,
     p: Xz<L::Ext>,
     q: Xz<L::Ext>,
@@ -245,7 +397,10 @@ struct OddImage<F: Field> {
 /// for a prime `q` when neither is a scalar multiple of the other. A
 /// scalar and its negative have the same x-coordinate, so the multiples
 /// checked run only up to `q/2`.
-pub fn odd_parts_generate<L: ParameterSet>(
+///
+/// That both points have order dividing `p+1` is the caller's; the two
+/// searches test it with [`has_order_p_plus_one`] first.
+pub(crate) fn odd_parts_generate<L: ParameterSet>(
     coefficient: L::Ext,
     r: Xz<L::Ext>,
     t: Xz<L::Ext>,
@@ -297,6 +452,14 @@ pub fn odd_parts_generate<L: ParameterSet>(
 /// `E[2^e]`, and their odd parts generate `E[f]`. The search stops at
 /// [`ParameterSet::SEARCH_BOUND`]
 /// candidates. `R − T` is [`difference`].
+///
+/// `None` when the index point does not have order `p+1`, when no
+/// candidate within the bound completes a basis, or when a
+/// [`difference`] has no root. Every property of the result is tested
+/// here before it is returned.
+///
+/// Not on the verifier's path: the verifier needs the `2^e`-torsion
+/// only. Its tests call this.
 pub fn rational_basis<L: ParameterSet>(
     coefficient: L::Ext,
     index: u16,
@@ -352,6 +515,12 @@ fn small_abscissa<L: ParameterSet>(real: u64, imag: u64) -> L::Ext {
 /// [`ParameterSet::SEARCH_BOUND`], ordered by `a` then
 /// `b`, for which both points have order `p+1`, their even parts generate
 /// `E[2^e]`, and their odd parts generate `E[f]`.
+///
+/// `None` when either search ends at the bound without a point. Every
+/// property of the result is tested here before it is returned.
+///
+/// Not on the verifier's path, which refuses the starting curve as a
+/// key. Its tests call this.
 pub fn starting_basis<L: ParameterSet>() -> Option<RationalBasis<L::Ext>> {
     let coefficient = L::Ext::zero();
     let bound = u64::from(L::SEARCH_BOUND);
@@ -398,7 +567,14 @@ pub fn starting_basis<L: ParameterSet>() -> Option<RationalBasis<L::Ext>> {
     None
 }
 
-/// `[2^times] point` on the normalized curve. Infinity is `Z = 0`.
+/// `[2^times] point` on the curve `y^2 = x^3 + coefficient·x^2 + x`,
+/// x-only. Infinity is `Z = 0`.
+///
+/// Nothing is tested: the point is on the curve or its twist, and
+/// `(0 : 0)` stays `(0 : 0)`. The verifier's order tests are built from
+/// this (`order_e` and `span_e` in `prism-verify`): they ask for `Z = 0`
+/// after `e` doublings and `Z ≠ 0` after `e − 1`, which no `(0 : 0)`
+/// and no point of lower order passes.
 pub fn double_times<L: ParameterSet>(
     coefficient: L::Ext,
     point: Xz<L::Ext>,

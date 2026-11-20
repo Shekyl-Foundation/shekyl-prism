@@ -5,30 +5,62 @@
 
 //! x-only arithmetic on a Montgomery curve `y^2 = x^3 + A x^2 + x`.
 //!
-//! Points are projective `(X : Z)`. The curve constant the differential
-//! formulas consume is `(A + 2) / 4`.
+//! Points are projective `(X : Z)`, the point with `x = X/Z`. The curve
+//! constant the differential formulas consume is `(A + 2) / 4`.
+//!
+//! # What x-only arithmetic cannot see
+//!
+//! An x-coordinate in the field is the abscissa of a point of the curve
+//! or of its quadratic twist, and these formulas are the same on both.
+//! Nothing here tests which, or that a coordinate belongs to the curve
+//! whose constant it is used with. A caller that needs a point of the
+//! curve tests that itself; in the verifier the points of a signature
+//! are tested on their curve before anything is computed from them
+//! (`response_points` in `prism-verify`), and a key's basis point is
+//! shown to be on its curve when [`crate::jac::lift_basis`] takes the
+//! square root for its `y`.
+//!
+//! `(0 : 0)` is not a point. The formulas return it where they
+//! degenerate, [`Xz::is_infinity`] is true of it, and doubling it gives
+//! it again. A test for exact order that asks for a multiple that is
+//! *not* infinity, as the verifier's does, therefore refuses it.
 
 use prism_field::Field;
 
-/// `(A + 2) / 4` for the Montgomery coefficient `A`.
+/// `(A + 2) / 4` for the Montgomery coefficient `A`, the constant
+/// [`ladder`] takes.
+///
+/// `None` only where 4 has no inverse, which is in no field of a
+/// parameter set.
 pub fn a24<F: Field>(coefficient: F) -> Option<F> {
     F::from_u64(4)
         .inv()
         .map(|inv| coefficient.add(F::from_u64(2)).mul(inv))
 }
 
-/// A point in projective x-coordinates. `Z = 0` is the point at infinity.
+/// A point in projective x-coordinates, `x = X/Z`. `Z = 0` is the point
+/// at infinity.
+///
+/// Plain data with no invariant: the fields are public, nothing checks
+/// that the abscissa is on any curve, and `(0 : 0)`, which is no point,
+/// can be written. Equality of two values is `X₁Z₂ = X₂Z₁`, which every
+/// value satisfies against `(0 : 0)`; a comparison that must not accept
+/// it refuses it first.
 #[derive(Clone, Copy, Debug)]
 pub struct Xz<F> {
+    /// `X`.
     pub x: F,
+    /// `Z`.
     pub z: F,
 }
 
 impl<F: Field> Xz<F> {
+    /// The finite point with abscissa `x`, as `(x : 1)`.
     pub fn affine(x: F) -> Self {
         Self { x, z: F::one() }
     }
 
+    /// The point at infinity, as `(1 : 0)`.
     pub fn infinity() -> Self {
         Self {
             x: F::one(),
@@ -36,24 +68,41 @@ impl<F: Field> Xz<F> {
         }
     }
 
+    /// Whether `Z = 0`. True of the point at infinity in any scaling, and
+    /// of `(0 : 0)`, which is no point.
     pub fn is_infinity(self) -> bool {
         self.z.is_zero()
     }
 
-    /// The affine x-coordinate, when the point is finite.
+    /// The affine x-coordinate `X/Z`, or `None` when `Z = 0`.
     pub fn x_affine(self) -> Option<F> {
         self.z.inv().map(|inv| self.x.mul(inv))
     }
 }
 
-/// Montgomery curve `C y^2 = C x^3 + A x^2 + C x`, stored as `(A : C)`.
+/// Montgomery curve `C y^2 = C x^3 + A x^2 + C x`, stored as `(A : C)`:
+/// the curve `y^2 = x^3 + (A/C) x^2 + x`.
+///
+/// Plain data with no invariant: the fields are public and nothing
+/// checks that `C` is nonzero or that the curve is nonsingular
+/// (`A² ≠ 4C²`).
+///
+/// The Jacobian arithmetic of [`crate::jac`] and the pairing read `A`
+/// alone and are the arithmetic of the curve with `C = 1`. Passing them a
+/// curve with another `C` gives the arithmetic of a different curve and
+/// no sign of it, except from [`crate::pairing::weil`], which refuses.
+/// The verifier builds every curve it passes them with [`Self::normalized`]
+/// or takes it from [`crate::jac::lift_basis`], which normalizes.
 #[derive(Clone, Copy, Debug)]
 pub struct Montgomery<F> {
+    /// `A`.
     pub a: F,
+    /// `C`.
     pub c: F,
 }
 
 impl<F: Field> Montgomery<F> {
+    /// The curve `y^2 = x^3 + coefficient·x^2 + x`, as `(coefficient : 1)`.
     pub fn normalized(coefficient: F) -> Self {
         Self {
             a: coefficient,
@@ -61,8 +110,9 @@ impl<F: Field> Montgomery<F> {
         }
     }
 
-    /// `(A/C : 1)`, the form Jacobian arithmetic assumes.
-    pub fn affine_coefficient(self) -> Option<Self> {
+    /// `(A/C : 1)`, the form Jacobian arithmetic assumes. `None` when
+    /// `C = 0`.
+    pub(crate) fn affine_coefficient(self) -> Option<Self> {
         self.c.inv().map(|inv| Self {
             a: self.a.mul(inv),
             c: F::one(),
@@ -70,8 +120,12 @@ impl<F: Field> Montgomery<F> {
     }
 }
 
-/// Doubling for a projective coefficient `(A : C)`, the reference `xDBL`.
-pub fn xdbl_ac<F: Field>(curve: Montgomery<F>, point: Xz<F>) -> Xz<F> {
+/// `[2] point` for a projective coefficient `(A : C)`, the reference
+/// `xDBL`.
+///
+/// Infinity, a point of order two and `(0 : 0)` all give `Z = 0`. The
+/// point must be on the curve or its twist; nothing is tested.
+pub(crate) fn xdbl_ac<F: Field>(curve: Montgomery<F>, point: Xz<F>) -> Xz<F> {
     let sum = point.x.add(point.z);
     let diff = point.x.sub(point.z);
     let sum2 = sum.square();
@@ -87,8 +141,9 @@ pub fn xdbl_ac<F: Field>(curve: Montgomery<F>, point: Xz<F>) -> Xz<F> {
     }
 }
 
-/// Doubling on the curve with constant [`a24`].
-pub fn xdbl<F: Field>(a24: F, point: Xz<F>) -> Xz<F> {
+/// `[2] point` on the curve with constant [`a24`]:
+/// `X' = (X+Z)²(X−Z)²`, `Z' = 4XZ·((X−Z)² + a24·4XZ)`.
+pub(crate) fn xdbl<F: Field>(a24: F, point: Xz<F>) -> Xz<F> {
     let sum = point.x.add(point.z);
     let diff = point.x.sub(point.z);
     let sum2 = sum.square();
@@ -100,8 +155,13 @@ pub fn xdbl<F: Field>(a24: F, point: Xz<F>) -> Xz<F> {
     }
 }
 
-/// Differential addition: `point + other`, given `difference = point - other`.
-pub fn xadd<F: Field>(difference: Xz<F>, point: Xz<F>, other: Xz<F>) -> Xz<F> {
+/// Differential addition: `point + other`, given `difference = point − other`.
+///
+/// `difference` is trusted. With an x-coordinate that is not that of
+/// `point − other` the result is a well-formed value that is not the
+/// sum. A `difference` with `X = 0` or `Z = 0` makes the result's `Z` or
+/// `X` zero whatever the sum is.
+pub(crate) fn xadd<F: Field>(difference: Xz<F>, point: Xz<F>, other: Xz<F>) -> Xz<F> {
     let point_sum = point.x.add(point.z);
     let point_diff = point.x.sub(point.z);
     let other_sum = other.x.add(other.z);
@@ -114,7 +174,33 @@ pub fn xadd<F: Field>(difference: Xz<F>, point: Xz<F>, other: Xz<F>) -> Xz<F> {
     }
 }
 
-/// `[scalar] point`, scalar little-endian bits, high bit first.
+/// `[scalar] point` by the Montgomery ladder. The scalar is given as its
+/// bits, most significant first; leading zero bits are allowed.
+///
+/// The loop runs once for each bit the iterator yields and ends when the
+/// iterator does, so the caller's iterator bounds it.
+///
+/// # What it assumes
+///
+/// `a24` is the constant of the curve `point` is on (or its twist), and
+/// `point` does not have `X = 0`. Neither is tested.
+///
+/// # When that fails
+///
+/// The ladder adds with `point` as the fixed difference. For the point
+/// `(0 : Z)`, which is the 2-torsion point `(0, 0)`, every sum has
+/// `Z = 0`: the result reads as infinity for an odd scalar too, where
+/// the multiple is the point itself. A wrong constant gives a multiple
+/// on another curve. Both are well-formed results that look like right
+/// ones.
+///
+/// # Who establishes it in the verifier
+///
+/// The verifier reaches this only through [`crate::torsion::even_basis`],
+/// with the constant of the key's own coefficient. A point that came out
+/// as `(0 : 0)` cannot pass the order test the verifier then applies
+/// (`basis_e` in `prism-verify`), which requires `[2^(e−1)]` of it not to
+/// be infinity.
 pub fn ladder<F: Field>(
     a24: F,
     mut scalar_bits_msb_first: impl Iterator<Item = bool>,
@@ -237,6 +323,8 @@ mod tests {
         for x0 in 1..40u64 {
             let x = Toy::from_u64(x0);
             let right = rhs(a, x);
+            // Either root: the abscissa of the double does not depend on
+            // the sign of `y`.
             let Some(y) = right.sqrt() else { continue };
             if y.is_zero() {
                 continue;

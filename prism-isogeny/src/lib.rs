@@ -3,18 +3,139 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! Montgomery curves and the 2-isogeny step a (2,2) chain is built from.
+//! The isogeny engine of the PRISM verifier: Montgomery curves, their
+//! `2^e`-torsion and Weil pairing, and chains of (2,2)-isogenies between
+//! products of two curves, in theta coordinates.
 //!
-//! A split (2,2)-isogeny is a pair of Vélu 2-isogenies, one on each factor.
-//! That is the kernel which is already a product of torsion subgroups. The
-//! glued theta chain in the C reference
-//! (`theta_chain_compute_and_eval_verify`) is the differential target.
-//! [`theta_step`] is one step of that chain. [`chain`] runs the steps and,
-//! on the salt-PRISM path, splits the codomain. [`chain::chain_surface`]
-//! stops before that split. [`dual_chain`] supplies the full-point adapted
-//! chains and their duals used by prime-degree signature verification.
+//! # What it is for
+//!
+//! A PRISM signature is a curve and two points that claim to be the
+//! image of the key's `2^e`-torsion basis under an isogeny of a degree
+//! the message fixes. The verifier (`prism-verify`) decides whether the
+//! claim holds. Every curve operation it needs is here. This crate
+//! decides nothing: it has no notion of a key, a signature or a verdict.
+//!
+//! # Read this before calling anything
+//!
+//! Most functions here are correct only under conditions the caller must
+//! have established: that a point is on the curve it is used with, that
+//! it has a given order, that two points span, that a curve's
+//! `2^e`-torsion is rational. **Almost none of those conditions is
+//! tested here.** A function whose assumption fails does one of three
+//! things, and its documentation says which:
+//!
+//! - it returns `None`;
+//! - it returns a wrong value that a later check will catch;
+//! - it returns a wrong value that looks like a right one.
+//!
+//! Each public item states what it assumes, which of the three happens
+//! otherwise, and which check in `prism-verify` makes the assumption
+//! true before the verifier's call. That last part is a pointer for the
+//! reader, not the contract: another caller has to establish the
+//! assumption itself.
+//!
+//! Everything here is variable time and is for public values only.
+//!
+//! # The path of one verification
+//!
+//! `prism_verify::verify` calls these modules, in this order.
+//!
+//! 1. [`torsion`]: from the key's coefficient, the points the basis
+//!    index names, with the odd cofactor cleared, and the canonical
+//!    second point ([`torsion::even_basis`]). The verifier then tests
+//!    that they, and the signature's two points, have order exactly
+//!    `2^e` and are independent, with [`torsion::double_times`].
+//! 2. [`jac`]: the key's basis lifted from x-coordinates to full points
+//!    ([`jac::lift_basis`]), and the group law on full points that
+//!    everything after uses.
+//! 3. [`pairing`]: the signature's points multiplied by the challenge
+//!    ([`pairing::mul`]), then the Weil pairing of each pair
+//!    ([`pairing::weil`]) and the comparison `e(sP', sQ') = e(P, Q)^q`.
+//! 4. [`modular`]: the challenge as an integer modulo `2^e`, and the two
+//!    4×4 matrices whose columns are the coefficients of the two kernels
+//!    ([`modular::challenge_matrices`]).
+//! 5. [`dual_chain`] and [`theta_base`]: the 4-torsion of each curve put
+//!    in canonical position ([`dual_chain::canonical_four`]), the theta
+//!    null point of the product ([`dual_chain::product_null`]), and its
+//!    change of basis for each kernel
+//!    ([`theta_base::base_change_theta`]).
+//! 6. [`dual_chain::DualChain`]: the two chains, of `e − 2` and `e − 3`
+//!    steps; the test that they end on the same surface; and three
+//!    points carried forward through the first and back through the
+//!    dual of the second, to be compared with their expected images.
+//!
+//! Under those: [`montgomery`] is the x-only arithmetic step 1 runs on,
+//! and [`theta`] is the theta point type the chains return. The
+//! (2,2)-isogeny step itself and the theta doubling are private modules
+//! that [`dual_chain`] drives.
+//!
+//! # What is not on that path
+//!
+//! - [`chain`], with [`gluing`] and a private splitting module: the C
+//!   reference's x-only chain, which ends by splitting its codomain into
+//!   two curves. It is compared with the pinned C tree on a committed
+//!   chain, and the verifier's tests use it to record where a single
+//!   chain stops on a signature of prime degree. The verifier does not
+//!   call it.
+//! - [`endomorphism`]: the action of an endomorphism on the starting
+//!   curve, with which the tests build inputs that need no signer.
+//! - [`torsion::rational_basis`] and [`torsion::starting_basis`]: a
+//!   basis of the whole `(p+1)`-torsion. The verifier needs the
+//!   `2^e`-torsion only.
+//! - `pairing::oracle`, behind the feature `oracle`: the affine Miller
+//!   loop that [`pairing::weil`] replaced, kept as its reference and
+//!   compiled only for the comparison. Nothing shipped enables the
+//!   feature.
+//!
+//! # Where this is in the paper
+//!
+//! The paper is ePrint 2026/443, in the repository as
+//! `docs/papers/2026-443_PRISM_with _salt.pdf`. Its section 5 and
+//! Algorithm 3 (`VerIsogenyStrong`) define the verification, and
+//! section 2.2 (Kani's lemma) is why an isogeny between two curves can
+//! be checked through a (2,2)-isogeny between products. Algorithm 3,
+//! line 3, "compute `(P, Q) = E[2^e]`", is step 1 above. Its lines 4
+//! and 5, "try to compute the isogeny", are steps 5 and 6. The paper
+//! says what is computed there and not how, and it has no section for
+//! theta coordinates, gluing or the pairing. Those are ports of
+//! reference code, which each module names at the top of its file: the
+//! C tree in `external/PRISM_v2` and the Sage package in
+//! `external/Theta_dim4`. The relation this verifier checks in step 6
+//! is not Algorithm 3's lines 4 to 8 as printed;
+//! `docs/VERIFIER_SPEC.md`, "Acceptance relation", states it.
+//!
+//! # An example
+//!
+//! The first thing the verifier does with a signature is test its
+//! points. Here that is done for one point of a committed signature at
+//! `p248`: it is on the signature's curve, and it has order exactly
+//! `2^e`.
+//!
+//! ```
+//! use prism_field::{Field, ParameterSet, P248};
+//! use prism_isogeny::montgomery::{Montgomery, Xz};
+//! use prism_isogeny::{jac, torsion};
+//! use prism_vectors::corpus::Primary;
+//!
+//! let vector = Primary::Lvl1.vector();
+//! let element = |name: &'static str| {
+//!     P248::ext_decode(&vector.bytes(name).unwrap()).unwrap()
+//! };
+//! // The signature's curve y² = x³ + A x² + x, and its first point.
+//! let (a, x, y) = (element("E"), element("Px"), element("Py"));
+//!
+//! // On the curve: y is one of the two square roots of x³ + A x² + x.
+//! let root = jac::recover_y(Montgomery::normalized(a), x).expect("x is on the curve");
+//! assert!(root.same(y) || root.same(y.negate()));
+//!
+//! // Of order exactly 2^e: e doublings reach infinity, and e − 1 do not.
+//! let point = Xz::affine(x);
+//! assert!(torsion::double_times::<P248>(a, point, P248::E).is_infinity());
+//! assert!(!torsion::double_times::<P248>(a, point, P248::E - 1).is_infinity());
+//! ```
 
 #![forbid(unsafe_code)]
+#![deny(missing_docs)]
 
 pub mod chain;
 pub mod dual_chain;
@@ -24,393 +145,10 @@ pub mod jac;
 pub mod modular;
 pub mod montgomery;
 pub mod pairing;
-pub mod splitting;
+mod splitting;
 pub mod theta;
 pub mod theta_base;
-pub mod theta_step;
+mod theta_step;
 pub mod torsion;
-
-use prism_field::Field;
-
-/// Short Weierstrass `y^2 = x^3 + a4 x + a6`.
-#[derive(Clone, Copy, Debug)]
-pub struct Curve<F> {
-    pub a4: F,
-    pub a6: F,
-}
-
-/// Affine point. The point at infinity is `None` from the isogeny map.
-#[derive(Clone, Copy, Debug)]
-pub struct Point<F> {
-    pub x: F,
-    pub y: F,
-}
-
-impl<F: Field> Curve<F> {
-    /// Montgomery `y^2 = x^3 + A x^2 + x`, translated by `X = x + A/3`.
-    pub fn from_montgomery(coefficient: F) -> Option<Self> {
-        let three = F::from_u64(3);
-        let three_inv = three.inv()?;
-        let shift = coefficient.mul(three_inv);
-        let shift2 = shift.square();
-        let shift3 = shift2.mul(shift);
-        // a4 = 3 (A/3)^2 + A (-2) (A/3) + 1
-        let a4 = three
-            .mul(shift2)
-            .add(coefficient.mul(F::from_u64(2).negate()).mul(shift))
-            .add(F::one());
-        // a6 = -(A/3)^3 + A (A/3)^2 - A/3
-        let a6 = shift3.negate().add(coefficient.mul(shift2)).sub(shift);
-        Some(Self { a4, a6 })
-    }
-
-    pub fn contains(self, point: Point<F>) -> bool {
-        let y2 = point.y.square();
-        let x2 = point.x.square();
-        let rhs = point.x.mul(x2).add(self.a4.mul(point.x)).add(self.a6);
-        y2.same(rhs)
-    }
-
-    /// The Montgomery point `(0, 0)` after the translation `X = x + A/3`.
-    pub fn kernel_at_zero(coefficient: F) -> Option<Point<F>> {
-        let three = F::from_u64(3).inv()?;
-        Some(Point {
-            x: coefficient.mul(three),
-            y: F::zero(),
-        })
-    }
-}
-
-impl<F: Field> Point<F> {
-    pub fn negated(self) -> Self {
-        Self {
-            x: self.x,
-            y: self.y.negate(),
-        }
-    }
-}
-
-/// 2-isogeny with kernel a rational point of order 2 (`y = 0`).
-///
-/// Vélu: `t = 3 x0^2 + a4`, `a4' = a4 − 5 t`, `a6' = a6 − 7 x0 t`,
-/// `x' = x + t / (x − x0)`, `y' = y (1 − t / (x − x0)^2)`.
-/// The kernel is sent to the point at infinity.
-pub fn two_isogeny<F: Field>(domain: Curve<F>, kernel: Point<F>) -> Option<Iso<F>> {
-    if !kernel.y.is_zero() || !domain.contains(kernel) {
-        return None;
-    }
-    let x0 = kernel.x;
-    let t = F::from_u64(3).mul(x0.square()).add(domain.a4);
-    let codomain = Curve {
-        a4: domain.a4.sub(F::from_u64(5).mul(t)),
-        a6: domain.a6.sub(F::from_u64(7).mul(x0).mul(t)),
-    };
-    Some(Iso {
-        domain,
-        codomain,
-        x0,
-        t,
-    })
-}
-
-/// One evaluated 2-isogeny.
-#[derive(Clone, Copy, Debug)]
-pub struct Iso<F> {
-    domain: Curve<F>,
-    codomain: Curve<F>,
-    x0: F,
-    t: F,
-}
-
-impl<F: Field> Iso<F> {
-    pub fn codomain(self) -> Curve<F> {
-        self.codomain
-    }
-
-    /// `None` is the point at infinity, which is where the kernel lands.
-    pub fn image(self, point: Point<F>) -> Option<Point<F>> {
-        if !self.domain.contains(point) {
-            return None;
-        }
-        let gap = point.x.sub(self.x0);
-        let gap_inv = gap.inv()?;
-        let x = point.x.add(self.t.mul(gap_inv));
-        let gap2_inv = gap_inv.square();
-        let scale = F::one().sub(self.t.mul(gap2_inv));
-        Some(Point {
-            x,
-            y: point.y.mul(scale),
-        })
-    }
-}
-
-/// A split (2,2)-isogeny: one 2-isogeny on each factor.
-pub struct SplitTwoTwo<F> {
-    pub left: Iso<F>,
-    pub right: Iso<F>,
-}
-
-impl<F: Field> SplitTwoTwo<F> {
-    pub fn new(
-        left: Curve<F>,
-        left_kernel: Point<F>,
-        right: Curve<F>,
-        right_kernel: Point<F>,
-    ) -> Option<Self> {
-        Some(Self {
-            left: two_isogeny(left, left_kernel)?,
-            right: two_isogeny(right, right_kernel)?,
-        })
-    }
-}
-
-/// `steps` successive 2-isogenies, the factor a split (2,2) chain repeats.
-///
-/// The walk starts at the Montgomery curve with coefficient `start`. The first
-/// kernel is `(0, 0)`. `siblings` are the other two 2-torsion x-coordinates,
-/// in Montgomery `x`, used only to name a point the first step can push.
-/// A 2-isogeny sends both of those points to the same codomain point, the
-/// kernel of the dual. The next kernel is one of the other two roots of the
-/// codomain's 2-division polynomial, so the walk does not step back.
-pub fn split_chain<F: Field>(start: F, siblings: [F; 2], steps: u32) -> Option<Curve<F>> {
-    let mut curve = Curve::from_montgomery(start)?;
-    if steps == 0 {
-        return Some(curve);
-    }
-    let shift = start.mul(F::from_u64(3).inv()?);
-    let mut kernel = Point {
-        x: shift,
-        y: F::zero(),
-    };
-    let mut spare = Point {
-        x: siblings[0].add(shift),
-        y: F::zero(),
-    };
-    for i in 0..steps {
-        if !curve.contains(kernel) {
-            return None;
-        }
-        let iso = two_isogeny(curve, kernel)?;
-        curve = iso.codomain();
-        if i + 1 == steps {
-            break;
-        }
-        let dual = iso.image(spare)?;
-        let (left, _right) = other_torsion(curve, dual.x)?;
-        kernel = Point {
-            x: left,
-            y: F::zero(),
-        };
-        spare = Point {
-            x: _right,
-            y: F::zero(),
-        };
-    }
-    Some(curve)
-}
-
-/// The two 2-torsion x-coordinates other than `known` on a short-Weierstrass
-/// curve whose cubic is `x^3 + a4 x + a6`.
-fn other_torsion<F: Field>(curve: Curve<F>, known: F) -> Option<(F, F)> {
-    let delta = F::from_u64(3)
-        .mul(known.square())
-        .negate()
-        .sub(F::from_u64(4).mul(curve.a4));
-    let root = delta.sqrt()?;
-    let half = F::from_u64(2).inv()?;
-    let base = known.negate();
-    let left = base.add(root).mul(half);
-    let right = base.sub(root).mul(half);
-    if left.same(known) || right.same(known) || left.same(right) {
-        return None;
-    }
-    let on = |x: F| curve.contains(Point { x, y: F::zero() });
-    if !on(left) || !on(right) {
-        return None;
-    }
-    Some((left, right))
-}
-
 #[cfg(test)]
-mod tests {
-    use super::{split_chain, two_isogeny, Curve, Point, SplitTwoTwo};
-    use prism_field::Field;
-
-    #[derive(Clone, Copy, Debug)]
-    struct Toy(u64);
-
-    const P: u64 = 1019;
-
-    impl PartialEq for Toy {
-        fn eq(&self, other: &Self) -> bool {
-            self.0 == other.0
-        }
-    }
-    impl Eq for Toy {}
-
-    impl Field for Toy {
-        fn zero() -> Self {
-            Self(0)
-        }
-        fn one() -> Self {
-            Self(1)
-        }
-        fn from_u64(v: u64) -> Self {
-            Self(v % P)
-        }
-        fn add(self, rhs: Self) -> Self {
-            Self((self.0 + rhs.0) % P)
-        }
-        fn sub(self, rhs: Self) -> Self {
-            Self((self.0 + P - rhs.0) % P)
-        }
-        fn square(self) -> Self {
-            self.mul(self)
-        }
-        fn mul(self, rhs: Self) -> Self {
-            Self(((self.0 as u128 * rhs.0 as u128) % P as u128) as u64)
-        }
-        fn negate(self) -> Self {
-            Self((P - self.0) % P)
-        }
-        fn inv(self) -> Option<Self> {
-            if self.0 == 0 {
-                None
-            } else {
-                Some(Self(mod_pow(self.0, P - 2)))
-            }
-        }
-        fn sqrt(self) -> Option<Self> {
-            if self.0 == 0 {
-                return Some(Self(0));
-            }
-            if !self.is_square() {
-                return None;
-            }
-            Some(Self(mod_pow(self.0, (P + 1) / 4)))
-        }
-        fn is_square(self) -> bool {
-            self.0 == 0 || mod_pow(self.0, (P - 1) / 2) == 1
-        }
-        fn is_zero(self) -> bool {
-            self.0 == 0
-        }
-        fn same(self, rhs: Self) -> bool {
-            self.0 == rhs.0
-        }
-    }
-
-    fn mod_pow(mut base: u64, mut exp: u64) -> u64 {
-        let mut out = 1u64;
-        base %= P;
-        while exp > 0 {
-            if exp & 1 == 1 {
-                out = ((out as u128 * base as u128) % P as u128) as u64;
-            }
-            base = ((base as u128 * base as u128) % P as u128) as u64;
-            exp >>= 1;
-        }
-        out
-    }
-
-    fn point_on_curve() -> (Curve<Toy>, Point<Toy>) {
-        // alpha = 3, A = -(alpha + 1/alpha), the setup checked by hand.
-        let alpha = Toy::from_u64(3);
-        let coefficient = alpha.add(alpha.inv().unwrap()).negate();
-        let curve = Curve::from_montgomery(coefficient).unwrap();
-        let kernel = Curve::kernel_at_zero(coefficient).unwrap();
-        // Use the order-2 point at x = alpha, translated, which was the
-        // hand check. kernel_at_zero is (0, 0). Either is valid; this test
-        // uses alpha so it matches the independent Vélu check.
-        let kernel = Point {
-            x: alpha.add(kernel.x),
-            y: Toy::zero(),
-        };
-        assert!(curve.contains(kernel));
-        (curve, kernel)
-    }
-
-    #[test]
-    fn kernel_lands_at_infinity_and_a_point_lands_on_the_codomain() {
-        let (curve, kernel) = point_on_curve();
-        let iso = two_isogeny(curve, kernel).unwrap();
-        assert!(iso.image(kernel).is_none());
-        let source = Point {
-            x: Toy::from_u64(2).add(Curve::kernel_at_zero(Toy::zero()).unwrap().x),
-            y: Toy::zero(),
-        };
-        // (2, y) may not lie on this curve. Search a small x that does.
-        let mut found = None;
-        for x in 1..80u64 {
-            let point = Point {
-                x: Toy::from_u64(x),
-                y: Toy::zero(),
-            };
-            if curve.contains(point) && !point.x.same(kernel.x) {
-                found = Some(point);
-                break;
-            }
-            let y2 = {
-                let x = Toy::from_u64(x);
-                x.square().mul(x).add(curve.a4.mul(x)).add(curve.a6)
-            };
-            let leg = mod_pow(y2.0, (P - 1) / 2);
-            if leg == 1 {
-                let y = Toy(mod_pow(y2.0, (P + 1) / 4));
-                let point = Point {
-                    x: Toy::from_u64(x),
-                    y,
-                };
-                if curve.contains(point) {
-                    found = Some(point);
-                    break;
-                }
-            }
-        }
-        let point = found.expect("a rational point");
-        let image = iso.image(point).expect("not the kernel");
-        assert!(iso.codomain().contains(image));
-        let _ = source;
-    }
-
-    #[test]
-    fn a_chain_walks_past_the_dual_kernel() {
-        let alpha = Toy::from_u64(3);
-        let coefficient = alpha.add(alpha.inv().unwrap()).negate();
-        let delta = coefficient.square().sub(Toy::from_u64(4));
-        let root = delta.sqrt().expect("2-torsion discriminant");
-        let half = Toy::from_u64(2).inv().unwrap();
-        let siblings = [
-            coefficient.negate().add(root).mul(half),
-            coefficient.negate().sub(root).mul(half),
-        ];
-        let one = split_chain(coefficient, siblings, 1).expect("one step");
-        let kernel = Curve::kernel_at_zero(coefficient).unwrap();
-        let iso = two_isogeny(Curve::from_montgomery(coefficient).unwrap(), kernel).unwrap();
-        assert!(one.a4.same(iso.codomain().a4));
-        assert!(one.a6.same(iso.codomain().a6));
-        // Two steps is the one that used to die: both siblings land on the
-        // dual kernel. Later discriminants need not be squares in this prime
-        // field; the walk at a parameter set is over F_{p^2}.
-        let two = split_chain(coefficient, siblings, 2).expect("two steps");
-        assert!(!(two.a4.same(one.a4) && two.a6.same(one.a6)));
-    }
-
-    #[test]
-    fn p248_chain_walks_eight_steps() {
-        use prism_field::{ParameterSet, P248};
-        let start = <P248 as ParameterSet>::ext_from_base(<P248 as ParameterSet>::fp_zero());
-        let i = <P248 as ParameterSet>::ext_i();
-        let walked = split_chain(start, [i, i.negate()], 8).expect("eight steps");
-        assert!(!(walked.a4.is_zero() && walked.a6.is_zero()));
-    }
-
-    #[test]
-    fn a_split_two_two_is_a_pair_of_two_isogenies() {
-        let (curve, kernel) = point_on_curve();
-        let split = SplitTwoTwo::new(curve, kernel, curve, kernel).unwrap();
-        let alone = two_isogeny(curve, kernel).unwrap();
-        assert!(split.left.codomain().a4.same(alone.codomain().a4));
-        assert!(split.right.codomain().a6.same(alone.codomain().a6));
-    }
-}
+mod weierstrass;
