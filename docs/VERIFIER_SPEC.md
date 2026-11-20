@@ -128,6 +128,29 @@ The signature pair is `(P,Q)` with `Q=difference(P,R)` **after** clearing.
 together to fix the relative signs; a common sign does not matter.
 The transitional single-chain probes are retained only in tests.
 
+`difference` is the C reference's `difference_point`. With `Bxx`, `Bxz`
+and `Bzz` the biquadratic forms of the curve at the two points, each
+multiplied by the squares of the conjugates of the two `Z` coordinates,
+it is the point `(Bxz + √(Bxz² − Bxx·Bzz) : Bzz)`: one of `x(P−R)` and
+`x(P+R)`. Two things in that are part of the protocol, because the other
+choice gives the other point as `Q`. With the other square root, the
+tests that verify the committed honest signatures fail:
+
+- **The square root.** It is the root whose real part is even as an
+  integer in `[0, p−1]`, or whose imaginary part is even when the real
+  part is zero. That is the rule of the reference's `fp2_sqrt`, and
+  `prism-field` promises it for the extension field of every set and
+  tests it there.
+- **The coordinates.** The rule reads a parity, and a parity is not
+  preserved when both coordinates of a point are multiplied by a common
+  factor. For the same two points written in another projective scaling,
+  `difference` returns the other candidate about half the time (ledger
+  O21). `P` and `R` are therefore taken exactly as the Montgomery ladder
+  by `f` returns them, from `(x : 1)`, without normalization, which is
+  what the C reference's basis functions do. A signer and a verifier are
+  sure to agree on `Q` only when they compute it from the same
+  coordinates.
+
 ## Acceptance relation
 
 Both public-key basis points must have exact order `2^e` and span the
