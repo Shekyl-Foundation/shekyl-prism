@@ -30,8 +30,11 @@ use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
 use prism_testkit::{files, identity_response, negatives, primary, set, vector, Form};
 use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
 use prism_verify::{
-    basis_hint, checked_response, verify, verify_prepared, CommittedSet, PreparedKey, Stage,
-    VerifyError,
+    basis::basis_hint,
+    prepared::{checked_response, verify_prepared, PreparedKey},
+    set::CommittedSet,
+    stage::Stage,
+    verify, VerifyError,
 };
 use std::collections::BTreeSet;
 use std::fs;

@@ -41,6 +41,7 @@ use crate::{verify, VerifyError};
 /// seed streams. A set added later implements this when its corpus exists,
 /// and not before.
 pub trait Committed: ParameterSet {
+    /// The `level` field of the set's committed vectors and records.
     const LABEL: &'static str;
 }
 
@@ -57,12 +58,22 @@ impl Committed for P500 {
 }
 
 /// One of the parameter sets, as a value.
+///
+/// All five are verified by the same code. Three have honest signatures
+/// to test acceptance with ([`CommittedSet`]); `p324` and `p664` are
+/// held by refusals alone, and the crate documentation says what that
+/// leaves unshown.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Set {
+    /// `p248`, [`prism_field::P248`].
     P248,
+    /// `p324`, [`prism_field::P324`]. No corpus.
     P324,
+    /// `p376`, [`prism_field::P376`].
     P376,
+    /// `p500`, [`prism_field::P500`].
     P500,
+    /// `p664`, [`prism_field::P664`]. No corpus.
     P664,
 }
 
@@ -94,7 +105,7 @@ impl Set {
     }
 
     /// Public salt length for this set, in bytes.
-    pub fn salt_len(self) -> usize {
+    pub(crate) fn salt_len(self) -> usize {
         match self {
             Self::P248 => P248::SALT_LEN,
             Self::P324 => P324::SALT_LEN,
@@ -120,8 +131,11 @@ impl fmt::Display for Set {
 /// has none".
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CommittedSet {
+    /// `p248`, whose committed label is `NIST-I`.
     P248,
+    /// `p376`, whose committed label is `NIST-III`.
     P376,
+    /// `p500`, whose committed label is `NIST-V`.
     P500,
 }
 
@@ -169,7 +183,10 @@ impl fmt::Display for CommittedSet {
 
 /// The set has no committed data: no vector, no record, no label.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct NoCorpus(pub Set);
+pub struct NoCorpus(
+    /// The set that was asked for.
+    pub Set,
+);
 
 impl fmt::Display for NoCorpus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -235,6 +252,9 @@ impl FromStr for Set {
 }
 
 /// Run [`verify`] for a set named at run time.
+///
+/// A complete entry, as [`verify`] is: it assumes nothing of its
+/// arguments, and its refusals are that function's, in that order.
 pub fn verify_set(
     set: Set,
     public_key: &[u8],

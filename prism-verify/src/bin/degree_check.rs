@@ -17,7 +17,7 @@ use std::io::{self, BufRead, Write};
 use std::process::ExitCode;
 
 use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
-use prism_verify::{degree_is_prime, Set};
+use prism_verify::{prime::degree_is_prime, set::Set};
 
 fn main() -> ExitCode {
     let stdin = io::stdin();
@@ -117,7 +117,7 @@ fn hex_value(byte: u8) -> Result<u8, String> {
 #[cfg(test)]
 mod tests {
     use super::judge;
-    use prism_verify::Set;
+    use prism_verify::set::Set;
 
     #[test]
     fn a_multibyte_scalar_is_refused() {

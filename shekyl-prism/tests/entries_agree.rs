@@ -24,7 +24,7 @@ mod entries;
 use entries::{both, both_at, Tally};
 use prism_field::{Field, ParameterSet, P248, P324, P376, P500, P664};
 use prism_vectors::corpus::Primary;
-use prism_verify::{Set, VerifyError};
+use prism_verify::{set::Set, VerifyError};
 
 #[test]
 fn the_identity_refusals_are_refused_alike_by_both_entries() {
@@ -59,7 +59,8 @@ fn the_identity_refusals_are_refused_alike_by_both_entries() {
 /// The `Basis` key is `1 + i`, whose curve does not have its
 /// `2^e`-torsion rational at any of the five sets. A key refused as
 /// `Basis` because the search finds no index is not known: that fails
-/// with probability about `2^-63` (`prism_verify::search_bound`).
+/// with probability at most about `2^-128` (the documentation of
+/// `prism_verify::basis`, "The search bound").
 fn both_faulty<L: ParameterSet>() -> Tally {
     let keys = [
         (vec![1u8; L::PUBLIC_KEY_LEN - 1], VerifyError::Length),

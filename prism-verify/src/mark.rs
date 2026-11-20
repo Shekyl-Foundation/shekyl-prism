@@ -28,10 +28,11 @@ pub enum Stage {
     Torsion,
     /// `[s]` of the two signature points.
     Scale,
-    /// The two Weil pairings and the power they are compared through.
+    /// The lift of the key's basis to full points, the two Weil pairings
+    /// and the power they are compared through.
     Pairing,
-    /// Lifts, the canonical four-torsion, the matrices, both chain kernels
-    /// and both theta base changes.
+    /// The canonical four-torsion, the matrices, both chain kernels and
+    /// both theta base changes.
     Kernel,
     /// The long chain.
     Chain1,

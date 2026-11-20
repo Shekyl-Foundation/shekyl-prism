@@ -45,7 +45,11 @@ use prism_vectors::curve_table::{CurveNumber, CurveRow};
 use prism_vectors::no_corpus::{curve_table, Model, WithoutCorpus};
 use prism_verify::signature::canonical_sign;
 use prism_verify::{
-    AffinePoint, ChallengeScalar, KeyIdentity, Response, Set as AnySet, VerifyError,
+    challenge::ChallengeScalar,
+    identity::KeyIdentity,
+    set::Set as AnySet,
+    signature::{AffinePoint, Response},
+    VerifyError,
 };
 
 /// The numbers a set's test module pins: the first salt counter of prime

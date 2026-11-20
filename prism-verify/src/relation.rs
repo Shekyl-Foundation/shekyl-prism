@@ -76,7 +76,7 @@ pub fn relate_points<L: ParameterSet>(
 }
 
 /// The relation for a key whose basis is already built and checked: the
-/// entry of [`crate::verify_prepared`]. It differs from [`relate_points`]
+/// entry of [`crate::prepared::verify_prepared`]. It differs from [`relate_points`]
 /// in one thing, that it neither searches for the key's basis nor
 /// computes nor tests it: `basis` is all three, done once.
 pub(crate) fn relate_prepared<L: ParameterSet>(
@@ -375,9 +375,9 @@ fn scale<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::Ext>, scalar: &[u8])
 #[cfg(test)]
 mod e0_vectors {
     use super::e_prime_surface;
+    use crate::set::Committed;
     use crate::signature::{canonical_sign, AffinePoint};
     use crate::verify;
-    use crate::Committed;
     use crate::VerifyError;
     use prism_field::{Field, ParameterSet, P248};
     #[cfg(test)]

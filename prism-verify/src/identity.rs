@@ -16,13 +16,17 @@ const SINGULAR_SQUARE: u64 = 4;
 /// A decoded public key: the Montgomery coefficient `A` of
 /// `E_vk : y^2 = x^3 + A x^2 + x`, together with the bytes that name it.
 ///
-/// [`Self::decode`] checks the encoding and the excluded coefficients.
-/// The coefficient is the decode of those bytes. [`Self::from_accepted_bytes`]
-/// reads them again for a caller that has already run `decode`, and does
-/// not check. This is the challenge identity, not proof of a full rational
-/// torsion basis: the verifier checks that basis's order and span before
-/// pairing and the chains. Both verification and the index search hash
-/// these exact canonical bytes.
+/// The fields are private and [`Self::decode`] is the only public
+/// constructor, so a value is a key of the set's length, canonically
+/// encoded, on neither excluded curve, and its coefficient is the decode
+/// of its bytes. (Inside the crate a prepared key reads its stored bytes
+/// again without repeating the checks; those bytes passed `decode` when
+/// the key was prepared.)
+///
+/// This is the challenge identity, not proof of a full rational torsion
+/// basis: a value of this type may be a curve whose `2^e`-torsion is not
+/// rational, which is no key. [`crate::prepared::PreparedKey`] is the
+/// type that holds that test. The challenge hashes these exact bytes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct KeyIdentity<'key, L: ParameterSet> {
     bytes: &'key [u8],
@@ -32,7 +36,8 @@ pub struct KeyIdentity<'key, L: ParameterSet> {
 impl<'key, L: ParameterSet> KeyIdentity<'key, L> {
     /// Decode `public_key`, refusing the lengths and curves no key may have.
     ///
-    /// `Length`, then `Canonical`, then `Origin`, then `Singular`.
+    /// `Length`, then `Canonical`, then `Origin`, then `Singular`. It
+    /// assumes nothing of the bytes.
     pub fn decode(public_key: &'key [u8]) -> Result<Self, VerifyError> {
         if public_key.len() != L::PUBLIC_KEY_LEN {
             return Err(VerifyError::Length);

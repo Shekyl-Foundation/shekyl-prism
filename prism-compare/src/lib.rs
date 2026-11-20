@@ -6,7 +6,7 @@
 //! Research-only archived unsalted-v1 hashing. Never a production dependency.
 #![forbid(unsafe_code)]
 use prism_field::ParameterSet;
-use prism_verify::KeyIdentity;
+use prism_verify::identity::KeyIdentity;
 use sha3::{
     digest::{core_api::CoreWrapper, ExtendableOutput, Update, XofReader},
     CShake256, CShake256Core,
@@ -37,7 +37,7 @@ pub fn unsalted<L: ParameterSet>(
 pub fn first_prime<L: ParameterSet>(key: &[u8], message: &[u8]) -> Option<(u16, Vec<u8>)> {
     for index in 0..=u16::MAX {
         let scalar = unsalted::<L>(key, message, index, L::CHALLENGE_BITS)?;
-        if prism_verify::degree_is_prime::<L::Degree>(L::E - 2, &scalar) {
+        if prism_verify::prime::degree_is_prime::<L::Degree>(L::E - 2, &scalar) {
             return Some((index, scalar));
         }
     }
@@ -138,7 +138,7 @@ mod tests {
         let j: u16 = vector.field("j").unwrap().parse().unwrap();
         let scalar = unsalted::<L>(&key, message, j, L::CHALLENGE_BITS).unwrap();
         assert_eq!(prism_signer::decimal(&scalar), vector.field("s").unwrap());
-        assert!(prism_verify::degree_is_prime::<L::Degree>(
+        assert!(prism_verify::prime::degree_is_prime::<L::Degree>(
             L::E - 2,
             &scalar
         ));
@@ -161,10 +161,10 @@ mod tests {
         for path in files {
             let text = std::fs::read_to_string(&path).unwrap();
             let vector = Vector::new(&text);
-            match prism_verify::CommittedSet::from_label(vector.level().unwrap()).unwrap() {
-                prism_verify::CommittedSet::P248 => check::<P248>(vector),
-                prism_verify::CommittedSet::P376 => check::<P376>(vector),
-                prism_verify::CommittedSet::P500 => check::<P500>(vector),
+            match prism_verify::set::CommittedSet::from_label(vector.level().unwrap()).unwrap() {
+                prism_verify::set::CommittedSet::P248 => check::<P248>(vector),
+                prism_verify::set::CommittedSet::P376 => check::<P376>(vector),
+                prism_verify::set::CommittedSet::P500 => check::<P500>(vector),
             }
         }
     }

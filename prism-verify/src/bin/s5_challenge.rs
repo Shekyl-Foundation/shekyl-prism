@@ -11,12 +11,12 @@
 //! the verifier's own Baillie–PSW test. The model shells out to this so a
 //! negative's `s` is the verifier's `s`, not a second hash.
 
-use prism_verify::CommittedSet;
+use prism_verify::set::CommittedSet;
 use std::env;
 use std::process::ExitCode;
 
 use prism_field::{ParameterSet, Salt, P248, P376, P500};
-use prism_verify::{ChallengeScalar, KeyIdentity};
+use prism_verify::{challenge::ChallengeScalar, identity::KeyIdentity};
 
 fn main() -> ExitCode {
     let mut args = env::args().skip(1);

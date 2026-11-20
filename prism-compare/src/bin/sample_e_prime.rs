@@ -21,7 +21,7 @@ use std::process::ExitCode;
 
 use prism_compare::first_prime;
 use prism_field::{ParameterSet, P248, P376, P500};
-use prism_verify::{challenge_degree, Committed, KeyIdentity};
+use prism_verify::{identity::KeyIdentity, prime::challenge_degree, set::Committed};
 
 const MESSAGE_PREFIX: &[u8] = b"shekyl-prism-small-extension";
 

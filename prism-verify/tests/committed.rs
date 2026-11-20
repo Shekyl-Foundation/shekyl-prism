@@ -19,7 +19,11 @@ use prism_field::{ParameterSet, Salt, P248, P376, P500};
 use prism_vectors::corpus::{files, Vector, HONEST_VECTORS};
 use prism_vectors::refusals::rows;
 use prism_verify::{
-    verify, verify_set, ChallengeScalar, CommittedSet, KeyIdentity, Response, Set, VerifyError,
+    challenge::ChallengeScalar,
+    identity::KeyIdentity,
+    set::{verify_set, CommittedSet, Set},
+    signature::Response,
+    verify, VerifyError,
 };
 use std::fs;
 

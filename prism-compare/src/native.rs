@@ -9,7 +9,7 @@
 
 use prism_field::Salt;
 use prism_signer::{limits, Attempt, SecretSeed, Session, SigningReport};
-use prism_verify::{ChallengeScalar, Committed, KeyIdentity};
+use prism_verify::{challenge::ChallengeScalar, identity::KeyIdentity, set::Committed};
 use std::path::Path;
 
 /// A reduced-width signature and the report of the search that found it.
@@ -79,7 +79,7 @@ pub fn sign<L: Committed>(
         },
     )?;
     let scalar = {
-        let response = prism_verify::Response::<L>::decode(&report.signature)
+        let response = prism_verify::signature::Response::<L>::decode(&report.signature)
             .map_err(|_| prism_signer::Error::Malformed)?;
         ChallengeScalar::derive_width(&identity, message, response.salt, bits)
             .ok_or(prism_signer::Error::Malformed)?
@@ -107,7 +107,7 @@ pub fn sign_unsalted<L: Committed>(
     let mut primes = 0u32;
     for index in 0..=u16::MAX {
         let scalar = super::unsalted::<L>(session.public_key(), message, index, bits)?;
-        if !prism_verify::degree_is_prime::<L::Degree>(L::E - 2, &scalar) {
+        if !prism_verify::prime::degree_is_prime::<L::Degree>(L::E - 2, &scalar) {
             continue;
         }
         primes += 1;

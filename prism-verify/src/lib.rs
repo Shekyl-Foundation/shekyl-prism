@@ -3,25 +3,213 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! Experimental prime-degree PRISM verifier at `e′ = e − 2`.
+//! Experimental prime-degree PRISM verifier at `e′ = e − 2`: what a
+//! signature is checked for, in what order, and what each refusal means.
+//!
+//! # What `Ok(())` means
 //!
 //! Canonical decoding and public checks precede two adapted theta chains,
 //! dual-codomain identification and both components of the image check.
 //! `Ok(())` means this research relation holds; it is not a claim of a
 //! reviewed SUF-CMA security proof. See `docs/SECURITY_REVIEW.md`.
 //!
-//! Each public check owns a module: [`identity`] decodes the key,
-//! [`signature`] decodes the response and normalizes its sign, [`basis`]
-//! re-derives the C reference's basis index, [`challenge`] derives the
-//! challenge scalar, and [`degree_is_prime`] decides its degree. [`verify`]
-//! runs them before the relation checks.
+//! Everything here is variable time and takes public values only: a key,
+//! a message and a signature. There is no secret and no randomness.
 //!
-//! [`verify`] is one of two entries. [`prepared`] is the other: the same
-//! checks split by object, so a key is checked once and its basis is
-//! searched for once. The `shekyl-prism` crate's typed interface is built
-//! on that module.
+//! # The two entries
+//!
+//! - [`verify`], with [`set::verify_set`] for a set named at run time:
+//!   three byte strings, every check on every call. It is the
+//!   definition. Its refusal order and its operation counts are held
+//!   fixed, and the committed count records are taken through it.
+//! - [`prepared`]: the same checks cut where the inputs separate.
+//!   [`prepared::PreparedKey::prepare`] runs every check on the key
+//!   alone, [`prepared::checked_response`] every check on the signature
+//!   alone, and [`prepared::verify_prepared`] the checks that need both
+//!   and the message. The typed interface of the `shekyl-prism` crate is
+//!   built on these three.
+//!
+//! The two accept the same inputs. With the prepared entry taken as its
+//! three calls in the order key, signature, verification, and its
+//! refusal as the first of them:
+//!
+//! 1. the prepared entry accepts exactly when [`verify`] accepts;
+//! 2. if `prepare` accepts the key, the prepared entry's refusal is
+//!    [`verify`]'s;
+//! 3. if `prepare` refuses the key, [`verify`] refuses too, and may name
+//!    another error. It names `Length` when the signature's length is
+//!    wrong, whatever the key is. Under a key whose only fault is
+//!    `Basis` it names a fault of the signature (`Canonical`, `Sign`,
+//!    `Singular`, `Model`) first; and when that fault is that the named
+//!    points are no basis, it names `Composite` if the challenge degree
+//!    is composite and otherwise `Kernel`.
+//!
+//! `shekyl-prism/tests/support/entries.rs` holds the rule on every input
+//! the front crate's tests verify.
+//!
+//! # The checks of the byte-level entry
+//!
+//! One row for each refusal [`verify`] can make, in the order it makes
+//! them. The table is written from the code. "Sender's cost" says whether
+//! the work this step does depends on bytes the sender of the key or the
+//! signature chooses; where it says no, every input that passes the
+//! step has paid the same for it. An input the step refuses may have
+//! paid less: a step that makes several tests stops at the first that
+//! fails (row 16, for one, is three tests, and its refusals cost a
+//! third, two thirds or all of it).
+//!
+//! | # | Step | What is tested | Refusal | Sender's cost |
+//! | --- | --- | --- | --- | --- |
+//! | 1 | lengths | the key and the signature each have the set's length; both before either is read | `Length` | no |
+//! | 2 | key | both halves of `A` are below `p` | `Canonical` | no |
+//! | 3 | key | `A ≠ 0` | `Origin` | no |
+//! | 4 | key | `A² ≠ 4` | `Singular` | no |
+//! | 5 | signature | each of `A_sig`, `x(P)`, `y(P)`, `x(Q)`, `y(Q)`, in that order, has both halves below `p` | `Canonical` | no |
+//! | 6 | signature | `0 < y(P) < −y(P)` | `Sign` | no |
+//! | 7 | response curve | `A_sig² ≠ 4` | `Singular` | no |
+//! | 8 | response curve | not one of the classes with extra automorphisms: `A_sig ≠ 0`, `A_sig² ≠ 3`, `2·A_sig² ≠ 9` | `Model` | no |
+//! | 9 | response curve | `A_sig` is not above `−A_sig` | `Model` | no |
+//! | 10 | response curve | `A_sig² − 4` is a square | `Model` | yes: a square root, paid only by a curve that passed 9 |
+//! | 11 | response curve | neither coefficient that a rational point of order 2 moves the curve to, nor its negative, is below `A_sig` | `Model` | yes: an inversion, then up to two more square roots and two more inversions |
+//! | 12 | key | an index within the search bound names a point of the key's curve | `Basis` | **yes**: one to `SEARCH_BOUND` Legendre symbols, and the key chooses how many |
+//! | 13 | challenge | the degree `2^{2e′−1} − s²` passes Baillie–PSW, for `s` the hash of key, salt and message | `Composite` | yes: the hash is linear in the message's length, and the test stops at the first small factor, or after its Miller–Rabin half, or runs both halves |
+//! | 14 | key's points | the index point, its partner and their difference can be computed | `Kernel` | no |
+//! | 15 | signature's points | `P` and `Q` satisfy the response curve's equation | `Kernel` | no |
+//! | 16 | signature's points | each has order exactly `2^e`, and the two span the `2^e`-torsion | `Kernel` | no |
+//! | 17 | key's points | each of the two basis points has order exactly `2^e`, and the two span | `Kernel` | no |
+//! | 18 | lift | the key's three points lift to full points with consistent signs | `Pairing` | no |
+//! | 19 | pairing | `e([s]P, [s]Q) = e(P_vk, Q_vk)^q`, and both pairings have a value | `Pairing` | slightly: `[s]` and the power follow the bits of `s` |
+//! | 20 | kernel | `−s²` has an inverse modulo `2^e` | `Kernel` | no |
+//! | 21 | kernel | the key's 4-torsion has a canonical basis | `Kernel` | no |
+//! | 22 | kernel | the response's 4-torsion has a canonical basis | `Kernel` | no |
+//! | 23 | kernel | the Weil pairing of the key's 4-torsion basis has a value | `Kernel` | no |
+//! | 24 | kernel | the two challenge matrices exist | `Kernel` | no |
+//! | 25 | kernel | the long chain's change of theta basis exists | `Kernel` | no |
+//! | 26 | long chain | every step of the `e − 2` steps has a codomain | `Kernel` | slightly: the kernel's ladders follow the matrix entries |
+//! | 27 | kernel | the short chain's change of theta basis exists | `Kernel` | no |
+//! | 28 | short chain | every step of the `e − 3` steps has a codomain | `Kernel` | slightly, as 26 |
+//! | 29 | codomain | the two chains end on dual theta structures of one surface | `Codomain` | no |
+//! | 30 | image, three times | the point can be carried through the long chain | `Kernel` | no |
+//! | 31 | image, three times | and back through the dual of the short chain | `Kernel` | no |
+//! | 32 | image, three times | both components are the expected multiples by `s` | `Image` | no |
+//!
+//! Rows 30 to 32 run in turn for each of the three points `P`, `Q` and
+//! `P − Q`, so a later point's `Kernel` can follow an earlier point's
+//! passing comparison.
+//!
+//! What the order is for: everything through row 11 is decoding and a
+//! few field operations, and runs before the search of row 12, the one
+//! step whose length a sender chooses outright. The hash and primality
+//! of row 13 come before any curve arithmetic, so a signature whose salt
+//! does not name a prime degree costs no doubling. From row 14 on, the
+//! cost of a refusal is set by how far it gets, and
+//! `docs/benchmarks/negative-verdicts.tsv` records it for each committed
+//! negative.
+//!
+//! ## Refusals the code spells and this entry cannot reach
+//!
+//! - `Length` inside [`identity::KeyIdentity::decode`] and
+//!   [`signature::Response::decode`]: row 1 has tested both lengths.
+//!   The prepared entry reaches them, having no row 1.
+//! - `Length` for the salt: a string of the salt's length is a salt.
+//! - `Model` where 2 has no inverse, and where the square root of
+//!   `α² − 1` is zero: the fields have odd characteristic, and the
+//!   second needs `A_sig = ±2`, which row 7 refused.
+//! - `Origin` and `Basis` at the head of the relation: rows 3 and 12
+//!   refused both, and the relation's second search of the same key
+//!   finds what the first found.
+//! - Row 20: `s` is odd, so `−s²` is a unit.
+//! - Rows 25 and 27: the change of basis fails only when the pairing of
+//!   row 23 squares to `−3`, and it is a fourth root of unity
+//!   (`accept.rs`, at `change`).
+//!
+//! ## Which rows the tests reach
+//!
+//! Found by marking every place the library makes a refusal and running
+//! the workspace's tests, without the two that need the C reference
+//! built (`docs/lab/NOTEBOOK.md`, library part 5c):
+//! rows 1 to 11, 13, 15 to 17, 19, 26, 29 and 32 are reached. Row 26 is
+//! reached by the committed negative `identity-response-q-negated`,
+//! which passes the pairing and has no long chain.
+//!
+//! No test reaches row 12's refusal, row 14, row 18, rows 21 to 24, row
+//! 28, or rows 30 and 31, and no input is known that would. They refuse
+//! values the earlier rows leave no known way to produce, and are kept
+//! so that a value this crate did not expect is refused and not used.
+//! What each would cost its sender is therefore not measured.
+//!
+//! # The prepared entry's order
+//!
+//! | Call | Rows, in order | Refusals |
+//! | --- | --- | --- |
+//! | [`prepared::PreparedKey::prepare`] | the key's length, 2, 3, 4, 12, then 14 and 17 | `Length`, `Canonical`, `Origin`, `Singular`, `Basis`; rows 14 and 17 are `Basis` here, not `Kernel` |
+//! | [`prepared::checked_response`] | the signature's length, 5 to 11 | `Length`, `Canonical`, `Sign`, `Singular`, `Model` |
+//! | [`prepared::verify_prepared`] | 13, 15, 16, 18 to 32 | `Composite`, `Kernel`, `Pairing`, `Codomain`, `Image` |
+//!
+//! The cost order differs with it: the search of row 12 and the test of
+//! row 17, the dearest of the key's checks, run when the key is prepared
+//! and never again. That suits a key validated once and kept, and not a
+//! key built from every incoming message.
+//!
+//! # The five sets
+//!
+//! | Set | Honest signatures to test with | What holds it |
+//! | --- | --- | --- |
+//! | `p248` | yes, committed | acceptance and every reachable refusal |
+//! | `p324` | none | refusals only |
+//! | `p376` | yes, committed | acceptance and every reachable refusal |
+//! | `p500` | yes, committed | acceptance and every reachable refusal |
+//! | `p664` | none | refusals only |
+//!
+//! At `p324` and `p664` no signer exists, so nothing shows that
+//! [`verify`] accepts anything, and row 32 is not reached. The field,
+//! the torsion, the pairing, the challenge and primality are tested
+//! there against independent implementations, and the refusals reachable
+//! from public data are reached, `Codomain` among them
+//! (`docs/lab/LEDGER.md`, O14).
+//!
+//! # The modules
+//!
+//! Each public check owns a module: [`identity`] decodes the key,
+//! [`signature`] decodes the response and has the sign rule, [`basis`]
+//! re-derives the C reference's basis index, [`challenge`] derives the
+//! challenge scalar, and [`prime`] decides its degree. [`set`] names a
+//! parameter set at run time. The relation itself, rows 14 to 32, is
+//! private: it is reached through the two entries and no other way.
+//!
+//! The functions in those modules are steps, not entries. Each one's
+//! documentation says what it assumes of its arguments, what it returns
+//! when the assumption fails, and which call establishes it. Only
+//! [`verify`], [`set::verify_set`] and the three calls of [`prepared`]
+//! taken together check everything.
+//!
+//! # An example
+//!
+//! A committed signature at `p248` is accepted. With one byte changed,
+//! the top byte of `x(P)`, it is refused at row 5: no element of the
+//! field has that byte.
+//!
+//! ```
+//! use prism_field::{ParameterSet, P248};
+//! use prism_vectors::corpus::Primary;
+//! use prism_verify::{verify, VerifyError};
+//!
+//! let vector = Primary::Lvl1.vector();
+//! let key = vector.public_key().unwrap();
+//! let message = vector.message().unwrap();
+//! let mut signature = vector.signature().unwrap();
+//! assert_eq!(verify::<P248>(&key, message, &signature), Ok(()));
+//!
+//! // `x(P)` is the second field element of the signature.
+//! signature[2 * P248::FP2_LEN - 1] = 0xff;
+//! assert_eq!(
+//!     verify::<P248>(&key, message, &signature),
+//!     Err(VerifyError::Canonical)
+//! );
+//! ```
 
 #![forbid(unsafe_code)]
+#![deny(missing_docs)]
 
 mod accept;
 pub mod basis;
@@ -30,7 +218,7 @@ pub mod identity;
 mod mark;
 mod model;
 pub mod prepared;
-mod prime;
+pub mod prime;
 mod relation;
 #[cfg(feature = "research-reduced-width")]
 pub mod research;
@@ -44,68 +232,115 @@ pub mod stage;
 
 use prism_field::ParameterSet;
 
-pub use basis::{basis_hint, search_bound, BasisHint, C_HINT_MAX_INDEX};
-pub use challenge::{ChallengeScalar, CHALLENGE_DOMAIN};
-pub use identity::KeyIdentity;
-pub use prepared::{checked_response, verify_prepared, CheckedResponse, PreparedKey};
-pub use prime::{challenge_degree, degree_is_prime, is_baillie_psw};
-pub use prism_field::Salt;
-pub use set::{
-    verify_set, Committed, CommittedSet, NoCorpus, Set, UnknownCommittedLabel, UnknownSet,
-};
-pub use signature::{AffinePoint, Response};
-#[cfg(feature = "op-count")]
-pub use stage::Stage;
+use basis::basis_hint;
+use challenge::ChallengeScalar;
+use identity::KeyIdentity;
+use prepared::CheckedResponse;
 
 /// Why a signature was refused.
 ///
-/// Public decoding checks precede curve/basis checks, pairing, chains,
-/// codomain identification and images. `Singular` can arise on either
-/// curve and `Kernel` can arise before or after pairing, so the enum's
-/// derived order is not a global precedence rule for malformed inputs.
+/// The row numbers are those of the table in the crate documentation,
+/// which is the order [`verify`] refuses in. The prepared entry runs the
+/// same checks in the order of its three calls. The enum's derived order
+/// is the order of the variants below and is not a precedence rule:
+/// `Singular` can be either curve's, and `Kernel` is given before the
+/// pairing and after it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum VerifyError {
-    /// The byte string is not this set's length.
+    /// A byte string is not this set's length (row 1).
+    ///
+    /// In [`verify`]: the key's or the signature's, tested together
+    /// before either is read, so a wrong signature length is `Length`
+    /// whatever the key is. In the prepared entry each call tests its
+    /// own input, so a key with another fault and a signature of the
+    /// wrong length are named for the key there and `Length` here.
+    ///
+    /// With the feature `research-reduced-width`, the two functions of
+    /// `research` also give it for a challenge width or scalar they do
+    /// not take.
     Length,
-    /// A field element is not the canonical representative in `0..p`.
+    /// A field element is not the canonical representative in `0..p`
+    /// (rows 2 and 5): the key's coefficient, or the first of the
+    /// signature's five elements, in layout order, that is out of range.
     Canonical,
-    /// `A = 0`, the starting curve. Its endomorphism ring is public.
+    /// `A = 0`, the starting curve, as a key (row 3). Its endomorphism
+    /// ring is public. A response curve with `A_sig = 0` is `Model`.
     Origin,
-    /// `A^2 = 4`. The Montgomery curve is singular.
+    /// `A² = 4`: the Montgomery curve is singular. The key's (row 4) or
+    /// the response's (row 7).
     Singular,
-    /// `y(P)` is zero or not strictly below `y(−P)` in `<_{F_{p^2}}`.
+    /// `y(P)` is zero or not strictly below `y(−P)` in `<_{F_{p^2}}`
+    /// (row 6).
     Sign,
-    /// A response curve is not its least model, or has extra automorphisms.
+    /// The response curve's coefficient is not the one permitted for its
+    /// isomorphism class (rows 8 to 11). Four causes: the class has
+    /// extra automorphisms (`A_sig = 0`, `A_sig² = 3` or `2·A_sig² = 9`);
+    /// `−A_sig` is below `A_sig`; `A_sig² − 4` is not a square, so the
+    /// curve's points of order 2 are not all rational; or a coefficient
+    /// one of those points moves the curve to, or its negative, is below
+    /// `A_sig`.
     Model,
     /// The key gives no usable basis of its `2^e`-torsion, by one of two
     /// causes.
     ///
-    /// No basis index within [`search_bound`] meets the C search.
-    /// The search is the reference's, including the indices its `start = 128`
-    /// fallback covers, so this refuses only keys whose smallest index
-    /// exceeds the set's [`search_bound`]. That function's comment gives
-    /// the heuristic estimate of how rare that is.
-    /// `docs/VERIFIER_SPEC.md` records the bound and what it costs.
+    /// No basis index within the set's search bound meets the C search
+    /// (row 12). The search is the reference's, including the indices its
+    /// `start = 128` fallback covers, so this refuses only keys whose
+    /// smallest index exceeds the bound. The documentation of [`basis`]
+    /// gives the heuristic estimate of how rare that is, and
+    /// `docs/VERIFIER_SPEC.md` records the bound and what it costs. Both
+    /// entries give this refusal for it.
     ///
     /// Or the search finds an index and the points it names are not a
-    /// basis: one of them has not order `2^e`, or the two do not span.
-    /// The search looks at abscissas and does not see this. It is so for
-    /// a curve whose `2^e`-torsion is not rational, which is no key.
-    /// [`PreparedKey::prepare`] refuses such a key with this error. The
-    /// byte-level [`verify`] reaches the same test later, in the
-    /// relation, and names it [`Self::Kernel`].
+    /// basis: they cannot be computed, one of them has not order `2^e`,
+    /// or the two do not span (rows 14 and 17). The search looks at
+    /// abscissas and does not see this. It is so for a curve whose
+    /// `2^e`-torsion is not rational, which is no key.
+    /// [`prepared::PreparedKey::prepare`] refuses such a key with this
+    /// error. The byte-level [`verify`] reaches the same test later, in
+    /// the relation, and names it [`Self::Kernel`]; before that it
+    /// names any fault of the signature in rows 5 to 11, and
+    /// [`Self::Composite`] when the challenge degree is composite.
     Basis,
-    /// `2^{2e′−1} − s_j^2` is not a Baillie–PSW prime, `e′ = e − 2`.
+    /// `2^{2e′−1} − s²` is not a Baillie–PSW prime, `e′ = e − 2` (row
+    /// 13). The same in both entries.
     Composite,
-    /// Curve, torsion, or adapted-chain construction failed.
+    /// A point or a construction the relation needs is not what it must
+    /// be. Before the pairing:
+    ///
+    /// - a signature point is not on the response curve (row 15);
+    /// - a signature point has not order exactly `2^e`, or the two do
+    ///   not span the torsion (row 16);
+    /// - in [`verify`] only, the points the key's index names cannot be
+    ///   computed or are not a basis (rows 14 and 17), which the
+    ///   prepared entry names [`Self::Basis`] when the key is prepared.
+    ///
+    /// After the pairing:
+    ///
+    /// - the 4-torsion of either curve has no canonical basis, its
+    ///   pairing has no value, the challenge matrices or a change of
+    ///   theta basis do not exist (rows 20 to 25 and 27);
+    /// - a step of either chain has no codomain (rows 26 and 28);
+    /// - a point cannot be carried through the long chain or back
+    ///   through the dual of the short one (rows 30 and 31).
+    ///
+    /// A signature whose two points are a basis and pass the pairing can
+    /// still end here: the committed negative `identity-response-q-negated`
+    /// does, at row 26. Of the cases after the pairing it is the only one
+    /// any test reaches.
     Kernel,
-    /// `e(R₁, R₂) ≠ e(P₁, P₂)^q`, with `R_i = [s]` of the signature points.
-    /// This pins the determinant of the basis change. It runs after the
-    /// order and span checks and before either chain.
+    /// `e(R₁, R₂) ≠ e(P₁, P₂)^q`, with `R_i = [s]` of the signature
+    /// points (row 19). This pins the determinant of the basis change. It
+    /// runs after the order and span checks and before either chain.
+    ///
+    /// The same error is given when either pairing has no value, and
+    /// when the key's basis does not lift to full points (row 18). No
+    /// input is known for the lift's refusal.
     Pairing,
-    /// The adapted chains do not meet in dual theta structures.
+    /// The adapted chains do not meet in dual theta structures (row 29).
     Codomain,
-    /// The composed chain does not have the challenge-bound images.
+    /// The composed chain does not have the challenge-bound images (row
+    /// 32).
     Image,
 }
 
@@ -131,7 +366,13 @@ impl core::fmt::Display for VerifyError {
 
 impl std::error::Error for VerifyError {}
 
-/// Run the public checks, then Algorithm 3.
+/// Verify `signature` on `message` under `public_key`, at the set `L`.
+///
+/// The byte-level entry and the definition of what is accepted. It
+/// assumes nothing of its three arguments: every check in the table of
+/// the crate documentation runs, in that order, on every call, and the
+/// first that fails is the refusal. `Ok(())` is returned only after the
+/// last image comparison.
 pub fn verify<L: ParameterSet>(
     public_key: &[u8],
     message: &[u8],
@@ -161,7 +402,7 @@ pub(crate) struct Opened<'a, L: ParameterSet> {
 /// input is short and a short signature cannot surface as `Origin`. The
 /// sign test is a byte comparison on an element already decoded, so it
 /// comes before the basis search, whose length an attacker chooses with
-/// `A` — up to [`search_bound`] Legendre symbols.
+/// `A` — up to `SEARCH_BOUND` Legendre symbols.
 pub(crate) fn open<'a, L: ParameterSet>(
     public_key: &'a [u8],
     signature: &[u8],
@@ -203,8 +444,13 @@ pub(crate) fn prime_then<L: ParameterSet>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prism_field::{Field, ParameterSet, P248, P376, P500};
-    use signature::{canonical_sign, ext_less};
+    use basis::{BasisHint, C_HINT_MAX_INDEX};
+    use prime::is_baillie_psw;
+    use prism_field::{Field, ParameterSet, Salt, P248, P376, P500};
+    use set::{
+        verify_set, Committed, CommittedSet, NoCorpus, Set, UnknownCommittedLabel, UnknownSet,
+    };
+    use signature::{canonical_sign, ext_less, AffinePoint, Response};
 
     type Ext1 = <P248 as ParameterSet>::Ext;
 

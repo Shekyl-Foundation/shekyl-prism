@@ -23,8 +23,11 @@ use std::path::{Path, PathBuf};
 
 use prism_field::{Field, ParameterSet, Salt, P248, P376, P500};
 use prism_verify::{
-    signature::canonical_sign, verify, ChallengeScalar, Committed, CommittedSet, KeyIdentity,
-    Response,
+    challenge::ChallengeScalar,
+    identity::KeyIdentity,
+    set::{Committed, CommittedSet},
+    signature::{canonical_sign, Response},
+    verify,
 };
 use sha3::{
     digest::{core_api::CoreWrapper, ExtendableOutput, Update, XofReader},
@@ -413,7 +416,7 @@ fn decode_hex(text: &str) -> Result<Vec<u8>, CandidateError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prism_verify::Committed;
+    use prism_verify::set::Committed;
 
     #[test]
     fn the_salt_kdf_binds_every_input_and_writes_the_row_length() {

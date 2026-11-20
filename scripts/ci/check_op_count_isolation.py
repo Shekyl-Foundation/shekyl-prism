@@ -25,7 +25,7 @@ does. This check requires that:
    has the feature on neither crate by default, and has it on both when it
    is requested (so the check can see the feature it says is absent);
 4. a consumer of a default build cannot name `prism_field::ops`,
-   `prism_verify::stage` or `prism_verify::Stage`, and can name all three
+   `prism_verify::stage` or `prism_verify::stage::Stage`, and can name all three
    when it enables `prism-verify/op-count` and nothing else; and the two
    private modules the crates mark through (`prism_field::tally`,
    `prism_verify::mark`) cannot be named in either build. The same holds
@@ -278,7 +278,7 @@ REFUSED = (
     ("pub use prism_field::ops;\n", ABSENT),
     ("pub use prism_field::ops::take;\n", ABSENT),
     ("pub use prism_verify::stage;\n", ABSENT),
-    ("pub use prism_verify::Stage;\n", ABSENT),
+    ("pub use prism_verify::stage::Stage;\n", ABSENT),
     ("pub use shekyl_prism::hazmat::field::ops;\n", ABSENT),
     ("pub use shekyl_prism::hazmat::verify::stage;\n", ABSENT),
     ("pub use prism_field::tally::tally;\n", PRIVATE),
@@ -292,7 +292,7 @@ STILL_PRIVATE = REFUSED[6:]
 ALLOWED = (
     "pub use prism_field::ops::{enter, take, Counts, Slot, SLOTS};\n"
     "pub use prism_verify::stage;\n"
-    "pub use prism_verify::Stage;\n"
+    "pub use prism_verify::stage::Stage;\n"
     "pub const NAMES: usize = Stage::ALL.len();\n"
     "pub use shekyl_prism::hazmat::field::ops::take as front_take;\n"
     "pub use shekyl_prism::hazmat::verify::stage::Stage as FrontStage;\n"

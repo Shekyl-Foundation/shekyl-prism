@@ -17,7 +17,7 @@
 //! change gives the same output before and after.
 
 use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
-use prism_verify::Set;
+use prism_verify::set::Set;
 use prism_verify::{verify, VerifyError};
 use std::path::PathBuf;
 

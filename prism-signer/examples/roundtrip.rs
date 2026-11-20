@@ -5,7 +5,7 @@
 
 //! Generate ephemeral research keys, sign, and verify. No secrets are printed.
 use prism_signer::{SecretSeed, Signer};
-use prism_verify::{verify_set, CommittedSet};
+use prism_verify::set::{verify_set, CommittedSet};
 use std::{path::PathBuf, time::Instant};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let dir = PathBuf::from(

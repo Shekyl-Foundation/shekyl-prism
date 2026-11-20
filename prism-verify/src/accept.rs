@@ -6,7 +6,7 @@
 //! Two adapted chains and the complete image check of the Sage model.
 use crate::mark::Stage;
 use crate::relation::KeyBasis;
-use crate::{AffinePoint, VerifyError};
+use crate::{signature::AffinePoint, VerifyError};
 use prism_field::{Field, ParameterSet};
 use prism_isogeny::dual_chain::{canonical_four, product_null, Couple, DualChain};
 use prism_isogeny::jac::{add, dbl, dbl_iter, lift_basis, to_xz, Jac};
@@ -383,7 +383,8 @@ pub(crate) fn check<L: ParameterSet>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{basis_hint, ChallengeScalar, KeyIdentity, Salt};
+    use crate::{basis::basis_hint, challenge::ChallengeScalar, identity::KeyIdentity};
+    use prism_field::Salt;
     use prism_field::{P248, P324, P376, P500, P664};
     use prism_isogeny::theta::{projectively_same, ThetaPoint};
 
@@ -579,10 +580,10 @@ mod tests {
                 0
             };
             let label = vector.level().expect("the vector's level");
-            match crate::CommittedSet::from_label(label) {
-                Ok(crate::CommittedSet::P248) => kernels_agree::<P248>(&text, &name, random),
-                Ok(crate::CommittedSet::P376) => kernels_agree::<P376>(&text, &name, random),
-                Ok(crate::CommittedSet::P500) => kernels_agree::<P500>(&text, &name, random),
+            match crate::set::CommittedSet::from_label(label) {
+                Ok(crate::set::CommittedSet::P248) => kernels_agree::<P248>(&text, &name, random),
+                Ok(crate::set::CommittedSet::P376) => kernels_agree::<P376>(&text, &name, random),
+                Ok(crate::set::CommittedSet::P500) => kernels_agree::<P500>(&text, &name, random),
                 Err(_) => panic!("{name}: label {label}"),
             }
         }
@@ -642,10 +643,10 @@ mod tests {
             let label = prism_vectors::corpus::Vector::new(&text)
                 .level()
                 .expect("the vector's level");
-            match crate::CommittedSet::from_label(label) {
-                Ok(crate::CommittedSet::P248) => the_sign_of_the_lift::<P248>(&text, &name),
-                Ok(crate::CommittedSet::P376) => the_sign_of_the_lift::<P376>(&text, &name),
-                Ok(crate::CommittedSet::P500) => the_sign_of_the_lift::<P500>(&text, &name),
+            match crate::set::CommittedSet::from_label(label) {
+                Ok(crate::set::CommittedSet::P248) => the_sign_of_the_lift::<P248>(&text, &name),
+                Ok(crate::set::CommittedSet::P376) => the_sign_of_the_lift::<P376>(&text, &name),
+                Ok(crate::set::CommittedSet::P500) => the_sign_of_the_lift::<P500>(&text, &name),
                 Err(_) => panic!("{name}: label {label}"),
             }
         }

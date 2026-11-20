@@ -6,7 +6,7 @@
 //! Streaming differential driver. Each line is a vector's `level` field,
 //! key hex, message hex (use '-' for empty), signature hex. Outputs exactly
 //! one verdict per line.
-use prism_verify::{verify_set, CommittedSet};
+use prism_verify::set::{verify_set, CommittedSet};
 use std::io::{self, BufRead};
 fn hex(s: &str) -> Option<Vec<u8>> {
     if s == "-" {

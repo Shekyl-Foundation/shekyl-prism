@@ -12,7 +12,7 @@
 use core::fmt;
 
 use prism_field::ParameterSet;
-use prism_verify::{verify_set, VerifyError};
+use prism_verify::{set::verify_set, VerifyError};
 
 use crate::{AcceptList, SetId, UnknownSetId};
 

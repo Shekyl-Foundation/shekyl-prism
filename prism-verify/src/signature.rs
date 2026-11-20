@@ -27,22 +27,37 @@ mod at {
 }
 
 /// A point of the signature's basis image, in affine coordinates.
+///
+/// Plain data with no invariant: the fields are public, and nothing
+/// checks that the point is on any curve. The point at infinity cannot
+/// be written.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct AffinePoint<L: ParameterSet> {
+    /// The abscissa.
     pub x: L::Ext,
+    /// The ordinate.
     pub y: L::Ext,
 }
 
 /// A decoded signature.
 ///
-/// Every field is canonical. Sign and curve-model normalization are checked
-/// by `verify`, rather than by this byte decoder.
-/// The full verifier checks both image components after the adapted chains.
+/// Plain data with no invariant: the fields are public and a value can
+/// be written by hand. One that [`Self::decode`] returned was the right
+/// length with every element canonical, and nothing more: the sign of
+/// `y(P)`, the model of the curve, that the points are on the curve, and
+/// the relation itself are not this type's business.
+/// [`crate::prepared::CheckedResponse`] is the type that holds the
+/// signature's own checks, and the verifier takes that.
+///
+/// The derived `==` compares field elements as stored. Compare
+/// [`Self::encode`] instead.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Response<L: ParameterSet> {
     /// `A_sig`, the Montgomery coefficient of `E_sig`.
     pub curve: L::Ext,
+    /// `P_sig`, the claimed image of the key's first basis point.
     pub p: AffinePoint<L>,
+    /// `Q_sig`, the claimed image of the key's second basis point.
     pub q: AffinePoint<L>,
     /// Public salt. Every byte pattern of the set's salt length is valid.
     pub salt: L::Salt,
@@ -50,6 +65,11 @@ pub struct Response<L: ParameterSet> {
 
 impl<L: ParameterSet> Response<L> {
     /// Decode `signature`: `Length`, then `Canonical`.
+    ///
+    /// The elements are read in the order of the layout, `A_sig`, `x(P)`,
+    /// `y(P)`, `x(Q)`, `y(Q)`, and the first that is not below `p` in
+    /// both halves is the refusal. The salt has no refusal: every byte
+    /// string of its length is a salt.
     pub fn decode(signature: &[u8]) -> Result<Self, VerifyError> {
         const {
             assert!(
@@ -99,17 +119,24 @@ fn salt<L: ParameterSet>(signature: &[u8]) -> Result<L::Salt, VerifyError> {
     L::Salt::from_bytes(signature.get(at..).ok_or(VerifyError::Length)?).ok_or(VerifyError::Length)
 }
 
-/// `true` when `y` is the representative Algorithm 2 line 8 normalizes to.
+/// `true` when `y` is the representative Algorithm 2 line 8 normalizes to:
+/// `0 < y < −y`, comparing the real parts as integers in `[0, p)` and
+/// then the imaginary parts.
 ///
 /// `y = 0` is an order-2 point: it cannot be a basis image, and it is its own
 /// negation, so no inequality would separate it.
+///
+/// It assumes nothing of `y`; any field element has an answer. A signer
+/// calls it to choose between a response and its negative, and the
+/// verifier's check of it is in
+/// [`crate::prepared::checked_response`].
 pub fn canonical_sign<L: ParameterSet>(y: L::Ext) -> bool {
     !y.is_zero() && ext_less::<L>(y, y.negate())
 }
 
 /// `<_{F_{p^2}}`: the real part as an integer in `[0, p)`, then the
 /// imaginary part.
-pub fn ext_less<L: ParameterSet>(left: L::Ext, right: L::Ext) -> bool {
+pub(crate) fn ext_less<L: ParameterSet>(left: L::Ext, right: L::Ext) -> bool {
     let (left_re, left_im) = L::ext_parts(left);
     let (right_re, right_im) = L::ext_parts(right);
     match little_endian_cmp(&L::base_encode(left_re), &L::base_encode(right_re)) {

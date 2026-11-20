@@ -3,7 +3,13 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! Baillie–PSW on a public little-endian integer.
+//! Baillie–PSW on a public little-endian integer: the test of the
+//! challenge degree.
+//!
+//! [`degree_is_prime`] and [`challenge_degree`] are the two public
+//! functions. Both take the width as a type and the exponent as a
+//! number; for a parameter set, [`crate::challenge::ChallengeScalar::degree_is_prime`]
+//! passes the set's own and is the call to prefer.
 //!
 //! Products and exponentiations are variable-time Montgomery
 //! multiplications on 64-bit limbs. The challenge degree is public, so
@@ -24,7 +30,8 @@
 //! verdict is a function of `n` alone.
 //!
 //! A perfect square is refused by the Lucas half, with no filter of its
-//! own: see [`selfridge_discriminant`].
+//! own: the search for Selfridge's discriminant ends empty on a square
+//! (`selfridge_discriminant`, in this file).
 //!
 //! # Every loop is counted
 //!
@@ -32,8 +39,8 @@
 //! number of times fixed by the width, by a bit length read once before
 //! it starts, or by a constant, so a wrong operator gives a wrong verdict
 //! and never a verifier that does not return. The two that are searches
-//! by nature, the strip of the factors of two ([`Nat::split_twos`]) and
-//! Euclid's algorithm in [`jacobi_nonneg`], have a count they provably do
+//! by nature, the strip of the factors of two (`Nat::split_twos`) and
+//! Euclid's algorithm in `jacobi_nonneg`, have a count they provably do
 //! not need in full and stop early inside it.
 
 use core::cmp::Ordering;
@@ -669,7 +676,7 @@ const SMALLEST_PRIME: u64 = 2;
 /// `true` when the little-endian integer `bytes` passes Baillie–PSW.
 ///
 /// An integer wider than the width is refused rather than truncated.
-pub fn is_baillie_psw<W: DegreeWidth>(bytes: &[u8]) -> bool {
+pub(crate) fn is_baillie_psw<W: DegreeWidth>(bytes: &[u8]) -> bool {
     Nat::<W>::from_le_bytes(bytes).is_some_and(is_prime)
 }
 
@@ -693,11 +700,24 @@ fn is_prime<W: DegreeWidth>(n: Nat<W>) -> bool {
     miller_rabin_base2(n) && strong_lucas_selfridge(n)
 }
 
-/// The challenge degree `q = 2^{2·exponent−1} − s^2`, little-endian.
+/// The challenge degree `q = 2^{2·exponent−1} − s^2`, little-endian,
+/// without high zero bytes.
 ///
-/// `None` when `s` is not a positive odd integer strictly below
-/// `2^{exponent−1}`. Zero would make `q` a power of two, the prime 2
-/// exactly at exponent 1, and that integer is not a challenge degree.
+/// It assumes nothing of its arguments and tests what it needs. `None`
+/// when `s` is zero or even, when `s`, its square or `2^{2·exponent−1}`
+/// does not fit the width `W`, or when `s² ≥ 2^{2·exponent−1}`. Zero
+/// would make `q` a power of two, the prime 2 exactly at exponent 1, and
+/// that integer is not a challenge degree.
+///
+/// The bound it enforces is `s² < 2^{2·exponent−1}`. A challenge is
+/// narrower: `s < 2^{exponent−1}`. A scalar between the two gives a
+/// degree here and is no challenge;
+/// [`crate::challenge::ChallengeScalar::derive`] is what keeps a scalar
+/// in the challenge's range, and the verifier passes nothing else.
+///
+/// `W` must be wide enough for the set: for a parameter set `L`, pass
+/// `L::Degree` and `L::CHAIN_STEPS`, as
+/// [`crate::challenge::ChallengeScalar::degree_is_prime`] does.
 pub fn challenge_degree<W: DegreeWidth>(exponent: u32, scalar: &[u8]) -> Option<Vec<u8>> {
     let scalar = Nat::<W>::from_le_bytes(scalar)?;
     if scalar.is_zero() || scalar.is_even() {
@@ -714,11 +734,22 @@ pub fn challenge_degree<W: DegreeWidth>(exponent: u32, scalar: &[u8]) -> Option<
 /// `true` when the challenge degree `q = 2^{2e−1} − s^2` is a Baillie–PSW
 /// prime.
 ///
-/// `exponent` is the chain exponent (`E − 2` for the current verifier),
-/// and `scalar` is `s` little-endian. The helper requires a positive odd
-/// scalar with `s² < 2^{2·exponent−1}`; it does not enforce the narrower
-/// challenge domain `s < 2^{exponent−1}`. The verifier gets that domain
-/// from `ChallengeScalar::derive`, rather than reducing supplied bytes.
+/// `exponent` is the chain exponent (`E − 2` for the current verifier,
+/// [`prism_field::ParameterSet::CHAIN_STEPS`]), and `scalar` is `s`
+/// little-endian.
+///
+/// It assumes nothing: `false` for every scalar [`challenge_degree`]
+/// gives no degree for, as well as for a composite degree, so a caller
+/// cannot tell a malformed scalar from a composite one. Like that
+/// function it requires a positive odd scalar with
+/// `s² < 2^{2·exponent−1}` and does not enforce the narrower challenge
+/// domain `s < 2^{exponent−1}`. The verifier gets that domain from
+/// [`crate::challenge::ChallengeScalar::derive`], and does not reduce
+/// supplied bytes.
+///
+/// "Prime" is Baillie–PSW's verdict: no composite that passes is known,
+/// and none is proved not to exist. `docs/VERIFIER_SPEC.md` states the
+/// test.
 pub fn degree_is_prime<W: DegreeWidth>(exponent: u32, scalar: &[u8]) -> bool {
     challenge_degree::<W>(exponent, scalar).is_some_and(|degree| is_baillie_psw::<W>(&degree))
 }

@@ -20,7 +20,7 @@ mod entries;
 use entries::{both, Outcome, Tally};
 use prism_field::{ParameterSet, P248, P376, P500};
 use prism_testkit::{files, negatives, primary, set, vector};
-use prism_verify::CommittedSet;
+use prism_verify::set::CommittedSet;
 use std::fs;
 
 fn positive<L: ParameterSet>(text: &str) -> Outcome {
