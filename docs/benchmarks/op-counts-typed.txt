@@ -8,7 +8,7 @@
 # part=one-basis-search: basis_hint on the key, counted alone. The reporter
 # fails unless sum plus one-basis-search equals byte-level on every vector.
 # The fields are those of op-counts.txt.
-# Sources: sha256 c0c745099edcbfa8c3c3019c5f6ea3c2c35529982f1641a00b81d2695a855404
+# Sources: sha256 9c07e26734a0db74a5fc8865d75007faa977c1e8b5db570059aed7f2df415c6f
 set=p248 vector=s5_i_r40.txt part=key ext_mul=6040 ext_square=3008 ext_inv=3 ext_sqrt=2 ext_is_square=3 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=8
 set=p248 vector=s5_i_r40.txt part=signature ext_mul=6 ext_square=3 ext_inv=3 ext_sqrt=3 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 set=p248 vector=s5_i_r40.txt part=verify ext_mul=131924 ext_square=90983 ext_inv=66 ext_sqrt=1 ext_is_square=0 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
