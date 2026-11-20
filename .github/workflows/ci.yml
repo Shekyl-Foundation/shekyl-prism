@@ -143,25 +143,28 @@ jobs:
         run: |
           python3 scripts/ci/check_sage_fixture.py --selftest
           python3 scripts/ci/check_sage_fixture.py
-      # The affine oracles are for the fuzz crate alone. The self-test plants
-      # each breach in a copy of the manifests first, so a check that had
-      # gone blind fails here instead of passing.
-      - name: The replaced-routine oracles are in no build but the fuzz crate's
+      # The isogeny crate's `oracle` feature (the affine pairing kept as a
+      # reference, and the 2-isogeny model) is for the fuzz crate alone: no
+      # other tracked manifest names it, the front crate's included, and
+      # neither the verifier's build nor the front crate's has it. The
+      # self-test plants each breach in a copy of the manifests first, so a
+      # check that had gone blind fails here instead of passing.
+      - name: The isogeny crate's reference code is in no build but the fuzz crate's
         run: |
           python3 scripts/ci/check_oracle_isolation.py --selftest
           python3 scripts/ci/check_oracle_isolation.py
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       # The front crate is the interface, the vectors crate is public data,
-      # the testkit is a library of test inputs and the field crate is the
-      # first of the layer crates held to the same standard: all four deny
-      # missing documentation, and here a broken link or any other rustdoc
-      # warning fails too. Their doc tests run in the test jobs, which
-      # `cargo test --workspace` already includes.
-      - name: Documentation of the front crate, the vectors crate, the testkit and the field crate
+      # the testkit is a library of test inputs, and the field crate and the
+      # isogeny crate are the layer crates held to the same standard so far:
+      # all five deny missing documentation, and here a broken link or any
+      # other rustdoc warning fails too. Their doc tests run in the test
+      # jobs, which `cargo test --workspace` already includes.
+      - name: Documentation of the front crate, the vectors crate, the testkit, the field crate and the isogeny crate
         env:
           RUSTDOCFLAGS: -D warnings
-        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit -p prism-field --no-deps --locked
+        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit -p prism-field -p prism-isogeny --no-deps --locked
       # The counter's module is public only with its feature, so its
       # documentation is built, and its missing documentation denied, in a
       # pass of its own.
@@ -169,6 +172,13 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
         run: cargo doc -p prism-field --features op-count --no-deps --locked
+      # The affine pairing kept as a reference and the 2-isogeny model are
+      # public only with their feature, so they too are built, and their
+      # missing documentation denied, in a pass of its own.
+      - name: Documentation of the isogeny crate, oracle
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc -p prism-isogeny --features oracle --no-deps --locked
       # The counter is compiled only when asked for, so its code and the
       # reporter (an example of the testkit that requires the feature) are
       # linted in a pass of their own.

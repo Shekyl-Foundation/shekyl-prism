@@ -17,6 +17,21 @@
 //! doublings. Signature verification in the pinned tree sets that flag, so
 //! those two forms are not on its path. A missing square root is a refusal
 //! here; the C signing path does not check the root it takes.
+//!
+//! Private to the crate. [`crate::dual_chain`] and [`crate::chain`] drive
+//! it, and the conditions under which a step means anything are theirs.
+//!
+//! # The square roots
+//!
+//! The 8-torsion form takes none. The other two take five between them,
+//! and the theta null point each returns depends on which root every one
+//! of them is: with the other root of any one, the chain that uses these
+//! forms no longer reproduces the reference's codomain and image on the
+//! committed chain (`tests/chain_kat.rs`, the chain without extra
+//! torsion). The roots are the ones [`Field::sqrt`] returns, which at a
+//! parameter set's extension field is the reference's rule. No verifier
+//! result depends on them, because the verifier's chains use the
+//! 8-torsion form alone.
 
 use prism_field::Field;
 
@@ -24,12 +39,12 @@ use crate::theta::{hadamard, to_squared_theta, ThetaPoint};
 
 /// A 4×4 change of theta basis. Row `i` is the output coordinate.
 #[derive(Clone, Copy, Debug)]
-pub struct BasisChange<F> {
-    pub rows: [[F; 4]; 4],
+pub(crate) struct BasisChange<F> {
+    pub(crate) rows: [[F; 4]; 4],
 }
 
 impl<F: Field> BasisChange<F> {
-    pub fn identity() -> Self {
+    pub(crate) fn identity() -> Self {
         let zero = F::zero();
         let one = F::one();
         Self {
@@ -41,18 +56,11 @@ impl<F: Field> BasisChange<F> {
             ],
         }
     }
-
-    pub fn zero() -> Self {
-        let zero = F::zero();
-        Self {
-            rows: [[zero; 4]; 4],
-        }
-    }
 }
 
 /// `M · P`. When `include_t` is false the `t` column is omitted, which is the
 /// C path for a point whose `t` coordinate is known to be zero.
-pub fn apply_isomorphism<F: Field>(
+pub(crate) fn apply_isomorphism<F: Field>(
     matrix: &BasisChange<F>,
     point: ThetaPoint<F>,
     include_t: bool,
@@ -70,13 +78,17 @@ pub fn apply_isomorphism<F: Field>(
 
 /// One (2,2)-step. `codomain` is its theta null point.
 #[derive(Clone, Copy, Debug)]
-pub struct IsogenyStep<F> {
-    pub kernel_1: ThetaPoint<F>,
-    pub kernel_2: ThetaPoint<F>,
-    pub domain_hadamard: bool,
-    pub codomain_hadamard: bool,
-    pub precomputation: ThetaPoint<F>,
-    pub codomain: ThetaPoint<F>,
+pub(crate) struct IsogenyStep<F> {
+    /// The kernel the step was computed from, kept as the reference's
+    /// structure keeps it. Nothing reads either point.
+    #[allow(dead_code)]
+    pub(crate) kernel_1: ThetaPoint<F>,
+    #[allow(dead_code)]
+    pub(crate) kernel_2: ThetaPoint<F>,
+    pub(crate) domain_hadamard: bool,
+    pub(crate) codomain_hadamard: bool,
+    pub(crate) precomputation: ThetaPoint<F>,
+    pub(crate) codomain: ThetaPoint<F>,
 }
 
 fn prepare_kernel<F: Field>(point: ThetaPoint<F>, domain_hadamard: bool) -> ThetaPoint<F> {
@@ -95,7 +107,7 @@ fn prepare_kernel<F: Field>(point: ThetaPoint<F>, domain_hadamard: bool) -> Thet
 /// `check_isotropy` is the verification chain's extra check that the
 /// 4-torsion below the kernel is isotropic. A zero projective factor is a
 /// refusal: the C comment records that as an unexpected split.
-pub fn isogeny_compute<F: Field>(
+pub(crate) fn isogeny_compute<F: Field>(
     kernel_1: ThetaPoint<F>,
     kernel_2: ThetaPoint<F>,
     domain_hadamard: bool,
@@ -155,7 +167,7 @@ fn isotropic<F: Field>(first: ThetaPoint<F>, second: ThetaPoint<F>, pre: ThetaPo
 
 /// `(2,2)`-isogeny from the 4-torsion above the kernel. Not used when the
 /// chain is given two extra doublings, which is how verification calls it.
-pub fn isogeny_compute_4<F: Field>(
+pub(crate) fn isogeny_compute_4<F: Field>(
     domain_null: ThetaPoint<F>,
     kernel: ThetaPoint<F>,
     domain_hadamard: bool,
@@ -163,6 +175,9 @@ pub fn isogeny_compute_4<F: Field>(
 ) -> Option<IsogenyStep<F>> {
     let first = prepare_kernel(kernel, domain_hadamard);
     let second = prepare_kernel(domain_null, domain_hadamard);
+    // The step that leaves this function depends on which root each of
+    // these two is. The committed chain without extra torsion fails with
+    // the other root of either. See "The square roots" in the module.
     let sqrt_xy = second.x.mul(second.y).sqrt()?;
     let sqrt_xz = second.x.mul(second.z).sqrt()?;
 
@@ -204,13 +219,19 @@ pub fn isogeny_compute_4<F: Field>(
 
 /// `(2,2)`-isogeny from the kernel itself. Same calling convention as
 /// [`isogeny_compute_4`]: verification does not use it.
-pub fn isogeny_compute_2<F: Field>(
+///
+/// `kernel` is recorded and not read: this form is computed from the
+/// domain's null point alone, as the reference's is.
+pub(crate) fn isogeny_compute_2<F: Field>(
     domain_null: ThetaPoint<F>,
     kernel: ThetaPoint<F>,
     domain_hadamard: bool,
     codomain_hadamard: bool,
 ) -> Option<IsogenyStep<F>> {
     let second = prepare_kernel(domain_null, domain_hadamard);
+    // The step that leaves this function depends on which root each of
+    // these three is. The committed chain without extra torsion fails
+    // with the other root of any. See "The square roots" in the module.
     let mut codomain = ThetaPoint {
         x: second.x,
         y: second.x.mul(second.y).sqrt()?,
@@ -238,7 +259,7 @@ pub fn isogeny_compute_2<F: Field>(
 }
 
 /// Image of one theta point under a computed step.
-pub fn isogeny_eval<F: Field>(step: &IsogenyStep<F>, point: ThetaPoint<F>) -> ThetaPoint<F> {
+pub(crate) fn isogeny_eval<F: Field>(step: &IsogenyStep<F>, point: ThetaPoint<F>) -> ThetaPoint<F> {
     let mut image = if step.domain_hadamard {
         to_squared_theta(hadamard(point))
     } else {

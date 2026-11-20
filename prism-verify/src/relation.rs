@@ -421,9 +421,9 @@ mod e0_vectors {
         let basis = starting_basis::<L>().expect("E0 basis");
         let (_, p, q) = lift_basis(
             Montgomery::normalized(L::Ext::zero()),
-            basis.even.p,
-            basis.even.q,
-            basis.even.difference,
+            basis.even().p,
+            basis.even().q,
+            basis.even().difference,
         )
         .expect("lift");
         let a = decimal(field(block, "a "));
@@ -459,8 +459,8 @@ mod e0_vectors {
         assert!(matches!(
             e_prime_surface::<L>(
                 zero,
-                &basis.even,
-                [basis.r, basis.t, basis.difference],
+                &basis.even(),
+                [basis.r(), basis.t(), basis.difference()],
                 zero,
                 p,
                 q,

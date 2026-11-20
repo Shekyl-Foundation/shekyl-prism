@@ -4,20 +4,25 @@
 # All rights reserved.
 # BSD-3-Clause
 
-"""Hold the replaced-routine oracles out of every build but the fuzz crate's.
+"""Hold the reference code of prism-isogeny out of every build but the fuzz crate's.
 
-`oracle` is a feature of prism-isogeny. It makes public the routines an
-optimized routine replaced (the affine Miller loop), so a fuzz target can
-compare the two. Cargo unifies features across a build, so a workspace
-member naming it would put those routines in the verifier everyone links.
-This check requires that:
+`oracle` is a feature of prism-isogeny. It makes public code that is kept
+for reference and is no part of the verifier: the affine Miller loop the
+pairing replaced, which a fuzz target compares with the pairing, and the
+short-Weierstrass model of a split (2,2)-isogeny. Cargo unifies features
+across a build, so a workspace member naming it would put that code in
+the verifier everyone links. This check requires that:
 
 1. prism-isogeny declares `oracle`, off by default (the subject exists);
 2. fuzz/Cargo.toml asks for it exactly once, and no other manifest in the
-   repository names it;
-3. the resolved feature graph of prism-verify does not contain it by
-   default, and does contain it when given on the command line (so the
-   check can see the feature it says is absent).
+   repository names it. The manifests are every `Cargo.toml` git tracks,
+   and the set must hold the workspace's, the owner's, the fuzz crate's
+   and the front crate's, so a manifest the listing lost is a failure and
+   not a pass;
+3. the resolved feature graph of prism-isogeny under prism-verify, and
+   under the front crate shekyl-prism, does not contain it by default,
+   and does contain it when given on the command line (so the check can
+   see the feature it says is absent).
 
 `--selftest` runs the manifest rule against planted manifests and the
 graph reader against the requested feature, without touching the tree.
@@ -31,15 +36,27 @@ ROOT = Path(__file__).resolve().parents[2]
 FEATURE = "oracle"
 OWNER = "prism-isogeny/Cargo.toml"
 USER = "fuzz/Cargo.toml"
+FRONT = "shekyl-prism/Cargo.toml"
+# The manifests the rule cannot be said to hold without having read.
+REQUIRED = ("Cargo.toml", OWNER, USER, FRONT)
+# The packages whose build must not contain the feature: the verifier,
+# and the front crate, which depends on prism-isogeny directly.
+GRAPHS = ("prism-verify", "shekyl-prism")
 
 
 def manifests():
-    found = [ROOT / "Cargo.toml", ROOT / "fuzz" / "Cargo.toml"]
-    found += sorted(ROOT.glob("prism-*/Cargo.toml"))
-    missing = [p for p in found if not p.is_file()]
+    """Every Cargo.toml git tracks, by its path from the root."""
+    result = subprocess.run(
+        ["git", "ls-files", "-z", "--", "Cargo.toml", "*/Cargo.toml"],
+        cwd=ROOT, text=True, capture_output=True,
+    )
+    if result.returncode:
+        raise SystemExit("git ls-files failed:\n" + result.stderr)
+    names = sorted(name for name in result.stdout.split("\0") if name)
+    missing = [name for name in names if not (ROOT / name).is_file()]
     if missing:
-        raise SystemExit(f"expected manifest is absent: {missing[0]}")
-    return {str(p.relative_to(ROOT)): p.read_text() for p in found}
+        raise SystemExit(f"tracked manifest is absent from the tree: {missing[0]}")
+    return {name: (ROOT / name).read_text() for name in names}
 
 
 def mentions(text):
@@ -50,8 +67,9 @@ def mentions(text):
 
 def manifest_fault(texts):
     """The first breach of rules 1 and 2 in a set of manifests, or None."""
-    if OWNER not in texts or USER not in texts:
-        return f"{OWNER} and {USER} must both be checked"
+    for name in REQUIRED:
+        if name not in texts:
+            return f"{name} is not among the manifests read"
     features = tomllib.loads(texts[OWNER]).get("features", {})
     if features.get(FEATURE) != []:
         return f"prism-isogeny must declare {FEATURE} with no dependencies"
@@ -69,10 +87,10 @@ def manifest_fault(texts):
     return None
 
 
-def isogeny_features(*extra):
-    """The features prism-isogeny is built with under prism-verify."""
+def isogeny_features(package, *extra):
+    """The features prism-isogeny is built with under `package`."""
     result = subprocess.run(
-        ["cargo", "tree", "--locked", "-p", "prism-verify", "-e", "normal",
+        ["cargo", "tree", "--locked", "-p", package, "-e", "normal",
          "--prefix", "none", "-f", "{p}\t{f}", *extra],
         cwd=ROOT, text=True, capture_output=True,
     )
@@ -81,13 +99,13 @@ def isogeny_features(*extra):
     rows = [line.split("\t")[1] for line in result.stdout.splitlines()
             if line.startswith("prism-isogeny ") and "\t" in line]
     if not rows:
-        raise SystemExit("prism-isogeny is not in the graph of prism-verify")
+        raise SystemExit(f"prism-isogeny is not in the graph of {package}")
     # A repeated node is printed with a trailing " (*)".
     return {name for row in rows for name in row.replace(" (*)", "").split(",") if name}
 
 
-def requested():
-    return isogeny_features("--features", f"prism-isogeny/{FEATURE}")
+def requested(package):
+    return isogeny_features(package, "--features", f"prism-isogeny/{FEATURE}")
 
 
 def selftest():
@@ -97,6 +115,11 @@ def selftest():
     planted = {
         "a workspace member asks for the feature": {
             "prism-verify/Cargo.toml": real["prism-verify/Cargo.toml"].replace(
+                "prism-isogeny = { workspace = true }",
+                'prism-isogeny = { workspace = true, features = ["oracle"] }'),
+        },
+        "the front crate asks for the feature": {
+            FRONT: real[FRONT].replace(
                 "prism-isogeny = { workspace = true }",
                 'prism-isogeny = { workspace = true, features = ["oracle"] }'),
         },
@@ -116,10 +139,17 @@ def selftest():
                 raise SystemExit(f"selftest: could not plant '{case}' in {name}")
         if manifest_fault({**real, **change}) is None:
             raise SystemExit(f"selftest: not caught: {case}")
-    if FEATURE not in requested():
-        raise SystemExit("selftest: the graph reader does not see a requested oracle")
-    print(f"selftest: {len(planted)} planted manifests refused; "
-          "the graph reader sees the feature when it is requested")
+    for name in REQUIRED:
+        lost = {other: text for other, text in real.items() if other != name}
+        if manifest_fault(lost) is None:
+            raise SystemExit(f"selftest: not caught: {name} was not read")
+    for package in GRAPHS:
+        if FEATURE not in requested(package):
+            raise SystemExit(
+                f"selftest: the graph reader does not see a requested oracle under {package}")
+    print(f"selftest: {len(planted)} planted manifests refused, and a set missing "
+          f"any of the {len(REQUIRED)} required manifests; the graph reader sees "
+          f"the feature when it is requested under each of {len(GRAPHS)} packages")
 
 
 def main():
@@ -127,15 +157,20 @@ def main():
         return selftest()
     if sys.argv[1:]:
         raise SystemExit("usage: check_oracle_isolation.py [--selftest]")
-    fault = manifest_fault(manifests())
+    texts = manifests()
+    fault = manifest_fault(texts)
     if fault:
         raise SystemExit(fault)
-    if FEATURE in isogeny_features():
-        raise SystemExit("the default feature graph of prism-verify contains oracle")
-    if FEATURE not in requested():
-        raise SystemExit("oracle did not appear when requested; this check cannot see it")
-    print("oracle is absent from the default feature graph of prism-verify "
-          "and named by no manifest but prism-isogeny's and the fuzz crate's")
+    for package in GRAPHS:
+        if FEATURE in isogeny_features(package):
+            raise SystemExit(f"the default feature graph of {package} contains oracle")
+        if FEATURE not in requested(package):
+            raise SystemExit(
+                f"oracle did not appear when requested under {package}; "
+                "this check cannot see it")
+    print(f"oracle is absent from the default feature graphs of {' and '.join(GRAPHS)} "
+          f"and named by none of the {len(texts)} tracked manifests but "
+          "prism-isogeny's and the fuzz crate's")
 
 
 if __name__ == "__main__":

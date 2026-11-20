@@ -1,6 +1,6 @@
 [package]
 name = "prism-isogeny"
-description = "Montgomery curves, Vélu 2-isogenies, and split (2,2) chains"
+description = "Montgomery curves, their 2^e-torsion and Weil pairing, and (2,2)-isogeny chains in theta coordinates"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,9 +9,12 @@ publish.workspace = true
 
 [features]
 default = []
-# The routines an optimized routine replaced, kept as its reference. The
-# crate's own tests see them without this; the fuzz crate turns it on to
-# compare the two. Nothing shipped enables it.
+# Code that is kept for reference and is no part of the verifier: the
+# affine Miller loop the pairing replaced (`pairing::oracle`), and the
+# short-Weierstrass model of a split (2,2)-isogeny (`weierstrass`). The
+# crate's own tests see both without this; the fuzz crate turns it on to
+# compare the two pairings. Nothing shipped enables it, and
+# scripts/ci/check_oracle_isolation.py holds that.
 oracle = []
 
 [dependencies]

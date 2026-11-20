@@ -7,11 +7,14 @@
 // `pkg/basis_change/base_change_dim2.py` (Apache-2.0, Pierrick Dartois).
 // See `NOTICE`.
 
-//! ParameterSet-2 theta coordinates after a symplectic base change of `A[4]`.
+//! Level-2 theta coordinates after a symplectic base change of `A[4]`.
 //!
 //! The matrix is in `Sp_4(Z/4Z)`, entries `0..3`, row then column. `zeta`
 //! is `e_4` of the product basis. The result is the matrix `N` such that
 //! the new theta coordinates are `N` times the product coordinates.
+//!
+//! On the verifier's path: each of its two chains starts from the product
+//! theta structure moved by one such `N`.
 
 use prism_field::Field;
 
@@ -85,11 +88,40 @@ fn nonvanishing<F: Field>(c: [[i32; 2]; 2], d: [[i32; 2]; 2], zeta: F) -> Option
 
 /// `N` for `M` and `zeta`, in the row convention of the Sage function.
 ///
-/// `None` when no half-period shift gives a nonzero sum, so there is no
-/// `N` to return; see [`nonvanishing`] for when that is. It is not a test
-/// of the inputs: a matrix that is not symplectic, or a `zeta` that is
-/// not a primitive fourth root of unity, still gets a matrix back, and it
-/// means nothing.
+/// # What it assumes
+///
+/// `matrix` is symplectic modulo 4 for the pairing of the product basis
+/// (its entries are read modulo 4), and `zeta` is the value of that
+/// pairing on the basis: a primitive fourth root of unity. Neither is
+/// tested.
+///
+/// # When that fails
+///
+/// A matrix that is not symplectic, or a `zeta` that is not a primitive
+/// fourth root of unity, still gets a matrix back, and it means nothing.
+/// Nothing in the result says so.
+///
+/// `None` is not a test of the inputs either. It is returned when none
+/// of the four half-period shifts the construction may use gives a
+/// nonzero sum, so that there is no `N` to return. That happens only
+/// when `zeta² = −3`, and then for 1,152 of the 65,536 pairs of blocks
+/// the right half of a matrix can have. A `zeta` with `zeta⁴ = 1` is
+/// never in that case, since `zeta² = −3` would make `9 = 1`.
+///
+/// # Who establishes it in the verifier
+///
+/// `accept::build` in `prism-verify` takes `zeta` from
+/// [`crate::pairing::weil`] on `[2^(e−2)]` of the key's basis, which
+/// refuses points that are not of order exactly four, and the basis has
+/// been tested independent, so the value is primitive. The matrix is the
+/// product modulo 4 of the matrix [`crate::dual_chain::canonical_four`]
+/// returns on each factor and a matrix of
+/// [`crate::modular::challenge_matrices`]. That the product is the right
+/// symplectic matrix is by construction and not by a test at run time;
+/// the evidence is the verifier's test that both chains reproduce every
+/// theta null point of the Sage model on the committed vectors. Whatever
+/// `N` is, the verifier accepts only if the two chains built from it
+/// meet and carry three points to their expected images.
 pub fn base_change_theta<F: Field>(matrix: [[u8; 4]; 4], zeta: F) -> Option<[[F; 4]; 4]> {
     let a = block(matrix, [0, 1], [0, 1]);
     let b = block(matrix, [2, 3], [0, 1]);
@@ -366,6 +398,7 @@ mod tests {
     /// halves. The function returns `None` for each of them, and none of
     /// them is the right half of a symplectic matrix. At every set.
     fn fails_only_at_a_root_of_minus_three<L: ParameterSet>() {
+        // Either root: the loop below runs at this one and at its negative.
         let root = L::Ext::from_u64(3)
             .negate()
             .sqrt()

@@ -14,8 +14,9 @@ prism-field = { version = "0.1.0", path = "../prism-field" }
 prism-verify = { version = "0.1.0", path = "../prism-verify" }
 # The committed fixtures the targets start from, read in one place.
 prism-vectors = { version = "0.1.0", path = "../prism-vectors" }
-# `oracle` exposes the routines an optimized routine replaced, so a target
-# can compare the two.
+# `oracle` exposes the affine pairing the verifier's pairing replaced, so a
+# target can compare the two. It also exposes the 2-isogeny model, which
+# no target uses.
 prism-isogeny = { version = "0.1.0", path = "../prism-isogeny", features = ["oracle"] }
 
 # Own workspace, so the parent workspace does not try to build libFuzzer.

@@ -10,14 +10,22 @@
 // loop; the reference switches to a Weierstrass formula for long runs, which
 // is the same group law.
 
-//! A (2,2)-isogeny chain.
+//! A (2,2)-isogeny chain: the C reference's x-only chain.
 //!
 //! `steps` is the C argument `n`. With `extra_torsion`, the kernel points
 //! have order `2^{n+2}` and every step is the 8-torsion formula. Without it,
 //! they have order `2^n` and the last two steps are the 4-torsion and
-//! 2-torsion formulas. [`chain`] then requires the codomain to split, which
-//! is the salt-PRISM path. [`chain_surface`] stops before that split and
-//! returns the theta images at step `n − 1` and step `n`.
+//! 2-torsion formulas. [`chain`] then requires the codomain to split, as
+//! the reference's verification does. [`chain_surface`] stops before that
+//! split and returns the theta images at step `n − 1` and step `n`.
+//!
+//! # Not the verifier's chain
+//!
+//! `prism_verify::verify` does not call this module. Its chains are
+//! [`crate::dual_chain::DualChain`]. This one is the port that is
+//! compared with the pinned C tree, on a committed chain of 160 steps,
+//! and the verifier's tests use it to record where a single chain of
+//! this kind stops on a prime-degree signature.
 
 use prism_field::Field;
 
@@ -30,18 +38,24 @@ use crate::theta_step::{
     apply_isomorphism, isogeny_compute, isogeny_compute_2, isogeny_compute_4, isogeny_eval,
 };
 
-/// The split codomain and the images of the input points.
+/// The split codomain and the images of the input points: what [`chain`]
+/// computed. Plain data with no invariant.
 #[derive(Clone, Debug)]
 pub struct ChainResult<F> {
+    /// The two Montgomery curves of the codomain, each as `(A : C)`.
     pub codomain: [Montgomery<F>; 2],
+    /// The image of each input point, in the order given, as a point on
+    /// each codomain curve.
     pub images: Vec<Couple<F>>,
 }
 
-/// Theta images of the input points, in one theta structure.
+/// Theta images of the input points, in one theta structure. Plain data
+/// with no invariant.
 #[derive(Clone, Debug)]
 pub struct SurfaceReading<F> {
     /// The theta-null point of this structure.
     pub null: ThetaPoint<F>,
+    /// The image of each input point, in the order given.
     pub images: Vec<ThetaPoint<F>>,
 }
 
@@ -59,6 +73,7 @@ pub enum SurfaceStop {
 }
 
 /// The chain at step `n − 1` and at step `n`, with no splitting step.
+/// Plain data with no invariant.
 #[derive(Clone, Debug)]
 pub struct SurfaceReadings<F> {
     /// After step `n − 1`.
@@ -82,10 +97,35 @@ fn one_factor_infinite<F: Field>(point: Couple<F>) -> bool {
     point.first.is_infinity() ^ point.second.is_infinity()
 }
 
-/// Evaluate a chain of `steps` (2,2)-isogenies.
+/// Evaluate a chain of `steps` (2,2)-isogenies from `curves[0] ×
+/// curves[1]` and split its codomain.
 ///
 /// `i` is the imaginary unit, which a splitting matrix may use. `verify`
 /// enables the isotropy checks the reference's verify entry point sets.
+/// `points` are pushed through the chain; each must have exactly one
+/// factor at infinity, which is tested.
+///
+/// `None` for every refusal: a pushed point with both factors or neither
+/// at infinity, fewer steps than the formulas need, a kernel that does
+/// not lift or does not glue, a step that cannot be computed, a codomain
+/// that does not split (with `extra_torsion`, that does not split at
+/// index 8), or an image that is not a product point.
+///
+/// # What it assumes
+///
+/// `kernel` is two generators and their difference
+/// ([`Kernel`]), of order `2^(steps+2)` with `extra_torsion` and
+/// `2^steps` without, generating an isotropic subgroup. Not tested
+/// beyond what the steps' own checks catch. `i` is a square root of
+/// `−1`; with any other value a splitting matrix is wrong and nothing
+/// says so.
+///
+/// # The square roots
+///
+/// Without `extra_torsion` the last two steps each take square roots,
+/// and the theta coordinates they produce depend on which roots those
+/// are: the roots [`Field::sqrt`] returns. The committed chain without
+/// extra torsion is the test of that.
 pub fn chain<F: Field>(
     steps: u32,
     curves: [Montgomery<F>; 2],
@@ -116,6 +156,9 @@ pub fn chain<F: Field>(
 ///
 /// `earlier` is the images after step `steps − 1`. `last` is the images
 /// after step `steps`. Both are theta coordinates on the codomain surface.
+///
+/// The error says where it stopped ([`SurfaceStop`]). What [`chain`]
+/// assumes of the kernel is assumed here.
 pub fn chain_surface<F: Field>(
     steps: u32,
     curves: [Montgomery<F>; 2],

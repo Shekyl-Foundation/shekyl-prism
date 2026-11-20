@@ -125,6 +125,28 @@ fn on_curve<F: Field>(curve: Montgomery<F>, p: Jac<F>) -> bool {
 ///
 /// Three inversions whatever `k` is: one for each point's affine form and
 /// one for the quotient of the two Miller values.
+///
+/// # What it tests itself
+///
+/// `None` when the curve is not given with `C = 1`, when either point is
+/// at infinity or not on the curve, and when either point does not have
+/// order exactly `2^k`: the Miller loop of each point must reach a point
+/// of order two at its last step and not before.
+///
+/// # What else is `None`
+///
+/// A line or a vertical that is zero at the other point. That happens
+/// for pairs in special position, `Q = P` among them, whose pairing has
+/// a value this routine does not compute. `None` therefore does not
+/// distinguish a bad input from such a pair, and a caller treats both as
+/// a failed check. It never returns a value for inputs it should have
+/// refused on the grounds above.
+///
+/// # What it does not test
+///
+/// That the two points are independent. For dependent points that are
+/// not refused the value is a root of unity of lower order. The verifier
+/// has tested independence before it pairs (`span_e` in `prism-verify`).
 pub fn weil<F: Field>(curve: Montgomery<F>, p: Jac<F>, q: Jac<F>, log_order: u32) -> Option<F> {
     if !curve.c.same(F::one()) || !on_curve(curve, p) || !on_curve(curve, q) {
         return None;
@@ -138,6 +160,13 @@ pub fn weil<F: Field>(curve: Montgomery<F>, p: Jac<F>, q: Jac<F>, log_order: u32
 /// The affine Miller loop this module used before its loop stopped
 /// inverting: two inversions a step. It is the reference the loop above is
 /// compared with, on values and on refusals, and nothing else calls it.
+///
+/// Compiled for this crate's tests and under the feature `oracle`, and
+/// not otherwise. No shipped manifest enables that feature. The fuzz
+/// crate does, to run the comparison on arbitrary inputs.
+/// `scripts/ci/check_oracle_isolation.py` holds the feature out of the
+/// default feature graph of the verifier and of the front crate, and out
+/// of every tracked manifest but the fuzz crate's.
 #[cfg(any(test, feature = "oracle"))]
 pub mod oracle {
     use super::{on_curve, to_affine, Aff};
@@ -201,7 +230,8 @@ pub mod oracle {
         None
     }
 
-    /// `e_{2^k}(P, Q)` by the affine loop.
+    /// `e_{2^k}(P, Q)` by the affine loop: the same value, and `None`
+    /// on the same inputs, as [`super::weil`].
     pub fn weil<F: Field>(curve: Montgomery<F>, p: Jac<F>, q: Jac<F>, log_order: u32) -> Option<F> {
         if !curve.c.same(F::one()) || !on_curve(curve, p) || !on_curve(curve, q) {
             return None;
@@ -212,7 +242,12 @@ pub mod oracle {
     }
 }
 
-/// `[scalar] point`, `scalar` little-endian.
+/// `[scalar] point` on the curve `y^2 = x^3 + A x^2 + x`, `scalar`
+/// little-endian bytes of any length. Double-and-add from the low bit.
+///
+/// Variable time: the additions made depend on the scalar. For public
+/// scalars only. What [`crate::jac`] assumes of the curve and the point
+/// is assumed here.
 pub fn mul<F: Field>(curve: Montgomery<F>, point: Jac<F>, scalar: &[u8]) -> Jac<F> {
     let mut result = Jac::infinity();
     let mut addend = point;
@@ -229,7 +264,8 @@ pub fn mul<F: Field>(curve: Montgomery<F>, point: Jac<F>, scalar: &[u8]) -> Jac<
     result
 }
 
-/// Low `bits` of `−s²`, little-endian. For `e ≥ 5` this is `q mod 2^e`,
+/// Low `bits` of `−s²`, little-endian, in `⌈bits/8⌉` bytes; `scalar`
+/// is `s`, little-endian. For `e ≥ 5` and `bits = e` this is `q mod 2^e`,
 /// because `q = 2^{2e−5} − s²` and `2^{2e−5}` is divisible by `2^e`.
 pub fn neg_square_mod_pow2(scalar: &[u8], bits: u32) -> Vec<u8> {
     let width = (bits as usize).div_ceil(8);
@@ -268,7 +304,9 @@ pub fn neg_square_mod_pow2(scalar: &[u8], bits: u32) -> Vec<u8> {
     square
 }
 
-/// `value` raised to a little-endian exponent.
+/// `value` raised to a little-endian exponent of any length.
+/// Square-and-multiply from the low bit; an empty exponent gives one.
+/// Variable time, for public exponents only.
 pub fn pow<F: Field>(mut value: F, exponent: &[u8]) -> F {
     let mut result = F::one();
     for byte in exponent {

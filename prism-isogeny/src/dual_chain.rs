@@ -9,6 +9,19 @@
 
 //! Full-point, adapted-theta chains and evaluation of their duals.
 //! All arithmetic here is on public verification inputs.
+//!
+//! This is the chain the verifier runs. A [`DualChain`] is a chain of
+//! (2,2)-isogenies from a product of two Montgomery curves, kept with
+//! what is needed to evaluate it forward and to evaluate its dual
+//! backward. The verifier builds two, of lengths `e − 2` and `e − 3`,
+//! from the two halves of one kernel; requires that they end on the same
+//! surface ([`DualChain::matches_dual`]); and carries three points
+//! forward through the first and back through the second.
+//!
+//! "Adapted" is the reference's word: the product's theta structure is
+//! first moved by the matrix of [`crate::theta_base::base_change_theta`]
+//! so that the kernel is in the position the step formulas assume, and
+//! every step is the 8-torsion formula.
 
 use crate::jac::{add, dbl_iter, to_xz, Jac};
 use crate::montgomery::{Montgomery, Xz};
@@ -20,6 +33,10 @@ use crate::theta_step::{
 };
 use prism_field::Field;
 
+/// One full point on each factor of a product `E1 × E2`: `[P1, P2]`.
+///
+/// Not [`crate::gluing::Couple`], which is the same pair in x-only
+/// coordinates. This chain needs the `y`.
 pub type Couple<F> = [Jac<F>; 2];
 
 fn map<F: Field>(matrix: [[F; 4]; 4], point: ThetaPoint<F>) -> ThetaPoint<F> {
@@ -109,6 +126,31 @@ fn product_coords<F: Field>(points: Couple<F>) -> ThetaPoint<F> {
 /// Canonicalize an order-four basis, preserving its pairing. The returned
 /// row matrix expresses the original basis in the canonical basis.
 /// The bounded enumeration replaces the reference's order-four discrete logs.
+///
+/// The canonical basis is `(T, U)` with `x(U) = −1`: `U` is a point of
+/// order four above `(0, 0)`. The search tries `q − d·p` for `d` in
+/// `0..4`, and then `p − d·q`, and takes the first with that abscissa.
+/// The point returned is the `T` that goes with it: `p`, or `q` when
+/// the roles were exchanged. Only `x(T)` is used by [`product_null`].
+///
+/// `None` when none of the eight candidates has `x = −1`.
+///
+/// # What it assumes
+///
+/// `p` and `q` are a basis of the 4-torsion of the curve
+/// `y^2 = x^3 + A x^2 + x`. Not tested.
+///
+/// # When that fails
+///
+/// If the two do not generate the 4-torsion, the search usually finds
+/// nothing and this is `None`. It can also find a candidate, and then
+/// the pair returned is not a basis and nothing says so.
+///
+/// # Who establishes it in the verifier
+///
+/// `accept::build` in `prism-verify` passes `[2^(e−2)]` of two points
+/// tested to have order exactly `2^e` and to be independent (`basis_e`),
+/// on the key's curve and on the response's.
 pub fn canonical_four<F: Field>(
     curve: Montgomery<F>,
     p: Jac<F>,
@@ -137,7 +179,18 @@ pub fn canonical_four<F: Field>(
     None
 }
 
-/// Product theta null induced by canonical order-four bases.
+/// Product theta null induced by canonical order-four bases:
+/// `((x₁+z₁)(x₂+z₂) : (x₁−z₁)(x₂+z₂) : (x₁+z₁)(x₂−z₂) : (x₁−z₁)(x₂−z₂))`
+/// for `p = (x₁ : z₁)` on the first factor and `q = (x₂ : z₂)` on the
+/// second.
+///
+/// # What it assumes
+///
+/// `p` and `q` are the first points [`canonical_four`] returned for the
+/// two factors. It computes the formula for any two points; for others
+/// the result is four field elements that are the null point of nothing,
+/// with no sign of it. The verifier passes those two points and no
+/// others.
 pub fn product_null<F: Field>(p: Jac<F>, q: Jac<F>) -> ThetaPoint<F> {
     let p = to_xz(p);
     let q = to_xz(q);
@@ -254,16 +307,57 @@ impl<F: Field> Gluing<F> {
 }
 
 /// A chain retaining its forward maps and the data for evaluating its dual.
+///
+/// Every field is private and [`Self::new`] is the only way to a value,
+/// so a `DualChain` is a chain every step of which was computed and
+/// passed the step's own checks.
 pub struct DualChain<F> {
     gluing: Gluing<F>,
     steps: Vec<IsogenyStep<F>>,
     dual_pre: Vec<[F; 4]>,
-    pub null: ThetaPoint<F>,
-    pub nulls: Vec<ThetaPoint<F>>,
+    null: ThetaPoint<F>,
+    nulls: Vec<ThetaPoint<F>>,
 }
 
 impl<F: Field> DualChain<F> {
-    /// `kernel` has order `2^(length+2)` and is adapted to `n`.
+    /// The chain of `length` steps from `curves[0] × curves[1]` with the
+    /// given kernel.
+    ///
+    /// `kernel` is two generators, each a point on each curve. `product`
+    /// is the product theta null of [`product_null`], and `n` the base
+    /// change of [`crate::theta_base::base_change_theta`] for this
+    /// kernel.
+    ///
+    /// `None` when `length < 2`, and wherever a step cannot be computed:
+    /// the gluing does not find the zero coordinate its formula needs, a
+    /// coordinate that must be inverted is zero, a step's kernel points
+    /// have a zero where the 8-torsion formula needs none, a step's
+    /// isotropy check fails, or a null point is `(0:0:0:0)`. All of
+    /// these are the one `None`.
+    ///
+    /// # What it assumes
+    ///
+    /// The two generators have order `2^(length+2)`, generate a subgroup
+    /// that is isotropic for the product pairing, and are adapted to
+    /// `n`: in the theta structure `n` defines, their multiples of order
+    /// eight are in the position the gluing formula assumes. The curves
+    /// have `C = 1` and the points are on them.
+    ///
+    /// # When that fails
+    ///
+    /// Usually `None`, from one of the checks above. Those checks do not
+    /// prove the assumption. A kernel that passes every one of them
+    /// gives a chain, and a chain from the wrong kernel looks like any
+    /// other.
+    ///
+    /// # Who establishes it in the verifier
+    ///
+    /// Nothing does before the call, and nothing needs to: the verifier
+    /// does not trust the chain it gets. `accept::check` in
+    /// `prism-verify` accepts only if the two chains end on the same
+    /// surface and three points with known images are carried to them.
+    /// That comparison is the protocol's test of the kernel, and so of
+    /// the signature.
     pub fn new(
         length: u32,
         curves: [Montgomery<F>; 2],
@@ -328,6 +422,19 @@ impl<F: Field> DualChain<F> {
         })
     }
 
+    /// The theta null point after the gluing and after each later step,
+    /// in order: `length` of them, the last being the codomain's.
+    pub fn nulls(&self) -> &[ThetaPoint<F>] {
+        &self.nulls
+    }
+
+    /// The image of a point of the product, in the codomain's theta
+    /// coordinates.
+    ///
+    /// `None` when the gluing cannot evaluate the point (a coordinate it
+    /// must invert is zero) or an image is `(0:0:0:0)`. The point must
+    /// be on the two curves; that is not tested, and for a point that is
+    /// not, the result is a theta point like any other.
     pub fn eval(&self, point: Couple<F>) -> Option<ThetaPoint<F>> {
         let mut image = self.gluing.eval(point)?;
         for step in &self.steps {
@@ -336,7 +443,23 @@ impl<F: Field> DualChain<F> {
         Some(image)
     }
 
-    /// Input uses the Hadamard of this chain's codomain structure.
+    /// The image of a theta point of the codomain under the dual chain,
+    /// as an x-only point on each of the two curves.
+    ///
+    /// Input uses the Hadamard of this chain's codomain structure. That
+    /// is the structure the *other* chain of a matching pair ends in
+    /// ([`Self::matches_dual`]), which is how the verifier uses it.
+    ///
+    /// `None` when an intermediate image is `(0:0:0:0)`, or when what
+    /// comes back to the product is not a product point: its four
+    /// coordinates must satisfy the rank-one relation, and the cases
+    /// with a factor at infinity are told apart, never guessed. A point
+    /// returned is never `(0 : 0)`.
+    ///
+    /// A theta point that is in some other structure is not refused for
+    /// that, and gives a pair of abscissas that mean nothing. The
+    /// verifier passes only what [`Self::eval`] of the matching chain
+    /// returned, and compares the result with points it already knows.
     pub fn dual_eval(&self, mut point: ThetaPoint<F>) -> Option<[Xz<F>; 2]> {
         for pre in self.dual_pre.iter().rev() {
             point = valid(hadamard(scaled(to_squared_theta(point), *pre)))?;
@@ -344,6 +467,13 @@ impl<F: Field> DualChain<F> {
         self.gluing.dual_eval(point)
     }
 
+    /// Whether this chain and `other` end on the same surface in dual
+    /// theta structures: this chain's null point is, projectively, the
+    /// Hadamard transform of the other's.
+    ///
+    /// This is the verifier's codomain check. When it holds, an image
+    /// under [`Self::eval`] of this chain is a valid input to
+    /// [`Self::dual_eval`] of `other`.
     pub fn matches_dual(&self, other: &Self) -> bool {
         projectively_same(self.null, hadamard(other.null))
     }

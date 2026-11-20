@@ -442,8 +442,13 @@ mod tests {
                 .enumerate()
                 .filter_map(|(i, s)| (i % 2 == 1).then_some(s))
                 .collect();
-            assert_eq!(numbers.len(), chain.nulls.len() * 4);
-            for (step, (got, want)) in chain.nulls.iter().zip(numbers.chunks_exact(4)).enumerate() {
+            assert_eq!(numbers.len(), chain.nulls().len() * 4);
+            for (step, (got, want)) in chain
+                .nulls()
+                .iter()
+                .zip(numbers.chunks_exact(4))
+                .enumerate()
+            {
                 let expected = ThetaPoint::from_coords(core::array::from_fn(|i| ext::<L>(want[i])));
                 assert!(
                     projectively_same(*got, expected),

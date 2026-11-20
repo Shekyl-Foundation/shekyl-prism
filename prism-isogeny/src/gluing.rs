@@ -13,6 +13,12 @@
 //! The kernel is a pair of points of order 8, one on each factor. A kernel
 //! whose order is not 8, or whose squared theta image is not in the shape
 //! the codomain formula assumes, is a refusal.
+//!
+//! This is the gluing of the reference's x-only chain, which
+//! [`crate::chain`] drives. It is not on the verifier's path: the
+//! verifier's chains glue with the adapted gluing inside
+//! [`crate::dual_chain`]. Only the two input types [`Couple`] and
+//! [`Kernel`] are public.
 
 use prism_field::Field;
 
@@ -21,38 +27,55 @@ use crate::montgomery::{xdbl_ac, Montgomery, Xz};
 use crate::theta::{hadamard, to_squared_theta, ThetaPoint};
 use crate::theta_step::{apply_isomorphism, BasisChange};
 
-/// One point on each factor, in x-only coordinates.
+/// One point on each factor of a product `E1 × E2`, in x-only
+/// coordinates.
+///
+/// Plain data with no invariant: the fields are public and nothing ties
+/// the points to curves.
 #[derive(Clone, Copy, Debug)]
 pub struct Couple<F> {
+    /// The point on `E1`.
     pub first: Xz<F>,
+    /// The point on `E2`.
     pub second: Xz<F>,
 }
 
 /// The same, with y-coordinates.
 #[derive(Clone, Copy, Debug)]
-pub struct CoupleJac<F> {
-    pub first: Jac<F>,
-    pub second: Jac<F>,
+pub(crate) struct CoupleJac<F> {
+    pub(crate) first: Jac<F>,
+    pub(crate) second: Jac<F>,
 }
 
-/// `(T1, T2, T1−T2)` on a product, the kernel the chain is given.
+/// `(T1, T2, T1−T2)` on a product, the kernel [`crate::chain::chain`]
+/// is given: two generators and their difference, each a point on each
+/// factor.
+///
+/// Plain data with no invariant: the fields are public, and that
+/// `difference` is the difference, on each factor, of the two generators
+/// is the caller's. The chain lifts each factor's three abscissas with
+/// [`crate::jac::lift_basis`], and what that function does with a wrong
+/// difference is what happens here.
 #[derive(Clone, Copy, Debug)]
 pub struct Kernel<F> {
+    /// The first generator.
     pub t1: Couple<F>,
+    /// The second generator.
     pub t2: Couple<F>,
+    /// `t1 − t2`, on each factor.
     pub difference: Couple<F>,
 }
 
 /// A gluing `E1 × E2 → A`.
 #[derive(Clone, Copy, Debug)]
-pub struct Gluing<F> {
-    pub domain: [Montgomery<F>; 2],
-    pub kernel: CoupleJac<F>,
-    pub matrix: BasisChange<F>,
-    pub image_x: F,
-    pub image_y: F,
-    pub precomputation: ThetaPoint<F>,
-    pub codomain: ThetaPoint<F>,
+pub(crate) struct Gluing<F> {
+    pub(crate) domain: [Montgomery<F>; 2],
+    pub(crate) kernel: CoupleJac<F>,
+    pub(crate) matrix: BasisChange<F>,
+    pub(crate) image_x: F,
+    pub(crate) image_y: F,
+    pub(crate) precomputation: ThetaPoint<F>,
+    pub(crate) codomain: ThetaPoint<F>,
 }
 
 #[derive(Clone, Copy)]
@@ -209,7 +232,7 @@ fn product_theta<F: Field>(point: Couple<F>) -> ThetaPoint<F> {
 }
 
 /// Glue `curves` along the order-8 kernel `(k1, k2)`.
-pub fn gluing_compute<F: Field>(
+pub(crate) fn gluing_compute<F: Field>(
     curves: [Montgomery<F>; 2],
     k1: CoupleJac<F>,
     k2: CoupleJac<F>,
@@ -273,7 +296,7 @@ pub fn gluing_compute<F: Field>(
 }
 
 /// Image of a general Jacobian point. The chain uses this for kernel points.
-pub fn gluing_eval<F: Field>(gluing: &Gluing<F>, point: CoupleJac<F>) -> ThetaPoint<F> {
+pub(crate) fn gluing_eval<F: Field>(gluing: &Gluing<F>, point: CoupleJac<F>) -> ThetaPoint<F> {
     let (u1, v1, w1) = add_components(gluing.domain[0], point.first, gluing.kernel.first);
     let (u2, v2, w2) = add_components(gluing.domain[1], point.second, gluing.kernel.second);
     let t1x = u1.mul(u2).add(v1.mul(v2));
@@ -309,7 +332,7 @@ pub fn gluing_eval<F: Field>(gluing: &Gluing<F>, point: CoupleJac<F>) -> ThetaPo
 }
 
 /// Image of a point with a zero factor, `(P, 0)` or `(0, P)`.
-pub fn gluing_eval_special<F: Field>(
+pub(crate) fn gluing_eval_special<F: Field>(
     gluing: &Gluing<F>,
     point: Couple<F>,
 ) -> Option<ThetaPoint<F>> {

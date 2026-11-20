@@ -13,21 +13,43 @@
 //!
 //! A point `(X : Y : Z)` is the affine point `(X/Z^2, Y/Z^3)`. The lift from
 //! an x-only basis recovers `y(P)` by a square root and `y(Q)` by the
-//! Okeya–Sakurai formula, which is what gluing reads.
+//! Okeya–Sakurai formula. The verifier's chains are built from the lifted
+//! points.
+//!
+//! # What this arithmetic assumes
+//!
+//! Every function here that takes a [`Montgomery`] reads its `A` and
+//! ignores its `C`: it is the arithmetic of `y^2 = x^3 + A x^2 + x`. None
+//! tests that a point is on that curve. Off the curve the formulas still
+//! return three field elements, and nothing marks them as meaningless.
+//!
+//! In the verifier the curves are built with `C = 1`, the signature's
+//! points are tested on their curve first (`response_points` in
+//! `prism-verify`), and the key's two lifted points are tested on theirs
+//! by [`crate::pairing::weil`] before either chain is built.
 
 use prism_field::Field;
 
 use crate::montgomery::{xdbl_ac, Montgomery, Xz};
 
-/// `(X : Y : Z)` on `y^2 = x^3 + A x^2 + x`.
+/// `(X : Y : Z)` on `y^2 = x^3 + A x^2 + x`: the affine point
+/// `(X/Z^2, Y/Z^3)`, or the point at infinity when `Z = 0`.
+///
+/// Plain data with no invariant: the fields are public and nothing checks
+/// that the point is on a curve. The arithmetic treats every value with
+/// `Z = 0` as infinity, whatever its `X` and `Y`.
 #[derive(Clone, Copy, Debug)]
 pub struct Jac<F> {
+    /// `X`.
     pub x: F,
+    /// `Y`.
     pub y: F,
+    /// `Z`.
     pub z: F,
 }
 
 impl<F: Field> Jac<F> {
+    /// The point at infinity, as `(0 : 1 : 0)`.
     pub fn infinity() -> Self {
         Self {
             x: F::zero(),
@@ -36,12 +58,15 @@ impl<F: Field> Jac<F> {
         }
     }
 
+    /// Whether `Z = 0`.
     pub fn is_infinity(self) -> bool {
         self.z.is_zero()
     }
 }
 
-/// Drop the y-coordinate. Infinity becomes `(1 : 0)`, as `jac_to_xz` does.
+/// Drop the y-coordinate: `(X : Z^2)`. A point with `Z = 0` becomes
+/// `(X : 0)`, and `(1 : 0)` when `X` is zero too, as `jac_to_xz` does.
+/// The result is never `(0 : 0)`.
 pub fn to_xz<F: Field>(point: Jac<F>) -> Xz<F> {
     let mut image = Xz {
         x: point.x,
@@ -53,7 +78,11 @@ pub fn to_xz<F: Field>(point: Jac<F>) -> Xz<F> {
     image
 }
 
-/// `[2] point` on the normalized curve. Infinity stays infinity.
+/// `[2] point` on the curve `y^2 = x^3 + A x^2 + x`.
+///
+/// A point with `Z = 0` gives a point with `Z = 0`, and so does a point
+/// of order two (`Y = 0`). See the module for what is assumed of the
+/// curve and the point.
 pub fn dbl<F: Field>(curve: Montgomery<F>, point: Jac<F>) -> Jac<F> {
     let infinity = point.x.is_zero() && point.z.is_zero();
     let x2 = point.x.square();
@@ -82,8 +111,12 @@ pub fn dbl<F: Field>(curve: Montgomery<F>, point: Jac<F>) -> Jac<F> {
     Jac { x, y, z }
 }
 
-/// `point + other` on the normalized curve, including the cases where either
-/// point is infinity or the two points are equal or negatives.
+/// `point + other` on the curve `y^2 = x^3 + A x^2 + x`.
+///
+/// Every case of the group law is handled: either point at infinity
+/// (the other is returned as given), the two equal (the doubling
+/// formula), and the two opposite (the result has `Z = 0`). See the
+/// module for what is assumed of the curve and the points.
 pub fn add<F: Field>(curve: Montgomery<F>, point: Jac<F>, other: Jac<F>) -> Jac<F> {
     let point_inf = point.z.is_zero();
     let other_inf = other.z.is_zero();
@@ -128,8 +161,14 @@ pub fn add<F: Field>(curve: Montgomery<F>, point: Jac<F>, other: Jac<F>) -> Jac<
     Jac { x, y, z }
 }
 
-/// `(u, v, w)` with `P+Q = (u−v : w)` and `P−Q = (u+v : w)`.
-pub fn add_components<F: Field>(curve: Montgomery<F>, point: Jac<F>, other: Jac<F>) -> (F, F, F) {
+/// `(u, v, w)` with `x(P+Q) = (u−v : w)` and `x(P−Q) = (u+v : w)`, for
+/// two finite points on the curve. No case of the group law is handled
+/// apart: with a point at infinity, or with `P = ±Q`, `w` is zero.
+pub(crate) fn add_components<F: Field>(
+    curve: Montgomery<F>,
+    point: Jac<F>,
+    other: Jac<F>,
+) -> (F, F, F) {
     let z1_2 = point.z.square();
     let z2_2 = other.z.square();
     let x1_z2_2 = point.x.mul(z2_2);
@@ -151,19 +190,62 @@ pub fn add_components<F: Field>(curve: Montgomery<F>, point: Jac<F>, other: Jac<
     (u, v, w)
 }
 
-/// A square root of `x^3 + A x^2 + x`, or `None` when the point is not on the
-/// curve. The root is the one [`Field::sqrt`] returns, which uses the same
-/// even-coordinate rule as the reference.
+/// A `y` with `y^2 = x^3 + A x^2 + x`, or `None` when that value is not
+/// a square in the field: then `x` is the abscissa of a point of the
+/// twist and of no point of the curve.
+///
+/// Which of the two roots is returned is [`Field::sqrt`]'s choice. At a
+/// parameter set's extension field that is the root whose real part is
+/// even, or whose imaginary part is even when the real part is zero
+/// (`prism_field::ParameterSet::Ext`), the rule of the reference's
+/// `fp2_sqrt`.
 pub fn recover_y<F: Field>(curve: Montgomery<F>, x: F) -> Option<F> {
     let x2 = x.square();
     let rhs = curve.a.mul(x2).add(x).add(x2.mul(x));
+    // The value that leaves this function depends on which root this is:
+    // the other one is the opposite point. The verifier's verdict does
+    // not depend on it: see "The sign" at `lift_basis`.
     rhs.sqrt()
 }
 
-/// Lift `(P, Q, P−Q)` to Jacobian points, normalizing the curve and `P`.
+/// Lift `(P, Q, P−Q)` from x-coordinates to Jacobian points on the
+/// normalized curve.
 ///
-/// This mutates the basis the way the reference does: `P.z` becomes 1 and the
-/// curve coefficient becomes `A/C`. The returned curve is that normalization.
+/// Returns the curve as `(A/C : 1)`, `P` as `(x : y : 1)` with `y` from
+/// [`recover_y`], and `Q` with the `y` the Okeya–Sakurai formula derives
+/// from `P`, `x(Q)` and `x(P−Q)`.
+///
+/// `None` when `C = 0`, when `P` is at infinity, or when `x(P)` is not
+/// the abscissa of a point of the curve.
+///
+/// # What it assumes
+///
+/// `pmq` is the x-coordinate of `P − Q`, `Q` and `P − Q` are finite, and
+/// `P` does not have order two. None of these is tested.
+///
+/// # When that fails
+///
+/// If `pmq` is not `x(P − Q)` or `x(P + Q)`, the `Q` returned is three
+/// field elements that are not a point of the curve. If it is `x(P + Q)`, the `Q`
+/// returned is `−Q`. If `Q` or `P − Q` is at infinity, or `y(P) = 0`,
+/// the `Q` returned is `(0 : 0 : 0)`. All are well-formed values.
+///
+/// # The sign
+///
+/// The two square roots of [`recover_y`] give `(P, Q)` and `(−P, −Q)`.
+/// Everything the verifier computes from the pair is the same for both:
+/// the Weil pairing of the two, the x-coordinates of every combination
+/// of them, and the chain a kernel built from them defines, which for
+/// the second pair is the first chain after the automorphism `(−1, 1)`
+/// of the product.
+///
+/// # Who establishes it in the verifier
+///
+/// `accept::lift` in `prism-verify` passes a key's tested basis: `P` and
+/// `Q` of exact order `2^e` (`basis_e`), with `Q` the output of
+/// [`crate::torsion::difference`] on `P` and the point passed as `pmq`,
+/// so that `pmq` is `x(P − Q)` by construction. The pairing check that
+/// follows refuses a lifted point that is not on the curve.
 pub fn lift_basis<F: Field>(
     curve: Montgomery<F>,
     p: Xz<F>,
@@ -205,14 +287,14 @@ pub fn lift_basis<F: Field>(
 }
 
 /// x-only doubling iterated `times` times.
-pub fn xdbl_iter<F: Field>(curve: Montgomery<F>, mut point: Xz<F>, times: u32) -> Xz<F> {
+pub(crate) fn xdbl_iter<F: Field>(curve: Montgomery<F>, mut point: Xz<F>, times: u32) -> Xz<F> {
     for _ in 0..times {
         point = xdbl_ac(curve, point);
     }
     point
 }
 
-/// Jacobian doubling iterated `times` times.
+/// `[2^times] point`: [`dbl`] iterated `times` times.
 pub fn dbl_iter<F: Field>(curve: Montgomery<F>, mut point: Jac<F>, times: u32) -> Jac<F> {
     for _ in 0..times {
         point = dbl(curve, point);
@@ -302,6 +384,7 @@ mod tests {
             let x0 = Toy::from_u64(candidate);
             let rhs = x0.square().mul(x0).add(curve.a.mul(x0.square())).add(x0);
             if rhs.is_square() {
+                // Either root: the doubling below is compared in x alone.
                 x = Some((x0, rhs.sqrt().unwrap()));
                 break;
             }
@@ -317,5 +400,49 @@ mod tests {
         let left = doubled.x.mul(x_only.z);
         let right = doubled.z.mul(x_only.x);
         assert!(left.same(right));
+    }
+
+    /// The `y` that [`super::recover_y`] returns is the root the
+    /// extension field promises, and the opposite point's `y` is not.
+    /// With the other root this fails at every point it meets.
+    fn recover_y_returns_the_promised_root<L: prism_field::ParameterSet>() {
+        let curve = Montgomery::normalized(L::Ext::from_u64(6));
+        let even = |value: L::Base| L::base_encode(value)[0] & 1 == 0;
+        let promised = |y: L::Ext| {
+            let (re, im) = L::ext_parts(y);
+            if re.is_zero() {
+                even(im)
+            } else {
+                even(re)
+            }
+        };
+        let (mut on_the_curve, mut on_the_twist) = (0, 0);
+        for v in 2..66u64 {
+            let x = L::Ext::from_u64(v).add(L::ext_i());
+            let rhs = x.square().mul(x).add(curve.a.mul(x.square())).add(x);
+            match super::recover_y(curve, x) {
+                Some(y) => {
+                    assert!(y.square().same(rhs), "{}: {v}", L::NAME);
+                    assert!(promised(y), "{}: {v}", L::NAME);
+                    assert!(!promised(y.negate()), "{}: {v}", L::NAME);
+                    on_the_curve += 1;
+                }
+                None => {
+                    assert!(!rhs.is_square(), "{}: {v}", L::NAME);
+                    on_the_twist += 1;
+                }
+            }
+        }
+        assert!(on_the_curve > 0 && on_the_twist > 0, "{}", L::NAME);
+    }
+
+    #[test]
+    fn recover_y_returns_the_promised_root_at_every_set() {
+        use prism_field::{P248, P324, P376, P500, P664};
+        recover_y_returns_the_promised_root::<P248>();
+        recover_y_returns_the_promised_root::<P324>();
+        recover_y_returns_the_promised_root::<P376>();
+        recover_y_returns_the_promised_root::<P500>();
+        recover_y_returns_the_promised_root::<P664>();
     }
 }
