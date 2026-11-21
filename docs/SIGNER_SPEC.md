@@ -23,6 +23,12 @@ Every statement of fact carries one of five labels. **Ran**: executed, with the 
 - **G5.** The experiments on the second basis point (ledger O21) are their own part, directly after key generation and before signing.
 - **G6.** Stage 1 opens with this section.
 
+Rulings on this section, the same day:
+
+- **R1.** The secret ideal's first norm is the next prime after `2^(2·WIDTH_BITS)` at all five sets (1.7).
+- **R2.** The four bounds of the quaternion layer (32 primality rounds, a box of 64, 17 generator bits, 20,000 steps per generator) are the values at all five sets: starting values, fixed at the three reference primes for replay, provisional at `p324` and `p664`, gated on stage 3's measured failure rates.
+- **R3, not ruled.** The Montgomery model of a key (1.6) is looked at again when the work reaches stage 3.
+
 Standing from Round 0 (2026-11-14): we are not transcribing the C; other code bases are oracles for values and not sources of structure; five sets, one algorithm.
 
 ### The layers, in the order they are built
@@ -31,8 +37,8 @@ Standing from Round 0 (2026-11-14): we are not transcribing the C; other code ba
 | --- | --- | --- |
 | 1 | The constants: what each is (1a, this section) and the generator that produces them (1b) | 1 |
 | 2 | Integers and the quaternion algebra: the algebra, the maximal order, lattices, ideals, lattice reduction | to be written |
-| 3 | Norm equations and sampling: Cornacchia, the norm equation of the ideal-to-isogeny translation, random ideals of a given norm, primality | to be written |
-| 4 | Ideal to isogeny: the starting curve, its basis, the action of its endomorphisms, the dimension-two chain from `E0 × E0` | to be written |
+| 3 | Cornacchia; the norm equation of the ideal-to-isogeny translation; sampling an ideal of prime norm, with the equivalent prime-norm ideal for key generation. No step that represents an integer by the order's norm form (1.2) | to be written |
+| 4 | Ideal to isogeny: first the engine's forward chain as the signer needs it (1.9), then the starting curve, its basis, the action of its endomorphisms, and the translation | to be written |
 | 5 | Key generation and signing | to be written |
 | last | Constant-time hardening (G4) | to be written |
 
@@ -114,7 +120,7 @@ Columns:
 | 22 | `QUAT_equiv_bound_coeff` | 64 | Half-width of the box of coefficients, on a reduced basis, searched for an equivalent ideal of prime norm; the search gives up after `(2·64 + 1)⁴` draws. | Tun | `K` only (`quat_lideal_prime_norm_reduced_equivalent`). Stage 3. | **Yes** | secret (which representative of the class the secret key holds), +draws | `C`. `R` has `EQUIV_BOUND_COEFF` by Algorithm B.2 (15, 19, 22), a different value at the shared prime (19). | — |
 | 23 | `QUAT_good_prime_lists_length` | 101 | The length of item 17. `primes_per_order` of `prism_parameters.txt` is its source. | Tun | as item 17 | **Yes** | path, +draws | `C` | Equal to the length of item 17. |
 | 24 | `QUAT_qlapoti_gen_bound_bits` | 17 | Bit length of the random coefficients from which a generator `α` of the ideal is drawn, on a reduced basis. | Tun | `K`, `S`, `S5`: `quat_qlapoti`. Stage 3. | **Yes** | path, +draws | `C`. `R` has none: its norm equation is the 3.0 specification's, a different algorithm whose bounds are computed from the ideal. | — |
-| 25 | `QUAT_qlapoti_used_power_of_two` | 246 / 374 / 498 | The exponent of the power of two the two equivalent ideals' norms sum to, and the length of the translation's chain: `e − 2`. The length is one less when the norm equation returns its transformed case. The paper says only that the exponent is at most the 2-valuation of `p + 1` (Section 2.3, equation 2). The 3.0 specification sets `f − 2` in its notation "for technical reasons related to 2-dimensional isogeny computations" (its Section 4.6), and its chain takes kernel points of order `2^(length+2)` (Section 4.5.4). The pinned reference calls the translation's chain *without* that extra torsion, on a kernel of order exactly `2^(e−2)`. So why its value is `e − 2` and not larger is **not understood**: this row is stated in the reference's terms. | Conv | `K`, `S`, `S5`. Stages 3 and 4. | **Yes** | path, +draws | `C`; `R` `QLAPOTY_USED_POWER_OF_TWO = f − 2` in its notation (322, 498, 662), equal at `p500` (**Read**: both files). | Equal to `e − 2`. |
+| 25 | `QUAT_qlapoti_used_power_of_two` | 246 / 374 / 498 | The exponent of the power of two the two equivalent ideals' norms sum to, and the length of the translation's chain: `e − 2`. The length is one less when the norm equation returns its transformed case. The paper says only that the exponent is at most the 2-valuation of `p + 1` (Section 2.3, equation 2). The 3.0 specification sets `f − 2` in its notation "for technical reasons related to 2-dimensional isogeny computations" (its Section 4.6), and its chain takes kernel points of order `2^(length+2)` (Section 4.5.4). The pinned reference calls the translation's chain *without* that extra torsion, on a kernel of order exactly `2^(e−2)`. So why its value is `e − 2` and not larger is **not understood**: this row is stated in the reference's terms. The value is kept, because replay needs it; whether `e` would do, and what that does to the failure rate, is for stage 4's section, with ledger O29. | Conv | `K`, `S`, `S5`. Stages 3 and 4. | **Yes** | path, +draws | `C`; `R` `QLAPOTY_USED_POWER_OF_TWO = f − 2` in its notation (322, 498, 662), equal at `p500` (**Read**: both files). | Equal to `e − 2`. |
 | 26 | `QUAT_qlapoti_iteration_bound` | 20,000 | Multiples `λ·α` of one generator tried before another is drawn. The whole search stops after 20 times this many steps; the 20 is written in the function and not generated. | Tun | as item 24 | **Yes** | path, +draws | `C`. `R` none, as item 24. | — |
 | 27, 28 | `FINDUV_box_size`, `FINDUV_cube_size` | 2, 624 / 3, 2400 / 3, 2400 | Parameters of a search the library declares and does not define. `cube = (2·box + 1)⁴ − 1`. | Tun | Nothing: there is no code. | **No** | — | `C` | — |
 
@@ -126,7 +132,7 @@ Columns:
 | 30 | `TWO_TO_SECURITY_BITS` | `2^128` / `2^192` / `2^256` | A power of two named for a level. | Det | Nothing. | **No** | — | `C` | — |
 | 31 | `TORSION_PLUS_2POWER` | `2^e` | The modulus of the matrices. | Det | `S`, `S5`: the response matrix. Stage 5. | **Has**: it is `2^E` of `ParameterSet::E` (`prism-field`). No generated data. | none | `C` | — |
 | 32 | `TWO_POW_A` | `2^192` / `2^256` / `2^320` | `2^a` of salt-PRISM. | Det | Nothing. | **No** | — | `C` | — |
-| 33 | `SEC_DEGREE` | `2^512 + 75` / `2^768 + 183` / `2^1024 + 643` | The prime norm of the ideal key generation first samples. Each is the next prime after a power of two (**Executed, not committed**). The paper asks for a norm that makes the key's distribution statistically close to uniform and gives no value (Section 3.3). | Tun | `K`. Stage 5. | **Yes** | public and secret: another prime gives other keys from the same randomness. +draws | `C`. `R` has `DEG_MIX_LE = next_prime(p·2^(2λ))`, the 3.0 specification's rule (Table 8): a different integer at the shared prime. | Prime; at least `p·2^(2λ)` for the `λ` one claims. |
+| 33 | `SEC_DEGREE` | `2^512 + 75` / `2^768 + 183` / `2^1024 + 643` | The prime norm of the ideal key generation first samples. Each is the next prime after a power of two (**Executed, not committed**). The paper asks for a norm that makes the key's distribution statistically close to uniform and gives no value (Section 3.3). | Tun | `K`. Stage 5. | **Yes** | public and secret: another prime gives other keys from the same randomness. +draws | `C`. `R` has `DEG_MIX_LE = next_prime(p·2^(2λ))`, the 3.0 specification's rule (Table 8): a different integer at the shared prime. | Prime, and greater than `p²`. |
 | 34 | `COM_DEGREE` | equal to item 33 | A commitment degree: SQIsign's, which PRISM does not have. | Tun | Nothing. | **No** | — | `C` | — |
 | 35 | `TORSION_EVEN_POWER` | 248 / 376 / 500 | `e`. | Det | everywhere | **Has**: `ParameterSet::E`. | none | `C`; `R` `TWO_ADIC_EXPONENT` | — |
 | 36 | `A_POWER` | 192 / 256 / 320 | salt-PRISM's `a`: the challenge prime has `a` bits (the paper's Table 2). | Tun | `S` and the reference's verifier. Not `S5`. | **No**: our degree is `2^(2e−5) − s²` and has no `a` (VERIFIER_SPEC). | — | `C` | — |
@@ -175,19 +181,27 @@ It is Algorithm B.1 (`GenerateBasisB0`) of the 3.0 specification. In our terms:
 2. For `m = 1, 2, 3, …` in that order, let `x = 1 + m·i`. If `x³ + x` is not a square, go on to the next `m`.
 3. Let `y` be the root of `y² = x³ + x` that is the smaller of the two in the order of step 1, and `R = (x, y)`.
 4. Let `n` be the order of `R`. If `2^e` does not divide `n`, go on. Otherwise replace `R` by `[n/2^e]R`: the multiplier is the odd part of the order *of this point*, which divides `f` and need not equal it.
-5. The first `R` to arrive is `P0`. After it, the first `R` with `[2^(e−1)]R ≠ [2^(e−1)]P0` is `Q0`.
+5. The first `R` to arrive is `P0`. After it, the first `R` with `[2^(e−1)]R ≠ [2^(e−1)]P0` is `Q0`. Algorithm B.1 states this test as a Weil pairing (its line 20: `e(P0, R)` raised to `2^(e−1)` is `−1`). The two are the same test: both points have order exactly `2^e`, so that power of the pairing is the pairing of the two points of order 2 above them, which is `−1` when those differ and `1` when they are equal; and the pair is a basis exactly when they differ.
 6. Then: if `[2^(e−1)]Q0 = (0, 0)`, keep both. Otherwise, if `[2^(e−1)]P0 = (0, 0)`, exchange them. Otherwise replace `Q0` by `Q0 + P0`.
 7. The third stored coordinate is `x(P0 − Q0)`.
 
 **Executed, not committed.** A plain implementation of steps 1 to 7 gives the reference's `x(P0)`, `x(Q0)` and `x(P0 − Q0)` exactly, at `p248`, `p376` and `p500`. The values of `m` used are 11 and 12, 10 and 12, 4 and 5. At `p500` the reference's three coordinates equal the three `sqisign-rs` has checked in.
 
-What the three known values do **not** exercise:
+At all five sets (**Executed, not committed**, here and independently by the reviewer, 2026-11-21):
 
-- Step 6 took its third branch (`Q0 + P0`) at all three. The first two branches are untested by any reference value.
-- In step 4 every accepted point had odd part of order equal to `f` (5, 65, 27). So the three values cannot tell the rule "multiply by the odd part of the point's order" from the rule "multiply by `f`", which differ when a point's order misses a prime of `f`.
-- Step 3's choice of `y` moves the result only through step 6's third branch and through step 7. It did at all three.
+| Set | Candidates `m` | Branch of step 6 | Compared with |
+| --- | --- | --- | --- |
+| `p248` | 11, 12 | third (`Q0 + P0`) | the reference: equal |
+| `p324` | 2, 3 | third | `sqisign-rs`, three coordinates: equal |
+| `p376` | 10, 12 | third | the reference: equal |
+| `p500` | 4, 5 | third | the reference and `sqisign-rs`: equal |
+| `p664` | 9, then 19 refused as dependent on `P0`, then 20 | second (the exchange) | `sqisign-rs`, three coordinates: equal |
 
-The rule above is the one adopted. Whether `p324` and `p664` reach the untested branches is **Open** (ledger O27) until stage 1b runs it there and compares with `sqisign-rs`.
+- The second and third branches of step 6 are each taken at a set with an oracle. The first branch is taken at none of the five.
+- In step 4, every accepted point at every set has odd part of order equal to `f` (5, 3, 65, 27, 17). So "multiply by the odd part of the point's order" and "multiply by `f`" give the same points at all five, and no value here tells them apart. The rule adopted is the first, which is Algorithm B.1 as printed (its line 17).
+- Step 3's choice of `y` moves the result through step 6's third branch and through step 7. It does at the four sets that take that branch.
+
+Stage 1b commits this (ledger O27).
 
 #### 1.4.2 The action matrices (items 5 to 10)
 
@@ -243,7 +257,11 @@ Two of these are not SQIsign 3.0's values. `sqisign-rs` uses `⌈λ/2⌉` rounds
 - key generation emits the canonical model, by the rule the response curve already has (D5). Then item 43 is not needed, no "path" item reaches a byte, and one curve has one key;
 - or the random model is kept, item 43 is a needed constant, and the specification says why a key's model should be random.
 
-This section does not choose. Ledger O28.
+What the 3.0 specification does (**Read**): it does not randomize the model. A curve there is always held by the largest of its six Montgomery coefficients in the specification's order on `F_{p²}`: at the end of a chain `ThetaToMontgomery` (its Algorithm 4.126) chooses, among six theta structures it lists, the one whose coefficient is largest, and `NormalizeMontgomery` (Algorithm 4.96) does the same from a point of order 4. Its six theta structures (the null point, its swap, two sums and differences, two with `i`) look like the six matrices of item 43; that they are the same six was not verified. Our D5 keeps the least. A rule for keys here would be D5's, so that a key and a response curve are normalized one way.
+
+What the choice does to replay against the reference (**Derived**). The reference's keys carry a random model, and a key's bytes enter the challenge. If our key generation emits the canonical model, a key's bytes differ from the reference's for the same curve, and so does every challenge under it. Then a replay of signing has to run on a key imported from the reference, model and all, and a replay of key generation compares the two keys up to the change of model and not byte for byte.
+
+This section does not choose. **Not ruled** (R3, 2026-11-21): it is looked at again when the work reaches stage 3. Ledger O28.
 
 ### 1.7 Totals, and the constants with no oracle at `p324` and `p664`
 
@@ -269,13 +287,13 @@ Oracles for the 16 at the two primes the reference does not have:
 | 8, 9, 10 | `sqisign-rs` | 1.4.2 and 1.4.3. |
 | 13, 17, 23, 43 | not prime-dependent | The reference's value, identical at its three sets, is the value at every set. |
 | 25 | `sqisign-rs` | `e − 2`. It reproduces 246, 374 and 498. |
-| 20 | **none** | 32 at every set, the reference's constant, unless stage 3 replaces the test with a deterministic one. A design choice; no formula is involved. |
-| 22 | **none** | 64 at every set, the reference's constant. A design choice. |
-| 24 | **none** | 17 at every set, the reference's constant. A design choice. |
-| 26 | **none** | 20,000 at every set, the reference's constant. A design choice. |
-| 33 | **none** | The next prime after `2^(2W)`, `W` being `ParameterSet::WIDTH_BITS` (`e` rounded up to a multiple of 128). It reproduces the three known values (`2W` = 512, 768, 1024) and gives `2^768 + 183` at `p324` and `2^1536 + 75` at `p664` (**Executed, not committed**). It is at least `p·2^(2λ)` at each set for the level each prime was or is assessed at. The reference's own rule is not written anywhere; "the next prime after `2^(4λ)`" with the paper's levels gives the same three values and cannot be used here, because a level is not coded. A design choice with a security meaning: to be ruled. |
+| 20 | **none** | 32 at every set, the reference's constant. **Ruled 2026-11-21 (R2):** a starting value, fixed at the three reference primes for replay, provisional at `p324` and `p664`, and gated on stage 3's measured failure rates (ledger O26, O29). Stage 3 may replace the test with a deterministic one. |
+| 22 | **none** | 64 at every set, the reference's constant. **Ruled 2026-11-21 (R2):** a starting value, fixed at the three reference primes for replay, provisional at `p324` and `p664`, and gated on stage 3's measured failure rates (ledger O26, O29). |
+| 24 | **none** | 17 at every set, the reference's constant. **Ruled 2026-11-21 (R2):** a starting value, fixed at the three reference primes for replay, provisional at `p324` and `p664`, and gated on stage 3's measured failure rates (ledger O26, O29). |
+| 26 | **none** | 20,000 at every set, the reference's constant. **Ruled 2026-11-21 (R2):** a starting value, fixed at the three reference primes for replay, provisional at `p324` and `p664`, and gated on stage 3's measured failure rates (ledger O26, O29). |
+| 33 | **none** | The next prime after `2^(2W)`, `W` being `ParameterSet::WIDTH_BITS` (`e` rounded up to a multiple of 128). **Ruled 2026-11-21 (R1).** It reproduces the three known values (`2W` = 512, 768, 1024) and gives `2^768 + 183` at `p324` and `2^1536 + 75` at `p664` (**Executed, not committed**). `W` is at least the bit length of `p` at all five sets (256, 384, 384, 512, 768 against 251, 326, 383, 505, 669), so the norm exceeds `p²`, which is at least `p·2^(2λ)` for every `λ ≤ ½·log₂ p`. No level is coded. The reference's own rule is not written anywhere. |
 
-For items 20, 22, 24 and 26 the three known values are one constant, so "the same constant" reproduces them trivially and says nothing about whether the constant is right at a larger prime. Nothing in the reference, the paper or `sqisign-rs` says how any of the four should grow with `p`. That is a finding (ledger O26, O29): the failure rate of the translation at `p664` under these bounds is **Open**, and the first evidence will be stage 3's own measurements.
+For items 20, 22, 24 and 26 the three known values are one constant, so "the same constant" reproduces them trivially and says nothing about whether the constant is right at a larger prime. Nothing in the reference, the paper or `sqisign-rs` says how any of the four should grow with `p`. That is a finding (ledger O26, O29), and the reason R2 makes the values provisional: the failure rate of the translation at `p664` under these bounds is **Open**, and the first evidence will be stage 3's own measurements.
 
 `sqisign-rs` is an oracle for the starting basis, the six matrices and `e − 2`, and for nothing else here. Its other constants (`PRIMALITY_NUM_ITER`, `EQUIV_BOUND_COEFF`, `DEG_MIX_LE`, `RI_COFACTOR_LE`) are SQIsign 3.0's, by that specification's formulas, and at the shared prime `p500` each differs from the reference's.
 
@@ -285,7 +303,7 @@ Requirements, not a design.
 
 1. **Scope.** It produces, at all five primes, items 4, 8, 9 and 10, and items 5, 6 and 7 as the intermediate values the tests of 8 to 10 need. Items 17, 20, 22 to 26 and 33 are written by rule (1.4.4, 1.7) and tested, not searched. Items 3, 12 and 13 are definitions, stated once.
 2. **From the definitions.** Each value is computed from 1.4, not copied from an oracle.
-3. **Deterministic and reproducible.** From a committed script, with the tool and its version pinned, the same bytes on every run. The obvious tool is Sage in the container the nightly already uses for the fixtures.
+3. **Deterministic and reproducible.** From a committed script, with the tool and its version pinned, the same bytes on every run. Plain Python sufficed for the basis at five primes in seconds, here and in the reviewer's run, and is preferred to Sage: none of Sage's own conventions can then enter a value.
 4. **Checked in with a digest manifest**, as `prism-vectors`' data is.
 5. **Compared element for element with every oracle the table names**: the reference at `p248`, `p376`, `p500`; `sqisign-rs` at `p324`, `p500`, `p664`; and the two oracles with each other at `p500`.
 6. **Every defining property a committed test**, and with them every statement this section marks "Executed, not committed":
@@ -296,11 +314,11 @@ Requirements, not a design.
    - the prime list is what 1.4.4 says, and the reference's "bad primes" product is its complement below 1237;
    - items 19 and 33 are the next primes after their powers of two; the order and the unit ideal of items 13 and 16 are as stated; the five field constants of item 41 decode as stated;
    - the 3.0 specification's box (Algorithm B.2) at the five primes, beside the reference's 64.
-7. **The branches the reference never took** (1.4.1): at each of the five primes the generator reports which branch of step 6 was taken and whether any accepted point had an order missing a prime of `f`, and a test fails if the two readings of step 4 give different points at a prime where no oracle decides between them.
+7. **The branches of 1.4.1**: at each of the five primes the generator reports the candidates, which branch of step 6 was taken and whether any accepted point had an order missing a prime of `f`, and a test holds them to the table of 1.4.1.
 
 Not yet known about doing this:
 
-- whether Sage's own choices (which square root it returns, how it orders points, what `order()` costs at `p664`) can be kept out of the result. The rule of 1.4.1 has to be implemented as written, with the order of step 1 coded and not inherited;
+- whether plain Python is also enough for the halved generators, which need arithmetic in `F_{p⁴}`. Whatever the tool, the rule of 1.4.1 is implemented as written, with the order of step 1 coded and not inherited from a library;
 - how the halves of 1.4.3 are best taken: in `F_{p⁴}` as `sqisign-rs` does, or by another construction; and the cost at `p664`;
 - what primality test "the next prime" uses, so that the script and a later Rust check agree. A proof is cheap at these sizes and is what should be asked for;
 - whether the generated data belongs in `prism-vectors` or beside the layer crate that reads it (G1 keeps it out of `prism-field`).
