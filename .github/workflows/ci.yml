@@ -223,8 +223,8 @@ jobs:
           cargo test -p prism-isogeny --release --locked -- --ignored --exact \
             pairing::tests::differential::a_thousand_random_pairs_per_set_agree > pairs.log 2>&1 || { cat pairs.log; exit 1; }
           grep -q 'test result: ok. 1 passed' pairs.log
-      - name: Research width keeps length ahead of origin
-        run: cargo test -p prism-verify --features research-reduced-width --locked --lib short_signature_is_length_before_origin
+      - name: The research module's tests
+        run: cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::
 
   test-aarch64:
     name: test-aarch64
@@ -255,8 +255,8 @@ jobs:
           cargo test -p prism-isogeny --release --locked -- --ignored --exact \
             pairing::tests::differential::a_thousand_random_pairs_per_set_agree > pairs.log 2>&1 || { cat pairs.log; exit 1; }
           grep -q 'test result: ok. 1 passed' pairs.log
-      - name: Research width keeps length ahead of origin
-        run: cargo test -p prism-verify --features research-reduced-width --locked --lib short_signature_is_length_before_origin
+      - name: The research module's tests
+        run: cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::
 
   # The field operations of a verification are deterministic, so the two
   # committed records are an exact match on both architectures. A change in

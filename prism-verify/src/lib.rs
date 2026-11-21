@@ -73,15 +73,15 @@
 //! | 11 | response curve | neither coefficient that a rational point of order 2 moves the curve to, nor its negative, is below `A_sig` | `Model` | yes: an inversion, then up to two more square roots and two more inversions |
 //! | 12 | key | an index within the search bound names a point of the key's curve | `Basis` | **yes**: one to `SEARCH_BOUND` Legendre symbols, and the key chooses how many |
 //! | 13 | challenge | the degree `2^{2e′−1} − s²` passes Baillie–PSW, for `s` the hash of key, salt and message | `Composite` | yes: the hash is linear in the message's length, and the test stops at the first small factor, or after its Miller–Rabin half, or runs both halves |
-//! | 14 | key's points | the index point, its partner and their difference can be computed | `Kernel` | no |
+//! | 14 | key's points | the index point, its partner and their difference can be computed | `Kernel` | yes: the relation repeats the search of row 12, and the key chooses how many Legendre symbols; the points then cost the same |
 //! | 15 | signature's points | `P` and `Q` satisfy the response curve's equation | `Kernel` | no |
 //! | 16 | signature's points | each has order exactly `2^e`, and the two span the `2^e`-torsion | `Kernel` | no |
 //! | 17 | key's points | each of the two basis points has order exactly `2^e`, and the two span | `Kernel` | no |
 //! | 18 | lift | the key's three points lift to full points with consistent signs | `Pairing` | no |
 //! | 19 | pairing | `e([s]P, [s]Q) = e(P_vk, Q_vk)^q`, and both pairings have a value | `Pairing` | slightly: `[s]` and the power follow the bits of `s` |
-//! | 20 | kernel | `−s²` has an inverse modulo `2^e` | `Kernel` | no |
-//! | 21 | kernel | the key's 4-torsion has a canonical basis | `Kernel` | no |
-//! | 22 | kernel | the response's 4-torsion has a canonical basis | `Kernel` | no |
+//! | 20 | kernel | `−s²` has an inverse modulo `2^e` | `Kernel` | slightly: the inverse runs a count fixed by the set, and then `[q⁻¹]` of the second scaled signature point follows the bits of that inverse |
+//! | 21 | kernel | the key's 4-torsion has a canonical basis | `Kernel` | slightly: at most eight candidates, returning at the first whose abscissa is `−1` |
+//! | 22 | kernel | the response's 4-torsion has a canonical basis | `Kernel` | slightly, as 21 |
 //! | 23 | kernel | the Weil pairing of the key's 4-torsion basis has a value | `Kernel` | no |
 //! | 24 | kernel | the two challenge matrices exist | `Kernel` | no |
 //! | 25 | kernel | the long chain's change of theta basis exists | `Kernel` | no |
@@ -98,13 +98,14 @@
 //! passing comparison.
 //!
 //! What the order is for: everything through row 11 is decoding and a
-//! few field operations, and runs before the search of row 12, the one
-//! step whose length a sender chooses outright. The hash and primality
-//! of row 13 come before any curve arithmetic, so a signature whose salt
-//! does not name a prime degree costs no doubling. From row 14 on, the
-//! cost of a refusal is set by how far it gets, and
-//! `docs/benchmarks/negative-verdicts.tsv` records it for each committed
-//! negative.
+//! few field operations, and runs before the search of row 12, the step
+//! whose length a sender chooses outright. The hash and primality of
+//! row 13 come before any curve arithmetic, so a signature whose salt
+//! does not name a prime degree costs no doubling. The relation then
+//! repeats that search, so a key that passes row 12 pays it again at
+//! row 14. From there, the cost of a refusal is set by how far it gets,
+//! and `docs/benchmarks/negative-verdicts.tsv` records it for each
+//! committed negative.
 //!
 //! ## Refusals the code spells and this entry cannot reach
 //!
