@@ -224,7 +224,7 @@ jobs:
             pairing::tests::differential::a_thousand_random_pairs_per_set_agree > pairs.log 2>&1 || { cat pairs.log; exit 1; }
           grep -q 'test result: ok. 1 passed' pairs.log
       - name: The research module's tests
-        run: cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::
+        run: "cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::"
 
   test-aarch64:
     name: test-aarch64
@@ -256,7 +256,7 @@ jobs:
             pairing::tests::differential::a_thousand_random_pairs_per_set_agree > pairs.log 2>&1 || { cat pairs.log; exit 1; }
           grep -q 'test result: ok. 1 passed' pairs.log
       - name: The research module's tests
-        run: cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::
+        run: "cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::"
 
   # The field operations of a verification are deterministic, so the two
   # committed records are an exact match on both architectures. A change in
