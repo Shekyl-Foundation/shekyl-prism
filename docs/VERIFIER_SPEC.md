@@ -104,6 +104,9 @@ least coefficient in its Montgomery isomorphism class, under the same fp2
 order. The candidates are `±A` and `±(3α+A)/λ` for the two nonzero rational
 2-torsion roots `α`, with `λ²=α²−1`. Full rational high-order torsion
 ensures the required rational transports exist for an honest signature.
+A response curve whose `A²−4` is not a square, so that those roots are
+not rational, is refused as Model; a root whose `λ` is not rational
+gives no candidate and is passed over.
 The exporter transports y using `λ^(3/2)` before joint normalization.
 
 The response classes `j=0` (`A²=3`) and `j=1728` (`A=0` or `2A²=9`) are
@@ -203,7 +206,14 @@ Sign, response Singular/Model, bounded Basis and Composite. Then run
 on-curve/order/span checks, Pairing, chain construction, Codomain and Image.
 `Kernel` can occur before or after pairing, and `Singular` can refer to
 either curve; enum ordering is not a global precedence promise.
+`Pairing` is the refusal of the pairing equation, and also of a pairing
+that has no value and of a key basis that does not lift to full points;
+no input is known for the last.
 `Ok(())` is returned only after every image comparison passes.
+
+The crate documentation of `prism-verify` has the refusals one to a
+row, in the order the byte-level entry makes them. Which of those rows
+a test reaches is ledger O23.
 
 Verification has no RNG or secret inputs. Public arithmetic is variable
 time. The signer remains a separate crate and process backend.

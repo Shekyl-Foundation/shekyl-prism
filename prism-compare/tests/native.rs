@@ -7,7 +7,7 @@
 use prism_compare::native::{self, Unsalted};
 use prism_field::{P248, P376, P500};
 use prism_signer::{limits, SecretSeed, Signer};
-use prism_verify::{Committed, CommittedSet};
+use prism_verify::set::{Committed, CommittedSet};
 
 fn agree<L: Committed>(dir: &std::path::Path, nist: CommittedSet, name: &str) {
     let backend = dir.join(name);

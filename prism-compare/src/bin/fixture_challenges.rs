@@ -10,8 +10,8 @@ const CHALLENGE_BATCH: u64 = 512;
 
 use prism_field::{Salt, P248, P376, P500};
 use prism_signer::limits;
-use prism_verify::CommittedSet;
-use prism_verify::{ChallengeScalar, Committed, KeyIdentity};
+use prism_verify::set::CommittedSet;
+use prism_verify::{challenge::ChallengeScalar, identity::KeyIdentity, set::Committed};
 fn hex(s: &str) -> Option<Vec<u8>> {
     if !s.len().is_multiple_of(2) {
         return None;

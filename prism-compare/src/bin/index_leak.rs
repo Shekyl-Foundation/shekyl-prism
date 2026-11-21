@@ -15,18 +15,21 @@
 //! name.
 use prism_compare::{archived_vectors, unsalted};
 use prism_field::{ParameterSet, P248, P376, P500};
-use prism_verify::CommittedSet;
+use prism_verify::set::CommittedSet;
 use std::collections::BTreeMap;
 
 fn earlier_primes<L: ParameterSet>(key: &[u8], message: &[u8], index: u16) -> Option<u32> {
     let carried = unsalted::<L>(key, message, index, L::CHALLENGE_BITS)?;
-    if !prism_verify::degree_is_prime::<L::Degree>(L::E - 2, &carried) {
+    if !prism_verify::prime::degree_is_prime::<L::Degree>(L::E - 2, &carried) {
         return None;
     }
     let mut primes = 0;
     for earlier in 0..index {
         let s = unsalted::<L>(key, message, earlier, L::CHALLENGE_BITS)?;
-        primes += u32::from(prism_verify::degree_is_prime::<L::Degree>(L::E - 2, &s));
+        primes += u32::from(prism_verify::prime::degree_is_prime::<L::Degree>(
+            L::E - 2,
+            &s,
+        ));
     }
     Some(primes)
 }

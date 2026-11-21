@@ -9,7 +9,7 @@
 
 use libfuzzer_sys::fuzz_target;
 use prism_field::{P248, P324, P376, P500, P664};
-use prism_verify::KeyIdentity;
+use prism_verify::identity::KeyIdentity;
 
 fuzz_target!(|data: &[u8]| {
     let _ = KeyIdentity::<P248>::decode(data);

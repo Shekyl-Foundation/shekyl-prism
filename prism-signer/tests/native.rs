@@ -4,7 +4,10 @@
 // BSD-3-Clause
 
 use prism_signer::{limits, SecretSeed, Signer};
-use prism_verify::{verify_set, CommittedSet, VerifyError};
+use prism_verify::{
+    set::{verify_set, CommittedSet},
+    VerifyError,
+};
 
 #[test]
 #[ignore = "requires the pinned native backend; set PRISM_SIGNER_BACKEND_DIR"]

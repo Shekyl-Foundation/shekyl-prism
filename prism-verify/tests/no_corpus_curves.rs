@@ -26,7 +26,7 @@ use prism_isogeny::pairing::weil;
 use prism_isogeny::torsion::{even_basis, has_order_p_plus_one};
 use prism_vectors::curve_table::{CurveNumber, Point};
 use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
-use prism_verify::{basis_hint, ChallengeScalar, KeyIdentity};
+use prism_verify::{basis::basis_hint, challenge::ChallengeScalar, identity::KeyIdentity};
 
 /// One row of the file, at this set.
 struct Curve<L: ParameterSet> {

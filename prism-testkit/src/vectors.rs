@@ -12,7 +12,7 @@
 
 use prism_field::ParameterSet;
 use prism_vectors::corpus::{Primary, Vector};
-use prism_verify::{CommittedSet, Response};
+use prism_verify::{set::CommittedSet, signature::Response};
 use std::path::PathBuf;
 
 pub use prism_vectors::corpus::files;

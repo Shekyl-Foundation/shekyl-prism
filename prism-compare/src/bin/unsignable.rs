@@ -23,7 +23,7 @@ use prism_compare::{
 };
 use prism_field::{P248, P376, P500};
 use prism_signer::{limits, SecretSeed};
-use prism_verify::{Committed, CommittedSet, Set};
+use prism_verify::set::{Committed, CommittedSet, Set};
 use sha3::{
     digest::{ExtendableOutput, Update, XofReader},
     Shake256,

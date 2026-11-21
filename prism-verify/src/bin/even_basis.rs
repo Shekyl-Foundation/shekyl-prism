@@ -12,14 +12,14 @@
 //! `sample <p248|p324|p376|p500> <count>` prints that many coefficients that have a
 //! basis.
 
-use prism_verify::Set;
+use prism_verify::set::Set;
 use std::env;
 use std::process::ExitCode;
 
 use prism_field::{Field, ParameterSet, P248, P324, P376, P500, P664};
 use prism_isogeny::torsion::{even_basis, mul_odd_then_double};
 use prism_verify::basis::basis_hint;
-use prism_verify::Committed;
+use prism_verify::set::Committed;
 use sha3::{Digest, Sha3_256};
 
 fn main() -> ExitCode {

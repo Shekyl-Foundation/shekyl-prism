@@ -155,30 +155,35 @@ jobs:
           python3 scripts/ci/check_oracle_isolation.py
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
-      # The front crate is the interface, the vectors crate is public data,
-      # the testkit is a library of test inputs, and the field crate and the
-      # isogeny crate are the layer crates held to the same standard so far:
-      # all five deny missing documentation, and here a broken link or any
-      # other rustdoc warning fails too. Their doc tests run in the test
-      # jobs, which `cargo test --workspace` already includes.
-      - name: Documentation of the front crate, the vectors crate, the testkit, the field crate and the isogeny crate
+      # Every library crate denies missing documentation: the front crate
+      # (the interface), the vectors crate (public data), the testkit (a
+      # library of test inputs) and the three layer crates. Here a broken
+      # link or any other rustdoc warning fails too. One step for each
+      # feature set that makes something public; a step builds every crate
+      # that has the feature. Their doc tests run in the test jobs, which
+      # `cargo test --workspace` already includes.
+      - name: Documentation of the library crates, default features
         env:
           RUSTDOCFLAGS: -D warnings
-        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit -p prism-field -p prism-isogeny --no-deps --locked
-      # The counter's module is public only with its feature, so its
-      # documentation is built, and its missing documentation denied, in a
-      # pass of its own.
-      - name: Documentation of the field crate, operation counter
+        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit -p prism-field -p prism-isogeny -p prism-verify --no-deps --locked
+      # The counter's module and the verifier's stage names are public only
+      # with this feature, which the verifier's turns on in the field crate.
+      - name: Documentation of the library crates, operation counter
         env:
           RUSTDOCFLAGS: -D warnings
-        run: cargo doc -p prism-field --features op-count --no-deps --locked
+        run: cargo doc -p prism-field -p prism-verify --features prism-verify/op-count --no-deps --locked
       # The affine pairing kept as a reference and the 2-isogeny model are
-      # public only with their feature, so they too are built, and their
-      # missing documentation denied, in a pass of its own.
-      - name: Documentation of the isogeny crate, oracle
+      # public only with this feature.
+      - name: Documentation of the library crates, oracle
         env:
           RUSTDOCFLAGS: -D warnings
         run: cargo doc -p prism-isogeny --features oracle --no-deps --locked
+      # The reduced-width experiment, which is not PRISM, is public only
+      # with this feature.
+      - name: Documentation of the library crates, reduced-width research
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc -p prism-verify --features research-reduced-width --no-deps --locked
       # The counter is compiled only when asked for, so its code and the
       # reporter (an example of the testkit that requires the feature) are
       # linted in a pass of their own.
@@ -218,8 +223,8 @@ jobs:
           cargo test -p prism-isogeny --release --locked -- --ignored --exact \
             pairing::tests::differential::a_thousand_random_pairs_per_set_agree > pairs.log 2>&1 || { cat pairs.log; exit 1; }
           grep -q 'test result: ok. 1 passed' pairs.log
-      - name: Research width keeps length ahead of origin
-        run: cargo test -p prism-verify --features research-reduced-width --locked --lib short_signature_is_length_before_origin
+      - name: The research module's tests
+        run: "cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::"
 
   test-aarch64:
     name: test-aarch64
@@ -250,8 +255,8 @@ jobs:
           cargo test -p prism-isogeny --release --locked -- --ignored --exact \
             pairing::tests::differential::a_thousand_random_pairs_per_set_agree > pairs.log 2>&1 || { cat pairs.log; exit 1; }
           grep -q 'test result: ok. 1 passed' pairs.log
-      - name: Research width keeps length ahead of origin
-        run: cargo test -p prism-verify --features research-reduced-width --locked --lib short_signature_is_length_before_origin
+      - name: The research module's tests
+        run: "cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::"
 
   # The field operations of a verification are deterministic, so the two
   # committed records are an exact match on both architectures. A change in

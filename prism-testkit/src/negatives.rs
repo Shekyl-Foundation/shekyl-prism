@@ -25,7 +25,10 @@ use prism_isogeny::{
     pairing::mul,
 };
 use prism_verify::{
-    signature::canonical_sign, AffinePoint, ChallengeScalar, KeyIdentity, Response, VerifyError,
+    challenge::ChallengeScalar,
+    identity::KeyIdentity,
+    signature::{canonical_sign, AffinePoint, Response},
+    VerifyError,
 };
 
 /// One input that must be refused, and the refusals it may meet.

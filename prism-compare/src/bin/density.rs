@@ -16,7 +16,7 @@
 //! label, not the set name.
 use prism_compare::{archived_vectors, unsalted};
 use prism_field::{Salt, P248, P376, P500};
-use prism_verify::{ChallengeScalar, Committed, KeyIdentity};
+use prism_verify::{challenge::ChallengeScalar, identity::KeyIdentity, set::Committed};
 
 fn message(n: u64) -> Vec<u8> {
     let mut m = b"shekyl-prism-comparison-e1-v1".to_vec();
@@ -38,7 +38,7 @@ fn set<L: Committed>(samples: u64, salted: bool) -> String {
             ChallengeScalar::derive(&id, &m, salt).degree_is_prime::<L>()
         } else {
             let s = unsalted::<L>(&key, &m, 0, L::CHALLENGE_BITS).expect("full width");
-            prism_verify::degree_is_prime::<L::Degree>(L::E - 2, &s)
+            prism_verify::prime::degree_is_prime::<L::Degree>(L::E - 2, &s)
         };
         blocks[(n * 10 / samples) as usize] += u64::from(prime);
     }

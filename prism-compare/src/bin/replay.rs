@@ -104,7 +104,7 @@ fn prime_collision(t: &Template) -> Result<Collision, &'static str> {
             }
             Some(Seen::Composite) => {}
             Some(&Seen::Once(first)) => {
-                if prism_verify::degree_is_prime::<<L as ParameterSet>::Degree>(
+                if prism_verify::prime::degree_is_prime::<<L as ParameterSet>::Degree>(
                     L::E - 2,
                     &t.scalar(value),
                 ) {
@@ -179,7 +179,7 @@ fn run(dir: &std::path::Path, trial: u64, bits: u32) -> Result<(), Box<dyn std::
         &[0; limits::CALLER_RANDOMNESS_LEN],
         bits,
     )?;
-    let actual = prism_verify::Response::<L>::decode(&signed.signature)?;
+    let actual = prism_verify::signature::Response::<L>::decode(&signed.signature)?;
     let replay = prism_verify::research::verify_width::<L>(
         session.public_key(),
         &guessed_second,

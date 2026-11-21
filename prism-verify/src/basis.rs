@@ -22,6 +22,40 @@
 //! Searching from 1 without the seven-bit ceiling therefore answers both
 //! cases, and [`C_HINT_MAX_INDEX`] is an encoding fact rather than a bound
 //! on the search.
+//!
+//! # The search bound
+//!
+//! The search tries [`ParameterSet::SEARCH_BOUND`] candidates and then
+//! refuses. That is the set's [`ParameterSet::WIDTH_BITS`]: `e` rounded
+//! up to a multiple of 128. The C loops without a bound. A verifier
+//! cannot, because whoever picks `A` picks the search length. The limit
+//! is not the width of the C hint byte.
+//!
+//! | Branch | Trials in `N` candidates | Failure probability |
+//! | --- | --- | --- |
+//! | `A` not a square | all `N`, each on the curve with probability about 1/2 | about `2^-N` |
+//! | `A` a square | about `N/2`, the rest spent on the `1 + b^2` non-square filter | about `2^-(N/2)` |
+//!
+//! So a key this verifier refuses and the C accepts arises with
+//! probability at most about `2^-(N/2)`: `2^-128`, `2^-192`, `2^-192`,
+//! `2^-256` and `2^-384` at the five sets. The figures are heuristic,
+//! from treating the candidates as independent; they are the argument
+//! the limit was chosen by and are not proved or measured here. No key
+//! past the bound is known, so no test has one.
+//!
+//! The estimate is this search's. `prism_isogeny::torsion`'s rational
+//! basis and starting basis share the limit and have no estimate here:
+//! the rational basis also requires full order and independence, and
+//! the starting basis is a fixed computation with no input.
+//!
+//! # What the index is not
+//!
+//! The search looks at abscissas. An index it returns names points of
+//! the curve; it does not show that they have order `2^e` or span the
+//! torsion. On a curve whose `2^e`-torsion is not rational the search
+//! succeeds and the points are no basis. The test of that is
+//! [`crate::prepared::PreparedKey::prepare`]'s, and in the byte-level
+//! entry the relation's.
 
 use prism_field::{Field, ParameterSet};
 
@@ -35,34 +69,13 @@ use crate::VerifyError;
 /// does for every key.
 pub const C_HINT_MAX_INDEX: u16 = 127;
 
-/// Candidates the public-key search tries before refusing.
-///
-/// The limit is the set's [`ParameterSet::WIDTH_BITS`]: `e` rounded up to
-/// a multiple of 128. The C loops without a bound. A verifier cannot,
-/// because whoever picks `A` picks the search length. The limit is not the
-/// width of the C hint byte.
-///
-/// This estimate is this search's. The rational basis and the starting
-/// basis share the limit and have none here: the rational basis also
-/// requires full order and independence, and the starting basis is a fixed
-/// computation with no input.
-///
-/// | Branch | Trials in `N` candidates | Failure probability |
-/// | --- | --- | --- |
-/// | `A` not a square | all `N`, each on the curve with probability about 1/2 | about `2^-N` |
-/// | `A` a square | about `N/2`, the rest spent on the `1 + b^2` non-square filter | about `2^-(N/2)` |
-///
-/// So a key this verifier refuses and the C accepts arises with probability
-/// at most about `2^-(N/2)`: `2^-128`, `2^-192` and `2^-256` at the three
-/// built sets. The figures are heuristic, from treating the candidates as
-/// independent; they are the argument the limit was chosen by and are not
-/// proved or measured here. The earlier seven-bit ceiling put the square
-/// branch at about `2^-63` at every set.
-pub fn search_bound<L: ParameterSet>() -> u16 {
-    L::SEARCH_BOUND
-}
-
 /// The basis index, in the form the C reference compresses into one byte.
+///
+/// The fields are private. [`basis_hint`] makes one with an index it
+/// found by the search, and [`Self::from_c_byte`] makes one from a byte
+/// with no search at all: a value of this type is therefore not evidence
+/// that the index is the smallest, or that it names a point of any
+/// curve. The verifier uses only values [`basis_hint`] returned.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct BasisHint {
     index: u16,
@@ -71,7 +84,8 @@ pub struct BasisHint {
 
 impl BasisHint {
     /// `b` when `A` is a square, `n` when it is not. At least 1, and at most
-    /// [`search_bound`] for the set it was derived at.
+    /// [`ParameterSet::SEARCH_BOUND`] for the set it was derived at. One
+    /// read from a C byte is at most [`C_HINT_MAX_INDEX`].
     pub fn index(self) -> u16 {
         self.index
     }
@@ -98,6 +112,12 @@ impl BasisHint {
 
     /// Read a C hint byte. An index of zero is the C's "no index below 128"
     /// signal rather than a hint, so it does not name one.
+    ///
+    /// Nothing is searched or tested: the result says what the byte says.
+    /// The verifier never calls this. It is here, with [`Self::to_c_byte`]
+    /// and [`C_HINT_MAX_INDEX`], because the committed hints
+    /// (`prism_vectors::hints`) are in this byte, and a comparison with
+    /// the C reference needs the encoding stated once.
     pub fn from_c_byte(byte: u8) -> Option<Self> {
         let index = byte >> 1;
         (index != 0).then_some(Self {
@@ -109,14 +129,27 @@ impl BasisHint {
 
 /// Derive the basis index for a non-zero `coefficient`.
 ///
-/// `A = 0` never reaches here: [`crate::KeyIdentity`] refuses the starting
-/// curve, which is also the one curve the C's entangled basis generation
-/// cannot handle.
+/// The search is bounded by [`ParameterSet::SEARCH_BOUND`], and absence
+/// is [`VerifyError::Basis`]. That bound is the only divergence from the
+/// C reference's unbounded loop, and `docs/VERIFIER_SPEC.md` records
+/// what it costs. The cost is the caller's to choose: up to the bound in
+/// Legendre symbols, and whoever chose `coefficient` chose how many.
 ///
-/// The search is bounded by [`search_bound`], and absence is
-/// [`VerifyError::Basis`]. That bound is the only divergence from the C
-/// reference's unbounded loop, and `docs/VERIFIER_SPEC.md` records what it
-/// costs.
+/// # What it assumes
+///
+/// That `coefficient` is the coefficient of a key: not zero and not a
+/// square root of four. Neither is tested here.
+///
+/// # When that fails
+///
+/// It runs the same search on a curve that is no key, and returns what
+/// that gives: an index or `Basis`, with nothing in the value to say the
+/// curve was excluded.
+///
+/// # Who establishes it
+///
+/// [`crate::identity::KeyIdentity::decode`] refuses both curves; pass
+/// its [`crate::identity::KeyIdentity::coefficient`]. Both entries do.
 pub fn basis_hint<L: ParameterSet>(coefficient: L::Ext) -> Result<BasisHint, VerifyError> {
     let coefficient_is_square = coefficient.is_square();
     let index = if coefficient_is_square {
@@ -136,7 +169,7 @@ pub fn basis_hint<L: ParameterSet>(coefficient: L::Ext) -> Result<BasisHint, Ver
 /// and `x(P) = −A / (1 + i·b)` is on the curve.
 fn nqr_factor_index<L: ParameterSet>(coefficient: L::Ext) -> Option<u16> {
     let square = coefficient.square();
-    (1..=search_bound::<L>()).find(|candidate| {
+    (1..=L::SEARCH_BOUND).find(|candidate| {
         let b = u64::from(*candidate);
         if L::Base::from_u64(b * b + 1).is_square() {
             return false;
@@ -162,7 +195,7 @@ fn nqr_factor_index<L: ParameterSet>(coefficient: L::Ext) -> Option<u16> {
 /// and the counter is only reported back as a hint.
 fn multiple_index<L: ParameterSet>(coefficient: L::Ext) -> Option<u16> {
     let mut x = coefficient;
-    for candidate in 1..=search_bound::<L>() {
+    for candidate in 1..=L::SEARCH_BOUND {
         if montgomery_rhs::<L>(coefficient, x).is_square() {
             return Some(candidate);
         }
@@ -179,7 +212,7 @@ fn montgomery_rhs<L: ParameterSet>(coefficient: L::Ext, x: L::Ext) -> L::Ext {
 
 #[cfg(test)]
 mod tests {
-    use super::{basis_hint, montgomery_rhs, search_bound, BasisHint, C_HINT_MAX_INDEX};
+    use super::{basis_hint, montgomery_rhs, BasisHint, C_HINT_MAX_INDEX};
     use prism_field::{Field, ParameterSet, P248, P324, P376, P500, P664};
 
     /// `x(P)` for an index, by the definition in `docs/VERIFIER_SPEC.md`:
@@ -246,7 +279,7 @@ mod tests {
                 L::NAME
             );
             assert!(
-                hint.index() >= 1 && hint.index() <= search_bound::<L>(),
+                hint.index() >= 1 && hint.index() <= L::SEARCH_BOUND,
                 "{} A={re}+{im}i index {}",
                 L::NAME,
                 hint.index()
@@ -286,8 +319,8 @@ mod tests {
     #[test]
     fn the_search_reaches_past_the_hint_byte() {
         fn check<L: ParameterSet>() {
-            assert_eq!(u32::from(search_bound::<L>()), L::WIDTH_BITS);
-            assert!(search_bound::<L>() > C_HINT_MAX_INDEX);
+            assert_eq!(u32::from(L::SEARCH_BOUND), L::WIDTH_BITS);
+            assert!(L::SEARCH_BOUND > C_HINT_MAX_INDEX);
         }
         check::<P248>();
         check::<P324>();
@@ -315,11 +348,7 @@ mod tests {
         assert_eq!(BasisHint::from_c_byte(1), None);
         // An index past the ceiling has no byte: the C stores the signal and
         // its verifier re-searches, which is what this module always does.
-        for index in [
-            C_HINT_MAX_INDEX + 1,
-            search_bound::<P324>(),
-            search_bound::<P500>(),
-        ] {
+        for index in [C_HINT_MAX_INDEX + 1, P324::SEARCH_BOUND, P500::SEARCH_BOUND] {
             let hint = BasisHint {
                 index,
                 coefficient_is_square: true,

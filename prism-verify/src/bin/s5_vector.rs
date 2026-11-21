@@ -5,8 +5,8 @@
 
 //! Public challenge probe for the vector generator; no secret inputs.
 use prism_field::{ParameterSet, Salt, P248, P324, P376, P500, P664};
-use prism_verify::Set;
-use prism_verify::{ChallengeScalar, KeyIdentity};
+use prism_verify::set::Set;
+use prism_verify::{challenge::ChallengeScalar, identity::KeyIdentity};
 fn hex(s: &str) -> Option<Vec<u8>> {
     if !s.len().is_multiple_of(2) {
         return None;

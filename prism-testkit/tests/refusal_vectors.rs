@@ -26,7 +26,10 @@ use prism_field::{P248, P376, P500};
 use prism_testkit::{error_of, negatives, refusal_vectors};
 use prism_vectors::corpus::WithCorpus;
 use prism_vectors::refusals::{row, rows, Verdict, TEXT};
-use prism_verify::{CommittedSet, Set, VerifyError};
+use prism_verify::{
+    set::{CommittedSet, Set},
+    VerifyError,
+};
 
 /// The verdict of each case, by the name it has in the records, and the
 /// error the verifier returns for it. Stated here and not read from the

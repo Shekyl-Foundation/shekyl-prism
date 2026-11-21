@@ -36,7 +36,7 @@
 //! tested before and holds the rule on every input it builds.
 
 use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
-use prism_verify::{Set, VerifyError};
+use prism_verify::{set::Set, VerifyError};
 use shekyl_prism::{verify_tagged, AcceptList, PublicKey, SetId, Signature, TaggedError};
 
 /// What the two entries said of one input.
@@ -195,7 +195,7 @@ pub fn both_at(set: Set, public_key: &[u8], message: &[u8], signature: &[u8]) ->
     }
 }
 
-/// `prism_verify::verify_set`, with the typed path held to it.
+/// `prism_verify::set::verify_set`, with the typed path held to it.
 #[allow(dead_code)]
 pub fn verify_set(
     set: Set,
@@ -205,7 +205,7 @@ pub fn verify_set(
 ) -> Result<(), VerifyError> {
     let outcome = both_at(set, public_key, message, signature);
     assert_eq!(
-        prism_verify::verify_set(set, public_key, message, signature),
+        prism_verify::set::verify_set(set, public_key, message, signature),
         outcome.byte,
         "{set}: verify_set is not verify at that set"
     );

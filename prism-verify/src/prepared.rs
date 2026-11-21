@@ -100,12 +100,15 @@ impl<L: ParameterSet> core::fmt::Debug for PreparedKey<L> {
 impl<L: ParameterSet> PreparedKey<L> {
     /// Decode `public_key`, search for its basis, and test it.
     ///
+    /// It assumes nothing of the bytes: it is the first call of the
+    /// prepared entry, and every check on a key alone is in it.
+    ///
     /// `Length`, then `Canonical`, then `Origin`, then `Singular`, then
     /// `Basis`: [`KeyIdentity::decode`], then [`basis_hint`], then the
     /// test that the points the index names are a basis of the
     /// `2^e`-torsion. `Basis` is either cause: no index, or no basis.
     ///
-    /// The search costs up to [`crate::search_bound`] Legendre symbols,
+    /// The search costs up to `SEARCH_BOUND` Legendre symbols,
     /// and whoever chose the key chose how many. The basis and its test
     /// cost the same for every key of a set: about `6e` doublings on the
     /// key's curve, which at `p248` is some 6,000 multiplications and
@@ -190,8 +193,9 @@ impl<L: ParameterSet> core::fmt::Debug for CheckedResponse<L> {
 }
 
 impl<L: ParameterSet> CheckedResponse<L> {
-    /// The decoded response, to read. A copy of it changed by hand is a
-    /// [`Response`] again and has to be encoded and checked to come back.
+    /// The decoded response, to read: the only reader this type has. A
+    /// copy of it changed by hand is a [`Response`] again and has to be
+    /// encoded and checked to come back.
     pub fn response(&self) -> &Response<L> {
         &self.response
     }
@@ -214,6 +218,10 @@ pub(crate) fn response_checks<L: ParameterSet>(
 }
 
 /// Decode `signature` and run every check a signature can pass alone.
+///
+/// It assumes nothing of the bytes. It does not need a key, and what it
+/// returns is not yet a signature of anything: the challenge, its degree
+/// and the relation are [`verify_prepared`]'s.
 ///
 /// `Length`, then `Canonical`, then `Sign`, then `Model` (or `Singular`,
 /// for a response curve that is singular): [`Response::decode`], the sign
@@ -259,7 +267,7 @@ pub fn verify_prepared<L: ParameterSet>(
 #[cfg(test)]
 mod tests {
     use super::{checked_response, PreparedKey};
-    use crate::basis_hint;
+    use crate::basis::basis_hint;
     use crate::identity::KeyIdentity;
     use prism_field::{Field, ParameterSet, P248};
 

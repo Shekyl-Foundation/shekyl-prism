@@ -8,7 +8,7 @@ use core::fmt;
 use core::marker::PhantomData;
 
 use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
-use prism_verify::Set;
+use prism_verify::set::Set;
 
 /// Which parameter set some bytes are under: the identifier a tagged
 /// key or signature starts with.
@@ -63,7 +63,7 @@ use prism_verify::Set;
 /// # Relation to the low-level name
 ///
 /// The verifier crate has a run-time name for a set,
-/// [`hazmat::verify::Set`](crate::hazmat::verify::Set), which tools
+/// [`hazmat::verify::set::Set`](crate::hazmat::verify::set::Set), which tools
 /// parse from text. A `SetId` is that value with the encoding added and
 /// the list of all sets taken away. It holds a `Set` and nothing else.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]

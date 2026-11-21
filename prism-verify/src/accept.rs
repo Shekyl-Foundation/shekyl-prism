@@ -6,7 +6,7 @@
 //! Two adapted chains and the complete image check of the Sage model.
 use crate::mark::Stage;
 use crate::relation::KeyBasis;
-use crate::{AffinePoint, VerifyError};
+use crate::{signature::AffinePoint, VerifyError};
 use prism_field::{Field, ParameterSet};
 use prism_isogeny::dual_chain::{canonical_four, product_null, Couple, DualChain};
 use prism_isogeny::jac::{add, dbl, dbl_iter, lift_basis, to_xz, Jac};
@@ -383,7 +383,8 @@ pub(crate) fn check<L: ParameterSet>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{basis_hint, ChallengeScalar, KeyIdentity, Salt};
+    use crate::{basis::basis_hint, challenge::ChallengeScalar, identity::KeyIdentity};
+    use prism_field::Salt;
     use prism_field::{P248, P324, P376, P500, P664};
     use prism_isogeny::theta::{projectively_same, ThetaPoint};
 
@@ -406,9 +407,12 @@ mod tests {
             L::ext_from_base(decimal::<L::Base>(&text))
         }
     }
-    fn known<L: ParameterSet>(primary: prism_vectors::corpus::Primary) {
-        let vector = primary.vector();
-        let nulls = prism_vectors::model::nulls(primary);
+    /// What the pairing check and the chains start from, for an honest
+    /// vector: the key's basis lifted, the signature's points multiplied
+    /// by the challenge, and the challenge.
+    fn honest_lift<L: ParameterSet>(
+        vector: &prism_vectors::corpus::Vector<'_>,
+    ) -> (Lifted<L::Ext>, ChallengeScalar) {
         let key = vector.public_key().expect("the vector's public key");
         let id = KeyIdentity::<L>::decode(&key).unwrap();
         let s = ChallengeScalar::derive(
@@ -433,6 +437,12 @@ mod tests {
             s.as_bytes(),
         )
         .unwrap();
+        (lifted, s)
+    }
+
+    fn known<L: ParameterSet>(primary: prism_vectors::corpus::Primary) {
+        let nulls = prism_vectors::model::nulls(primary);
+        let (lifted, s) = honest_lift::<L>(&primary.vector());
         let built = build::<L>(&lifted, s.as_bytes()).unwrap();
         for (chain, key) in built.chains.iter().zip(["chain1", "chain2"]) {
             let section = nulls.split_once(&format!("\"{key}\"")).unwrap().1;
@@ -509,31 +519,7 @@ mod tests {
     /// The kernel from shared doublings against one ladder per coefficient,
     /// on the vector's own matrices and on `random` sets of scalars.
     fn kernels_agree<L: ParameterSet>(text: &str, name: &str, random: u32) {
-        let vector = prism_vectors::corpus::Vector::new(text);
-        let key = vector.public_key().expect("the vector's public key");
-        let id = KeyIdentity::<L>::decode(&key).unwrap();
-        let s = ChallengeScalar::derive(
-            &id,
-            vector.message().expect("the vector's message"),
-            L::Salt::from_bytes(&vector.salt().expect("the vector's salt")).unwrap(),
-        );
-        let f = |row| L::ext_decode(&vector.bytes(row).expect(row)).unwrap();
-        let hint = basis_hint::<L>(id.coefficient()).unwrap();
-        let basis = KeyBasis::<L>::of_key(id.coefficient(), hint).unwrap();
-        let lifted = lift::<L>(
-            &basis,
-            f("E"),
-            AffinePoint {
-                x: f("Px"),
-                y: f("Py"),
-            },
-            AffinePoint {
-                x: f("Qx"),
-                y: f("Qy"),
-            },
-            s.as_bytes(),
-        )
-        .unwrap();
+        let (lifted, s) = honest_lift::<L>(&prism_vectors::corpus::Vector::new(text));
         let (residue, points) = basis_points::<L>(&lifted, s.as_bytes()).unwrap();
         let tables = doublings::<L>(lifted.curves, points);
         let (_, m1, m2) = challenge_matrices(residue).unwrap();
@@ -578,29 +564,102 @@ mod tests {
         }
     }
 
+    /// How many random scalar sets a primary vector's kernel comparison tries.
+    /// Every other honest vector compares its own two matrices and stops.
+    const RANDOM_SETS_ON_A_PRIMARY: u32 = 6;
+
+    /// Every committed honest vector. `$set` is the parameter set its
+    /// `level` names, one of the three sets with a corpus.
+    macro_rules! for_each_honest_vector {
+        ($text:ident, $name:ident, $set:ident, $body:block) => {{
+            let files = prism_vectors::corpus::files();
+            assert_eq!(files.len(), prism_vectors::corpus::HONEST_VECTORS);
+            for path in files {
+                let $text = std::fs::read_to_string(&path).unwrap();
+                let $name = path.file_name().unwrap().to_string_lossy().into_owned();
+                let label = prism_vectors::corpus::Vector::new(&$text)
+                    .level()
+                    .expect("the vector's level");
+                match crate::set::CommittedSet::from_label(label) {
+                    Ok(crate::set::CommittedSet::P248) => {
+                        type $set = P248;
+                        $body
+                    }
+                    Ok(crate::set::CommittedSet::P376) => {
+                        type $set = P376;
+                        $body
+                    }
+                    Ok(crate::set::CommittedSet::P500) => {
+                        type $set = P500;
+                        $body
+                    }
+                    Err(_) => panic!("{}: label {label}", $name),
+                }
+            }
+        }};
+    }
+
     #[test]
     fn the_shared_doublings_give_the_ladders_kernel_on_every_vector() {
-        let files = prism_vectors::corpus::files();
-        assert_eq!(files.len(), prism_vectors::corpus::HONEST_VECTORS);
-        for path in files {
-            let text = std::fs::read_to_string(&path).unwrap();
-            let vector = prism_vectors::corpus::Vector::new(&text);
-            let name = path.file_name().unwrap().to_string_lossy().into_owned();
-            // Random sets on the six primary vectors; the rest check their
-            // own two matrices.
+        for_each_honest_vector!(text, name, Set, {
             let random = if prism_vectors::corpus::Primary::by_file_name(&name).is_some() {
-                6
+                RANDOM_SETS_ON_A_PRIMARY
             } else {
                 0
             };
-            let label = vector.level().expect("the vector's level");
-            match crate::CommittedSet::from_label(label) {
-                Ok(crate::CommittedSet::P248) => kernels_agree::<P248>(&text, &name, random),
-                Ok(crate::CommittedSet::P376) => kernels_agree::<P376>(&text, &name, random),
-                Ok(crate::CommittedSet::P500) => kernels_agree::<P500>(&text, &name, random),
-                Err(_) => panic!("{name}: label {label}"),
-            }
-        }
+            kernels_agree::<Set>(&text, &name, random);
+        });
+    }
+
+    /// The pairing check and then the chains, as the relation runs them:
+    /// `None` when the pairing refuses, and otherwise what the chains say.
+    fn after_the_lift<L: ParameterSet>(
+        lifted: &Lifted<L::Ext>,
+        scalar: &ChallengeScalar,
+    ) -> Option<Result<(), VerifyError>> {
+        crate::relation::pairing_holds::<L>(lifted, scalar.as_bytes())
+            .then(|| check::<L>(lifted, scalar.as_bytes()))
+    }
+
+    /// The verdict with the key's lifted pair as it is, with both points
+    /// negated, and with one negated.
+    fn the_sign_of_the_lift<L: ParameterSet>(text: &str, name: &str) {
+        let (lifted, s) = honest_lift::<L>(&prism_vectors::corpus::Vector::new(text));
+        let [p1, p2] = lifted.vk;
+        assert_eq!(after_the_lift::<L>(&lifted, &s), Some(Ok(())), "{name}");
+        let both = Lifted {
+            vk: [negative(p1), negative(p2)],
+            ..lifted
+        };
+        assert_eq!(
+            after_the_lift::<L>(&both, &s),
+            Some(Ok(())),
+            "{name}: both points negated"
+        );
+        // Not vacuous: the relative sign of the two is what the lift fixes,
+        // and with it wrong the pairing is the inverse and refuses.
+        let one = Lifted {
+            vk: [negative(p1), p2],
+            ..lifted
+        };
+        assert_eq!(
+            after_the_lift::<L>(&one, &s),
+            None,
+            "{name}: one point negated"
+        );
+    }
+
+    /// `jac::lift_basis` takes a square root for the `y` of the key's
+    /// first point, and the other root gives the negative of both lifted
+    /// points. The verdict does not depend on which: with both negated,
+    /// every committed honest signature is still accepted. With one
+    /// negated it is refused at the pairing, so the lift's relative sign
+    /// is not free.
+    #[test]
+    fn the_verdict_does_not_depend_on_the_sign_of_the_lifted_basis() {
+        for_each_honest_vector!(text, name, Set, {
+            the_sign_of_the_lift::<Set>(&text, &name);
+        });
     }
 
     #[test]

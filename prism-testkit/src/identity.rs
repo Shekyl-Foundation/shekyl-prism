@@ -25,7 +25,13 @@ use prism_isogeny::jac::{add, lift_basis, Jac};
 use prism_isogeny::montgomery::Montgomery;
 use prism_isogeny::torsion::even_basis;
 use prism_verify::signature::canonical_sign;
-use prism_verify::{basis_hint, AffinePoint, ChallengeScalar, KeyIdentity, Response, VerifyError};
+use prism_verify::{
+    basis::basis_hint,
+    challenge::ChallengeScalar,
+    identity::KeyIdentity,
+    signature::{AffinePoint, Response},
+    VerifyError,
+};
 
 /// Which pair of inverse pairing answers for the basis `(P, Q)`.
 #[derive(Clone, Copy, Debug)]

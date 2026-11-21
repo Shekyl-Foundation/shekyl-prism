@@ -27,7 +27,7 @@ use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
 use prism_vectors::corpus::WithCorpus;
 use prism_vectors::no_corpus::{curve_table, WithoutCorpus};
 use prism_vectors::refusals::Verdict;
-use prism_verify::{Response, Set, VerifyError};
+use prism_verify::{set::Set, signature::Response, VerifyError};
 
 use crate::identity::{first_prime_salt_counter, identity_response, Form};
 use crate::verdict::error_of;

@@ -7,7 +7,10 @@ use core::fmt;
 use core::hash::{Hash, Hasher};
 
 use prism_field::ParameterSet;
-use prism_verify::{verify_prepared, PreparedKey, VerifyError};
+use prism_verify::{
+    prepared::{verify_prepared, PreparedKey},
+    VerifyError,
+};
 
 use crate::tagged::{bare_of, tagged, Container};
 use crate::{SetId, Signature, TaggedError};

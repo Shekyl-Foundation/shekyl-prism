@@ -19,7 +19,7 @@ mod entries;
 use entries::verify_set;
 use prism_testkit::error_of;
 use prism_vectors::refusals::rows;
-use prism_verify::Set;
+use prism_verify::set::Set;
 
 /// The set a row names.
 fn set_of(name: &str) -> Set {

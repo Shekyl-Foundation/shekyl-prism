@@ -76,7 +76,7 @@ pub fn relate_points<L: ParameterSet>(
 }
 
 /// The relation for a key whose basis is already built and checked: the
-/// entry of [`crate::verify_prepared`]. It differs from [`relate_points`]
+/// entry of [`crate::prepared::verify_prepared`]. It differs from [`relate_points`]
 /// in one thing, that it neither searches for the key's basis nor
 /// computes nor tests it: `basis` is all three, done once.
 pub(crate) fn relate_prepared<L: ParameterSet>(
@@ -224,7 +224,7 @@ fn relate_bases<L: ParameterSet>(
 /// `Q` is the cleared difference. `P − Q` for the lift is `R`, the cleared
 /// point whose full-point abscissa is `−x(P) − A`. A global sign on the
 /// lifted pair cancels in the pairing.
-fn pairing_holds<L: ParameterSet>(lifted: &Lifted<L::Ext>, scalar: &[u8]) -> bool {
+pub(crate) fn pairing_holds<L: ParameterSet>(lifted: &Lifted<L::Ext>, scalar: &[u8]) -> bool {
     Stage::Pairing.enter();
     let [r1, r2] = lifted.scaled;
     let [p_vk, q_vk] = lifted.vk;
@@ -375,9 +375,9 @@ fn scale<L: ParameterSet>(coefficient: L::Ext, point: Xz<L::Ext>, scalar: &[u8])
 #[cfg(test)]
 mod e0_vectors {
     use super::e_prime_surface;
+    use crate::set::Committed;
     use crate::signature::{canonical_sign, AffinePoint};
     use crate::verify;
-    use crate::Committed;
     use crate::VerifyError;
     use prism_field::{Field, ParameterSet, P248};
     #[cfg(test)]
