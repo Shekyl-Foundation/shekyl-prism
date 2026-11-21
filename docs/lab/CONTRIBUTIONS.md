@@ -17,6 +17,12 @@ Status: living record, started 2026-11-13. Ruled by Rick 2026-11-13: AI particip
 - **Other tools.** Commit `8f1f8bb`, pushed before PR #1, carries a Cursor co-author trailer; it is the only commit on `dev` that carries one. Pull-request review bots (CodeQL, Copilot) raised findings on #15; each is recorded with its verdict in that pull request.
 - **Coding agent (Grok, xAI, in Grok Build).** On 2026-11-17, the review of PR #29 at `4d05f0f` and the representation fix that followed: a prepared key keeps its bytes and its basis index, and the coefficient is decoded from those bytes. On the same day, the structure review of PR #31 and `b0dee9c`: a set identifier is the built set whose prime is the pair read, found by searching `Set::ALL`, and an accept list is a `BTreeSet` of those identifiers ordered by the prime.
 
+## Other code bases read
+
+Oracles for values, not sources of structure (the Round 0 axiom). What was learned from each is recorded here so that it is not presented as ours.
+
+- **`sqisign-rs`** (Anchorage Labs, <https://github.com/anchorageoss/sqisign-rs>, MIT or Apache-2.0), read at `7a4a01b` on 2026-11-21 for signer stage 1a. Learned from its generator `tools/gen-precomp`: that the starting basis of `E0[2^e]` is the output of Algorithm B.1 of the SQIsign specification of 2026-09-01, which led to the check that the pinned C reference's basis follows the same rule; the layout of the action matrices (columns as images); and the construction of the two halved generators' actions through a half of each basis point taken over `F_{p⁴}`. Its checked-in constants at `p324`, `p500` and `p664` are the comparison values `docs/SIGNER_SPEC.md` names. No code of it is in this repository.
+
 ## What git shows and does not show
 
 Every commit is authored under Rick's identity. Repository rule 90 keeps AI attribution trailers out of commit messages, so git history does not show which commits an AI agent wrote. Most of them were. The notebook's "Who" line on each entry is the record.
@@ -41,3 +47,4 @@ To be kept current. As of 2026-11-13:
 | Operation-count metric as the machine-independent cost signal | reviewer, ruled by Rick 11-08; brief by reviewer 11-13 | coding agent (Claude Code) | CI on x86_64 and aarch64 |
 | Verifier cost: squaring, inversion-free Miller loop, shared chain inversion, scalar-multiplication reuse | reviewer named the four targets from a profile and the refusals to preserve | coding agent (Claude Code) chose the constructions (fraction-carrying Jacobian loop, one batch per chain, doubling tables per basis point) | the replaced routines kept as references; 2,712 negative verdicts pinned; Sage differential |
 | A prepared key stores its bytes and its basis index; the coefficient is decoded from the bytes | review of PR #29 at `4d05f0f` | coding agent (Grok, xAI, in Grok Build) | unit test `the_coefficient_is_the_bytes_and_the_index_is_that_search`; `scripts/op_counts.sh` |
+| What each signer constant is, which the signer needs, and the rule of the starting basis (`docs/SIGNER_SPEC.md` section 1) | reviewer (brief of 2026-11-21); the basis rule found through `sqisign-rs` | coding agent (Claude Code) | scratch computations, not committed; the tests are stage 1b's |
