@@ -38,7 +38,7 @@ experiment measures them and tests whether the same idea carries over:
 
 Sets: P248, P324, P376, P500, P664 only.
 
-Status: plan committed; code and results follow in later commits.
+Status: complete. See [`REPORT.md`](REPORT.md) and [`results/TABLES.md`](results/TABLES.md).
 
 ## Progress log
 
