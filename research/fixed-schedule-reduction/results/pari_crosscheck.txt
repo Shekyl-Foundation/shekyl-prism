@@ -1,0 +1,11 @@
+p248 stream: 50 checked so far, 0 mismatches
+p248 nvar: 100 checked so far, 0 mismatches
+p324 stream: 150 checked so far, 0 mismatches
+p324 nvar: 200 checked so far, 0 mismatches
+p376 stream: 250 checked so far, 0 mismatches
+p376 nvar: 300 checked so far, 0 mismatches
+p500 stream: 350 checked so far, 0 mismatches
+p500 nvar: 400 checked so far, 0 mismatches
+p664 stream: 450 checked so far, 0 mismatches
+p664 nvar: 500 checked so far, 0 mismatches
+TOTAL 500 lattices, 0 mismatches between PARI qfminim, our enumeration, and the Z[i]-Lagrange output (stream and varied-N product)
