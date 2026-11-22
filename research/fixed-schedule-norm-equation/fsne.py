@@ -69,8 +69,12 @@ class Sched:
         # M4 ~ 2 m / n with m <= 2^(e-2); n >= 2^(nbits-6) assumed (public bound;
         # a smaller n makes the pass fail, it does not change the schedule)
         self.m4bits = m4_bits_max or (e - 2) + 2 - (self.nbits - 8)
-        self.T_lat = math.ceil(0.75 * self.nbits) + 6
-        self.T_corn = math.ceil(0.75 * self.m4bits) + 6
+        # nearest-integer Gauss reduction shrinks by >= 1+sqrt(2) per step,
+        # from length ~n to ~sqrt(n): (nbits/2) log_{1+sqrt2} 2 steps (+3)
+        self.T_lat = math.ceil(0.3932 * self.nbits) + 3
+        # Cornacchia's plain Euclid from r to sqrt(r): Lame bound
+        # (m4bits/2) log_phi 2 = 0.7202 m4bits steps (+3)
+        self.T_corn = math.ceil(0.7202 * self.m4bits) + 3
         self.V = {}
         for p_ in GOOD_PRIMES:
             if p_ == 2:
@@ -92,7 +96,7 @@ class Sched:
         jac = self.J * max(1.0, mb / 8)
         sq = 1.5 * mb
         corn = 2 * self.T_corn + 10
-        cpow = 8 * self.cpow_bits
+        cpow = min(8 * self.cpow_bits, 4 * self.td)   # ladder or V_i cond. mults
         post = 40 + 3 * ctgcd
         return gen + lat + cvp + td + pt + jac + sq + corn + cpow + post
 
@@ -127,6 +131,7 @@ def qlapoti_fixed(S, p, e2, rng, sch, early_exit=False):
     got = 0
     res = None
     first = 0
+    unfin = dict(lat=0, corn=0)
     for ps in range(1, sch.P + 1):
         # 1. generator: K draws, first valid kept
         f = 0
@@ -184,6 +189,7 @@ def qlapoti_fixed(S, p, e2, rng, sch, early_exit=False):
             na, nb = sel(go, na2, na), sel(go, nb2, nb)
             done = done | (1 - go)
         op('lat', sch.T_lat)
+        unfin['lat'] += 1 - done
         ok &= done
         fin = int(nt < na)
         a = [sel(fin, a[i] - r * b[i], a[i]) for i in range(2)]
@@ -255,6 +261,7 @@ def qlapoti_fixed(S, p, e2, rng, sch, early_exit=False):
             r2, r1 = sel(go, r2n, r2), sel(go, r1n, r1)
             fz = fz | (1 - go)
         op('euclid', sch.T_corn)
+        unfin['corn'] += (1 - fz) * (1 - one)
         ok &= sel(one, 1, fz)
         aa = rmod - prod
         yy, ex = gmpy2.iroot(sel(int(aa >= 0), aa, mpz(0)), 2)
@@ -299,4 +306,4 @@ def qlapoti_fixed(S, p, e2, rng, sch, early_exit=False):
     for o in ops:
         tr.update(repr(o).encode())
     return res, dict(trace=tr.hexdigest(), first=first, passes=len([o for o in ops if o[0] == 'gen']),
-                     n_ops=len(ops))
+                     n_ops=len(ops), unfinished=unfin)
