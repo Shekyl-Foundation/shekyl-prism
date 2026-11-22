@@ -1,0 +1,3 @@
+set,i,P,K,n_bits,early_first,early_ok,unf_lat_e,unf_corn_e,eq_ok,full_ok,same,trace,full_passes,unf_lat,unf_corn,sec
+p664,8,20441,13,334,70,1,0,0,1,1,1,94ac829df9a7fdc06e6d69b250a2dc82ed906bc9e0bf4c5518879aa721d82edf,20441,0,0,16.422
+p664,9,20441,13,334,1777,1,0,0,1,1,1,94ac829df9a7fdc06e6d69b250a2dc82ed906bc9e0bf4c5518879aa721d82edf,20441,0,0,17.033
