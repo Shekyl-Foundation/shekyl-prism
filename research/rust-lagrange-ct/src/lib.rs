@@ -4,5 +4,7 @@
 // BSD-3-Clause
 pub mod ct;
 pub mod exact;
+#[cfg(feature = "gmp")]
+pub mod exact_gmp;
 pub mod sets;
 pub mod zi;

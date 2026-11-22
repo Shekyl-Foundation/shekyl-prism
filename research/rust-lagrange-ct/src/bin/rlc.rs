@@ -97,6 +97,8 @@ fn check_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo) -> b
         (0, 0, 0, 0, 0, 0, 0);
     let (mut n_lam, mut n_lll_short) = (0, 0);
     let mut maxbits_t = 0;
+    #[allow(unused_mut)]
+    let mut gmp_agree = 0;
     for r in &rows {
         let inp = prep::<C>(si, r);
         let (u, nu) = zi::reduce::<C, N, PL>(&inp.t, &inp.x, &inp.y, &pl, si.steps);
@@ -117,74 +119,103 @@ fn check_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo) -> b
             let (b1, _) = exact::lll(&exact::gram(&r.t, &r.x, &r.y, &p));
             ok_lll += (b1 == r.lam1) as usize;
             n_lll_short += (b1 > r.lam1) as usize;
+            #[cfg(feature = "gmp")]
+            {
+                use rust_lagrange_ct::exact_gmp as eg;
+                let (t, x, y, gp) = (eg::conv(&r.t), eg::conv(&r.x), eg::conv(&r.y), eg::conv(&p));
+                let (b1g, _) = eg::lll(&eg::gram(&t, &x, &y, &gp));
+                let (ng, _) = eg::gauss(&t, &x, &y, &gp);
+                gmp_agree += (b1g == eg::conv(&b1) && ng == eg::conv(&r.lam1)) as usize;
+            }
         }
         maxbits_t = maxbits_t.max(r.t.bits());
     }
     println!(
         "{} rows={} ct==py_p64 {}/{} ct==py_exact {}/{} ct==lambda1 {}/{} ct==rust_exact_gauss {}/{} \
-         ct_in_ideal {}/{} rust_lll_b1==lambda1 {}/{} (lll b1 > lambda1: {}) maxbits(T)={} bound={}",
+         ct_in_ideal {}/{} rust_lll_b1==lambda1 {}/{} (lll b1 > lambda1: {}) maxbits(T)={} bound={} gmp_baselines_agree={}/{}",
         si.name, n, ok_p64, n, ok_exact, n, ok_lam, n_lam, ok_gauss, n, ok_q, n, ok_lll, n_lam,
-        n_lll_short, maxbits_t, si.t_bits_max()
+        n_lll_short, maxbits_t, si.t_bits_max(), gmp_agree, n_lam
     );
     ok_p64 == n && ok_lam == n_lam && ok_q == n
 }
 
 // ------------------------------------------------------------- bench
-fn median(v: &mut [u64]) -> u64 {
-    v.sort_unstable();
-    v[v.len() / 2]
-}
-
 fn bench_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo, reps: usize) {
     let p = si.p();
     let pl: [u64; PL] = to_limbs(&p);
     let pool = load(&format!("vectors/{}_pool.txt", si.name));
     let inps: Vec<Inp<C>> = pool.iter().map(|r| prep::<C>(si, r)).collect();
     let grams: Vec<_> = pool.iter().map(|r| exact::gram(&r.t, &r.x, &r.y, &p)).collect();
+    #[cfg(feature = "gmp")]
+    let gp = rust_lagrange_ct::exact_gmp::conv(&p);
+    #[cfg(feature = "gmp")]
+    let gin: Vec<_> = pool
+        .iter()
+        .map(|r| {
+            use rust_lagrange_ct::exact_gmp::conv;
+            let (t, x, y) = (conv(&r.t), conv(&r.x), conv(&r.y));
+            let g = rust_lagrange_ct::exact_gmp::gram(&t, &x, &y, &gp);
+            (t, x, y, g)
+        })
+        .collect();
     let m = pool.len();
-    // warm-up
-    for i in 0..20 {
-        std::hint::black_box(zi::reduce::<C, N, PL>(&inps[i].t, &inps[i].x, &inps[i].y, &pl, si.steps));
-        std::hint::black_box(exact::lll(&grams[i]));
-    }
-    let (mut c_ct, mut c_lll, mut c_g) = (vec![], vec![], vec![]);
-    let mut lll_steps = 0usize;
-    let mut g_steps = 0usize;
-    for k in 0..reps {
+    let names = ["ct_zi", "lll_num", "gauss_num", "lll_gmp", "gauss_gmp"];
+    let mut cyc: Vec<Vec<u64>> = vec![vec![]; 5];
+    let mut steps = [0usize; 5];
+    for k in 0..reps + 20 {
         let i = k % m;
         let r = &pool[i];
+        let mut rec = |j: usize, c: u64, s: usize| {
+            if k >= 20 {
+                cyc[j].push(c);
+                steps[j] += s;
+            }
+        };
         let a = rdtsc();
         let o = zi::reduce::<C, N, PL>(&inps[i].t, &inps[i].x, &inps[i].y, &pl, si.steps);
         let b = rdtsc();
         std::hint::black_box(o);
-        c_ct.push(b - a);
+        rec(0, b - a, si.steps);
         let a = rdtsc();
         let o = exact::lll(&grams[i]);
         let b = rdtsc();
-        lll_steps += o.1;
+        rec(1, b - a, o.1);
         std::hint::black_box(o);
-        c_lll.push(b - a);
         let a = rdtsc();
         let o = exact::gauss(&r.t, &r.x, &r.y, &p);
         let b = rdtsc();
-        g_steps += o.1;
+        rec(2, b - a, o.1);
         std::hint::black_box(o);
-        c_g.push(b - a);
+        #[cfg(feature = "gmp")]
+        {
+            let a = rdtsc();
+            let o = rust_lagrange_ct::exact_gmp::lll(&gin[i].3);
+            let b = rdtsc();
+            rec(3, b - a, o.1);
+            std::hint::black_box(o);
+            let a = rdtsc();
+            let o = rust_lagrange_ct::exact_gmp::gauss(&gin[i].0, &gin[i].1, &gin[i].2, &gp);
+            let b = rdtsc();
+            rec(4, b - a, o.1);
+            std::hint::black_box(o);
+        }
     }
-    let mean = |v: &[u64]| v.iter().sum::<u64>() as f64 / v.len() as f64;
-    let (mct, mlll, mg) = (mean(&c_ct), mean(&c_lll), mean(&c_g));
-    let p999 = |v: &mut Vec<u64>| {
+    // name,set,reps,median,mean,p999,cv,mean_steps
+    for j in 0..5 {
+        let v = &mut cyc[j];
+        if v.is_empty() {
+            continue;
+        }
+        let n = v.len() as f64;
+        let mean = v.iter().sum::<u64>() as f64 / n;
+        let var = v.iter().map(|&x| (x as f64 - mean).powi(2)).sum::<f64>() / n;
         v.sort_unstable();
-        v[(v.len() as f64 * 0.999) as usize]
-    };
-    let (dct, dlll, dg) = (median(&mut c_ct), median(&mut c_lll), median(&mut c_g));
-    let (pct, plll) = (p999(&mut c_ct), p999(&mut c_lll));
-    println!(
-        "{},{},{},{:.0},{},{},{:.0},{},{:.0},{},{:.1},{:.1},{:.4},{:.4},{:.4},{:.3}",
-        si.name, reps, dct, mct, pct, dlll, mlll, plll, mg, dg,
-        lll_steps as f64 / reps as f64, g_steps as f64 / reps as f64,
-        dct as f64 / dlll as f64, mct / mlll, pct as f64 / plll as f64, dct as f64 / dg as f64
-    );
+        println!(
+            "{},{},{},{},{:.0},{},{:.4},{:.1}",
+            si.name, names[j], v.len(), v[v.len() / 2], mean, v[(n * 0.999) as usize],
+            var.sqrt() / mean, steps[j] as f64 / n
+        );
+    }
 }
 
 // ------------------------------------------------------------- dudect
@@ -226,6 +257,16 @@ fn dudect_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo, n: 
                 std::hint::black_box(o);
                 b - a
             }
+            #[cfg(feature = "gmp")]
+            "lll_gmp" => {
+                use rust_lagrange_ct::exact_gmp as eg;
+                let g = eg::gram(&eg::conv(&pool[i].t), &eg::conv(&pool[i].x), &eg::conv(&pool[i].y), &eg::conv(&p));
+                let a = rdtsc();
+                let o = eg::lll(&g);
+                let b = rdtsc();
+                std::hint::black_box(o);
+                b - a
+            }
             "gauss" => {
                 let r = &pool[i];
                 let a = rdtsc();
@@ -241,6 +282,44 @@ fn dudect_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo, n: 
         }
     }
     eprintln!("wrote {path}");
+}
+
+// ------------------------------------------------------------- ctgrind
+#[cfg(feature = "ctgrind")]
+extern "C" {
+    fn rlc_secret(p: *mut u8, n: usize);
+    fn rlc_public(p: *mut u8, n: usize);
+}
+
+/// Run the reduction on `count` vectors with T, x, y marked secret
+/// (undefined) for memcheck. A secret-dependent branch or address shows as
+/// a memcheck error inside zi::reduce.
+#[cfg(feature = "ctgrind")]
+fn ctgrind_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo, count: usize) {
+    let p = si.p();
+    let pl: [u64; PL] = to_limbs(&p);
+    let rows = load(&format!("vectors/{}_pool.txt", si.name));
+    for r in rows.iter().take(count) {
+        let mut inp = prep::<C>(si, r);
+        unsafe {
+            rlc_secret(inp.t.as_mut_ptr() as *mut u8, 8 * C);
+            rlc_secret(inp.x.as_mut_ptr() as *mut u8, 8 * C);
+            rlc_secret(inp.y.as_mut_ptr() as *mut u8, 8 * C);
+        }
+        if std::env::var("RLC_CTGRIND_CONTROL").is_ok() {
+            // positive control: a deliberate branch on a secret bit
+            if std::hint::black_box(inp.x[0]) & 1 == 1 {
+                std::hint::black_box(1u64);
+            }
+        }
+        let (mut u, mut nu) = zi::reduce::<C, N, PL>(&inp.t, &inp.x, &inp.y, &pl, si.steps);
+        unsafe {
+            rlc_public(nu.as_mut_ptr() as *mut u8, 8 * N);
+            rlc_public(u.as_mut_ptr() as *mut u8, 8 * 4 * C);
+        }
+        assert_eq!(from_limbs_unsigned(&nu), r.nu_p64);
+    }
+    println!("{} ctgrind: {} runs done", si.name, count);
 }
 
 fn main() {
@@ -273,6 +352,12 @@ fn main() {
             let si = info(&a[2]);
             let n: usize = a[3].parse().unwrap();
             with_set!(si.name, dudect_set, si, n, &a[4]);
+        }
+        #[cfg(feature = "ctgrind")]
+        Some("ctgrind") => {
+            let si = info(&a[2]);
+            let n: usize = a[3].parse().unwrap();
+            with_set!(si.name, ctgrind_set, si, n);
         }
         _ => eprintln!("usage: rlc check [sets] | bench <set> <reps> | dudect <set> <n> <ct|lll|gauss>"),
     }

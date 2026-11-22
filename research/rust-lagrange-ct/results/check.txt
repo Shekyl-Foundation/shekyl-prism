@@ -1,0 +1,6 @@
+p248 rows=1501 ct==py_p64 1501/1501 ct==py_exact 1501/1501 ct==lambda1 1000/1000 ct==rust_exact_gauss 1501/1501 ct_in_ideal 1501/1501 rust_lll_b1==lambda1 996/1000 (lll b1 > lambda1: 4) maxbits(T)=649 bound=649 gmp_baselines_agree=1000/1000
+p324 rows=1501 ct==py_p64 1501/1501 ct==py_exact 1501/1501 ct==lambda1 1000/1000 ct==rust_exact_gauss 1501/1501 ct_in_ideal 1501/1501 rust_lll_b1==lambda1 997/1000 (lll b1 > lambda1: 3) maxbits(T)=838 bound=838 gmp_baselines_agree=1000/1000
+p376 rows=1501 ct==py_p64 1501/1501 ct==py_exact 1501/1501 ct==lambda1 1000/1000 ct==rust_exact_gauss 1501/1501 ct_in_ideal 1501/1501 rust_lll_b1==lambda1 992/1000 (lll b1 > lambda1: 8) maxbits(T)=971 bound=971 gmp_baselines_agree=1000/1000
+p500 rows=1501 ct==py_p64 1501/1501 ct==py_exact 1501/1501 ct==lambda1 1000/1000 ct==rust_exact_gauss 1501/1501 ct_in_ideal 1501/1501 rust_lll_b1==lambda1 997/1000 (lll b1 > lambda1: 3) maxbits(T)=1280 bound=1280 gmp_baselines_agree=1000/1000
+p664 rows=1501 ct==py_p64 1501/1501 ct==py_exact 1501/1501 ct==lambda1 1000/1000 ct==rust_exact_gauss 1501/1501 ct_in_ideal 1501/1501 rust_lll_b1==lambda1 996/1000 (lll b1 > lambda1: 4) maxbits(T)=1690 bound=1690 gmp_baselines_agree=1000/1000
+ALL PASS

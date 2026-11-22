@@ -14,17 +14,34 @@
 //! 1.97.1 carry-folding miscompile, #163779 on the O32 watch list, has no
 //! shape here) and there is no hand-written clamp.
 
-/// A barrier that stops the optimiser from reasoning about a choice bit
-/// (and turning a mask select back into a branch).
+/// A value barrier: an empty inline-asm block the optimiser cannot see
+/// through, so it cannot learn that a mask is 0 or all-ones and turn a
+/// mask select back into a branch. (A first version used
+/// `core::hint::black_box` on the choice bit only; LLVM then knew the mask
+/// was 0 or -1 and compiled the barrel shifter's array select into a
+/// conditional jump, found by asm_scan.py.)
 #[inline(always)]
-pub fn barrier(x: u64) -> u64 {
-    core::hint::black_box(x)
+pub fn barrier(mut x: u64) -> u64 {
+    // SAFETY: an empty asm block that only names a register.
+    unsafe {
+        core::arch::asm!("/* {0} */", inout(reg) x, options(pure, nomem, nostack, preserves_flags));
+    }
+    x
 }
 
-/// `bit` in {0,1} -> 0 or all-ones.
+/// `bit` in {0,1} -> 0 or all-ones, hidden behind the barrier.
+#[cfg(not(feature = "weak-barrier"))]
 #[inline(always)]
 pub fn mask(bit: u64) -> u64 {
-    0u64.wrapping_sub(barrier(bit) & 1)
+    barrier(0u64.wrapping_sub(bit & 1))
+}
+
+/// Negative control only (feature `weak-barrier`): the first version,
+/// `black_box` on the bit, which LLVM sees through. Not for use.
+#[cfg(feature = "weak-barrier")]
+#[inline(always)]
+pub fn mask(bit: u64) -> u64 {
+    0u64.wrapping_sub(core::hint::black_box(bit) & 1)
 }
 
 /// 1 if `x == 0`, else 0, without a comparison instruction.
