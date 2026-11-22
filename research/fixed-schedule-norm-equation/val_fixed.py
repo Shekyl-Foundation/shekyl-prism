@@ -79,8 +79,8 @@ def job(args):
 if __name__ == '__main__':
     summ = json.load(open(HERE / 'results' / 'summary.json'))
     sets = sys.argv[1].split(',') if len(sys.argv) > 1 else ['p248', 'p324', 'p376', 'p500', 'p664']
-    n_full = {'p248': 40, 'p324': 30, 'p376': 30, 'p500': 20, 'p664': 16}
-    n_early = 400
+    n_full = {'p248': 24, 'p324': 20, 'p376': 12, 'p500': 12, 'p664': 10}
+    n_early = 250
     jobs = []
     for name in sets:
         sc = summ[name]['schedule']

@@ -74,9 +74,9 @@ C: the pinned reference with a counting patch, 400 calls on its benchmark inputs
 
 | Set | C mean / median passes | model mean / median passes | C share M4>0 | model share M4>0 |
 |---|---|---|---|---|
-| p248 | 353 / 265 | 358 / 243 | 0.970 | — |
-| p376 | 3,417 / 1,848 | 3,172 / 1,657 | 0.162 | — |
-| p500 | 1,932 / 1,134 | 2,001 / 1,116 | 0.365 | — |
+| p248 | 353 / 265 | 358 / 243 | 0.970 | 0.957 |
+| p376 | 3,417 / 1,848 | 3,172 / 1,657 | 0.162 | 0.151 |
+| p500 | 1,932 / 1,134 | 2,001 / 1,116 | 0.365 | 0.351 |
 
 ## T7. Failure probability against the pass budget (fixed-order search)
 
@@ -111,4 +111,25 @@ Reference: mean and p99.9 of the weighted work per call. Fixed: P × the per-pas
 | p376 | 734,188 | 5.61e+06 | 7,657 | 2.87e+08 (×391) | 1.85e+09 (×2513) | ×229 (Q=16,099) | ×1472 (Q=102,686) |
 | p500 | 1.26e+06 | 9.16e+06 | 9,399 | 1.67e+08 (×132) | 1.07e+09 (×847) | ×77 (Q=7,682) | ×492 (Q=48,810) |
 | p664 | 2.12e+06 | 1.39e+07 | 11,775 | 2.41e+08 (×114) | 1.55e+09 (×730) | ×66 (Q=8,828) | ×424 (Q=56,175) |
+
+## T9. Executor validation (fsne.py)
+
+Full: the whole schedule at the 99.9% budget, compared with an early-exit run on the same tape. Early: early-exit runs only, for the per-pass success rate of the fixed schedule itself.
+
+| Set | P, K | full runs | success | same answer as early exit | distinct traces | norm equation holds | unfinished Gauss/Euclid | early runs: p per pass (vs p_eff) |
+|---|---|---|---|---|---|---|---|---|
+| p248 | 2,662, 14 | 24 | 24/24 | 24/24 | 1 | 323/323 | 0/0 | 0.00299 (n=299; 0.00259) |
+| p324 | 2,848, 14 | 20 | 20/20 | 20/20 | 1 | 220/220 | 0/0 | 0.00256 (n=200; 0.00242) |
+
+## T10. What-if for O29: the target power of two
+
+Same inputs, the search aimed at 2^(e−2) (the reference), 2^(e−1) and 2^e. Whether the dimension-two chain can use the larger powers is the open question of O29 and is not addressed here.
+
+| Set | inputs | e−2: ref passes, fresh p/pass, M4>0 | e−1 | e |
+|---|---|---|---|---|
+| p248 | 300 | 353, 0.00372, 0.96 | 384, 0.00389, 1.00 | 347, 0.00377, 1.00 |
+| p324 | 300 | 402, 0.00305, 1.00 | 437, 0.00287, 1.00 | 456, 0.00281, 1.00 |
+| p376 | 150 | 3,828, 0.00041, 0.15 | 1,843, 0.00067, 0.30 | 923, 0.00124, 0.55 |
+| p500 | 150 | 2,052, 0.00071, 0.35 | 910, 0.00082, 0.64 | 722, 0.00158, 0.89 |
+| p664 | 100 | 1,595, 0.00064, 0.50 | 1,158, 0.00109, 0.80 | 927, 0.00138, 0.98 |
 
