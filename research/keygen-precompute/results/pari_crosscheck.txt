@@ -1,0 +1,7 @@
+Key sizes (bytes):
+  p248: cref_sk=353 base_spec=336 exp_hnf=480 exp_red=548 (no_can=356, compat=693, gram=756)
+  p324: cref_sk=452 base_spec=435 exp_hnf=617 exp_red=701 (no_can=455, compat=882, gram=965)
+  p376: cref_sk=529 base_spec=504 exp_hnf=716 exp_red=816 (no_can=528, compat=1033, gram=1124)
+  p500: cref_sk=701 base_spec=672 exp_hnf=944 exp_red=1076 (no_can=692, compat=1361, gram=1472)
+  p664: cref_sk=925 base_spec=882 exp_hnf=1234 exp_red=1406 (no_can=902, compat=1785, gram=1926)
+PARI crosscheck PASS: hnf_checks=100, zi_checks=500, bound_checks=500 (0 mismatches).
