@@ -1,5 +1,0 @@
-p248,herm=2336,quotient=1018 (x2),nrd=1212,update=60,sum_per_step=5644,herm%=41,quot%=36,nrd%=21,upd%=1
-p324,herm=3440,quotient=1002 (x2),nrd=1676,update=48,sum_per_step=7168,herm%=48,quot%=28,nrd%=23,upd%=1
-p376,herm=4372,quotient=1140 (x2),nrd=2106,update=48,sum_per_step=8806,herm%=50,quot%=26,nrd%=24,upd%=1
-p500,herm=8146,quotient=1320 (x2),nrd=3678,update=48,sum_per_step=14512,herm%=56,quot%=18,nrd%=25,upd%=0
-p664,herm=11874,quotient=2200 (x2),nrd=5916,update=320,sum_per_step=22510,herm%=53,quot%=20,nrd%=26,upd%=1
