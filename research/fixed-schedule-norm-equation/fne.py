@@ -101,7 +101,8 @@ class Ctr:
               'lat_red_steps', 'cvp', 'm_neg', 'mod_ok', 'trial_divs',
               'pt', 'pt_bits', 'pt_pass', 'legendre', 'sqrt_modp',
               'tonelli_steps', 'corn_steps', 'cpow', 'post', 'resets',
-              'bigops', 'success_pass', 'transformed')
+              'bigops', 'success_pass', 'transformed',
+              'mx_gen', 'mx_lat', 'mx_corn', 'mx_tonelli')
 
     def __init__(self):
         for f in self.FIELDS:
@@ -271,6 +272,16 @@ def rounded_div(a, b):
     return q + s
 
 
+def equivalent_by(L, beta, p):
+    """L * (-conj(beta)) / n(L) for beta in L (numerators over L.den)."""
+    nb = nrd_num(beta, p)
+    d2 = L.den * L.den * L.norm
+    n_new, r = divmod(nb, d2)
+    assert r == 0
+    el = (-beta[0], beta[1], beta[2], beta[3])
+    return right_mul(L, el, L.den * L.norm, p, n_new)
+
+
 def shortest_equivalent(L, p):
     """quat_lideal_shortest_equivalent: small = L * (-conj(beta)) / n(L)."""
     red = lll_cols(L, p)
@@ -356,6 +367,7 @@ def sqrt_mod_p(a, p, c):
     z = pow(qnr, q, p)
     y = pow(amod, q, p)
     x = pow(amod, (q + 1) // 2, p)
+    c.mx_tonelli = max(c.mx_tonelli, e)
     ex = mpz(1) << (e - 2) if e >= 2 else mpz(0)
     for _ in range(e):
         c.tonelli_steps += 1
@@ -382,12 +394,14 @@ def cornacchia_prime(n, p, c):
     prod = p
     r1 = p
     r0 = p
+    s0 = c.corn_steps
     while prod >= p:
         c.corn_steps += 1
         r0 = r2 % r1
         prod = r0 * r0
         r2 = r1
         r1 = r0
+    c.mx_corn = max(c.mx_corn, c.corn_steps - s0)
     a = p - prod
     a, rem = divmod(a, n)
     if rem:
@@ -562,7 +576,8 @@ def qlapoti(S, p, e2, rng, c, max_counter=ITER_BOUND, total=None,
             new_gen = (counter % M_reuse == 0)
         if new_gen:
             c.gens += 1
-            got, _ = generator(S, p, rng, c, K_gen)
+            got, dr = generator(S, p, rng, c, K_gen)
+            c.mx_gen = max(c.mx_gen, dr)
             if got is None:
                 valid = False
                 alpha0 = None
@@ -585,7 +600,8 @@ def qlapoti(S, p, e2, rng, c, max_counter=ITER_BOUND, total=None,
                     c.bigops += 1
             else:
                 if gmpy2.gcd(n, lam) != 1:
-                    valid = False
+                    # invalid pass: a fixed schedule still spends it
+                    continue
         alpha, dal = normalize(tuple(lam * x for x in alpha0[0]), alpha0[1])
         # m = 2^e - floor(2 n(alpha0) lam^2 / n)
         num = 2 * a0norm * lam * lam
@@ -607,7 +623,9 @@ def qlapoti(S, p, e2, rng, c, max_counter=ITER_BOUND, total=None,
             c.lat_builds += 1
             x = (b_al * tmp) % n
             Lm = [[n - x, n], [mpz(1), mpz(0)]]
+            s0 = c.lat_red_steps
             L_red = dim2_short_basis(Lm, c)
+            c.mx_lat = max(c.mx_lat, c.lat_red_steps - s0)
             L_det = L_red[0][0] * L_red[1][1] - L_red[0][1] * L_red[1][0]
             L_inv = [[L_red[1][1], -L_red[0][1]], [-L_red[1][0], L_red[0][0]]]
             suitable = (gmpy2.gcd(a_al, b_al) == 1 and

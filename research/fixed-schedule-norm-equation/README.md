@@ -39,3 +39,14 @@ experiment measures them and tests whether the same idea carries over:
 Sets: P248, P324, P376, P500, P664 only.
 
 Status: plan committed; code and results follow in later commits.
+
+## Progress log
+
+- Audit of the real search loops: `SOURCE_AUDIT.md`.
+- Model: `fne.py` (port of `quat_qlapoti` and its helpers, keygen's
+  prime-norm search), `selftest.py` (norm-equation identity
+  n(γ1)/n + n(γ2)/n = 2^(e−2) asserted on every success).
+- Driver: `run_fne.py` (panels keys / fixkey / fixS / rnd / equiv),
+  full run started 2026-11-22 15:46 EST: 400 keys × 10 messages per set,
+  2,000 fixed-key and 2,000 random-key signatures, 6 fixed small ideals ×
+  1,000 tapes, 50 × 4 equivalence checks.
