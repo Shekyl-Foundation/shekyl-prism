@@ -317,6 +317,10 @@
       "zb_fixed_mul": 4685,
       "ze_fixed_mul": 4460,
       "zi_step_saving_pct": 4.81,
+      "Tprov_base": 301,
+      "Tprov_exp_guard": 283,
+      "Tprov_exp_unguard": 354,
+      "prov_step_saving_pct": 5.98,
       "Tb_4d": 128,
       "Te_4d": 122,
       "u4b_fixed_mul": 13470,
@@ -359,6 +363,10 @@
       "zb_fixed_mul": 6035,
       "ze_fixed_mul": 5660,
       "zi_step_saving_pct": 6.22,
+      "Tprov_base": 387,
+      "Tprov_exp_guard": 369,
+      "Tprov_exp_unguard": 461,
+      "prov_step_saving_pct": 4.65,
       "Tb_4d": 164,
       "Te_4d": 155,
       "u4b_fixed_mul": 17250,
@@ -401,6 +409,10 @@
       "zb_fixed_mul": 6910,
       "ze_fixed_mul": 6560,
       "zi_step_saving_pct": 5.07,
+      "Tprov_base": 446,
+      "Tprov_exp_guard": 428,
+      "Tprov_exp_unguard": 536,
+      "prov_step_saving_pct": 4.04,
       "Tb_4d": 191,
       "Te_4d": 181,
       "u4b_fixed_mul": 20085,
@@ -443,6 +455,10 @@
       "zb_fixed_mul": 8885,
       "ze_fixed_mul": 8660,
       "zi_step_saving_pct": 2.54,
+      "Tprov_base": 587,
+      "Tprov_exp_guard": 569,
+      "Tprov_exp_unguard": 712,
+      "prov_step_saving_pct": 3.07,
       "Tb_4d": 243,
       "Te_4d": 233,
       "u4b_fixed_mul": 25545,
@@ -485,6 +501,10 @@
       "zb_fixed_mul": 11585,
       "ze_fixed_mul": 11335,
       "zi_step_saving_pct": 2.16,
+      "Tprov_base": 773,
+      "Tprov_exp_guard": 755,
+      "Tprov_exp_unguard": 945,
+      "prov_step_saving_pct": 2.33,
       "Tb_4d": 313,
       "Te_4d": 308,
       "u4b_fixed_mul": 32895,
@@ -519,7 +539,11 @@
       "save_limb_vs_cref_disk_pct": 95.29,
       "kg_zi_limb": 56500,
       "breakeven_sigs_sess": 0.2,
-      "breakeven_sigs_disk": 0.2
+      "breakeven_sigs_disk": 0.2,
+      "base_sess_limb_prov": 3332030,
+      "exp_red_limb_prov_guard": 2846039,
+      "save_limb_prov_guard_pct": 14.59,
+      "breakeven_sigs_prov_guard": 0.12
     },
     {
       "set": "p324",
@@ -539,7 +563,11 @@
       "save_limb_vs_cref_disk_pct": 95.3,
       "kg_zi_limb": 92160,
       "breakeven_sigs_sess": 0.16,
-      "breakeven_sigs_disk": 0.16
+      "breakeven_sigs_disk": 0.16,
+      "base_sess_limb_prov": 7075053,
+      "exp_red_limb_prov_guard": 6266295,
+      "save_limb_prov_guard_pct": 11.43,
+      "breakeven_sigs_prov_guard": 0.11
     },
     {
       "set": "p376",
@@ -559,7 +587,11 @@
       "save_limb_vs_cref_disk_pct": 95.32,
       "kg_zi_limb": 136465,
       "breakeven_sigs_sess": 0.19,
-      "breakeven_sigs_disk": 0.19
+      "breakeven_sigs_disk": 0.19,
+      "base_sess_limb_prov": 10744292,
+      "exp_red_limb_prov_guard": 9672440,
+      "save_limb_prov_guard_pct": 9.98,
+      "breakeven_sigs_prov_guard": 0.13
     },
     {
       "set": "p500",
@@ -579,7 +611,11 @@
       "save_limb_vs_cref_disk_pct": 95.21,
       "kg_zi_limb": 266085,
       "breakeven_sigs_sess": 0.82,
-      "breakeven_sigs_disk": 0.8
+      "breakeven_sigs_disk": 0.8,
+      "base_sess_limb_prov": 23529523,
+      "exp_red_limb_prov_guard": 22846950,
+      "save_limb_prov_guard_pct": 2.9,
+      "breakeven_sigs_prov_guard": 0.39
     },
     {
       "set": "p664",
@@ -599,7 +635,11 @@
       "save_limb_vs_cref_disk_pct": 95.24,
       "kg_zi_limb": 476135,
       "breakeven_sigs_sess": 0.78,
-      "breakeven_sigs_disk": 0.76
+      "breakeven_sigs_disk": 0.76,
+      "base_sess_limb_prov": 54370340,
+      "exp_red_limb_prov_guard": 53200839,
+      "save_limb_prov_guard_pct": 2.15,
+      "breakeven_sigs_prov_guard": 0.41
     }
   ],
   "dudect": [
@@ -696,6 +736,30 @@
       "ze_early_rnd": 316.0,
       "ze_early_t": 0.26,
       "ze_early_p": 0.7946127536334298,
+      "ze_fixed_traces": 1,
+      "ze_fixed_t": 0.0
+    },
+    {
+      "set": "p664",
+      "n_zi": 3000,
+      "n_lll": 500,
+      "fix_Nbits": 365,
+      "exb_fix_mean": 2728.7,
+      "exb_rnd_mean": 2701.6,
+      "exb_t": 7.06,
+      "exb_p": 3.1109908523400684e-12,
+      "exe_fix_mean": 2665.8,
+      "exe_rnd_mean": 2666.0,
+      "exe_t": -0.06,
+      "exe_p": 0.9527576026390419,
+      "zb_early_fix": 429.88,
+      "zb_early_rnd": 425.79,
+      "zb_early_t": 12.74,
+      "zb_early_p": 1.2205944261951994e-36,
+      "ze_early_fix": 419.94,
+      "ze_early_rnd": 419.66,
+      "ze_early_t": 1.2,
+      "ze_early_p": 0.23207042098725755,
       "ze_fixed_traces": 1,
       "ze_fixed_t": 0.0
     }

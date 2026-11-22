@@ -29,6 +29,10 @@ PLOTS.mkdir(parents=True, exist_ok=True)
 SET_NAMES = [s[0] for s in SETS]
 ZI_STEP_MUL = 25  # 23 mul + 2 div
 ZI_INIT_MUL = 10
+# Certified worst-case Z[i]-Lagrange tour bounds (research/lagrange-tour-bound):
+T_PROV_BASE = {'p248': 301, 'p324': 387, 'p376': 446, 'p500': 587, 'p664': 773}
+T_PROV_EXP_GUARD = {'p248': 283, 'p324': 369, 'p376': 428, 'p500': 569, 'p664': 755}
+T_PROV_EXP_UNGUARD = {'p248': 354, 'p324': 461, 'p376': 536, 'p500': 712, 'p664': 945}
 
 
 def load(pat):
@@ -167,6 +171,8 @@ def main():
                 ze_p16_lam1_rate=round(float(pd.concat([gv.ze_p16_eq_lam1, gb.ze_p16_eq_lam1]).mean()), 6),
                 zb_fixed_mul=zb_fixed_mul, ze_fixed_mul=ze_fixed_mul,
                 zi_step_saving_pct=round(100 * (1 - Te_zi / Tb_zi), 2),
+                Tprov_base=T_PROV_BASE[s], Tprov_exp_guard=T_PROV_EXP_GUARD[s], Tprov_exp_unguard=T_PROV_EXP_UNGUARD[s],
+                prov_step_saving_pct=round(100 * (1 - T_PROV_EXP_GUARD[s] / T_PROV_BASE[s]), 2),
                 Tb_4d=Tb_4d, Te_4d=Te_4d,
                 u4b_fixed_mul=u4b_fixed_mul, u4e_fixed_mul=u4e_fixed_mul,
                 u4_step_saving_pct=round(100 * (1 - Te_4d / Tb_4d), 2),
@@ -211,6 +217,10 @@ def main():
                     # break-even signatures = kg_zi_limb / (base_sess_limb - exp_red_limb)
                     breakeven_sigs_sess=round(srow['kg_zi_limb_ops'] / max(1, base_sess_limb - exp_red_limb), 2),
                     breakeven_sigs_disk=round(srow['kg_zi_limb_ops'] / max(1, base_disk_limb - exp_red_limb), 2),
+                    base_sess_limb_prov=int(srow['q3_limb_ops'] + (ZI_INIT_MUL + T_PROV_BASE[s] * ZI_STEP_MUL) * limb_factor(zb_mb)),
+                    exp_red_limb_prov_guard=int(srow['exp_inter_limb_ops'] + (ZI_INIT_MUL + T_PROV_EXP_GUARD[s] * ZI_STEP_MUL) * limb_factor(ze_mb)),
+                    save_limb_prov_guard_pct=round(100 * (1 - (srow['exp_inter_limb_ops'] + (ZI_INIT_MUL + T_PROV_EXP_GUARD[s] * ZI_STEP_MUL) * limb_factor(ze_mb)) / (srow['q3_limb_ops'] + (ZI_INIT_MUL + T_PROV_BASE[s] * ZI_STEP_MUL) * limb_factor(zb_mb))), 2),
+                    breakeven_sigs_prov_guard=round(srow['kg_zi_limb_ops'] / max(1, (srow['q3_limb_ops'] + (ZI_INIT_MUL + T_PROV_BASE[s] * ZI_STEP_MUL) * limb_factor(zb_mb)) - (srow['exp_inter_limb_ops'] + (ZI_INIT_MUL + T_PROV_EXP_GUARD[s] * ZI_STEP_MUL) * limb_factor(ze_mb))), 2),
                 ))
 
     red_df = pd.DataFrame(red_rows)
