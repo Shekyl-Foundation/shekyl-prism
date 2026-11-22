@@ -38,6 +38,23 @@ states that it is built on Qlapoti and the SQIsign reference.
 
 The rest of this repository is BSD-3-Clause, The Shekyl Foundation.
 
+Signer constants: comparison values
+===================================
+
+`prism-vectors/data/signer/oracle_c_reference.txt` holds numerical values
+extracted from the generated files of the PRISM_v2 repository at the commit
+named above (`src/precomp/ref/lvl1`, `lvl3`, `lvl5`; Apache-2.0), re-encoded.
+`prism-vectors/data/signer/oracle_sqisign_rs.txt` holds numerical values
+extracted from the generated files of sqisign-rs
+(https://github.com/anchorageoss/sqisign-rs, commit
+7a4a01bb8108f4d0c0726112cc7d3eaef8053439; MIT or Apache-2.0, Copyright (c)
+2026 Anchorage Labs), re-encoded; its MIT notice is retained in
+`LICENSES/sqisign-rs-MIT.txt`. Each file names its source files and their
+digests. They are comparison values for `scripts/signer_constants.py`,
+which computes this repository's own values from their definitions and
+reads neither file to do so. No code of either repository is in that
+script.
+
 Research comparison and protocol framing
 ========================================
 

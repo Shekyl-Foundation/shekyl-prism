@@ -1,0 +1,16 @@
+# Signer constants that do not depend on the prime, written by
+# scripts/signer_constants.py. Do not edit.
+# docs/SIGNER_SPEC.md section 1 defines every row; item numbers are that section's.
+# All are shipped to the signer.
+# Items 17 and 23: 2 and the first 100 primes that are 1 modulo 4 (1.4.4).
+small_primes 2 5 13 17 29 37 41 53 61 73 89 97 101 109 113 137 149 157 173 181 193 197 229 233 241 257 269 277 281 293 313 317 337 349 353 373 389 397 401 409 421 433 449 457 461 509 521 541 557 569 577 593 601 613 617 641 653 661 673 677 701 709 733 757 761 769 773 797 809 821 829 853 857 877 881 929 937 941 953 977 997 1009 1013 1021 1033 1049 1061 1069 1093 1097 1109 1117 1129 1153 1181 1193 1201 1213 1217 1229 1237
+small_primes_length 101
+# Items 20, 22, 24, 26: the four bounds of the quaternion layer (ruling R2).
+primality_rounds 32
+equivalent_ideal_box 64
+generator_bits 17
+steps_per_generator 20000
+# The four bounds are PROVISIONAL at the sets named here: starting values,
+# gated on the signer's measured failure rates (docs/lab/LEDGER.md O26, O29).
+# At the other three sets they are the C reference's and fixed.
+provisional_at p324 p664
