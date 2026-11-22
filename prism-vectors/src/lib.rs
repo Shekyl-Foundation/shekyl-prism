@@ -19,12 +19,14 @@
 //!
 //! # Where the files are
 //!
-//! Under `data/`, in three directories, each a group of files that used
-//! to sit beside the crate that tests against them:
+//! Under `data/`, in four directories. The first three are groups of
+//! files that used to sit beside the crate that tests against them:
 //!
 //! - `data/verify/`: signatures, keys and whole-verifier vectors;
 //! - `data/isogeny/`: intermediate values of the isogeny arithmetic;
-//! - `data/compare/`: the archive the protocol comparison replays.
+//! - `data/compare/`: the archive the protocol comparison replays;
+//! - `data/signer/`: the signer's constants, and the values of two other
+//!   code bases they are compared with.
 //!
 //! `data.sha256` lists the SHA-256 of every file. CI holds the files to
 //! it, so a data file cannot change without that list changing in the
@@ -136,6 +138,29 @@
 //! - **Regenerate:** `python3 scripts/export_e0_endomorphisms.py` for the
 //!   endomorphisms. The chain files have no generator here.
 //!
+//! ## The signer's constants: [`signer`]
+//!
+//! - **What:** at each of the five sets, the starting basis of
+//!   `E0[2^e]`, the matrices of the maximal order's generators on it, the
+//!   exponent of the translation's chain and the secret ideal's first
+//!   norm (`data/signer/<set>.txt`); the small primes and four bounds
+//!   that do not depend on the prime (`data/signer/shared.txt`); and the
+//!   same values as the C reference and `sqisign-rs` have them
+//!   (`data/signer/oracle_*.txt`). `docs/SIGNER_SPEC.md` section 1
+//!   defines each. No signer exists yet; a signer crate will hold its own
+//!   copy equal to this.
+//! - **Format:** lines of `name value` under `#` lines that say what
+//!   each row is; [`signer`] gives the encodings. The four bounds of
+//!   `shared.txt` are provisional at two sets, and the file says so.
+//! - **From:** `scripts/signer_constants.py`, standard-library Python,
+//!   from the definitions. The oracle files are extracted by the same
+//!   script from the pinned C reference and from a checkout of
+//!   `sqisign-rs`, and each records its commit and its source files'
+//!   digests.
+//! - **Regenerate:** `python3 scripts/signer_constants.py --write`; CI
+//!   runs `--check`, which regenerates every value, compares it with the
+//!   oracles and tests its defining properties.
+//!
 //! ## The unsalted archive: [`unsalted`]
 //!
 //! - **What:** the 113 vectors as they were before the challenge took a
@@ -171,9 +196,10 @@ pub mod kat;
 pub mod model;
 pub mod no_corpus;
 pub mod refusals;
+pub mod signer;
 pub mod unsalted;
 
-/// One of the three directories the committed files are grouped in.
+/// One of the four directories the committed files are grouped in.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Group {
     /// Signatures, keys and whole-verifier vectors.
@@ -182,11 +208,13 @@ pub enum Group {
     Isogeny,
     /// The archive the protocol comparison replays.
     Compare,
+    /// The signer's constants and their comparison values.
+    Signer,
 }
 
 impl Group {
-    /// All three.
-    pub const ALL: [Self; 3] = [Self::Verify, Self::Isogeny, Self::Compare];
+    /// All four.
+    pub const ALL: [Self; 4] = [Self::Verify, Self::Isogeny, Self::Compare, Self::Signer];
 
     /// The group's directory, relative to this crate.
     const fn relative(self) -> &'static str {
@@ -194,6 +222,7 @@ impl Group {
             Self::Verify => "data/verify",
             Self::Isogeny => "data/isogeny",
             Self::Compare => "data/compare",
+            Self::Signer => "data/signer",
         }
     }
 
