@@ -59,10 +59,12 @@ def spearman(a, b):
     return r.correlation, r.pvalue
 
 
-def slope(x, y):
+def slope(x, y, ci=False):
     if np.std(x) == 0 or np.std(y) == 0:
-        return 0.0, 0.0
+        return (0.0, 0.0, 0.0) if ci else (0.0, 0.0)
     s = stats.linregress(x, y)
+    if ci:
+        return s.slope, s.rvalue, 1.96 * s.stderr
     return s.slope, s.rvalue
 
 
@@ -157,14 +159,15 @@ def pair_tables():
                 d2 = d[d[f'{v}_std'] == 1]
             else:
                 d2 = d
-            sl, r = slope(d2.N_bits, d2[col])
+            sl, r, ci = slope(d2.N_bits, d2[col], ci=True)
             rs, ps = spearman(d2.N_bits, d2[col])
             rsh, psh = spearman(d2['shape'], d2[col])
             eta, null, p_an = anova_eta(d2, col)
             row = dict(set=s, arm=v, n=len(d2), keys=d2.key.nunique(),
                        ex_lovasz_mean=round(d2[col].mean(), 1),
                        ex_mul_mean=round(d2[f'{v}_ex_mul'].mean(), 1),
-                       slope_steps_per_Nbit=round(sl, 3), r_Nbits=round(r, 4),
+                       slope_steps_per_Nbit=round(sl, 3), slope_ci95=round(ci, 3),
+                       r_Nbits=round(r, 4),
                        spearman_Nbits=round(rs, 4), p_Nbits=ps,
                        spearman_shape=round(rsh, 4), p_shape=psh,
                        key_eta2=round(eta, 4), key_eta2_null=round(null, 4),
