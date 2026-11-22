@@ -1,0 +1,5 @@
+Random seed: "--seed={ 0x3bcab53e, 0x5f41aadc, 0x089d6b7a, 0x2a4d07ed, 0x0cdfbace, 0xcc20b66a, 0xd5b9e0f0, 0x20150298, 0x5897ed22, 0x0052a09e, 0x6316b9b5, 0xbb0632c0 }"
+Running qlapoti_normeq benchmarks for lvl5 with 400 iterations, inputs of bitsize 1010 and the 505-bit prime
+Tests are run on the outputs
+QLapoti took 127699641 cycles on average per iteration
+Tests in id2iso_qlapoti_normeq_benchmarks failed

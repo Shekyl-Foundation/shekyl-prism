@@ -1,0 +1,5 @@
+set,i,P,K,n_bits,early_first,early_ok,unf_lat_e,unf_corn_e,eq_ok,full_ok,same,trace,full_passes,unf_lat,unf_corn,sec
+p324,16,2848,14,162,816,1,0,0,1,1,1,0ca4fd29fec90f76ff1be7c1ad106f79398abadd43b78cdea43310244ec5faa2,2848,0,0,2.147
+p324,17,2848,14,162,224,1,0,0,1,1,1,0ca4fd29fec90f76ff1be7c1ad106f79398abadd43b78cdea43310244ec5faa2,2848,0,0,1.814
+p324,18,2848,14,162,13,1,0,0,1,1,1,0ca4fd29fec90f76ff1be7c1ad106f79398abadd43b78cdea43310244ec5faa2,2848,0,0,1.71
+p324,19,2848,14,162,284,1,0,0,1,1,1,0ca4fd29fec90f76ff1be7c1ad106f79398abadd43b78cdea43310244ec5faa2,2848,0,0,1.831
