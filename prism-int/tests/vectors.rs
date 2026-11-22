@@ -93,10 +93,11 @@ fn same_secret<const N: usize>(got: &SecretInt<N>, want: &str, line: &str) {
             assert_eq!(got.ct_eq(got).declassify(), Err(SecretError::Overflowed));
         }
         (Ok(value), want) if refusal(want).is_none() => {
+            // The line names the operands; the value computed from the
+            // secret type is not printed, here as anywhere.
             assert!(
                 value == int::<N>(want),
-                "secret: got {} on line: {line}",
-                value.public_hex()
+                "secret: a wrong value on line: {line}"
             );
         }
         (got, want) => panic!("secret: got {got:?}, want {want}, on line: {line}"),
