@@ -833,3 +833,103 @@ Addition, 2026-11-21, after the review of PR #39 at `9f6a2be`.
 - **Six corrections the review asked for**, all in the documents: the ledger's header names the two labels this part introduced; step 5 of the basis rule says why comparing the points of order 2 is the pairing test of Algorithm B.1; the secret norm's bound is level-free; the five-set table; what the 3.0 specification does with the codomain's model (the largest of the six, its Algorithms 4.126 and 4.96, where D5 takes the least); and what a canonical key does to replay against the reference.
 - **Plan amendments (the reviewer's).** Stage 3 is Cornacchia, the translation's norm equation, and sampling an ideal of prime norm with the equivalent prime-norm ideal, with no integer-representation step. Stage 4 gains a first part, the engine's forward chain as the signer needs it, which raises the weight of O20. Stage 1b prefers plain Python to Sage. The question of item 25 (`e − 2`) goes to stage 4's section with O29; the value is kept.
 
+Corrections: 2026-11-21, Copilot on PR #39 (`1c7629a`). Two findings, both valid. (1) The section called the 400,000 of the norm equation the point where "the whole search stops". It counts passes of the outer loop; two loops inside a pass (the generator's rejection loop and the step to the next multiple coprime to the norm) have no cap in the pinned reference, so it bounds neither the running time nor termination. Item 26's row and the tunables table now say "a budget of passes". (2) The section said the verifier accepts any nonsingular coefficient other than 0 as a key. It also requires a basis index inside the search bound and the named points to be a basis of the full torsion (a key that fails those is `Basis`; ledger O15 is what that asks of key generation). 1.6 lists all four; its point, that none of them is a canonical model, stands.
+
+## 2026-11-21 — Signer stage 1b: the constants generated from their definitions, at five sets
+
+Question. Stage 1a wrote what each signer constant is and checked the rules with scratch scripts it could not commit. Can one script generate every needed constant at the five sets from the definitions alone, agree with both other code bases wherever they have a value, and be tested where no reference value reaches?
+
+Rule (the brief of 2026-11-21). One Python script, standard library only. Output under `prism-vectors/data/signer/` with the existing manifest. The oracle values committed as extracted, with provenance, and never read by the generating path. Every test of `docs/SIGNER_SPEC.md` 1.8 committed. A Rust reader, and one Rust test in `prism-isogeny` as a second implementation. No signer crate, no change to a verifier code path, no change to `prism-field`.
+
+Expected before running. That the basis and the six matrices would agree with the oracles (stage 1a's scratch run and the reviewer's had). That toy primes would reach all three cases of the rule's last step. That the engine's test would pass first time, the data being right.
+
+What was built. `scripts/signer_constants.py` (`--write`, `--check`, `--selftest`, `--extract-c`, `--extract-sqisign-rs`); eight data files; `prism_vectors::signer`; `prism-isogeny/tests/signer_constants.rs`; the CI steps (the lint job, the aarch64 test job, the job with the C reference's submodule, the nightly's sympy check, `scripts/ci/check_signer_primes.py`). Python 3.13.5 on the development machine and on the build VM; the script needs 3.8.
+
+Results.
+
+- **Every generated value equals its oracle** (Ran, `--check`): 17 values a set against the C reference at `p248`, `p376`, `p500`, 10 a set against `sqisign-rs` at `p324`, `p500`, `p664`, and the two oracles with each other at `p500`. **No value differed from an oracle at any point of the work.** The first complete run of the generator was already equal everywhere.
+- **The halves** (Ran). Over `F_{p⁴} = F_{p²}(t)`, by three square roots: `x_H = x + r₁r₂ + r₂r₃ + r₃r₁`, `y_H = ±(r₁ + r₂)(r₂ + r₃)(r₃ + r₁)`, the sign found by doubling. Plain Python was enough. The one fault on the way was the script's: its first version also tried both signs of `r₃`, found two halves where it asserted one (a half of `−R` has the same `x` as a half of `R`), and stopped on its own assertion before any value was produced. Each image is computed from two different halves and compared; on each half the maps over the extension are held to `i² = −1`, `π² = −p`, `iπ = −πi` first.
+- **4 of 16** (Ran): for both halved generators, at all five sets, four of the sixteen top-bit candidates pass every matrix identity. The three wrong ones are refused on points, and by the oracle comparison when planted in the generated text.
+- **The first case of the rule's last step cannot be reached** (Derived, and Ran at 65 toy primes and the five sets; ledger C22). The second expectation was wrong, and this is the part's finding against the specification: 1.4.1 said the first branch was "untested by any reference value", and it is untestable by any search. A sweep of 138 toy primes found none; the reason is in which of `x − i`, `x`, `x + i` is a square along `x = 1 + m·i`, and is now written in 1.4.1. The case is kept, as published, and called directly.
+- **Toy primes** (Ran, `--selftest`): `(e, f)` = (3, 1), (3, 9), (3, 25), (4, 5), (3, 33), (3, 91), (4, 57), (11, 3); 1.4.1 has what each reaches. Where an order misses a prime of `f`, the two readings of step 4 are required to differ, and do.
+- **The next prime** (Ran). Baillie–PSW as the verifier specifies it, in the script. Below `2^512 + 75` the refusals are 67 by the sieve, 6 by the base-2 test and 1 by the Lucas test: that one is `2^512 + 1`, the Fermat number `F₉`, a strong pseudoprime to base 2 with no small factor. sympy 1.13.3 on the development machine names the same five primes; the nightly installs 1.14.0.
+- **Run time of `--check`** (Ran). Development machine, one thread: 1.0, 1.5, 2.8, 5.7 and 11.5 s to generate `p248`, `p324`, `p376`, `p500`, `p664`; 22.7 s to generate and about 28 to 32 s in all with the properties and comparisons. Build VM, at nice 10 beside other lanes' runs: 3.7, 5.5, 9.8, 14.6, 34.3 s; 95.5 s in all. The CI runners' figure is in the pull request once they have run. Well under the five minutes at which regeneration would move to the nightly.
+
+**The engine's test failed, and the cause was not the data** (Ran; ledger O31). The third expectation was wrong in a way nobody expected. The first build-VM run: test-profile tests 74 passed and 3 failed before the run stopped; release all passed. The three were the new test at `p324`, `p500`, `p664`, at "x(P0 − Q0)": neither sign of `Q0` gave the committed third coordinate, while the script, both oracles and the release build agreed on it. Followed down: inside the test, a closure given a point by value received another value. Reduced first to this repository's types, then to a program with no dependency at all, in a fresh crate:
+
+```rust
+// No crate of ours: a Copy struct of arrays, and a function that changes its by-value argument.
+#[derive(Clone, Copy)]
+struct Big { x: [u64; 12], y: [u64; 12], z: [u64; 12] }
+
+#[inline(never)]
+fn churn(mut point: Big, times: u32) -> Big {
+    for round in 0..times {
+        for k in 0..12 {
+            point.x[k] = point.x[k].wrapping_mul(6364136223846793005).wrapping_add(round as u64 + k as u64);
+            point.y[k] ^= point.x[k].rotate_left(7);
+            point.z[k] = point.z[k].wrapping_add(point.y[k]);
+        }
+    }
+    point
+}
+
+fn make() -> Big {
+    let mut b = Big { x: [0; 12], y: [0; 12], z: [0; 12] };
+    for k in 0..12 { b.x[k] = 7 + k as u64; b.y[k] = 11; b.z[k] = 1; }
+    std::hint::black_box(b)
+}
+
+#[test]
+fn plain_closure_then_closure() {
+    let q = make();
+    let top = |p| churn(p, 3);
+    let t = top(q);
+    let ident = |v: Big| v;
+    let back = ident(q);
+    assert_eq!(back.x, q.x, "t.z[0] = {}", t.z[0]);
+}
+```
+
+rustc 1.94.0 (4a4ef493e 2026-03-02), x86_64, Xeon E5-4650 v4. What was run, and what each gave:
+
+| Build | Result |
+| --- | --- |
+| this workspace's test profile (`opt-level = 1`, debug assertions, overflow checks) | fails |
+| the same at `opt-level` 2, and at 3 | fails |
+| the same with debug assertions off; with overflow checks off; with `CARGO_INCREMENTAL=0` | fails, each |
+| the same at `opt-level = 0` | passes |
+| release | passes |
+| release with debug assertions, with overflow checks, with debug information, with 256 codegen units, one at a time | passes, each |
+| release with incremental compilation on | fails |
+| the fresh crate with no dependency, its tests at `opt-level = 1`, incremental on and off | fails |
+| the fresh crate at `opt-level = 0` | passes |
+
+The first seven rows are of the reduction to this repository's types (a closure that calls `jac::dbl_iter`, then an identity closure). The program above was run in the workspace at `opt-level` 1 and 3 (fails) and 0 (passes), and in the fresh crate. Variants of the workspace reduction, in the test profile: with the function called directly and no first closure, it passes; with a function in place of the second closure, it passes; with the first closure's parameter typed, it fails; reading the variable directly after the first call is correct. So the second closure is handed the first call's copy, which the callee changed, as it may.
+
+Not established: which settings together decide it (release passes and release with incremental compilation fails, yet the test profile fails with `CARGO_INCREMENTAL=0`); whether it is known upstream; aarch64. Why `p248` and `p376` passed in the full test while `p376` fails in the reduction is not understood, and nothing was concluded from which sets fail. The engine's test is now written with functions and passes in both builds. What this means for every other test built with this profile is ledger O31, for Rick.
+
+One more thing happened here and is recorded because the rule is that it does not: while this entry was being written, a shell quoting mistake ran the workspace's tests once on the development machine, which is for edits and checks only. They ran to the end. Nothing was measured from that run and nothing here rests on it.
+
+Count records. The three records' source digest covers `prism-vectors` and `prism-isogeny`, so it moved; regenerated on the build VM by `scripts/op_counts.sh`. All three differ from `dev` in that digest line and in nothing else (`1842250a…` to `0047f327…`): no count and no verdict moved.
+
+Anchor (Ran, build VM, at the head of the source changes, the third run there; the first had the three failures above, and the second passed before the test's comment and the script's last corrections). `cargo test --workspace`: 287 passed, 0 failed, 2 ignored, in the test profile and in release (277 at `dev`; the ten new are the five engine tests of the constants, a test of the engine test's own byte addition, and four of the reader). Clippy with warnings denied and the documentation build of the six library crates: clean. `signer_constants.py --selftest` and `--check`: pass. On the development machine: `--extract-c` and `--extract-sqisign-rs` give the committed oracle files; the manifest, the vectors-isolation and the no-upward-edge checks pass.
+
+Findings against the specification, fixed in this part: 1.4.1's first case (above); 1.4.3 did not say how a half is taken (now it does); 1.4.6 did not say what test "the next prime" uses (now it does); 1.8's four unknowns are answered; and every "Executed, not committed" is "Ran".
+
+Not done. The re-extraction of `sqisign-rs`'s values is by hand (ledger O27's remaining line). No proof of primality for the five secret norms (O19).
+
+Who. Rick ruled R1 and R2 and set the part. The reviewer wrote the brief, with the tool, the placement, the shape and the wargame. The coding agent (Claude Code, `claude-fable-5-2`) wrote the script, the reader, the test and these records, found the unreachable case and the opt-level 1 fault, and ran everything.
+
+Addition, 2026-11-22, after the review of PR #40 at `59387be`.
+
+- **The compiler fault is known and fixed upstream** (Read: the issue, the pull request and the test on GitHub, 2026-11-22). rust-lang/rust issue 155241, opened 2026-04-13 against rustc 1.94.0, labelled a miscompilation and a regression from stable to stable; first wrong result in stable 1.77.0 by the reporter's bisection. Closed 2026-04-22 by pull request 155343, milestone 1.97.0, no backport label. Its description, an argument passed indirectly through a hidden pointer that must be copied first, is what the reproduction above shows. Its regression test has a closure case and a plain function called twice with the same value, so the engine test's rewrite to functions avoids the form that failed and does not avoid the fault's class. The reviewer ran the dependency-free program on rustc 1.97.0: it passes at every `opt-level` and in release. Not run by anyone: the reproduction on 1.96 and on 1.97 side by side, which is what would show the two are one fault.
+- **The entry's "Not done" said the fault was not reduced to a program with no dependency.** It was, in the same entry; the sentence was left from an earlier draft and is removed.
+- **Acceptance 4 of the brief is amended by the reviewer** to "every branch a search can reach, and the unreachable one called directly", which is what the self-test does. The derivation of the unreachable case (ledger C22) was followed step by step in review and holds. The dead lines 23 and 24 of Algorithm B.1 join the list of remarks for the SQIsign authors.
+- **Reviewer's checks, on rustc 1.97.0**: the script's self-test and check pass (26 s); `--extract-sqisign-rs` on the reviewer's own checkout at `7a4a01b` gives the committed file, which is the by-hand step of ledger O27 done a second time; sympy names the five secret norms; the ten new Rust tests pass.
+- **R4, ruled by Rick 2026-11-22 as the reviewer recommended**: no upstream report; the test profile stays at `opt-level = 1`; a toolchain part before signer stage 2. Ledger O31 and the rulings list have it.
+
+Corrections: 2026-11-22, Copilot on PR #40. One finding, valid, and it uncovered a larger fault of the same kind. It said that `--check` tested one wrong top-bit survivor against an oracle at two sets, that the count of 4 in 16 was never taken, and that the variants were tested on points only at toy primes, while the specification claimed all of it at five sets. All true of the head it read. The cause: an edit of 2026-11-21 that added the squareness checks replaced a span of the script that ran from one line to another and took with it, unnoticed, the block between them: the matrix identities, each matrix on points, the range of the entries, and the count. The script's own generation still asserted the identities and the actions, and the oracle comparison still ran, so no wrong value could have been committed; but four properties the specification marks Ran were not run by `--check` between that edit and this one, and the 4-of-16 count rested on the run made before it. Restored and widened: at each of the five sets `--check` now holds the identities, each of the six matrices on points, every one of its fifteen top-bit variants refused on points, the count of 4 for both halved generators, and each of the three wrong survivors of each generator refused by every oracle that has the set (36 planted, 36 refused). A corrupted copy shows the check sees it: with a wrong `gen3` at `p248` the properties report two failures. The lesson is the one already in this lane's notes about replacing a span by script: read the removed lines before committing.
+
+Run time, with those checks (Ran). Before them, on CI: 34.7 s on x86_64 and 38.1 s on aarch64 (per set 1.4, 2.1, 3.7, 7.3, 14.8 s and 1.6, 2.4, 4.2, 8.2, 16.3 s to generate). With them, on the development machine: 22.8 s to generate and 57 s in all. The engine's test of the constants passed in the test profile on both CI architectures.
+

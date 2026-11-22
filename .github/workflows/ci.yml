@@ -125,6 +125,18 @@ jobs:
       # The Rust tests read the file; this holds the file to the script.
       - name: The residue known answers are what the script writes
         run: python3 scripts/residue_known_answers.py --check
+      # The signer's constants (docs/SIGNER_SPEC.md section 1) are generated
+      # by one standard-library script. `--selftest` runs its rules at toy
+      # primes, where every branch a search can reach is reached. `--check`
+      # regenerates every value at the five sets, requires the committed
+      # files byte for byte, compares them with the committed values of the
+      # C reference and of sqisign-rs, and tests each defining property.
+      # About a minute. The aarch64 job runs `--check` too, so the bytes are
+      # held on both architectures.
+      - name: The signer constants are what the script generates, and equal their oracles
+        run: |
+          python3 scripts/signer_constants.py --selftest
+          python3 scripts/signer_constants.py --check
       # Every file under prism-vectors/data has its SHA-256 in
       # prism-vectors/data.sha256, so a data file cannot change, appear or
       # disappear without that list changing in the same commit. `--moved`
@@ -242,6 +254,9 @@ jobs:
         run: |
           set -euo pipefail
           test "$(uname -m)" = "aarch64"
+      # The same bytes on this architecture as on x86_64 (the lint job).
+      - name: The signer constants are what the script generates, on aarch64
+        run: python3 scripts/signer_constants.py --check
       - name: Debug, the portable fp2 path
         run: cargo test --workspace --locked
       - name: Release
@@ -380,6 +395,12 @@ jobs:
           submodules: true
       - name: Pin and recorded quirks
         run: python3 scripts/check_c_reference.py
+      # The C reference's values of the signer's constants are committed as
+      # extracted (prism-vectors/data/signer/oracle_c_reference.txt). This
+      # job has the submodule: it extracts them again and requires the
+      # committed file byte for byte, with the digests of the source files.
+      - name: The committed C oracle values are what the pinned tree holds
+        run: python3 scripts/signer_constants.py --extract-c
 
   c-vectors:
     name: c-vectors

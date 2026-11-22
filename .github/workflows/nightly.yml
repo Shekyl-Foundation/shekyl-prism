@@ -181,6 +181,10 @@ jobs:
         run: python3 -m pip install --break-system-packages 'sympy==1.14.0'
       - name: 10_000 degrees per level, zero disagreements
         run: python3 scripts/differential_prime.py
+      # The script that generates the signer's constants finds each secret
+      # norm with its own primality test. sympy must name the same prime.
+      - name: sympy names the same secret norm at all five sets
+        run: python3 scripts/ci/check_signer_primes.py
       # The doc comment of `nonvanishing` states when its search can fail,
       # for every `zeta`. This is the computation behind that statement.
       - name: The theta base-change search fails only where its comment says

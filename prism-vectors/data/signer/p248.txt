@@ -1,0 +1,34 @@
+# Signer constants of p248, written by scripts/signer_constants.py. Do not edit.
+# docs/SIGNER_SPEC.md section 1 defines every row; item numbers are that section's.
+# A field element is the verifier's canonical encoding in hex: the real part,
+# then the imaginary part, each little-endian. An integer modulo 2^e, and the
+# secret norm, are little-endian hex in whole bytes. A matrix is its entries
+# m11 m12 m21 m22, with alpha(P0) = [m11]P0 + [m21]Q0 and
+# alpha(Q0) = [m12]P0 + [m22]Q0.
+set p248
+e 248
+f 5
+# Shipped to the signer.
+# Item 4: x(P0), x(Q0) and x(P0 - Q0) of the starting basis of E0[2^e] (1.4.1).
+basis_px 7800b4ae5ed919218ba7bf591a99be44c41662a6c304cc8324b182ca7f879b0175d2f9c33d13048e74924251aeddcfb22fe96798aa0a155242e0ea49db2a4404
+basis_qx 1feb93552a25167cf3e14ba5f77886871d040d051727df9f710b5c7d47fd5f04eeaacda0b728e2fdaea58e6f4b05ff399ab37636fba86544dc7318dfe9d48704
+basis_pmqx 27dd28019cb9b7e5fa32f94c109e26adabdedae1ea1d83563cce6ded1ded17004e23d740462e7cb17097ca8c0782c80efb25644c15abec5576724f7c00d6cd03
+# Items 8, 9, 10: the actions of i, (i + j)/2 and (1 + k)/2 on that basis.
+action_gen2 db56541ba2bdd3c506dd1d8680977574d133af41b2349d7f8c7f8caa71b4ca 7a7d8b04327dfb7bd39bd863829155a9e10344036168bf76d05cb4eee34a57 4f44983649d66f85db418f49dfaf9c185bcb0be5ff0be0f7f9478ba8da3515 25a9abe45d422c3af922e2797f688a8b2ecc50be4dcb6280738073558e4b35
+action_gen3 cd30f2b7cf4947fe8adb3b683573a3bae0ebae74d49d7188c867393ca22b24 fd8109de8a9d8c6e99a2a077b7adb758a113417d49631d1a0bc4c51772b7df 6343dcd12d3a3e52adecf1207e266e371b66fc53aadd04f07a26075be1d86f 33cf0d4830b6b8017524c497ca8c5c451f14518b2b628e773798c6c35dd4db
+action_gen4 8e11790d200bced8897b38721f34cdf944192a3d37612748d36a0635fe2a22 bdd642db346fe9aa3a2b74428bac2f4905465b8e28bec841e7ffe80867cb66 929bde3cc98dcd4af6598c37ea9353b2a54d3fc6f3d625b36cd343d10e3524 73ee86f2dff431277684c78de0cb3206bbe6d5c2c89ed8b72c95f9ca01d5dd
+# Item 25: e - 2.
+chain_exponent 246
+# Item 33: the next prime after 2^(2 * WIDTH_BITS) (ruling R1).
+secret_norm 4b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+# Test intermediates, not shipped.
+# Items 5, 6, 7: the actions of i, of the Frobenius j, and of k = i j.
+action_i db56541ba2bdd3c506dd1d8680977574d133af41b2349d7f8c7f8caa71b4ca 7a7d8b04327dfb7bd39bd863829155a9e10344036168bf76d05cb4eee34a57 4f44983649d66f85db418f49dfaf9c185bcb0be5ff0be0f7f9478ba8da3515 25a9abe45d422c3af922e2797f688a8b2ecc50be4dcb6280738073558e4b35
+action_j bf0a9054fdd5ba360fda594aea4ed100f0a3aea7f60646910450e6cdd2a27d 808687b7e3bd1d615fa9688becc9190861233ef7315e7bbd452bd740002468 7742206d129e0c1f7f9754f81c9d3f56db00edc254af29e8fb04830de87bca 41f56fab022a45c9f025a6b515b12eff0f5c515809f9b96efbaf19322d5d82
+action_k 1b23f21a40169cb113f770e43e689af38932547a6ec24e90a6d50c6afc5544 7aad85b669ded2557556e88416595f920a8cb61c517c9183ceffd111ce96cd 2437bd79921b9b95ecb3186fd427a7644b9b7e8ce7ad4b66d9a687a21d6a48 e5dc0de5bfe9634eec088f1bc197650c76cdab85913db16f592af39503aabb
+# How 1.4.1 ran: each candidate m whose point has order divisible by 2^e and
+# what became of it, the branch of step 6, and the odd part of each of those
+# points' orders.
+basis_search 11:P0 12:Q0
+basis_branch 3
+basis_odd_parts 5 5
