@@ -62,16 +62,30 @@ jobs:
           submodules: false
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
-          toolchain: 1.94.0
+          toolchain: 1.97.1
           components: rustfmt, clippy
-      - name: The workflow pin matches rust-toolchain.toml
+      # One release everywhere: rust-toolchain.toml, the workspace's
+      # rust-version, and every `toolchain:` line of every workflow. The
+      # floor is the pin because older compilers have the fault of ledger
+      # O31, so a workflow on another release would test a different thing.
+      - name: Every workflow, rust-toolchain.toml and rust-version name one release
         run: |
           set -euo pipefail
           channel=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)
-          if [ "$channel" != "1.94.0" ]; then
-            echo "rust-toolchain.toml pins ${channel}; this workflow pins 1.94.0"
+          test -n "$channel"
+          floor=$(sed -n 's/^rust-version = "\(.*\)"/\1/p' Cargo.toml)
+          if [ "$floor" != "$channel" ]; then
+            echo "rust-toolchain.toml pins ${channel}; the workspace's rust-version is ${floor}"
             exit 1
           fi
+          lines=$(grep -h '^ *toolchain: ' .github/workflows/*.yml | sed 's/^ *toolchain: //')
+          count=$(printf '%s\n' "$lines" | wc -l)
+          other=$(printf '%s\n' "$lines" | grep -vxF "$channel" || true)
+          if [ -n "$other" ]; then
+            echo "rust-toolchain.toml pins ${channel}; a workflow pins: ${other}"
+            exit 1
+          fi
+          echo "${count} workflow pins, rust-toolchain.toml and rust-version are ${channel}"
       - name: Format
         run: |
           set -euo pipefail
@@ -217,7 +231,7 @@ jobs:
           submodules: false
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
-          toolchain: 1.94.0
+          toolchain: 1.97.1
       - name: The runner is x86_64
         run: |
           set -euo pipefail
@@ -249,7 +263,7 @@ jobs:
           submodules: false
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
-          toolchain: 1.94.0
+          toolchain: 1.97.1
       - name: The runner is aarch64
         run: |
           set -euo pipefail
@@ -296,7 +310,7 @@ jobs:
           submodules: false
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
-          toolchain: 1.94.0
+          toolchain: 1.97.1
       - name: The runner is ${{ matrix.machine }}
         run: |
           set -euo pipefail
@@ -329,7 +343,7 @@ jobs:
           submodules: false
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
-          toolchain: 1.94.0
+          toolchain: 1.97.1
       # Timings are printed. A non-zero exit means a sample's outcome was
       # not the expected refusal, so the bench stopped timing that path.
       - name: Bench
@@ -346,7 +360,7 @@ jobs:
           submodules: false
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
-          toolchain: 1.94.0
+          toolchain: 1.97.1
       - name: Install cargo-deny 0.20.2
         run: python3 scripts/ci/install_pinned_tool.py cargo-deny
       - name: Licences, advisories, sources, bans
@@ -417,7 +431,7 @@ jobs:
         run: bash scripts/ci/apt_install.sh build-essential cmake
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
-          toolchain: 1.94.0
+          toolchain: 1.97.1
       - name: Rebuild the vectors from the pin
         run: python3 scripts/export_c_basis_hints.py
       - name: Rebuild salted algebraic fixtures from documented public seeds
@@ -441,7 +455,7 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
-          toolchain: 1.94.0
+          toolchain: 1.97.1
       - name: Compiler
         run: bash scripts/ci/apt_install.sh build-essential cmake
       - name: Build pinned libraries and SHAKE signer backend
@@ -495,7 +509,7 @@ jobs:
           submodules: false
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
-          toolchain: 1.94.0
+          toolchain: 1.97.1
       - uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
         with:
           languages: rust

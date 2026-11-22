@@ -79,8 +79,10 @@ fn churn(mut limbs: Limbs, rounds: u32) -> Limbs {
 /// (NOTEBOOK 2026-11-21, signer stage 1b). A closure passes the value to
 /// a callee that changes its copy; a second closure is then given the
 /// same variable, and must receive the value as it was made. On rustc
-/// 1.94.0, x86_64, it failed at `opt-level` 1, 2 and 3 and passed at 0
-/// and in a plain release build (ledger O31).
+/// 1.94.0, x86_64, this test fails at `opt-level` 1, 2 and 3, with and
+/// without incremental compilation, and in release with incremental
+/// compilation; it passes at `opt-level` 0 and in a plain release build
+/// (ledger O31). It is the detector: it has been seen to fail.
 #[test]
 fn a_closure_receives_the_value_and_not_an_earlier_callees_copy() {
     let made = make();
@@ -97,8 +99,17 @@ fn a_closure_receives_the_value_and_not_an_earlier_callees_copy() {
 /// value, whose body changes its own copy. The two calls must return the
 /// same thing, and the caller's value must be unchanged. This is the
 /// first case of the regression test upstream added for the fault,
-/// written here from its description. Its result on rustc 1.94.0 is in
-/// ledger O31.
+/// written here from its description.
+///
+/// **A guard of the class, not a demonstrated detector.** On rustc
+/// 1.94.0, which has the fault, this test passes at every `opt-level`
+/// and in release, and so did the variants tried beside it: two other
+/// plain-function shapes, and the closure form's two closures passed
+/// through a function that takes `impl FnOnce` (ledger O31). Upstream's test checks the compiler's output
+/// and not a run, so it does not say that this shape misbehaves when
+/// run. The test is kept because the class includes it: a passing
+/// result here says the toolchain did not show the fault in this shape,
+/// not that the shape is safe.
 #[test]
 fn a_function_called_twice_with_one_value_receives_it_twice() {
     let made = make();

@@ -123,6 +123,15 @@ to a valid point.
 
 ## Rust checks
 
+The toolchain is Rust 1.97.1 (`rust-toolchain.toml`), and the workspace's
+`rust-version` is the same release, so cargo refuses to build these crates
+with an older compiler. Every rustc from 1.77.0 to 1.96 can miscompile
+ordinary safe code by passing a value through the caller's own copy
+(rust-lang/rust issue 155241, fixed in 1.97.0), and 1.97.0 has another
+miscompilation that 1.97.1 fixes (issue 159035); ledger O31 has what was
+measured here. Building with `--ignore-rust-version` builds with that
+fault.
+
 ```
 cargo fmt --all --check
 cargo clippy --workspace --all-targets --locked -- -D warnings

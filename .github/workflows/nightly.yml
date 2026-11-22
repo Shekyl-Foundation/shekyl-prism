@@ -105,7 +105,7 @@ jobs:
           submodules: false
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
-          toolchain: 1.94.0
+          toolchain: 1.97.1
       - name: Nightly toolchain and clang
         run: |
           set -euo pipefail
@@ -176,7 +176,7 @@ jobs:
           submodules: false
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
-          toolchain: 1.94.0
+          toolchain: 1.97.1
       - name: sympy 1.14.0
         run: python3 -m pip install --break-system-packages 'sympy==1.14.0'
       - name: 10_000 degrees per level, zero disagreements
@@ -203,7 +203,7 @@ jobs:
           submodules: false
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
-          toolchain: 1.94.0
+          toolchain: 1.97.1
       - name: Install cross 0.2.5
         run: python3 scripts/ci/install_pinned_tool.py cross
       - name: s390x under qemu
@@ -343,7 +343,7 @@ jobs:
           submodules: false
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
-          toolchain: 1.94.0
+          toolchain: 1.97.1
           components: llvm-tools-preview
       - name: Install cargo-llvm-cov 0.9.1
         run: python3 scripts/ci/install_pinned_tool.py cargo-llvm-cov
