@@ -30,11 +30,14 @@
 //!
 //! **Why the helpers below are functions and not closures.** Written with
 //! closures that take a point by value, this test failed at three sets in
-//! the test profile and passed in release. The cause was not a constant:
-//! rustc 1.94.0 on x86_64, optimizing a test build, handed a closure the
-//! copy of a point that an earlier closure's callee had changed. Ledger
-//! O31 has what was measured, and the notebook a reproduction with no
-//! crate of ours. Functions do not show it.
+//! the test profile and passed in release, on rustc 1.94.0. The cause was
+//! not a constant: that compiler handed a closure the copy of a point that
+//! an earlier closure's callee had changed (rust-lang/rust issue 155241;
+//! ledger O31). Functions avoid the form that failed. They are not a
+//! safeguard: the fault's class includes plain functions. The safeguard
+//! is the toolchain, which is now a release with the fix, named as the
+//! workspace's `rust-version`, with canaries of the fault in
+//! `prism-field/tests/toolchain_canary.rs`.
 
 use prism_field::{Field, ParameterSet, P248, P324, P376, P500, P664};
 use prism_isogeny::endomorphism::{apply, multiply};
