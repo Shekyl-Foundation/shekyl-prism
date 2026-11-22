@@ -1,0 +1,3442 @@
+{
+ "p248": {
+  "n_stream": 60000,
+  "n_keys": 50,
+  "n_msgs": 200,
+  "constructions": {
+   "B0": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 1.0,
+    "precomputable_after": 1.0,
+    "attacker_has_seed_before": 1.0,
+    "attacker_has_seed_after": 1.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 91.81,
+     "sd": 90.31,
+     "min": 1,
+     "max": 902
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 1.99,
+     "sd": 1.39,
+     "min": 1,
+     "max": 15
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 743.01,
+     "sd": 30.39,
+     "min": 636,
+     "max": 860
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 231.16,
+     "sd": 14.98,
+     "min": 181,
+     "max": 292
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 491.0,
+     "sd": 0.0,
+     "min": 491,
+     "max": 491
+    },
+    "cost_vs_D0": 3.214,
+    "trace_cv": 0.0409,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 29.64,
+      "p": 0.536,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0067,
+     "ks_p": 0.765
+    },
+    "uniform_y_mod256": {
+     "chi2": 238.16,
+     "p": 0.768,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4969,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0032,
+     "kruskal_H": 27.8,
+     "kruskal_p": 0.994
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0157,
+     "kruskal_H": 164.2,
+     "kruskal_p": 0.966
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 993.14,
+      "sd": 34.79,
+      "min": 867,
+      "max": 1134
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0063,
+      "kruskal_H": 68.1,
+      "kruskal_p": 0.037
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0157,
+      "kruskal_H": 158.9,
+      "kruskal_p": 0.983
+     },
+     "cv": 0.035
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 742.84,
+      "sd": 30.11,
+      "min": 636,
+      "max": 836
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0056,
+      "kruskal_H": 20.5,
+      "kruskal_p": 0.61
+     },
+     "eta2_vs_key": {
+      "eta2": 0.047,
+      "kruskal_H": 164.5,
+      "kruskal_p": 0.182
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 27.38,
+      "p": 0.653,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "COM": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 0.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 0.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 92.16,
+     "sd": 90.46,
+     "min": 1,
+     "max": 1097
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 2.0,
+     "sd": 1.4,
+     "min": 1,
+     "max": 14
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 743.09,
+     "sd": 30.28,
+     "min": 639,
+     "max": 879
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 231.48,
+     "sd": 14.92,
+     "min": 175,
+     "max": 283
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 491.0,
+     "sd": 0.0,
+     "min": 491,
+     "max": 491
+    },
+    "cost_vs_D0": 3.21,
+    "trace_cv": 0.0407,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 28.14,
+      "p": 0.614,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0143,
+     "ks_p": 0.0337
+    },
+    "uniform_y_mod256": {
+     "chi2": 217.22,
+     "p": 0.959,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.5033,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0052,
+     "kruskal_H": 54.6,
+     "kruskal_p": 0.271
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0227,
+     "kruskal_H": 220.0,
+     "kruskal_p": 0.147
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 993.49,
+      "sd": 34.92,
+      "min": 853,
+      "max": 1125
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0049,
+      "kruskal_H": 52.2,
+      "kruskal_p": 0.35
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.022,
+      "kruskal_H": 213.7,
+      "kruskal_p": 0.226
+     },
+     "cv": 0.0351
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 742.6,
+      "sd": 30.85,
+      "min": 638,
+      "max": 861
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0049,
+      "kruskal_H": 19.6,
+      "kruskal_p": 0.669
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0371,
+      "kruskal_H": 131.6,
+      "kruskal_p": 0.844
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 17.48,
+      "p": 0.976,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "EPH": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 1.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 1.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 91.43,
+     "sd": 89.61,
+     "min": 1,
+     "max": 1192
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 2.01,
+     "sd": 1.43,
+     "min": 1,
+     "max": 16
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 743.45,
+     "sd": 29.93,
+     "min": 627,
+     "max": 855
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 231.31,
+     "sd": 14.99,
+     "min": 175,
+     "max": 289
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 491.0,
+     "sd": 0.0,
+     "min": 491,
+     "max": 491
+    },
+    "cost_vs_D0": 3.214,
+    "trace_cv": 0.0403,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 30.1,
+      "p": 0.512,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0115,
+     "ks_p": 0.139
+    },
+    "uniform_y_mod256": {
+     "chi2": 239.23,
+     "p": 0.753,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4979,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0049,
+     "kruskal_H": 54.0,
+     "kruskal_p": 0.288
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0195,
+     "kruskal_H": 189.6,
+     "kruskal_p": 0.672
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 993.5,
+      "sd": 35.11,
+      "min": 856,
+      "max": 1121
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0058,
+      "kruskal_H": 53.9,
+      "kruskal_p": 0.292
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0207,
+      "kruskal_H": 213.0,
+      "kruskal_p": 0.237
+     },
+     "cv": 0.0353
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 742.84,
+      "sd": 29.6,
+      "min": 642,
+      "max": 843
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0062,
+      "kruskal_H": 25.8,
+      "kruskal_p": 0.311
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0371,
+      "kruskal_H": 132.1,
+      "kruskal_p": 0.836
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 20.96,
+      "p": 0.913,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "Hpk": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 1.0,
+    "precomputable_after": 1.0,
+    "attacker_has_seed_before": 1.0,
+    "attacker_has_seed_after": 1.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 91.81,
+     "sd": 90.31,
+     "min": 1,
+     "max": 902
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 2.02,
+     "sd": 1.45,
+     "min": 1,
+     "max": 14
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 742.9,
+     "sd": 30.26,
+     "min": 630,
+     "max": 860
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 231.16,
+     "sd": 14.98,
+     "min": 181,
+     "max": 292
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 491.0,
+     "sd": 0.0,
+     "min": 491,
+     "max": 491
+    },
+    "cost_vs_D0": 3.214,
+    "trace_cv": 0.0407,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 50.36,
+      "p": 0.0154,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.012,
+     "ks_p": 0.11
+    },
+    "uniform_y_mod256": {
+     "chi2": 264.12,
+     "p": 0.334,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.5075,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0064,
+     "kruskal_H": 65.0,
+     "kruskal_p": 0.0624
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0181,
+     "kruskal_H": 185.2,
+     "kruskal_p": 0.75
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 993.49,
+      "sd": 35.22,
+      "min": 849,
+      "max": 1113
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0042,
+      "kruskal_H": 47.7,
+      "kruskal_p": 0.524
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0185,
+      "kruskal_H": 183.6,
+      "kruskal_p": 0.776
+     },
+     "cv": 0.0355
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 742.6,
+      "sd": 30.14,
+      "min": 631,
+      "max": 843
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0041,
+      "kruskal_H": 13.9,
+      "kruskal_p": 0.929
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0399,
+      "kruskal_H": 140.8,
+      "kruskal_p": 0.672
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 22.13,
+      "p": 0.879,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "Hsk": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 0.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 0.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 91.81,
+     "sd": 90.31,
+     "min": 1,
+     "max": 902
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 1.99,
+     "sd": 1.39,
+     "min": 1,
+     "max": 13
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 742.95,
+     "sd": 30.24,
+     "min": 635,
+     "max": 853
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 231.16,
+     "sd": 14.98,
+     "min": 181,
+     "max": 292
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 491.0,
+     "sd": 0.0,
+     "min": 491,
+     "max": 491
+    },
+    "cost_vs_D0": 3.214,
+    "trace_cv": 0.0407,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 30.28,
+      "p": 0.503,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0087,
+     "ks_p": 0.428
+    },
+    "uniform_y_mod256": {
+     "chi2": 236.93,
+     "p": 0.785,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4996,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0048,
+     "kruskal_H": 46.5,
+     "kruskal_p": 0.574
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.018,
+     "kruskal_H": 181.7,
+     "kruskal_p": 0.805
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 993.29,
+      "sd": 34.66,
+      "min": 860,
+      "max": 1131
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0062,
+      "kruskal_H": 58.2,
+      "kruskal_p": 0.174
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0183,
+      "kruskal_H": 185.5,
+      "kruskal_p": 0.746
+     },
+     "cv": 0.0349
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 743.63,
+      "sd": 30.92,
+      "min": 638,
+      "max": 847
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0071,
+      "kruskal_H": 27.3,
+      "kruskal_p": 0.243
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0385,
+      "kruskal_H": 133.4,
+      "kruskal_p": 0.816
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 20.23,
+      "p": 0.931,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "REV": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": 1.0
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 0.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 0.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 92.03,
+     "sd": 90.27,
+     "min": 1,
+     "max": 859
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 2.02,
+     "sd": 1.46,
+     "min": 1,
+     "max": 16
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 743.89,
+     "sd": 30.27,
+     "min": 638,
+     "max": 850
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 231.4,
+     "sd": 14.9,
+     "min": 181,
+     "max": 280
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 491.0,
+     "sd": 0.0,
+     "min": 491,
+     "max": 491
+    },
+    "cost_vs_D0": 3.215,
+    "trace_cv": 0.0407,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 27.0,
+      "p": 0.672,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0092,
+     "ks_p": 0.358
+    },
+    "uniform_y_mod256": {
+     "chi2": 257.0,
+     "p": 0.453,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.5031,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0056,
+     "kruskal_H": 58.6,
+     "kruskal_p": 0.164
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0198,
+     "kruskal_H": 196.6,
+     "kruskal_p": 0.534
+    },
+    "corr_trace_vs_qbits": null,
+    "map_iterations": {
+     "n": 10000,
+     "mean": 24.43,
+     "sd": 7.79,
+     "min": 12,
+     "max": 75
+    },
+    "eta2_map_vs_key": {
+     "eta2": 0.0045,
+     "kruskal_H": 43.5,
+     "kruskal_p": 0.696
+    },
+    "map_cv": 0.3189,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 993.04,
+      "sd": 35.22,
+      "min": 865,
+      "max": 1132
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0059,
+      "kruskal_H": 61.4,
+      "kruskal_p": 0.111
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0211,
+      "kruskal_H": 212.9,
+      "kruskal_p": 0.238
+     },
+     "cv": 0.0355
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 743.63,
+      "sd": 30.92,
+      "min": 638,
+      "max": 847
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0071,
+      "kruskal_H": 27.3,
+      "kruskal_p": 0.243
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0385,
+      "kruskal_H": 133.4,
+      "kruskal_p": 0.816
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 20.23,
+      "p": 0.931,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   }
+  }
+ },
+ "p324": {
+  "n_stream": 60000,
+  "n_keys": 50,
+  "n_msgs": 200,
+  "constructions": {
+   "B0": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 1.0,
+    "precomputable_after": 1.0,
+    "attacker_has_seed_before": 1.0,
+    "attacker_has_seed_after": 1.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 120.87,
+     "sd": 119.81,
+     "min": 1,
+     "max": 1134
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 2.01,
+     "sd": 1.43,
+     "min": 1,
+     "max": 14
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 973.47,
+     "sd": 34.76,
+     "min": 839,
+     "max": 1103
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 301.17,
+     "sd": 17.06,
+     "min": 236,
+     "max": 361
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 643.0,
+     "sd": 0.0,
+     "min": 643,
+     "max": 643
+    },
+    "cost_vs_D0": 3.232,
+    "trace_cv": 0.0357,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 35.16,
+      "p": 0.277,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0071,
+     "ks_p": 0.688
+    },
+    "uniform_y_mod256": {
+     "chi2": 308.66,
+     "p": 0.012,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4967,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0062,
+     "kruskal_H": 64.6,
+     "kruskal_p": 0.0673
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0203,
+     "kruskal_H": 198.2,
+     "kruskal_p": 0.503
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 1299.4,
+      "sd": 39.94,
+      "min": 1150,
+      "max": 1445
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0038,
+      "kruskal_H": 39.5,
+      "kruskal_p": 0.832
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0169,
+      "kruskal_H": 175.6,
+      "kruskal_p": 0.882
+     },
+     "cv": 0.0307
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 972.92,
+      "sd": 34.92,
+      "min": 854,
+      "max": 1088
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0043,
+      "kruskal_H": 15.1,
+      "kruskal_p": 0.893
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0397,
+      "kruskal_H": 143.2,
+      "kruskal_p": 0.619
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 24.46,
+      "p": 0.791,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "COM": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 0.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 0.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 118.57,
+     "sd": 118.11,
+     "min": 1,
+     "max": 1029
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 2.01,
+     "sd": 1.4,
+     "min": 1,
+     "max": 15
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 972.65,
+     "sd": 34.5,
+     "min": 844,
+     "max": 1119
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 300.81,
+     "sd": 17.0,
+     "min": 229,
+     "max": 367
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 643.0,
+     "sd": 0.0,
+     "min": 643,
+     "max": 643
+    },
+    "cost_vs_D0": 3.233,
+    "trace_cv": 0.0355,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 22.91,
+      "p": 0.852,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0054,
+     "ks_p": 0.931
+    },
+    "uniform_y_mod256": {
+     "chi2": 284.39,
+     "p": 0.0996,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4956,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0056,
+     "kruskal_H": 52.9,
+     "kruskal_p": 0.325
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0195,
+     "kruskal_H": 195.9,
+     "kruskal_p": 0.549
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 1299.67,
+      "sd": 40.41,
+      "min": 1157,
+      "max": 1454
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0051,
+      "kruskal_H": 54.3,
+      "kruskal_p": 0.28
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0165,
+      "kruskal_H": 171.6,
+      "kruskal_p": 0.92
+     },
+     "cv": 0.0311
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 973.55,
+      "sd": 34.88,
+      "min": 836,
+      "max": 1086
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0078,
+      "kruskal_H": 28.6,
+      "kruskal_p": 0.196
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0448,
+      "kruskal_H": 162.4,
+      "kruskal_p": 0.214
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 27.22,
+      "p": 0.661,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "EPH": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 1.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 1.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 120.33,
+     "sd": 117.88,
+     "min": 1,
+     "max": 983
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 2.0,
+     "sd": 1.4,
+     "min": 1,
+     "max": 14
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 972.6,
+     "sd": 34.34,
+     "min": 842,
+     "max": 1083
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 300.68,
+     "sd": 17.03,
+     "min": 232,
+     "max": 364
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 643.0,
+     "sd": 0.0,
+     "min": 643,
+     "max": 643
+    },
+    "cost_vs_D0": 3.235,
+    "trace_cv": 0.0353,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 40.94,
+      "p": 0.109,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0129,
+     "ks_p": 0.0727
+    },
+    "uniform_y_mod256": {
+     "chi2": 255.46,
+     "p": 0.48,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4953,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0052,
+     "kruskal_H": 48.3,
+     "kruskal_p": 0.501
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0185,
+     "kruskal_H": 187.5,
+     "kruskal_p": 0.71
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 1300.07,
+      "sd": 40.13,
+      "min": 1144,
+      "max": 1447
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0048,
+      "kruskal_H": 50.5,
+      "kruskal_p": 0.415
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0192,
+      "kruskal_H": 193.8,
+      "kruskal_p": 0.591
+     },
+     "cv": 0.0309
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 972.4,
+      "sd": 34.81,
+      "min": 841,
+      "max": 1097
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0081,
+      "kruskal_H": 26.4,
+      "kruskal_p": 0.283
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0369,
+      "kruskal_H": 137.7,
+      "kruskal_p": 0.736
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 37.01,
+      "p": 0.211,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "Hpk": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 1.0,
+    "precomputable_after": 1.0,
+    "attacker_has_seed_before": 1.0,
+    "attacker_has_seed_after": 1.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 120.87,
+     "sd": 119.81,
+     "min": 1,
+     "max": 1134
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 1.99,
+     "sd": 1.4,
+     "min": 1,
+     "max": 12
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 972.68,
+     "sd": 34.51,
+     "min": 851,
+     "max": 1104
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 301.17,
+     "sd": 17.06,
+     "min": 236,
+     "max": 361
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 643.0,
+     "sd": 0.0,
+     "min": 643,
+     "max": 643
+    },
+    "cost_vs_D0": 3.23,
+    "trace_cv": 0.0355,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 45.08,
+      "p": 0.049,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0064,
+     "ks_p": 0.803
+    },
+    "uniform_y_mod256": {
+     "chi2": 259.71,
+     "p": 0.406,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.5008,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0042,
+     "kruskal_H": 43.6,
+     "kruskal_p": 0.692
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0218,
+     "kruskal_H": 209.0,
+     "kruskal_p": 0.3
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 1299.57,
+      "sd": 40.28,
+      "min": 1141,
+      "max": 1462
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0056,
+      "kruskal_H": 60.1,
+      "kruskal_p": 0.133
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0255,
+      "kruskal_H": 262.1,
+      "kruskal_p": 0.0018
+     },
+     "cv": 0.031
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 973.14,
+      "sd": 34.93,
+      "min": 850,
+      "max": 1093
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0087,
+      "kruskal_H": 28.5,
+      "kruskal_p": 0.199
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0406,
+      "kruskal_H": 142.8,
+      "kruskal_p": 0.628
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 21.49,
+      "p": 0.898,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "Hsk": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 0.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 0.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 120.87,
+     "sd": 119.81,
+     "min": 1,
+     "max": 1134
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 1.98,
+     "sd": 1.38,
+     "min": 1,
+     "max": 16
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 973.54,
+     "sd": 34.73,
+     "min": 842,
+     "max": 1106
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 301.17,
+     "sd": 17.06,
+     "min": 236,
+     "max": 361
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 643.0,
+     "sd": 0.0,
+     "min": 643,
+     "max": 643
+    },
+    "cost_vs_D0": 3.233,
+    "trace_cv": 0.0357,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 31.69,
+      "p": 0.432,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0103,
+     "ks_p": 0.239
+    },
+    "uniform_y_mod256": {
+     "chi2": 254.8,
+     "p": 0.492,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4965,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0056,
+     "kruskal_H": 50.3,
+     "kruskal_p": 0.421
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.022,
+     "kruskal_H": 218.2,
+     "kruskal_p": 0.167
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 1299.86,
+      "sd": 40.33,
+      "min": 1135,
+      "max": 1440
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0057,
+      "kruskal_H": 61.5,
+      "kruskal_p": 0.108
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0197,
+      "kruskal_H": 198.5,
+      "kruskal_p": 0.497
+     },
+     "cv": 0.031
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 973.37,
+      "sd": 35.27,
+      "min": 862,
+      "max": 1091
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0072,
+      "kruskal_H": 25.9,
+      "kruskal_p": 0.307
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0442,
+      "kruskal_H": 149.9,
+      "kruskal_p": 0.465
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 21.14,
+      "p": 0.908,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "REV": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": 1.0
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 0.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 0.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 121.06,
+     "sd": 119.14,
+     "min": 1,
+     "max": 1006
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 1.99,
+     "sd": 1.4,
+     "min": 1,
+     "max": 17
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 973.06,
+     "sd": 34.88,
+     "min": 842,
+     "max": 1103
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 301.09,
+     "sd": 17.07,
+     "min": 233,
+     "max": 370
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 643.0,
+     "sd": 0.0,
+     "min": 643,
+     "max": 643
+    },
+    "cost_vs_D0": 3.232,
+    "trace_cv": 0.0358,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 24.28,
+      "p": 0.799,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0066,
+     "ks_p": 0.781
+    },
+    "uniform_y_mod256": {
+     "chi2": 293.04,
+     "p": 0.0509,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.5036,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0077,
+     "kruskal_H": 71.3,
+     "kruskal_p": 0.0202
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0181,
+     "kruskal_H": 189.6,
+     "kruskal_p": 0.671
+    },
+    "corr_trace_vs_qbits": null,
+    "map_iterations": {
+     "n": 10000,
+     "mean": 24.43,
+     "sd": 7.79,
+     "min": 12,
+     "max": 75
+    },
+    "eta2_map_vs_key": {
+     "eta2": 0.0045,
+     "kruskal_H": 43.5,
+     "kruskal_p": 0.696
+    },
+    "map_cv": 0.3189,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 1300.58,
+      "sd": 39.75,
+      "min": 1130,
+      "max": 1436
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0064,
+      "kruskal_H": 65.6,
+      "kruskal_p": 0.0568
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0166,
+      "kruskal_H": 165.6,
+      "kruskal_p": 0.959
+     },
+     "cv": 0.0306
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 973.37,
+      "sd": 35.27,
+      "min": 862,
+      "max": 1091
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0072,
+      "kruskal_H": 25.9,
+      "kruskal_p": 0.307
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0442,
+      "kruskal_H": 149.9,
+      "kruskal_p": 0.465
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 21.14,
+      "p": 0.908,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   }
+  }
+ },
+ "p376": {
+  "n_stream": 60000,
+  "n_keys": 50,
+  "n_msgs": 200,
+  "constructions": {
+   "B0": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 1.0,
+    "precomputable_after": 1.0,
+    "attacker_has_seed_before": 1.0,
+    "attacker_has_seed_after": 1.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 139.59,
+     "sd": 138.07,
+     "min": 1,
+     "max": 1398
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 1.99,
+     "sd": 1.42,
+     "min": 1,
+     "max": 18
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 1125.34,
+     "sd": 37.23,
+     "min": 987,
+     "max": 1263
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 347.02,
+     "sd": 18.44,
+     "min": 265,
+     "max": 418
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 747.0,
+     "sd": 0.0,
+     "min": 747,
+     "max": 747
+    },
+    "cost_vs_D0": 3.243,
+    "trace_cv": 0.0331,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 28.54,
+      "p": 0.593,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0098,
+     "ks_p": 0.287
+    },
+    "uniform_y_mod256": {
+     "chi2": 256.69,
+     "p": 0.458,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4967,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0063,
+     "kruskal_H": 63.1,
+     "kruskal_p": 0.0852
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0196,
+     "kruskal_H": 202.3,
+     "kruskal_p": 0.421
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 1508.51,
+      "sd": 42.7,
+      "min": 1350,
+      "max": 1661
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0056,
+      "kruskal_H": 53.1,
+      "kruskal_p": 0.319
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0185,
+      "kruskal_H": 180.0,
+      "kruskal_p": 0.829
+     },
+     "cv": 0.0283
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 1124.67,
+      "sd": 37.56,
+      "min": 998,
+      "max": 1256
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0047,
+      "kruskal_H": 20.1,
+      "kruskal_p": 0.637
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0458,
+      "kruskal_H": 168.8,
+      "kruskal_p": 0.128
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 33.01,
+      "p": 0.369,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "COM": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 0.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 0.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 140.15,
+     "sd": 141.45,
+     "min": 1,
+     "max": 1476
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 1.99,
+     "sd": 1.41,
+     "min": 1,
+     "max": 15
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 1125.29,
+     "sd": 37.45,
+     "min": 984,
+     "max": 1261
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 347.14,
+     "sd": 18.14,
+     "min": 262,
+     "max": 406
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 747.0,
+     "sd": 0.0,
+     "min": 747,
+     "max": 747
+    },
+    "cost_vs_D0": 3.242,
+    "trace_cv": 0.0333,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 37.06,
+      "p": 0.21,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0133,
+     "ks_p": 0.058
+    },
+    "uniform_y_mod256": {
+     "chi2": 265.09,
+     "p": 0.319,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4962,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0054,
+     "kruskal_H": 54.3,
+     "kruskal_p": 0.279
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0208,
+     "kruskal_H": 215.0,
+     "kruskal_p": 0.207
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 1508.08,
+      "sd": 43.63,
+      "min": 1347,
+      "max": 1711
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0058,
+      "kruskal_H": 57.1,
+      "kruskal_p": 0.199
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0181,
+      "kruskal_H": 180.3,
+      "kruskal_p": 0.824
+     },
+     "cv": 0.0289
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 1125.5,
+      "sd": 37.45,
+      "min": 995,
+      "max": 1265
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0085,
+      "kruskal_H": 30.5,
+      "kruskal_p": 0.135
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0454,
+      "kruskal_H": 162.8,
+      "kruskal_p": 0.208
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 37.26,
+      "p": 0.203,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "EPH": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 1.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 1.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 141.91,
+     "sd": 142.03,
+     "min": 1,
+     "max": 1289
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 2.01,
+     "sd": 1.39,
+     "min": 1,
+     "max": 14
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 1125.49,
+     "sd": 37.24,
+     "min": 986,
+     "max": 1261
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 346.92,
+     "sd": 18.31,
+     "min": 280,
+     "max": 421
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 747.0,
+     "sd": 0.0,
+     "min": 747,
+     "max": 747
+    },
+    "cost_vs_D0": 3.244,
+    "trace_cv": 0.0331,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 32.95,
+      "p": 0.372,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.009,
+     "ks_p": 0.388
+    },
+    "uniform_y_mod256": {
+     "chi2": 263.24,
+     "p": 0.348,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4967,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0043,
+     "kruskal_H": 43.3,
+     "kruskal_p": 0.703
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0199,
+     "kruskal_H": 206.8,
+     "kruskal_p": 0.338
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 1508.03,
+      "sd": 42.99,
+      "min": 1328,
+      "max": 1665
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0045,
+      "kruskal_H": 45.2,
+      "kruskal_p": 0.629
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0175,
+      "kruskal_H": 178.5,
+      "kruskal_p": 0.849
+     },
+     "cv": 0.0285
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 1125.42,
+      "sd": 36.95,
+      "min": 993,
+      "max": 1258
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0067,
+      "kruskal_H": 23.8,
+      "kruskal_p": 0.414
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0449,
+      "kruskal_H": 155.7,
+      "kruskal_p": 0.337
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 35.56,
+      "p": 0.262,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "Hpk": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 1.0,
+    "precomputable_after": 1.0,
+    "attacker_has_seed_before": 1.0,
+    "attacker_has_seed_after": 1.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 139.59,
+     "sd": 138.07,
+     "min": 1,
+     "max": 1398
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 2.03,
+     "sd": 1.44,
+     "min": 1,
+     "max": 14
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 1125.67,
+     "sd": 37.33,
+     "min": 990,
+     "max": 1288
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 347.02,
+     "sd": 18.44,
+     "min": 265,
+     "max": 418
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 747.0,
+     "sd": 0.0,
+     "min": 747,
+     "max": 747
+    },
+    "cost_vs_D0": 3.244,
+    "trace_cv": 0.0332,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 30.39,
+      "p": 0.497,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0113,
+     "ks_p": 0.151
+    },
+    "uniform_y_mod256": {
+     "chi2": 239.64,
+     "p": 0.747,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4919,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0051,
+     "kruskal_H": 47.5,
+     "kruskal_p": 0.533
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0179,
+     "kruskal_H": 181.1,
+     "kruskal_p": 0.813
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 1508.52,
+      "sd": 42.94,
+      "min": 1332,
+      "max": 1687
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0059,
+      "kruskal_H": 60.2,
+      "kruskal_p": 0.131
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0243,
+      "kruskal_H": 227.6,
+      "kruskal_p": 0.0801
+     },
+     "cv": 0.0285
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 1124.88,
+      "sd": 37.47,
+      "min": 1012,
+      "max": 1277
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0087,
+      "kruskal_H": 33.4,
+      "kruskal_p": 0.0739
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0441,
+      "kruskal_H": 161.8,
+      "kruskal_p": 0.223
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 31.02,
+      "p": 0.465,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "Hsk": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 0.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 0.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 139.59,
+     "sd": 138.07,
+     "min": 1,
+     "max": 1398
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 1.98,
+     "sd": 1.41,
+     "min": 1,
+     "max": 16
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 1125.01,
+     "sd": 37.51,
+     "min": 986,
+     "max": 1271
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 347.02,
+     "sd": 18.44,
+     "min": 265,
+     "max": 418
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 747.0,
+     "sd": 0.0,
+     "min": 747,
+     "max": 747
+    },
+    "cost_vs_D0": 3.242,
+    "trace_cv": 0.0333,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 19.92,
+      "p": 0.937,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0097,
+     "ks_p": 0.299
+    },
+    "uniform_y_mod256": {
+     "chi2": 269.34,
+     "p": 0.257,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.495,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0065,
+     "kruskal_H": 63.2,
+     "kruskal_p": 0.0835
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0188,
+     "kruskal_H": 189.4,
+     "kruskal_p": 0.676
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 1508.36,
+      "sd": 43.21,
+      "min": 1359,
+      "max": 1671
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.006,
+      "kruskal_H": 58.8,
+      "kruskal_p": 0.158
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0173,
+      "kruskal_H": 163.7,
+      "kruskal_p": 0.968
+     },
+     "cv": 0.0286
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 1124.58,
+      "sd": 37.98,
+      "min": 959,
+      "max": 1255
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0066,
+      "kruskal_H": 25.9,
+      "kruskal_p": 0.307
+     },
+     "eta2_vs_key": {
+      "eta2": 0.036,
+      "kruskal_H": 132.4,
+      "kruskal_p": 0.832
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 36.55,
+      "p": 0.226,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   },
+   "REV": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": 1.0
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 0.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 0.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 138.44,
+     "sd": 138.57,
+     "min": 1,
+     "max": 1427
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 1.98,
+     "sd": 1.38,
+     "min": 1,
+     "max": 12
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 1125.55,
+     "sd": 37.41,
+     "min": 978,
+     "max": 1265
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 346.91,
+     "sd": 18.57,
+     "min": 265,
+     "max": 418
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 747.0,
+     "sd": 0.0,
+     "min": 747,
+     "max": 747
+    },
+    "cost_vs_D0": 3.245,
+    "trace_cv": 0.0332,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 35.53,
+      "p": 0.263,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0088,
+     "ks_p": 0.413
+    },
+    "uniform_y_mod256": {
+     "chi2": 233.96,
+     "p": 0.824,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4935,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0053,
+     "kruskal_H": 53.7,
+     "kruskal_p": 0.3
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0216,
+     "kruskal_H": 205.1,
+     "kruskal_p": 0.368
+    },
+    "corr_trace_vs_qbits": null,
+    "map_iterations": {
+     "n": 10000,
+     "mean": 24.43,
+     "sd": 7.79,
+     "min": 12,
+     "max": 75
+    },
+    "eta2_map_vs_key": {
+     "eta2": 0.0045,
+     "kruskal_H": 43.5,
+     "kruskal_p": 0.696
+    },
+    "map_cv": 0.3189,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 1508.63,
+      "sd": 43.28,
+      "min": 1349,
+      "max": 1689
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0047,
+      "kruskal_H": 46.9,
+      "kruskal_p": 0.56
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0217,
+      "kruskal_H": 216.3,
+      "kruskal_p": 0.191
+     },
+     "cv": 0.0287
+    },
+    "fixedq": {
+     "n": 3600,
+     "n_q": 24,
+     "draws": 150,
+     "iterations": {
+      "n": 3600,
+      "mean": 1124.58,
+      "sd": 37.98,
+      "min": 959,
+      "max": 1255
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0066,
+      "kruskal_H": 25.9,
+      "kruskal_p": 0.307
+     },
+     "eta2_vs_key": {
+      "eta2": 0.036,
+      "kruskal_H": 132.4,
+      "kruskal_p": 0.832
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 3599.0,
+      "kruskal_p": 0.0
+     },
+     "uniform_y_over_q": {
+      "chi2": 36.55,
+      "p": 0.226,
+      "bins": 32,
+      "n": 3600
+     }
+    }
+   }
+  }
+ },
+ "p500": {
+  "n_stream": 60000,
+  "n_keys": 50,
+  "n_msgs": 200,
+  "constructions": {
+   "B0": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 1.0,
+    "precomputable_after": 1.0,
+    "attacker_has_seed_before": 1.0,
+    "attacker_has_seed_after": 1.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 188.83,
+     "sd": 189.31,
+     "min": 1,
+     "max": 1626
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 1.99,
+     "sd": 1.4,
+     "min": 1,
+     "max": 15
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 1500.15,
+     "sd": 43.54,
+     "min": 1340,
+     "max": 1658
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 460.75,
+     "sd": 21.29,
+     "min": 385,
+     "max": 541
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 995.0,
+     "sd": 0.0,
+     "min": 995,
+     "max": 995
+    },
+    "cost_vs_D0": 3.256,
+    "trace_cv": 0.029,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 37.32,
+      "p": 0.201,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0063,
+     "ks_p": 0.819
+    },
+    "uniform_y_mod256": {
+     "chi2": 255.67,
+     "p": 0.476,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4902,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0049,
+     "kruskal_H": 49.6,
+     "kruskal_p": 0.449
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.02,
+     "kruskal_H": 200.1,
+     "kruskal_p": 0.465
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 2006.64,
+      "sd": 49.37,
+      "min": 1809,
+      "max": 2231
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0063,
+      "kruskal_H": 66.8,
+      "kruskal_p": 0.0462
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0199,
+      "kruskal_H": 196.6,
+      "kruskal_p": 0.534
+     },
+     "cv": 0.0246
+    },
+    "fixedq": {
+     "n": 1200,
+     "n_q": 24,
+     "draws": 50,
+     "iterations": {
+      "n": 1200,
+      "mean": 1499.71,
+      "sd": 45.35,
+      "min": 1360,
+      "max": 1681
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0217,
+      "kruskal_H": 22.9,
+      "kruskal_p": 0.467
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0416,
+      "kruskal_H": 48.8,
+      "kruskal_p": 0.483
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 1199.0,
+      "kruskal_p": 5.49e-239
+     },
+     "uniform_y_over_q": {
+      "chi2": 26.08,
+      "p": 0.717,
+      "bins": 32,
+      "n": 1200
+     }
+    }
+   },
+   "COM": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 0.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 0.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 186.81,
+     "sd": 186.8,
+     "min": 1,
+     "max": 1928
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 2.01,
+     "sd": 1.41,
+     "min": 1,
+     "max": 15
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 1499.79,
+     "sd": 43.2,
+     "min": 1337,
+     "max": 1672
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 460.5,
+     "sd": 21.25,
+     "min": 385,
+     "max": 538
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 995.0,
+     "sd": 0.0,
+     "min": 995,
+     "max": 995
+    },
+    "cost_vs_D0": 3.257,
+    "trace_cv": 0.0288,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 31.75,
+      "p": 0.429,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0072,
+     "ks_p": 0.681
+    },
+    "uniform_y_mod256": {
+     "chi2": 296.17,
+     "p": 0.039,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.5032,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0063,
+     "kruskal_H": 59.2,
+     "kruskal_p": 0.151
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0176,
+     "kruskal_H": 181.7,
+     "kruskal_p": 0.806
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 2006.18,
+      "sd": 49.62,
+      "min": 1792,
+      "max": 2209
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0039,
+      "kruskal_H": 39.2,
+      "kruskal_p": 0.839
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0143,
+      "kruskal_H": 147.9,
+      "kruskal_p": 0.997
+     },
+     "cv": 0.0247
+    },
+    "fixedq": {
+     "n": 1200,
+     "n_q": 24,
+     "draws": 50,
+     "iterations": {
+      "n": 1200,
+      "mean": 1500.08,
+      "sd": 41.34,
+      "min": 1388,
+      "max": 1639
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0193,
+      "kruskal_H": 22.6,
+      "kruskal_p": 0.485
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0277,
+      "kruskal_H": 30.8,
+      "kruskal_p": 0.98
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 1199.0,
+      "kruskal_p": 5.49e-239
+     },
+     "uniform_y_over_q": {
+      "chi2": 37.12,
+      "p": 0.208,
+      "bins": 32,
+      "n": 1200
+     }
+    }
+   },
+   "EPH": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 1.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 1.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 187.48,
+     "sd": 186.95,
+     "min": 1,
+     "max": 2014
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 1.99,
+     "sd": 1.4,
+     "min": 1,
+     "max": 14
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 1500.98,
+     "sd": 43.22,
+     "min": 1304,
+     "max": 1672
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 460.29,
+     "sd": 21.18,
+     "min": 370,
+     "max": 535
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 995.0,
+     "sd": 0.0,
+     "min": 995,
+     "max": 995
+    },
+    "cost_vs_D0": 3.261,
+    "trace_cv": 0.0288,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 23.43,
+      "p": 0.833,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0076,
+     "ks_p": 0.601
+    },
+    "uniform_y_mod256": {
+     "chi2": 285.31,
+     "p": 0.0931,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.5043,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0032,
+     "kruskal_H": 30.9,
+     "kruskal_p": 0.98
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0215,
+     "kruskal_H": 205.2,
+     "kruskal_p": 0.367
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 2005.72,
+      "sd": 50.37,
+      "min": 1782,
+      "max": 2195
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.005,
+      "kruskal_H": 51.3,
+      "kruskal_p": 0.382
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0186,
+      "kruskal_H": 184.6,
+      "kruskal_p": 0.76
+     },
+     "cv": 0.0251
+    },
+    "fixedq": {
+     "n": 1200,
+     "n_q": 24,
+     "draws": 50,
+     "iterations": {
+      "n": 1200,
+      "mean": 1499.09,
+      "sd": 42.33,
+      "min": 1358,
+      "max": 1649
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0088,
+      "kruskal_H": 11.1,
+      "kruskal_p": 0.983
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0329,
+      "kruskal_H": 40.9,
+      "kruskal_p": 0.789
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 1199.0,
+      "kruskal_p": 5.49e-239
+     },
+     "uniform_y_over_q": {
+      "chi2": 33.55,
+      "p": 0.345,
+      "bins": 32,
+      "n": 1200
+     }
+    }
+   },
+   "Hpk": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 1.0,
+    "precomputable_after": 1.0,
+    "attacker_has_seed_before": 1.0,
+    "attacker_has_seed_after": 1.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 188.83,
+     "sd": 189.31,
+     "min": 1,
+     "max": 1626
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 2.01,
+     "sd": 1.44,
+     "min": 1,
+     "max": 14
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 1499.73,
+     "sd": 43.24,
+     "min": 1333,
+     "max": 1681
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 460.75,
+     "sd": 21.29,
+     "min": 385,
+     "max": 541
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 995.0,
+     "sd": 0.0,
+     "min": 995,
+     "max": 995
+    },
+    "cost_vs_D0": 3.255,
+    "trace_cv": 0.0288,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 28.79,
+      "p": 0.58,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0065,
+     "ks_p": 0.783
+    },
+    "uniform_y_mod256": {
+     "chi2": 257.31,
+     "p": 0.448,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4967,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0041,
+     "kruskal_H": 40.8,
+     "kruskal_p": 0.791
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.023,
+     "kruskal_H": 231.4,
+     "kruskal_p": 0.0574
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 2006.17,
+      "sd": 49.48,
+      "min": 1787,
+      "max": 2196
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0046,
+      "kruskal_H": 42.9,
+      "kruskal_p": 0.719
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0212,
+      "kruskal_H": 216.6,
+      "kruskal_p": 0.187
+     },
+     "cv": 0.0247
+    },
+    "fixedq": {
+     "n": 1200,
+     "n_q": 24,
+     "draws": 50,
+     "iterations": {
+      "n": 1200,
+      "mean": 1501.29,
+      "sd": 42.36,
+      "min": 1372,
+      "max": 1658
+     },
+     "eta2_vs_q": {
+      "eta2": 0.0208,
+      "kruskal_H": 23.9,
+      "kruskal_p": 0.41
+     },
+     "eta2_vs_key": {
+      "eta2": 0.0446,
+      "kruskal_H": 52.3,
+      "kruskal_p": 0.346
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 1199.0,
+      "kruskal_p": 5.49e-239
+     },
+     "uniform_y_over_q": {
+      "chi2": 18.19,
+      "p": 0.967,
+      "bins": 32,
+      "n": 1200
+     }
+    }
+   },
+   "Hsk": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": null
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 0.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 0.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 188.83,
+     "sd": 189.31,
+     "min": 1,
+     "max": 1626
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 1.99,
+     "sd": 1.4,
+     "min": 1,
+     "max": 12
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 1500.05,
+     "sd": 43.29,
+     "min": 1331,
+     "max": 1674
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 460.75,
+     "sd": 21.29,
+     "min": 385,
+     "max": 541
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 995.0,
+     "sd": 0.0,
+     "min": 995,
+     "max": 995
+    },
+    "cost_vs_D0": 3.256,
+    "trace_cv": 0.0289,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 31.85,
+      "p": 0.424,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0115,
+     "ks_p": 0.144
+    },
+    "uniform_y_mod256": {
+     "chi2": 281.32,
+     "p": 0.124,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.4998,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0035,
+     "kruskal_H": 34.7,
+     "kruskal_p": 0.938
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0183,
+     "kruskal_H": 182.2,
+     "kruskal_p": 0.798
+    },
+    "corr_trace_vs_qbits": null,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 2005.59,
+      "sd": 49.45,
+      "min": 1807,
+      "max": 2211
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.005,
+      "kruskal_H": 45.7,
+      "kruskal_p": 0.609
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0189,
+      "kruskal_H": 189.8,
+      "kruskal_p": 0.667
+     },
+     "cv": 0.0247
+    },
+    "fixedq": {
+     "n": 1200,
+     "n_q": 24,
+     "draws": 50,
+     "iterations": {
+      "n": 1200,
+      "mean": 1499.91,
+      "sd": 41.52,
+      "min": 1370,
+      "max": 1644
+     },
+     "eta2_vs_q": {
+      "eta2": 0.02,
+      "kruskal_H": 22.8,
+      "kruskal_p": 0.474
+     },
+     "eta2_vs_key": {
+      "eta2": 0.035,
+      "kruskal_H": 44.8,
+      "kruskal_p": 0.644
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 1199.0,
+      "kruskal_p": 5.49e-239
+     },
+     "uniform_y_over_q": {
+      "chi2": 27.47,
+      "p": 0.649,
+      "bins": 32,
+      "n": 1200
+     }
+    }
+   },
+   "REV": {
+    "n": 10000,
+    "determinism": {
+     "seed": 1.0,
+     "q": 1.0,
+     "index": 1.0,
+     "map": 1.0
+    },
+    "verifier_q_ok": 1.0,
+    "precomputable_before": 0.0,
+    "precomputable_after": 0.0,
+    "attacker_has_seed_before": 0.0,
+    "attacker_has_seed_after": 0.0,
+    "qtries": {
+     "n": 10000,
+     "mean": 185.31,
+     "sd": 185.78,
+     "min": 1,
+     "max": 2514
+    },
+    "h2_tries": {
+     "n": 10000,
+     "mean": 2.01,
+     "sd": 1.44,
+     "min": 1,
+     "max": 13
+    },
+    "sign_iterations": {
+     "n": 10000,
+     "mean": 1500.66,
+     "sd": 42.73,
+     "min": 1344,
+     "max": 1675
+    },
+    "D0_iterations": {
+     "n": 10000,
+     "mean": 460.39,
+     "sd": 21.34,
+     "min": 388,
+     "max": 538
+    },
+    "sign_ok": 1.0,
+    "q_bits": {
+     "n": 10000,
+     "mean": 995.0,
+     "sd": 0.0,
+     "min": 995,
+     "max": 995
+    },
+    "cost_vs_D0": 3.26,
+    "trace_cv": 0.0285,
+    "uniform_y_over_q": {
+     "chi2_32": {
+      "chi2": 28.45,
+      "p": 0.598,
+      "bins": 32,
+      "n": 10000
+     },
+     "ks_D": 0.0048,
+     "ks_p": 0.975
+    },
+    "uniform_y_mod256": {
+     "chi2": 236.93,
+     "p": 0.785,
+     "bins": 256,
+     "n": 10000
+    },
+    "sign_balance": 0.5049,
+    "collisions_same_key": {
+     "pairs": 995000,
+     "collisions": 0,
+     "rate": 0.0
+    },
+    "eta2_trace_vs_key": {
+     "eta2": 0.0041,
+     "kruskal_H": 43.1,
+     "kruskal_p": 0.71
+    },
+    "eta2_trace_vs_msg": {
+     "eta2": 0.0192,
+     "kruskal_H": 194.8,
+     "kruskal_p": 0.57
+    },
+    "corr_trace_vs_qbits": null,
+    "map_iterations": {
+     "n": 10000,
+     "mean": 24.43,
+     "sd": 7.79,
+     "min": 12,
+     "max": 75
+    },
+    "eta2_map_vs_key": {
+     "eta2": 0.0045,
+     "kruskal_H": 43.5,
+     "kruskal_p": 0.696
+    },
+    "map_cv": 0.3189,
+    "prod": {
+     "n": 10000,
+     "iterations": {
+      "n": 10000,
+      "mean": 2004.93,
+      "sd": 50.09,
+      "min": 1811,
+      "max": 2200
+     },
+     "ok": 1.0,
+     "eta2_vs_key": {
+      "eta2": 0.0052,
+      "kruskal_H": 53.7,
+      "kruskal_p": 0.299
+     },
+     "eta2_vs_msg": {
+      "eta2": 0.0191,
+      "kruskal_H": 185.1,
+      "kruskal_p": 0.752
+     },
+     "cv": 0.025
+    },
+    "fixedq": {
+     "n": 1200,
+     "n_q": 24,
+     "draws": 50,
+     "iterations": {
+      "n": 1200,
+      "mean": 1499.91,
+      "sd": 41.52,
+      "min": 1370,
+      "max": 1644
+     },
+     "eta2_vs_q": {
+      "eta2": 0.02,
+      "kruskal_H": 22.8,
+      "kruskal_p": 0.474
+     },
+     "eta2_vs_key": {
+      "eta2": 0.035,
+      "kruskal_H": 44.8,
+      "kruskal_p": 0.644
+     },
+     "D0_eta2_vs_q": {
+      "eta2": 1.0,
+      "kruskal_H": 1199.0,
+      "kruskal_p": 5.49e-239
+     },
+     "uniform_y_over_q": {
+      "chi2": 27.47,
+      "p": 0.649,
+      "bins": 32,
+      "n": 1200
+     }
+    }
+   }
+  }
+ }
+}

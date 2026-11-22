@@ -67,3 +67,10 @@ and pandas 3.1.1.
 - *Isogeny-based Signatures with Randomizable Keys*, ePrint 2026/1169,
   <https://eprint.iacr.org/2026/1169>. It covers randomizable-key variants
   SQIsign-RK, PRISM-RK and DeuringVUF-RK.
+
+## Transparency, and the follow-up
+
+This is a research experiment for Shekyl PRISM, Rick Dawson's isogeny
+signature scheme. Its results are public by design, negative ones
+included. The 4-D hash-expanded follow-up, which treats this experiment as
+its negative control, is in [`../latticeprism-4d/`](../latticeprism-4d/).
