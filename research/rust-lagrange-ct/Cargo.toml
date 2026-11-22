@@ -1,0 +1,39 @@
+[package]
+name = "rust-lagrange-ct"
+version = "0.0.0"
+edition = "2021"
+license = "BSD-3-Clause"
+publish = false
+description = "Research: fixed-schedule Z[i]-Lagrange reduction in fixed-width constant-time arithmetic (not part of the workspace)"
+
+# Standalone: an empty workspace table keeps this crate out of the
+# repository workspace, its build and its CI.
+[workspace]
+
+[dependencies]
+num-bigint = "0.4"
+num-integer = "0.1"
+num-traits = "0.2"
+libc = "0.2"
+rug = { version = "1.28", default-features = false, features = ["integer", "std"], optional = true }
+gmp-mpfr-sys = { version = "1.6", default-features = false, features = ["use-system-libs"], optional = true }
+
+[build-dependencies]
+cc = { version = "1", optional = true }
+
+[features]
+# Valgrind memcheck as a constant-time checker (ctgrind method): secret
+# inputs are marked undefined; VALGRIND_INC=<valgrind include dir>
+ctgrind = ["dep:cc"]
+# Negative control: the first, too-weak value barrier (compiles to a branch)
+weak-barrier = []
+# Secondary comparison only: old empirical count, no exact cleanup
+empirical = []
+# Exact baselines on GMP (needs a system libgmp; see README)
+gmp = ["dep:rug", "dep:gmp-mpfr-sys"]
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "fat"
+debug = 1
