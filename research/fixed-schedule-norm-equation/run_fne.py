@@ -242,15 +242,17 @@ def job_pS(args):
         Is, _ = keygen(name, kid, p, SEC)
         q, rng = challenge(name, e, kid, 0, p)
         S = prepare_small(intersect_coprime(Is, random_prime_ideal(q, p, rng)), p)
-        tot = m4 = cv = 0
+        tot = m4 = cv = gen_dr = gen_ct = 0
         for t in range(R):
             c = Ctr()
             qlapoti(S, p, e - 2, tape(b'pS', name, j, t), c, policy='fresh')
             tot += c.passes
             m4 += c.m4pos
             cv += c.cvp
+            gen_dr += c.gen_draws
+            gen_ct += c.gens
         row = dict(set=name, j=j, R=R, passes=tot, p_hat=R / tot, m4pos_share=m4 / max(cv, 1),
-                   N_bits=int(Is.norm).bit_length())
+                   gen_valid=gen_ct / gen_dr, N_bits=int(Is.norm).bit_length())
         row.update(small_bits_info(S))
         rows.append(row)
     write(path, rows)

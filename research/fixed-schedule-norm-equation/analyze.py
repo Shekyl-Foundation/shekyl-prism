@@ -76,15 +76,15 @@ def main():
     md = []
     for name in SETS:
         keys = load(name, 'keys')
-        if not keys:
-            continue
-        _, e, f = SET_MAP[name]
-        p = prime_of(e, f)
-        L = p.bit_length()
         fk = load(name, 'fixkey')
         rn = load(name, 'rnd')
         fs = load(name, 'fixS')
         eq = load(name, 'equiv')
+        if not keys or not fk or not rn:
+            continue
+        _, e, f = SET_MAP[name]
+        p = prime_of(e, f)
+        L = p.bit_length()
         o = dict(set=name, L=L, n_sig=len(keys), n_keys=len(set(r['kid'] for r in keys)))
         Nb = col(keys, 'N_bits')
         nb = col(keys, 'n_bits')
