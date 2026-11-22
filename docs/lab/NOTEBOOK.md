@@ -917,7 +917,15 @@ Anchor (Ran, build VM, at the head of the source changes, the third run there; t
 
 Findings against the specification, fixed in this part: 1.4.1's first case (above); 1.4.3 did not say how a half is taken (now it does); 1.4.6 did not say what test "the next prime" uses (now it does); 1.8's four unknowns are answered; and every "Executed, not committed" is "Ran".
 
-Not done. The re-extraction of `sqisign-rs`'s values is by hand (ledger O27's remaining line). No proof of primality for the five secret norms (O19). The opt-level 1 fault is reduced to this repository's types and not to a program with no dependency.
+Not done. The re-extraction of `sqisign-rs`'s values is by hand (ledger O27's remaining line). No proof of primality for the five secret norms (O19).
 
 Who. Rick ruled R1 and R2 and set the part. The reviewer wrote the brief, with the tool, the placement, the shape and the wargame. The coding agent (Claude Code, `claude-fable-5-2`) wrote the script, the reader, the test and these records, found the unreachable case and the opt-level 1 fault, and ran everything.
+
+Addition, 2026-11-22, after the review of PR #40 at `59387be`.
+
+- **The compiler fault is known and fixed upstream** (Read: the issue, the pull request and the test on GitHub, 2026-11-22). rust-lang/rust issue 155241, opened 2026-04-13 against rustc 1.94.0, labelled a miscompilation and a regression from stable to stable; first wrong result in stable 1.77.0 by the reporter's bisection. Closed 2026-04-22 by pull request 155343, milestone 1.97.0, no backport label. Its description, an argument passed indirectly through a hidden pointer that must be copied first, is what the reproduction above shows. Its regression test has a closure case and a plain function called twice with the same value, so the engine test's rewrite to functions avoids the form that failed and does not avoid the fault's class. The reviewer ran the dependency-free program on rustc 1.97.0: it passes at every `opt-level` and in release. Not run by anyone: the reproduction on 1.96 and on 1.97 side by side, which is what would show the two are one fault.
+- **The entry's "Not done" said the fault was not reduced to a program with no dependency.** It was, in the same entry; the sentence was left from an earlier draft and is removed.
+- **Acceptance 4 of the brief is amended by the reviewer** to "every branch a search can reach, and the unreachable one called directly", which is what the self-test does. The derivation of the unreachable case (ledger C22) was followed step by step in review and holds. The dead lines 23 and 24 of Algorithm B.1 join the list of remarks for the SQIsign authors.
+- **Reviewer's checks, on rustc 1.97.0**: the script's self-test and check pass (26 s); `--extract-sqisign-rs` on the reviewer's own checkout at `7a4a01b` gives the committed file, which is the by-hand step of ledger O27 done a second time; sympy names the five secret norms; the ten new Rust tests pass.
+- **For Rick (R4)**: no upstream report; the test profile stays at `opt-level = 1`; a toolchain part before signer stage 2. Ledger O31 has the recommendation.
 
