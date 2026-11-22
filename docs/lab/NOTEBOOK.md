@@ -927,5 +927,5 @@ Addition, 2026-11-22, after the review of PR #40 at `59387be`.
 - **The entry's "Not done" said the fault was not reduced to a program with no dependency.** It was, in the same entry; the sentence was left from an earlier draft and is removed.
 - **Acceptance 4 of the brief is amended by the reviewer** to "every branch a search can reach, and the unreachable one called directly", which is what the self-test does. The derivation of the unreachable case (ledger C22) was followed step by step in review and holds. The dead lines 23 and 24 of Algorithm B.1 join the list of remarks for the SQIsign authors.
 - **Reviewer's checks, on rustc 1.97.0**: the script's self-test and check pass (26 s); `--extract-sqisign-rs` on the reviewer's own checkout at `7a4a01b` gives the committed file, which is the by-hand step of ledger O27 done a second time; sympy names the five secret norms; the ten new Rust tests pass.
-- **For Rick (R4)**: no upstream report; the test profile stays at `opt-level = 1`; a toolchain part before signer stage 2. Ledger O31 has the recommendation.
+- **R4, ruled by Rick 2026-11-22 as the reviewer recommended**: no upstream report; the test profile stays at `opt-level = 1`; a toolchain part before signer stage 2. Ledger O31 and the rulings list have it.
 
