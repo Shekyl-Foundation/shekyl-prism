@@ -264,3 +264,62 @@ pub fn div_u128_64q(a: u128, d: u128) -> u64 {
     }
     q
 }
+
+/// Exact floor((2 h + nu) / (2 nu)), returning a full-width two's-
+/// complement quotient. Fixed N*64-bit restoring division. Used only for
+/// the one final cleanup step, unconditionally, never an early exit.
+#[inline(never)]
+pub fn exact_round<const N: usize>(h: &[u64; N], nu: &[u64; N]) -> [u64; N] {
+    // (2h + nu)/(2nu) = floor((h + floor(nu/2)) / nu), except that nu odd
+    // rounds ties the same way too: floor(h/nu + 1/2), integer h.
+    let mut a = *h;
+    let mut half = [0u64; N];
+    for i in 0..N {
+        let hi = if i + 1 < N { nu[i + 1] } else { 0 };
+        half[i] = (nu[i] >> 1) | (hi << 63);
+    }
+    add_assign(&mut a, &half);
+    let sg = sign_mask(&a);
+    cond_neg(&mut a, sg);
+    // floor negative division: |a| += nu - 1 then negate the quotient
+    let mut add = *nu;
+    let mut one = [0u64; N]; one[0] = 1;
+    sub_assign(&mut add, &one);
+    for i in 0..N { add[i] &= sg; }
+    add_assign(&mut a, &add);
+    let mut r = [0u64; N];
+    let mut q = [0u64; N];
+    for pos in (0..N*64).rev() {
+        let bit = (a[pos / 64] >> (pos % 64)) & 1;
+        let mut c = bit;
+        for i in 0..N {
+            let nc = r[i] >> 63;
+            r[i] = (r[i] << 1) | c;
+            c = nc;
+        }
+        let mut sub = r;
+        let borrow = sub_assign(&mut sub, nu);
+        let ge = 1 ^ borrow;
+        r = select_arr(mask(ge), &sub, &r);
+        q[pos / 64] |= ge << (pos % 64);
+    }
+    cond_neg(&mut q, sg);
+    q
+}
+
+/// Low C limbs of the signed product of a C-limb coordinate by an N-limb
+/// quotient, modulo 2^(64C). The final cleanup's full-width quotient is
+/// used, so even a very large coefficient is not silently truncated.
+#[inline(always)]
+pub fn mul_low<const C: usize, const N: usize>(a: &[u64; C], b: &[u64; N]) -> [u64; C] {
+    let mut r = [0u64; C];
+    for i in 0..C {
+        let mut c = 0u128;
+        for j in 0..C-i {
+            let t = r[i+j] as u128 + a[i] as u128 * b[j] as u128 + c;
+            r[i+j] = t as u64;
+            c = t >> 64;
+        }
+    }
+    r
+}

@@ -93,6 +93,9 @@ fn check_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo) -> b
     let mut rows = load(&format!("vectors/{}_check.txt", si.name));
     let pool = load(&format!("vectors/{}_pool.txt", si.name));
     rows.extend(pool.into_iter().take(501));
+    let adv = load(&format!("vectors/{}_adv.txt", si.name));
+    let n_adv = adv.len();
+    rows.extend(adv);
     let (mut n, mut ok_p64, mut ok_exact, mut ok_lam, mut ok_lll, mut ok_gauss, mut ok_q) =
         (0, 0, 0, 0, 0, 0, 0);
     let (mut n_lam, mut n_lll_short) = (0, 0);
@@ -108,8 +111,10 @@ fn check_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo) -> b
         // u is in the ideal: nrd divisible by T, nonzero, and equals the CT norm
         let in_ideal = nrd_u == nu_b && (&nu_b % &r.t) == BigInt::from(0) && nu_b > BigInt::from(0);
         n += 1;
-        ok_q += in_ideal as usize;
-        ok_p64 += (nu_b == r.nu_p64) as usize;
+        // corner-case adversarial lattices are not ideals of norm T: n/a there
+        ok_q += (in_ideal || r.nu_p64 == BigInt::from(0)) as usize;
+        // adversarial rows carry no p64 reference (0): compare with lambda_1 instead
+        ok_p64 += (nu_b == r.nu_p64 || (r.nu_p64 == BigInt::from(0) && nu_b == r.lam1)) as usize;
         ok_exact += (nu_b == r.nu_exact) as usize;
         let (g_nu, _) = exact::gauss(&r.t, &r.x, &r.y, &p);
         ok_gauss += (g_nu == nu_b) as usize;
@@ -129,7 +134,11 @@ fn check_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo) -> b
             }
         }
         maxbits_t = maxbits_t.max(r.t.bits());
+        if r.nu_p64 == BigInt::from(0) {
+            println!("  {} {}: exact steps {} schedule {} ct==lambda1 {}", si.name, r.kind, r.nb, si.steps, nu_b == r.lam1);
+        }
     }
+    println!("  {} adversarial rows: {}", si.name, n_adv);
     println!(
         "{} rows={} ct==py_p64 {}/{} ct==py_exact {}/{} ct==lambda1 {}/{} ct==rust_exact_gauss {}/{} \
          ct_in_ideal {}/{} rust_lll_b1==lambda1 {}/{} (lll b1 > lambda1: {}) maxbits(T)={} bound={} gmp_baselines_agree={}/{}",
@@ -228,14 +237,15 @@ fn dudect_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo, n: 
     let grams: Vec<_> = pool.iter().map(|r| exact::gram(&r.t, &r.x, &r.y, &p)).collect();
     let m = pool.len();
     // class sequence from a fixed xorshift (public, reproducible)
-    let mut s: u64 = 0x9e37_79b9_7f4a_7c15;
+    let mut s: u64 = std::env::var("RLC_SEED").ok().and_then(|v| v.parse().ok()).unwrap_or(0x9e37_79b9_7f4a_7c15);
     let mut next = || {
         s ^= s << 13;
         s ^= s >> 7;
         s ^= s << 17;
         s
     };
-    let path = format!("results/raw/dudect_{}_{}.csv", si.name, imp);
+    let tag = std::env::var("RLC_TAG").unwrap_or_default();
+    let path = format!("results/raw/dudect_{}_{}{}.csv", si.name, imp, tag);
     std::fs::create_dir_all("results/raw").unwrap();
     let mut out = std::io::BufWriter::new(std::fs::File::create(&path).unwrap());
     for k in 0..n + 50 {
@@ -326,6 +336,42 @@ fn ctgrind_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo, co
     println!("{} ctgrind: {} runs done", si.name, count);
 }
 
+// ------------------------------------------------------------- parts
+fn parts_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo, reps: usize) {
+    use rust_lagrange_ct::zi::parts::*;
+    let p = si.p();
+    let pl: [u64; PL] = to_limbs(&p);
+    let r = &load(&format!("vectors/{}_pool.txt", si.name))[1];
+    let inp = prep::<C>(si, r);
+    let mut one = [0u64; C];
+    one[0] = 1;
+    let u: zi::Vec4<C> = [inp.t, [0; C], [0; C], [0; C]];
+    let mut v: zi::Vec4<C> = [inp.x, inp.y, one, [0; C]];
+    let nu: [u64; N] = nrd_part::<C, N, PL>(&u, &pl);
+    let med = |f: &mut dyn FnMut()| {
+        let mut c = vec![];
+        for _ in 0..reps {
+            let a = rdtsc();
+            f();
+            c.push(rdtsc() - a);
+        }
+        c.sort_unstable();
+        c[c.len() / 2]
+    };
+    let h = med(&mut || { std::hint::black_box(herm_part::<C, N, PL>(&v, &u, &pl)); });
+    let (h0, _) = herm_part::<C, N, PL>(&v, &u, &pl);
+    let q = med(&mut || { std::hint::black_box(quotient_part::<N>(&h0, &nu)); });
+    let n = med(&mut || { std::hint::black_box(nrd_part::<C, N, PL>(&v, &pl)); });
+    let up = med(&mut || { update_part::<C>(&mut v, &u, std::hint::black_box(3), std::hint::black_box(-2)); std::hint::black_box(&v); });
+    let full = h + 2 * q + n + up;
+    println!(
+        "{},herm={},quotient={} (x2),nrd={},update={},sum_per_step={},herm%={:.0},quot%={:.0},nrd%={:.0},upd%={:.0}",
+        si.name, h, q, n, up, full,
+        100.0 * h as f64 / full as f64, 200.0 * q as f64 / full as f64,
+        100.0 * n as f64 / full as f64, 100.0 * up as f64 / full as f64
+    );
+}
+
 fn main() {
     let a: Vec<String> = std::env::args().collect();
     let cpu = std::env::var("RLC_CPU").ok().and_then(|s| s.parse().ok());
@@ -356,6 +402,14 @@ fn main() {
             let si = info(&a[2]);
             let n: usize = a[3].parse().unwrap();
             with_set!(si.name, dudect_set, si, n, &a[4]);
+        }
+        Some("parts") => {
+            if let Some(c) = cpu {
+                pin(c);
+            }
+            for si in SETS.iter() {
+                with_set!(si.name, parts_set, si, 20000);
+            }
         }
         #[cfg(feature = "ctgrind")]
         Some("ctgrind") => {

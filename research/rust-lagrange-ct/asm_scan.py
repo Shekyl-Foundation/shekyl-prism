@@ -73,7 +73,10 @@ for start, size in funcs:
                 flagsrc['other'] += 1
                 if VERBOSE:
                     review.append(ins[max(0, k - 5):k + 1])
-    print(f'reduce @ {start:#x} size {size} bytes: ' + ', '.join(f'{k}={v}' for k, v in sorted(c.items())))
+    sizes = [int(k.split('n=$')[1], 16) for k in calls if 'n=$' in k]
+    nl = max(sizes) // 16 if sizes else 0
+    label = {22: 'p248', 28: 'p324', 32: 'p376', 42: 'p500', 54: 'p664'}.get(nl, '?')
+    print(f'reduce::<N={nl}> ({label}) @ {start:#x} size {size} bytes: ' + ', '.join(f'{k}={v}' for k, v in sorted(c.items())))
     print('   jcc flag sources: ' + ', '.join(f'{k}={v}' for k, v in flagsrc.most_common()))
     print('   calls: ' + ', '.join(f'{k} x{v}' for k, v in calls.most_common()))
     for r in review:

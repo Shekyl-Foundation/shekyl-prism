@@ -27,6 +27,8 @@ cc = { version = "1", optional = true }
 ctgrind = ["dep:cc"]
 # Negative control: the first, too-weak value barrier (compiles to a branch)
 weak-barrier = []
+# Secondary comparison only: old empirical count, no exact cleanup
+empirical = []
 # Exact baselines on GMP (needs a system libgmp; see README)
 gmp = ["dep:rug", "dep:gmp-mpfr-sys"]
 

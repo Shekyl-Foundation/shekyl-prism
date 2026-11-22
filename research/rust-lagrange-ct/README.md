@@ -3,9 +3,14 @@
 Research only. PRISM is the scheme of ePrint 2026/443 (Basso, Borin,
 Castryck, Corte-Real Santos, Invernizzi, Leroux, Maino, Vercauteren,
 Wesolowski); shekyl-prism implements it. This directory does not change
-the signer, the signature format, or any parameter set, and the crate
-here is standalone: it is not a member of the workspace and is not built
-by CI.
+the signer, the signature format, or any parameter set. The crate here is
+standalone: an empty `[workspace]` table keeps it out of the repository
+workspace, so it is not built, linted or tested by CI. It uses `unsafe`
+(rdtsc, CPU pinning, an inline-asm value barrier, Valgrind client
+requests), which the workspace forbids; that is another reason it stays
+out.
+
+Results are in [REPORT.md](REPORT.md).
 
 ## Question
 
@@ -16,20 +21,32 @@ P248/P324/P376/P500/P664), finds λ₁ on every sample at about 0.28× exact
 LLL's multiply-and-divide count. Step counts are not cycles. Does that
 hold up as real constant-time code?
 
-## Plan
+## Files
 
-1. A standalone Rust crate with a fixed-limb signed integer type sized
-   per set from B (no data-dependent branches, mask-based conditional
-   swaps, constant-time comparisons, fixed-iteration division, full
-   schedule always run), plus a plain variable-time exact reduction
-   (exact LLL on the same lattice, arbitrary precision) for comparison.
-2. Cross-check against the Python model on shared test vectors
-   (λ₁ equality, and the reduced vector itself).
-3. Measure cycles per set for both (rdtsc, many repetitions, pinned core
-   where possible).
-4. dudect-style fixed-vs-random Welch t-test over tens of thousands of
-   measurements (threshold |t| = 4.5).
-5. Read the generated assembly of the hot loop for branches or
-   divisions on secret data.
+| file | what |
+|---|---|
+| `src/ct.rs` | Fixed-limb two's-complement integers and constant-time primitives: mask selects behind an inline-asm value barrier, borrow-chain comparisons, branch-free bit length, barrel shifter, fixed-iteration restoring division (no `div`). |
+| `src/zi.rs` | The fixed-schedule Z[i]-Lagrange reduction (`reduce::<C, N, PL>`), with fsr.py's 64-bit bounded-precision quotient. |
+| `src/sets.rs` | Per-set widths from public data: C = ⌈(bits(q)+B+3)/64⌉ coordinate limbs, N = 2C norm limbs. |
+| `src/exact.rs`, `src/exact_gmp.rs` | Variable-time baselines: Cohen 2.6.7 exact LLL (δ = 99/100) and exact early-exit Z[i]-Lagrange, on num-bigint and on GMP (rug). |
+| `src/bin/rlc.rs` | Driver: `check`, `bench`, `dudect`, `ctgrind`. |
+| `gen_vectors.py` | Test vectors from the Python model (fsr.py/hdl.py unchanged): λ₁, the model's exact and 64-bit-quotient outputs. |
+| `asm_scan.py` | Static scan of the compiled reduction. |
+| `ctgrind/` | Valgrind memcheck as a constant-time checker (secrets marked undefined), with positive controls. |
+| `analyze.py` | Tables and `results/summary.json`. |
+| `results/` | `check.txt`, `bench.csv`, `tables.md`, `asm_scan.txt`, `ctgrind.txt`, `summary.json`, `dudect/*.csv.gz`. |
+
+## Running
+
+```sh
+PY=/workspace/mamba/envs/sage/bin/python
+FSR_DIR=../fixed-schedule-reduction JOBS=2 $PY gen_vectors.py 500 2000   # ~5 min, deterministic
+cargo build --release -j2                                  # check/bench/dudect without GMP
+./build_gmp.sh                                             # with the GMP baselines
+./target/gmp/release/rlc check                             # cross-check, all sets
+RLC_CPU=6 ./run_measure.sh                                 # bench + dudect, pinned
+./ctgrind/run.sh                                           # memcheck constant-time check
+$PY analyze.py > results/tables.md
+```
 
 Sets: P248, P324, P376, P500, P664 only.

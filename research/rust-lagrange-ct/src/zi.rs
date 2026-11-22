@@ -128,6 +128,33 @@ fn step<const C: usize, const N: usize, const PL: usize>(
     cswap(m, nu, nv);
 }
 
+/// One exact cleanup step, always executed (fixed-iteration full-width
+/// restoring divisions for both Gaussian coefficients). This is needed
+/// for the finite-precision half-integer ping-pong found by the
+/// lagrange-tour-bound study, not an input-dependent fallback.
+#[inline(always)]
+fn exact_cleanup<const C: usize, const N: usize, const PL: usize>(
+    u: &mut Vec4<C>, v: &mut Vec4<C>, nu: &mut [u64; N], nv: &mut [u64; N], p: &[u64; PL],
+) {
+    let (h0,h1) = herm::<C,N,PL>(v,u,p);
+    let m0 = exact_round(&h0, nu);
+    let m1 = exact_round(&h1, nu);
+    let mut a0 = mul_low(&u[0], &m0);
+    sub_assign(&mut a0, &mul_low(&u[1], &m1));
+    let mut a1 = mul_low(&u[1], &m0);
+    add_assign(&mut a1, &mul_low(&u[0], &m1));
+    let mut a2 = mul_low(&u[2], &m0);
+    sub_assign(&mut a2, &mul_low(&u[3], &m1));
+    let mut a3 = mul_low(&u[3], &m0);
+    add_assign(&mut a3, &mul_low(&u[2], &m1));
+    sub_assign(&mut v[0], &a0); sub_assign(&mut v[1], &a1);
+    sub_assign(&mut v[2], &a2); sub_assign(&mut v[3], &a3);
+    *nv = nrd::<C,N,PL>(v,p);
+    let m = mask(lt_unsigned(nv,nu));
+    for r in 0..4 { cswap(m,&mut u[r],&mut v[r]); }
+    cswap(m,nu,nv);
+}
+
 /// The full fixed schedule: initial conditional swap, then `steps` steps
 /// (a public count, from the parameter set). Returns (u, nrd(u)).
 #[inline(never)]
@@ -152,5 +179,42 @@ pub fn reduce<const C: usize, const N: usize, const PL: usize>(
     for _ in 0..steps {
         step::<C, N, PL>(&mut u, &mut v, &mut nu, &mut nv, p);
     }
+    if cfg!(not(feature = "empirical")) {
+        exact_cleanup::<C,N,PL>(&mut u,&mut v,&mut nu,&mut nv,p);
+    }
     (u, nu)
+}
+
+/// Cost breakdown hooks (benchmark only): each part of one step, not inlined.
+pub mod parts {
+    use super::*;
+    #[inline(never)]
+    pub fn herm_part<const C: usize, const N: usize, const PL: usize>(
+        v: &Vec4<C>, u: &Vec4<C>, p: &[u64; PL],
+    ) -> ([u64; N], [u64; N]) {
+        herm::<C, N, PL>(v, u, p)
+    }
+    #[inline(never)]
+    pub fn quotient_part<const N: usize>(h: &[u64; N], nu: &[u64; N]) -> i64 {
+        quotient(h, nu)
+    }
+    #[inline(never)]
+    pub fn nrd_part<const C: usize, const N: usize, const PL: usize>(v: &Vec4<C>, p: &[u64; PL]) -> [u64; N] {
+        nrd::<C, N, PL>(v, p)
+    }
+    #[inline(never)]
+    pub fn update_part<const C: usize>(v: &mut Vec4<C>, u: &Vec4<C>, m0: i64, m1: i64) {
+        let mut a0 = mul_scalar(&u[0], m0);
+        sub_assign(&mut a0, &mul_scalar(&u[1], m1));
+        let mut a1 = mul_scalar(&u[1], m0);
+        add_assign(&mut a1, &mul_scalar(&u[0], m1));
+        let mut a2 = mul_scalar(&u[2], m0);
+        sub_assign(&mut a2, &mul_scalar(&u[3], m1));
+        let mut a3 = mul_scalar(&u[3], m0);
+        add_assign(&mut a3, &mul_scalar(&u[2], m1));
+        sub_assign(&mut v[0], &a0);
+        sub_assign(&mut v[1], &a1);
+        sub_assign(&mut v[2], &a2);
+        sub_assign(&mut v[3], &a3);
+    }
 }

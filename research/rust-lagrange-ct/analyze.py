@@ -77,7 +77,7 @@ def main():
     print('| Set | impl | measurements | t raw | max t cropped | t 2nd order | max abs t | r(cycles, bits N) random class | verdict |')
     print('|---|---|---|---|---|---|---|---|---|')
     for s in SETS:
-        for imp in ('ct', 'gauss', 'lll'):
+        for imp in ('ct', 'ct_rep2', 'gauss', 'lll_gmp'):
             p = os.path.join(HERE, 'results', 'raw', f'dudect_{s}_{imp}.csv')
             if not os.path.exists(p):
                 continue

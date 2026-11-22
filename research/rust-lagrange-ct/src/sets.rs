@@ -22,11 +22,11 @@ pub struct SetInfo {
 }
 
 pub const SETS: [SetInfo; 5] = [
-    SetInfo { name: "p248", e: 248, f: 5, steps: 189, c: 11, n: 22, pl: 4 },
-    SetInfo { name: "p324", e: 324, f: 3, steps: 239, c: 14, n: 28, pl: 6 },
-    SetInfo { name: "p376", e: 376, f: 65, steps: 283, c: 16, n: 32, pl: 6 },
-    SetInfo { name: "p500", e: 500, f: 27, steps: 359, c: 21, n: 42, pl: 8 },
-    SetInfo { name: "p664", e: 664, f: 17, steps: 465, c: 27, n: 54, pl: 11 },
+    SetInfo { name: "p248", e: 248, f: 5, steps: if cfg!(feature="empirical") {189} else {301}, c: 11, n: 22, pl: 4 },
+    SetInfo { name: "p324", e: 324, f: 3, steps: if cfg!(feature="empirical") {239} else {387}, c: 14, n: 28, pl: 6 },
+    SetInfo { name: "p376", e: 376, f: 65, steps: if cfg!(feature="empirical") {283} else {446}, c: 16, n: 32, pl: 6 },
+    SetInfo { name: "p500", e: 500, f: 27, steps: if cfg!(feature="empirical") {359} else {587}, c: 21, n: 42, pl: 8 },
+    SetInfo { name: "p664", e: 664, f: 17, steps: if cfg!(feature="empirical") {465} else {773}, c: 27, n: 54, pl: 11 },
 ];
 
 impl SetInfo {
