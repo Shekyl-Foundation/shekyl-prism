@@ -244,8 +244,12 @@ fn dudect_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo, n: 
         let i = if class == 0 { 0 } else { 1 + ((r >> 1) as usize % (m - 1)) };
         let cyc = match imp {
             "ct" => {
+                // copy the chosen input to the same stack buffer for both
+                // classes, so the timed call reads from the same addresses
+                let (t, x, y) = (inps[i].t, inps[i].x, inps[i].y);
+                let (t, x, y) = (std::hint::black_box(t), std::hint::black_box(x), std::hint::black_box(y));
                 let a = rdtsc();
-                let o = zi::reduce::<C, N, PL>(&inps[i].t, &inps[i].x, &inps[i].y, &pl, si.steps);
+                let o = zi::reduce::<C, N, PL>(&t, &x, &y, &pl, si.steps);
                 let b = rdtsc();
                 std::hint::black_box(o);
                 b - a
