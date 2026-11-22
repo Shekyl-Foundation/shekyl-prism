@@ -1,10 +1,14 @@
 # research/latticeprism-seeding
 
-**This is a research experiment for Shekyl PRISM, Rick Dawson's isogeny
-signature scheme. Its code, data and conclusions, including negative
-ones, are public by design.** It is not part of any crate, CI does not
-build or test it, and it makes no constant-time or security claim.
-Findings are in [REPORT_SEEDING.md](REPORT_SEEDING.md).
+**This is a research experiment for Shekyl PRISM. PRISM is the signature
+scheme of ePrint 2026/443 (Andrea Basso, Giacomo Borin, Wouter Castryck,
+Maria Corte-Real Santos, Riccardo Invernizzi, Antonin Leroux, Luciano
+Maino, Frederik Vercauteren, and Benjamin Wesolowski; the paper is at
+`docs/papers/2026-443_PRISM_with _salt.pdf`). Shekyl's `shekyl-prism` is
+an implementation of it. The experiment's code, data and conclusions,
+including negative ones, are public by design.** It is not part of any
+crate, CI does not build or test it, and it makes no constant-time or
+security claim. Findings are in [REPORT_SEEDING.md](REPORT_SEEDING.md).
 
 ## Purpose
 
@@ -65,4 +69,36 @@ micromamba run -n sage python analyze_seeding.py
 Same list as `../latticeprism-4d/README.md`: ePrint 2023/807 (the 2-D
 control), TCHES 2025 constant-time dimension-4 LLL, ePrint 2025/2192
 (constant-time quaternion arithmetic), and ePrint 2026/1169
-(randomizable keys).
+(randomizable keys). **ePrint 2023/807 was read from indexed excerpts
+because the PDF was blocked (Cloudflare) from the box. Algorithm numbers,
+section citations, and the model of Alg. 10 must be checked against the
+paper itself before anything here is cited.**
+
+## Review notes (Rick, 2026-11-21)
+
+These experiments are worth keeping as a measuring tool for the hardening
+stage, not as the design of a LatticePrism type now.
+
+- The harness leaves out PRISM's 32- to 96-byte salt, which is carried in
+  the signature. Our challenge is computed from the key, that salt, and
+  the message, so it is not known before signing, contrary to the report
+  baselines that form the challenge from the public key and message alone.
+- The "commitment" construction is essentially that existing salt, chosen
+  from the secret key and the message. Shekyl already has that property
+  with no new signature bytes.
+- The challenge is public anyway. Timing that depends on it leaks nothing
+  secret. What needs constant time is the work on the secret ideal and the
+  norm equations, and those are modelled only roughly here.
+- The model assumes a retry-heavy integer-representation step. Stage 1a
+  found that our signing path has no such step.
+- Three of the constructions here (COM, EPH, REV) change the signature
+  format and how the challenge is hashed. That is a different scheme, with
+  no security proof, and the replay test against the C reference would no
+  longer apply. None of that should be adopted without a design round.
+
+Intended later use: from stage 2 on, point the harness at the
+secret-touching steps listed in each specification section, using our
+constants and real secret ideals. In stage 7, use it as the first filter:
+any secret-touching step whose count varies needs a fixed schedule, an
+argument that its count cannot depend on the key, or blinding. Then port
+the instrumentation to the Rust code, because step counts are not cycles.

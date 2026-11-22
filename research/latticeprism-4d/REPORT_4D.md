@@ -11,7 +11,9 @@ Does embedding PRISM targets in a **4-D** lattice whose basis comes from a
 **hash expansion** (SHAKE-256 or BLAKE3 XOF of seed, target and a domain tag)
 break the target-to-trace dependence seen in 2-D? There, the 2023/807
 randomized-basis variant's trace was 85–91% explained by the target.
-If it does break, does some other invariant survive?
+If it does break, does some other invariant survive? (ePrint 2023/807 was
+read from indexed excerpts because the PDF was blocked from the box; it
+must be checked against the paper itself before anything here is cited.)
 
 ## 2. Setup
 
@@ -20,8 +22,8 @@ If it does break, does some other invariant survive?
 `docs/PARAMETER_SETS.md`, with p = f·2^e − 1: P248 (5·2^248 − 1), P324
 (3·2^324 − 1), P376 (65·2^376 − 1), P500 (27·2^500 − 1) and P664
 (17·2^664 − 1). The challenge degree is q = 2^(2e−5) − s² with s odd and
-e − 4 free bits (`docs/VERIFIER_SPEC.md`). Rick's tags P363 and P384 are not
-repository sets and were not run.
+e − 4 free bits (`docs/VERIFIER_SPEC.md`). P363 and P384 are **not** Shekyl
+parameter sets (the repository sets are the five above) and were not run.
 
 **Target streams (600 per set per stream):**
 - **T1** consists of prime challenge degrees q of 491, 643, 747, 995 and

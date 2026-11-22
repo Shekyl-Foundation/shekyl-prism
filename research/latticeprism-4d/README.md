@@ -1,11 +1,16 @@
 # research/latticeprism-4d
 
-**This is a research experiment for Shekyl PRISM, Rick Dawson's isogeny
-signature scheme. Its code, data and conclusions, including negative ones,
-are public by design, so that anyone working on constant-time isogeny or
-lattice techniques has the same information we do.** It is not part of any
-crate, CI does not build or test it, and it makes no constant-time or
-security claim. Findings are in [REPORT_4D.md](REPORT_4D.md).
+**This is a research experiment for Shekyl PRISM. PRISM is the signature
+scheme of ePrint 2026/443 (Andrea Basso, Giacomo Borin, Wouter Castryck,
+Maria Corte-Real Santos, Riccardo Invernizzi, Antonin Leroux, Luciano
+Maino, Frederik Vercauteren, and Benjamin Wesolowski; the paper is at
+`docs/papers/2026-443_PRISM_with _salt.pdf`). Shekyl's `shekyl-prism` is
+an implementation of it. The experiment's code, data and conclusions,
+including negative ones, are public by design, so that anyone working on
+constant-time isogeny or lattice techniques has the same information we
+do.** It is not part of any crate, CI does not build or test it, and it
+makes no constant-time or security claim. Findings are in
+[REPORT_4D.md](REPORT_4D.md).
 
 ## Purpose
 
@@ -13,10 +18,10 @@ This tests the design under consideration for LatticePrism, a proposed
 Rust type that maps PRISM targets (primes) to lattice coordinates for
 constant-time prime derivation:
 
-- **Prime-set tags.** The design names P363, P384, P500 and P664. This
-  repository defines P248, P324, P376, P500 and P664 (`prism-field`), and
-  those five are what was run. P363 and P384 are not repository parameter
-  sets.
+- **Prime-set tags.** Early LatticePrism notes named P363, P384, P500 and
+  P664. P363 and P384 are **not** Shekyl parameter sets. This repository
+  defines P248, P324, P376, P500 and P664 (`prism-field`), and those five
+  are what was run.
 - **Four-dimensional embedding** with coordinates from a hash expansion
   (SHAKE-256 or BLAKE3 XOF of seed, target and domain tag), instead of a
   pure deterministic map.
@@ -51,7 +56,10 @@ micromamba run -n sage sage crosscheck_4d.sage
 
 - Jacquemin, Mukherjee, Kutas, Sinha Roy, *Ready to SQI? Safety First!*,
   ePrint 2023/807 (<https://eprint.iacr.org/2023/807>). Its Cornacchia
-  leak and randomized-basis variant are the 2-D control.
+  leak and randomized-basis variant are the 2-D control. **This paper was
+  read from indexed excerpts because the PDF was blocked (Cloudflare) from
+  the box. Algorithm numbers, section citations, and the model of Alg. 10
+  must be checked against the paper itself before anything here is cited.**
 - Hanyecz, Karenin, Kirshanova, Kutas, Schaeffler, *Constant time lattice
   reduction in dimension 4 with application to SQIsign*, TCHES 2025. It
   gives a constant-time dimension-4 LLL with shortest-vector guarantees.
@@ -68,3 +76,32 @@ micromamba run -n sage sage crosscheck_4d.sage
 The follow-up that compares seed constructions for H2 (secret
 deterministic seeds, commitments, ephemeral keys, and a reverse map) is
 in [`../latticeprism-seeding/`](../latticeprism-seeding/).
+
+## Review notes (Rick, 2026-11-21)
+
+These experiments are worth keeping as a measuring tool for the hardening
+stage, not as the design of a LatticePrism type now.
+
+- The harness leaves out PRISM's 32- to 96-byte salt, which is carried in
+  the signature. Our challenge is computed from the key, that salt, and
+  the message, so it is not known before signing, contrary to the report
+  baselines that form the challenge from the public key and message alone.
+- The "commitment" construction is essentially that existing salt, chosen
+  from the secret key and the message. Shekyl already has that property
+  with no new signature bytes.
+- The challenge is public anyway. Timing that depends on it leaks nothing
+  secret. What needs constant time is the work on the secret ideal and the
+  norm equations, and those are modelled only roughly here.
+- The model assumes a retry-heavy integer-representation step. Stage 1a
+  found that our signing path has no such step.
+- Three of the later seed constructions change the signature format and
+  how the challenge is hashed. That is a different scheme, with no
+  security proof, and the replay test against the C reference would no
+  longer apply. None of that should be adopted without a design round.
+
+Intended later use: from stage 2 on, point the harness at the
+secret-touching steps listed in each specification section, using our
+constants and real secret ideals. In stage 7, use it as the first filter:
+any secret-touching step whose count varies needs a fixed schedule, an
+argument that its count cannot depend on the key, or blinding. Then port
+the instrumentation to the Rust code, because step counts are not cycles.

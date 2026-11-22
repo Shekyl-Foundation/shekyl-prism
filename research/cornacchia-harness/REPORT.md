@@ -22,15 +22,18 @@ is (x, y) with x² + y² = M, and masks the starting basis with a random det-1
 matrix S. Our B follows Alg. 10 and §4.2.1. The paper does not fix the P_j
 entry size or the list length, so we chose 4-bit entries and 64 matrices. That
 keeps S's entries between 128 and 145 bits (measured mean about 140), matching
-the paper's "∼128 bits". The PDF itself was behind a Cloudflare check from the
-box, so Alg. 10 and §4.2.1 were read from indexed full-text excerpts of
-eprint.iacr.org/2023/807.pdf. The paper's first CT proposal (fixed-iteration
-constant-time half-GCD) is **not** implemented here.
+the paper's "∼128 bits". **The PDF itself was blocked by a Cloudflare check
+from the box, so Alg. 10 and §4.2.1 were read from indexed full-text
+excerpts of eprint.iacr.org/2023/807.pdf. Those excerpts must be checked
+against the paper itself before anything here is cited.** The paper's first
+CT proposal (fixed-iteration constant-time half-GCD) is **not** implemented
+here.
 
 **Parameter choices.** M is a uniformly random prime ≡ 1 (mod 4) of exactly 376,
-384, 500 or 664 bits. 376, 500 and 664 match the repo sets P376, P500 and P664;
-384 matches Rick's LatticePrism tag P384. P363 and P384 are not repo parameter
-sets yet, and P248/P324 were not run. We did not derive M from an actual PRISM
+384, 500 or 664 bits. 376, 500 and 664 match the Shekyl sets P376, P500 and
+P664. 384 is a bit length only: P363 and P384 are **not** Shekyl parameter
+sets (the repository sets are P248, P324, P376, P500 and P664). P248 and P324
+were not run in this 2-D harness. We did not derive M from an actual PRISM
 norm equation (p = c·2^e − 1). In SQIsign/PRISM the Cornacchia input is a
 cofactor of roughly that size, which the generator retries until it is prime,
 and the "random" stream below models that retry. d = 1 throughout, the norm form
@@ -153,9 +156,9 @@ integers". We see the weaker case here: it is not independent either.
 - Implement 2023/807's first variant (fixed-iteration CT half-GCD) and the
   TCHES 2025 CT dim-4 LLL step schedule; check that the trace has zero
   variance and measure the cost against B.
-- Feed real PRISM norm-equation cofactors (P376/P500/P664 from `prism-field`,
-  and a derived P363/P384 if those tags get parameter sets) instead of random
-  primes.
+- Feed real PRISM norm-equation cofactors from the Shekyl sets (P248, P324,
+  P376, P500 and P664 in `prism-field`) instead of random primes. P363 and
+  P384 are not Shekyl parameter sets.
 - Quantify how many bits of the secret ideal or key L(M, u) carries, for
   example by simulating the 2023/807 key-recovery with a CF-length oracle.
 - Try a mask applied on both sides (S·L·T) or a randomized-reduction order, to
