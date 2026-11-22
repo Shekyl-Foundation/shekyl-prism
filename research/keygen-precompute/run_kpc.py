@@ -308,7 +308,7 @@ def _nvar_worker(args):
                 row['exe_is_lam1'] = int(d_e[1] == lam1_ref)
 
                 # 4-D updown fixed schedule (BASE vs EXP_RED)
-                if mid < updown_limit_mid:
+                if kid < updown_limit_kid:
                     b1_b = d_b[1]
                     b1_e = d_e[1]
                     for utag, G_u, Tu, b1_t in [
