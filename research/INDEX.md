@@ -30,6 +30,8 @@ are not Shekyl parameter sets.
 
 | [`keygen-precompute/`](keygen-precompute/) | Which secret-only PRISM signing work can move to key generation, what does it save per signature vs. secret-key growth, and does remaining work still need a fixed schedule? | Code/spec audit of `shekyl-prism` and `PRISM_v2` (`87fad7d`); PARI-verified `EXP_HNF` (HNF + `E_vk` canonical basis) and `EXP_RED_O0` (`Z[i]`-Lagrange pre-reduced `{u_sec, v_sec}` with `O₀`-coordinate intersection mod `q`); 500 setup keys, 400 varied-`N` × 10 + 100 boundary-`N` × 100 keys/set, and 3,000-trace `dudect` t-tests across P248–P664, evaluated under both empirical maxima and `lagrange-tour-bound`'s certified `T_prov`. | Storing `{u_sec, v_sec}` (`+20–24 B` compact, or `+212–524 B` with `E_vk` canonical basis for verify-after-sign) eliminates `quat_lideal_create`, `4×8` HNF, and the `bits(N)` leak (`exact LLL` slope `+1.89..+2.24 → −0.09..+0.13`, `dudect |t| 12.7–27.3 → ≤1.20`). With a keygen balance guard (`nrd(v_sec) ≤ 2√p·N`, 100% observed pass rate), `T_prov` drops 18 steps (`301/387/446/587/773 → 283/369/428/569/755`), cutting setup+reduce 64-bit limb ops by **2.15%–14.59%** vs. `BASE_SPEC` (**95.2%–95.3%** vs. `PRISM_v2`) with `0.11–0.41` signature break-even. `quat_qlapoti` on `S = shortest_equivalent(I_sec·I_q)` and `theta_chain` stay per-message. Remaining work still needs a fixed schedule (`t = 0`). Changing `SECRETKEY_BYTES` needs a design round; `EXP_RED_O0` changes stage 5 byte-for-byte replay (`EXP_HNF` preserves replay with negligible signing savings). | `experiment/keygen-precompute` @ [`649a26c`](https://github.com/Shekyl-Foundation/shekyl-prism/commit/649a26cc12c30d90ff36975f7179682455c31315) |
 
+| [`secret-ideal-rerandomization/`](secret-ideal-rerandomization/) | Does drawing a fresh equivalent secret ideal `J = I · β̄ / N` per signature remove the `bits(N)` leak from 4-D reduction (and `S` leaks in `quat_qlapoti`), and is it worth adding on top of the certified fixed `Z[i]`-Lagrange schedule? | Keygen `Z[i]`-reduction (`{u, iu, v, iv}`) + per-signature sampling (`plain`, `norm`, `gauss` × `prime`/`odd`, 20k sigs/set), 900 paired products/set (`I∩I_q` vs `J·K_J`) with map-back verification, 1,000-trace fixed-key-at-`B` vs random-key `dudect` under exact LLL and certified `Z[i]`-Lagrange (`T_prov = 301/387/446/587/773`), plus a `quat_qlapoti` re-randomization panel (`O₀` model). | Masks `bits(N)` under exact LLL (`1.78–2.20 → −0.21..+0.40` steps/bit; `dudect |t|` `11.6–19.7 → 0.09–0.99` with `odd_gauss`, `2.25–2.28` candidates mean, `K = 76–78` for `2⁻⁶⁴`; `100%` map-back agreement, no format change). However, certified `Z[i]`-Lagrange (`T_prov`) already runs in `1` trace (`t = 0.00`) at `0.464–0.475×` exact LLL with no extra bookkeeping, and re-randomization does **not** alter `n(S)` (`100%` invariant) or remove `S`-dependent `quat_qlapoti` leaks (`fixS |t| = 2.11–3.26` vs `2.21–3.64` baseline). Optional defence in depth only; not worth adding as primary protection. | `experiment/secret-ideal-rerandomization` @ [`a19677f`](https://github.com/Shekyl-Foundation/shekyl-prism/commit/a19677f4108771413b3371131617241b424fa982) |
+
 ## In progress
 
 None.
@@ -147,6 +149,19 @@ rest on, and from the fixed-schedule experiment that followed:
     class shape without a fixed schedule, and changing `SECRETKEY_BYTES`
     (plus Stage 5 C-reference byte-for-byte replay under `EXP_RED_O0`)
     requires a design round.
+
+12. **Per-signature secret-ideal re-randomization (`J = I · β̄ / N`) works
+    mathematically and hides `bits(N)` from exact LLL, but adds no
+    timing gain over `T_prov` and leaves `quat_qlapoti`'s `S` leak
+    intact.** Accepting odd cyclic-HNF norms (`2.25–2.28` draws mean,
+    `K = 76–78` for `2⁻⁶⁴`) with Gaussian-then-round sampling (`odd_gauss`)
+    eliminates both `bits(N)` (`dudect |t|` `11.6–19.7 → 0.09–0.99`) and
+    basis-shape leaks while mapping short elements back 100% unchanged.
+    Because `Z[i]`-Lagrange at `T_prov = 301/387/446/587/773` already
+    has `1` trace (`t = 0`) at `0.464–0.475×` exact LLL, and
+    `quat_lideal_shortest_equivalent(J · K_J)` collapses back to the
+    exact same norm `n(S)` 100% of the time (`fixS |t| = 2.11–3.26`),
+    re-randomization is optional defence in depth only.
 
 The quantized-precision runs (Q256, PREC_256) were sometimes flat where
 they worked, which hints that bounded-precision reduction is size-blind
