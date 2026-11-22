@@ -62,6 +62,8 @@ def main():
     if setup is not None:
         for s in SET_NAMES:
             g = setup[setup.set == s]
+            if len(g) == 0:
+                continue
             g_dual = g[g.dual_mul >= 0]
             # per-phase mean op counts and limb ops
             row = dict(
@@ -111,6 +113,8 @@ def main():
         for s in SET_NAMES:
             gv = nvar[nvar.set == s]
             gb = nbnd[nbnd.set == s]
+            if len(gv) == 0 or len(gb) == 0:
+                continue
             srow = setup_df[setup_df.set == s].iloc[0] if len(setup_df) else None
 
             # Calibrated T from max observed across nvar + nbound
@@ -126,10 +130,10 @@ def main():
             Tb_4d = int(max(gvu.u4b_b1.max(), gbu.u4b_b1.max()))
             Te_4d = int(max(gvu.u4e_b1.max(), gbu.u4e_b1.max()))
 
-            # Exact LLL regression vs N_bits (rows where exb_lov >= 0)
-            gvl = gv[gv.exb_lov >= 0]
-            sl_b, _, r_b, p_b, _ = stats.linregress(gvl.N_bits, gvl.exb_lov)
-            sl_e, _, r_e, p_e, _ = stats.linregress(gvl.N_bits, gvl.exe_lov)
+            # Exact LLL regression vs N_bits (rows where exb_lovasz >= 0)
+            gvl = gv[gv.exb_lovasz >= 0]
+            sl_b, _, r_b, p_b, _ = stats.linregress(gvl.N_bits, gvl.exb_lovasz)
+            sl_e, _, r_e, p_e, _ = stats.linregress(gvl.N_bits, gvl.exe_lovasz)
 
             # Z[i] early-exit regression vs N_bits
             sl_zb, _, r_zb, p_zb, _ = stats.linregress(gv.N_bits, gv.zb_red)
@@ -149,10 +153,10 @@ def main():
 
             red_rows.append(dict(
                 set=s, n_zi=len(gv) + len(gb), n_lll=len(gvl),
-                exb_lov_mean=round(gvl.exb_lov.mean(), 1),
+                exb_lovasz_mean=round(gvl.exb_lovasz.mean(), 1),
                 exb_mul_mean=round(exb_mul_mean, 1),
                 exb_slope=round(sl_b, 3), exb_r=round(r_b, 3), exb_p=float(p_b),
-                exe_lov_mean=round(gvl.exe_lov.mean(), 1),
+                exe_lovasz_mean=round(gvl.exe_lovasz.mean(), 1),
                 exe_mul_mean=round(exe_mul_mean, 1),
                 exe_slope=round(sl_e, 3), exe_r=round(r_e, 3), exe_p=float(p_e),
                 zb_slope=round(sl_zb, 3), zb_r=round(r_zb, 3),
@@ -222,6 +226,8 @@ def main():
         for s in SET_NAMES:
             gf = dfix[dfix.set == s]
             gr = drnd[drnd.set == s]
+            if len(gf) == 0 or len(gr) == 0:
+                continue
             gfl = gf[gf.exb_lov >= 0]
             grl = gr[gr.exb_lov >= 0]
             t_exb, p_exb = stats.ttest_ind(gfl.exb_lov, grl.exb_lov, equal_var=False)
@@ -266,13 +272,13 @@ def main():
     # Plot 2: Combined 64-bit limb-ops comparison
     if len(comb_df):
         fig, ax = plt.subplots(figsize=(9, 4.5))
-        x = np.arange(len(SET_NAMES))
+        x = np.arange(len(comb_df))
         w = 0.22
         ax.bar(x - w, comb_df.base_disk_limb / 1e6, w, label='BASE disk (create + Q3 HNF + Z[i])')
         ax.bar(x, comb_df.base_sess_limb / 1e6, w, label='BASE session / EXP_HNF (Q3 HNF + Z[i])')
         ax.bar(x + w, comb_df.exp_red_limb / 1e6, w, label='EXP_RED_O0 (phi_q inter + Z[i])')
         ax.set_xticks(x)
-        ax.set_xticklabels([s.upper() for s in SET_NAMES])
+        ax.set_xticklabels([s.upper() for s in comb_df.set])
         ax.set_ylabel('64-bit limb ops (millions)')
         ax.set_title('Per-signature setup + reduction limb-op cost')
         ax.legend(fontsize=8)
@@ -284,9 +290,11 @@ def main():
     if nvar is not None:
         fig, axs = plt.subplots(1, 2, figsize=(11, 4.2))
         for ax, s in zip(axs, ('p248', 'p500')):
-            gv = nvar[(nvar.set == s) & (nvar.exb_lov >= 0)]
-            g_b = gv.groupby('N_bits')['exb_lov'].mean()
-            g_e = gv.groupby('N_bits')['exe_lov'].mean()
+            gv = nvar[(nvar.set == s) & (nvar.exb_lovasz >= 0)]
+            if len(gv) == 0:
+                continue
+            g_b = gv.groupby('N_bits')['exb_lovasz'].mean()
+            g_e = gv.groupby('N_bits')['exe_lovasz'].mean()
             ax.plot(g_b.index, g_b.values, 'o-', ms=3, label='Exact LLL (BASE HNF)')
             ax.plot(g_e.index, g_e.values, 's-', ms=3, label='Exact LLL (EXP_RED)')
             ax.set_xlabel('bits(N)')
@@ -301,6 +309,8 @@ def main():
         fig, axs = plt.subplots(1, 2, figsize=(11, 4.2))
         for ax, s in zip(axs, ('p248', 'p500')):
             gb = nbnd[nbnd.set == s]
+            if len(gb) == 0:
+                continue
             for col, lbl in [('zb_red', 'Z[i] BASE (HNF)'), ('ze_red', 'Z[i] EXP_RED')]:
                 vals = np.sort(gb[col].to_numpy())
                 y = np.arange(1, len(vals) + 1) / len(vals)

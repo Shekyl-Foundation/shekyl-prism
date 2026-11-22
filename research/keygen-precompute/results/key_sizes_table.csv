@@ -1,0 +1,6 @@
+set,L,e,B,cref_sk,base_spec_sk,exp_hnf_no_can,exp_hnf_with_can,exp_hnf_compat,exp_red_compact_no_can,exp_red_compact_with_can,exp_red_uniform_with_can,exp_red_compat,exp_red_gram,can_basis_bytes,hnf_bytes,dual_bytes,uv_compact_bytes,uv_uniform_bytes,gram_bytes,delta_red_nocan_vs_spec,delta_red_can_vs_spec,delta_hnf_can_vs_spec,delta_red_compat_vs_cref
+p248,251,248,158,353,336,288,480,625,356,548,608,693,756,192,80,320,148,208,208,20,212,144,340
+p324,326,324,195,452,435,371,617,798,455,701,781,882,965,246,100,400,184,264,264,20,266,182,430
+p376,383,376,224,529,504,428,716,933,528,816,912,1033,1124,288,116,464,216,312,308,24,312,212,504
+p500,505,500,285,701,672,560,944,1229,692,1076,1200,1361,1472,384,144,576,276,400,396,20,404,272,660
+p664,669,664,367,925,882,730,1234,1613,902,1406,1570,1785,1926,504,184,736,356,520,520,20,524,352,860

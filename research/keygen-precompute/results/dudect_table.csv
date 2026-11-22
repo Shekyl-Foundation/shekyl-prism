@@ -1,0 +1,2 @@
+set,n_zi,n_lll,fix_Nbits,exb_fix_mean,exb_rnd_mean,exb_t,exb_p,exe_fix_mean,exe_rnd_mean,exe_t,exe_p,zb_early_fix,zb_early_rnd,zb_early_t,zb_early_p,ze_early_fix,ze_early_rnd,ze_early_t,ze_early_p,ze_fixed_traces,ze_fixed_t
+p248,3000,500,156,1055.4,1027.7,11.32,4.897446657268292e-28,995.8,994.7,0.47,0.6364394608847944,166.14,161.9,27.27,2.4039199041913193e-154,156.42,156.38,0.25,0.8028561604366108,1,0.0

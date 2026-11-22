@@ -1,0 +1,2 @@
+set,base_disk_mul,base_sess_mul,cref_disk_mul,exp_red_mul,save_mul_vs_base_sess_pct,save_mul_vs_base_disk_pct,save_mul_vs_cref_disk_pct,base_disk_limb,base_sess_limb,cref_disk_limb,exp_red_limb,save_limb_vs_base_sess_pct,save_limb_vs_base_disk_pct,save_limb_vs_cref_disk_pct,kg_zi_limb,breakeven_sigs_sess,breakeven_sigs_disk
+p248,6554,5522,18362,5646,-2.25,13.85,69.25,2078368,2075180,38117118,1796039,13.45,13.58,95.29,56500,0.2,0.2
