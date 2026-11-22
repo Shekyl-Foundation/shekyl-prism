@@ -1250,6 +1250,23 @@ def properties_of_set(report, v):
     hold(second != first and (first == "NSN" or second == "NNS"), f"{name}: the second point's squareness is {second}")
     for m, role in v["search"][1:-1]:
         hold(role == "dependent" and squareness(K, m) == first, f"{name}: candidate {m} is not dependent")
+    # 1.4.2: the matrices, by their identities and on points.
+    failed = identities_fail(v["matrices"], p, modulus)
+    hold(not failed, f"{name}: matrix identities fail: {failed}")
+    for which, M in v["matrices"].items():
+        hold(v["basis"].acts_as(M, *v["images"][which]), f"{name}: the matrix of {which} is not its action")
+        hold(all(0 <= entry < modulus for entry in M), f"{name}: an entry of {which} is outside [0, 2^e)")
+        # Every matrix that differs from it in top bits alone is refused on points.
+        hold(
+            not any(v["basis"].acts_as(other, *v["images"][which]) for other in top_bit_candidates(M, e)[1:]),
+            f"{name}: the test on points accepts a top-bit variant of {which}",
+        )
+    for which in ("gen3", "gen4"):
+        # 1.4.3: the identities let wrong matrices through: 4 of the 16 pass,
+        # the true one and three wrong ones. (The loop above refused those
+        # three on points with the other twelve.)
+        count = identities_pass_count(v["matrices"], which, p, e)
+        hold(count == 4, f"{name}: {count} of 16 top-bit candidates of {which} pass the identities, not 4")
     norm = v["secret_norm"]
     hold(baillie_psw(norm)[0] == "prime", f"{name}: the secret norm is not a probable prime")
     hold(norm > p * p, f"{name}: the secret norm is not above p^2")
@@ -1283,21 +1300,28 @@ def properties_of_oracles(report, texts, values, c_rows, r_rows):
     hold(set(c_rows) == {"p248", "p376", "p500"}, "the C oracle is not of its three sets")
     hold(set(r_rows) == {"p324", "p500", "p664"}, "the sqisign-rs oracle is not of its three sets")
     # A wrong halved generator that passes the identities is refused by
-    # the oracle comparison too.
-    for set_name, theirs in (("p248", c_rows), ("p664", r_rows)):
+    # the oracle comparison too: each of the three wrong survivors of each
+    # generator, at every set, against every oracle that has the set.
+    planted_and_refused = 0
+    for set_name, _, _ in SETS:
         v = values[set_name]
+        ours = parse_rows(texts[f"{set_name}.txt"], set_name)
+        oracles = [rows[set_name] for rows in (c_rows, r_rows) if set_name in rows]
+        hold(oracles, f"{set_name}: no oracle has this set")
         for which in ("gen3", "gen4"):
-            planted = dict(parse_rows(texts[f"{set_name}.txt"], set_name))
-            wrong = next(
+            wrong = [
                 candidate
                 for candidate in top_bit_candidates(v["matrices"][which], v["e"])[1:]
                 if all(halved_identities(v["matrices"], which, v["K"].p, 1 << v["e"], candidate).values())
-            )
-            planted[f"action_{which}"] = hex_matrix(wrong, v["e"])
-            hold(
-                compare(planted, theirs.get(set_name, {}), COMPARED_WITH_R) == [f"action_{which}"],
-                f"{set_name}: a wrong {which} is not refused by the oracle",
-            )
+            ]
+            for candidate in wrong:
+                planted = {**ours, f"action_{which}": hex_matrix(candidate, v["e"])}
+                for theirs in oracles:
+                    refused = compare(planted, theirs, COMPARED_WITH_R) == [f"action_{which}"]
+                    hold(refused, f"{set_name}: a wrong {which} is not refused by an oracle")
+                    planted_and_refused += refused
+    # Five sets, two generators, three wrong survivors each, and p500 twice.
+    hold(planted_and_refused == 36, f"{planted_and_refused} wrong matrices planted and refused, not 36")
     # The C reference's own values (1.8 item 6).
     primes = small_primes()
     below = [n for n in range(3, primes[-1]) if n % 4 == 3 and all(n % d for d in range(3, math.isqrt(n) + 1, 2))]

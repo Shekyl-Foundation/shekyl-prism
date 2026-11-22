@@ -131,8 +131,8 @@ jobs:
       # regenerates every value at the five sets, requires the committed
       # files byte for byte, compares them with the committed values of the
       # C reference and of sqisign-rs, and tests each defining property.
-      # Half a minute to a minute and a half, by the machine. The aarch64 job
-      # runs `--check` too, so the bytes are held on both architectures.
+      # About a minute. The aarch64 job runs `--check` too, so the bytes are
+      # held on both architectures.
       - name: The signer constants are what the script generates, and equal their oracles
         run: |
           python3 scripts/signer_constants.py --selftest
