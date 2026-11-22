@@ -1,0 +1,11 @@
+p248: runs=2 memcheck_error_contexts=8 static_glibc_allocator_false_positives=8 outside_glibc=0 in_ct_code=0
+p324: runs=2 memcheck_error_contexts=8 static_glibc_allocator_false_positives=8 outside_glibc=0 in_ct_code=0
+p376: runs=2 memcheck_error_contexts=7 static_glibc_allocator_false_positives=7 outside_glibc=0 in_ct_code=0
+p500: runs=2 memcheck_error_contexts=8 static_glibc_allocator_false_positives=8 outside_glibc=0 in_ct_code=0
+p664: runs=2 memcheck_error_contexts=8 static_glibc_allocator_false_positives=8 outside_glibc=0 in_ct_code=0
+p248: runs=1 memcheck_error_contexts=9 static_glibc_allocator_false_positives=8 outside_glibc=1 in_ct_code=0
+  Conditional jump or move depends on uninitialised value(s) | at 0x40F2D2B: rlc::ctgrind_set (rlc.rs:325)
+p248: runs=1 memcheck_error_contexts=13 static_glibc_allocator_false_positives=7 outside_glibc=6 in_ct_code=6
+  Conditional jump or move depends on uninitialised value(s) | at 0x40B8F21: black_box<u64> (hint.rs:475)
+  Conditional jump or move depends on uninitialised value(s) | at 0x40B9534: black_box<u64> (hint.rs:475)
+  Conditional jump or move depends on uninitialised value(s) | at 0x40BA182: black_box<u64> (hint.rs:475)

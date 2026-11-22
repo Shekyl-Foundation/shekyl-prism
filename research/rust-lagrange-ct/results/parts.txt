@@ -1,0 +1,5 @@
+p248,herm=2498,quotient=1060 (x2),nrd=1224,update=252,sum_per_step=6094,herm%=41,quot%=35,nrd%=20,upd%=4,cleanup_once=191424,steps=301,est_total=2025718
+p324,herm=3524,quotient=1074 (x2),nrd=1682,update=356,sum_per_step=7710,herm%=46,quot%=28,nrd%=22,upd%=5,cleanup_once=368078,steps=387,est_total=3351848
+p376,herm=4396,quotient=1140 (x2),nrd=2138,update=414,sum_per_step=9228,herm%=48,quot%=25,nrd%=23,upd%=4,cleanup_once=491628,steps=446,est_total=4607316
+p500,herm=8998,quotient=1442 (x2),nrd=4050,update=628,sum_per_step=16560,herm%=54,quot%=17,nrd%=24,upd%=4,cleanup_once=824050,steps=587,est_total=10544770
+p664,herm=11908,quotient=2222 (x2),nrd=6786,update=870,sum_per_step=24008,herm%=50,quot%=19,nrd%=28,upd%=4,cleanup_once=1187844,steps=773,est_total=19746028

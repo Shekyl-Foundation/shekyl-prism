@@ -20,7 +20,10 @@ import os
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# Python models' multiply-and-divide ratio vs exact LLL: empirical T
+# (fixed-schedule-reduction REPORT section 4) and T_prov (lagrange-tour-bound REPORT section 1)
 PY_STEP_RATIO = {'p248': 0.299, 'p324': 0.291, 'p376': 0.298, 'p500': 0.286, 'p664': 0.279}
+PY_STEP_RATIO_PROV = {'p248': 0.48, 'p324': 0.47, 'p376': 0.47, 'p500': 0.47, 'p664': 0.47}
 SETS = ['p248', 'p324', 'p376', 'p500', 'p664']
 
 
@@ -58,27 +61,35 @@ def dudect(path):
 
 def main():
     res = {'bench': {}, 'dudect': {}}
-    bench = {}
-    with open(os.path.join(HERE, 'results', 'bench.csv')) as fh:
-        for r in csv.DictReader(fh):
-            bench.setdefault(r['set'], {})[r['impl']] = r
-    res['bench'] = bench
-    print('## Cycles (median, rdtsc at 2.4 GHz TSC)\n')
-    print('| Set | CT Z[i] (T steps) | exact LLL, GMP | exact LLL, num-bigint | exact Z[i], GMP (mean steps) | CT / LLL-GMP | CT / LLL-num | model step ratio | CT / exact Z[i]-GMP |')
-    print('|---|---|---|---|---|---|---|---|---|')
-    for s in SETS:
-        if s not in bench:
+    for fname, title, model in (('bench.csv', 'primary: T_prov + 1 exact cleanup step', PY_STEP_RATIO_PROV),
+                                ('bench_empirical.csv', 'secondary: empirical T, no cleanup (unsafe on Rolletschek inputs)', PY_STEP_RATIO)):
+        path = os.path.join(HERE, 'results', fname)
+        if not os.path.exists(path):
             continue
-        b = bench[s]
-        ct, lg, ln, gg = (float(b[k]['median_cycles']) for k in ('ct_zi', 'lll_gmp', 'lll_num', 'gauss_gmp'))
-        print(f"| {s.upper()} | {ct/1e6:.2f} M ({int(float(b['ct_zi']['mean_steps']))}) | {lg/1e6:.2f} M | {ln/1e6:.2f} M | "
-              f"{gg/1e6:.2f} M ({float(b['gauss_gmp']['mean_steps']):.0f}) | {ct/lg:.3f} | {ct/ln:.3f} | {PY_STEP_RATIO[s]:.3f} | {ct/gg:.2f} |")
+        bench = {}
+        with open(path) as fh:
+            for r in csv.DictReader(fh):
+                bench.setdefault(r['set'], {})[r['impl']] = r
+        res['bench'][fname] = bench
+        print(f'## Cycles, {title} (median, rdtsc, 2.4 GHz TSC)\n')
+        print('| Set | CT Z[i] (steps) | exact LLL, GMP | exact LLL, num-bigint | exact Z[i], GMP (mean steps) | CT / LLL-GMP | CT / LLL-num | model mul ratio | CT / exact Z[i]-GMP |')
+        print('|---|---|---|---|---|---|---|---|---|')
+        for s in SETS:
+            if s not in bench:
+                continue
+            b = bench[s]
+            ct, lg, ln, gg = (float(b[k]['median_cycles']) for k in ('ct_zi', 'lll_gmp', 'lll_num', 'gauss_gmp'))
+            print(f"| {s.upper()} | {ct/1e6:.2f} M ({int(float(b['ct_zi']['mean_steps']))}) | {lg/1e6:.2f} M | {ln/1e6:.2f} M | "
+                  f"{gg/1e6:.2f} M ({float(b['gauss_gmp']['mean_steps']):.0f}) | {ct/lg:.3f} | {ct/ln:.3f} | {model[s]:.3f} | {ct/gg:.2f} |")
+        print()
     print('\n## dudect (fixed vs random input), threshold |t| = 4.5\n')
     print('| Set | impl | measurements | t raw | max t cropped | t 2nd order | max abs t | r(cycles, bits N) random class | verdict |')
     print('|---|---|---|---|---|---|---|---|---|')
     for s in SETS:
-        for imp in ('ct', 'ct_rep2', 'gauss', 'lll_gmp'):
+        for imp in ('ct', 'ct_emp', 'ct_emp_rep2', 'gauss', 'lll_gmp'):
             p = os.path.join(HERE, 'results', 'raw', f'dudect_{s}_{imp}.csv')
+            if not os.path.exists(p) and os.path.exists(p.replace(os.sep + 'raw' + os.sep, os.sep + 'dudect' + os.sep) + '.gz'):
+                p = p.replace(os.sep + 'raw' + os.sep, os.sep + 'dudect' + os.sep) + '.gz'
             if not os.path.exists(p):
                 continue
             try:

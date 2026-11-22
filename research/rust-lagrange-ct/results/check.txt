@@ -1,0 +1,46 @@
+  p248 rolletschek_conj_alt: exact steps 276 schedule 301 ct==lambda1 true
+  p248 rolletschek_i_rot: exact steps 276 schedule 301 ct==lambda1 true
+  p248 zero_xy: exact steps 1 schedule 301 ct==lambda1 true
+  p248 half_tie: exact steps 3 schedule 301 ct==lambda1 true
+  p248 skew_large_q: exact steps 2 schedule 301 ct==lambda1 true
+  p248 equal_norms: exact steps 3 schedule 301 ct==lambda1 true
+  p248 pingpong: exact steps 2 schedule 301 ct==lambda1 true
+  p248 adversarial rows: 7
+p248 rows=1508 ct==py_p64 1508/1508 ct==py_exact 1508/1508 ct==lambda1 1007/1007 ct==rust_exact_gauss 1508/1508 ct_in_ideal 1508/1508 rust_lll_b1==lambda1 1003/1007 (lll b1 > lambda1: 4) maxbits(T)=649 bound=649 gmp_baselines_agree=1007/1007
+  p324 rolletschek_conj_alt: exact steps 356 schedule 387 ct==lambda1 true
+  p324 rolletschek_i_rot: exact steps 356 schedule 387 ct==lambda1 true
+  p324 zero_xy: exact steps 1 schedule 387 ct==lambda1 true
+  p324 half_tie: exact steps 3 schedule 387 ct==lambda1 true
+  p324 skew_large_q: exact steps 2 schedule 387 ct==lambda1 true
+  p324 equal_norms: exact steps 3 schedule 387 ct==lambda1 true
+  p324 pingpong: exact steps 2 schedule 387 ct==lambda1 true
+  p324 adversarial rows: 7
+p324 rows=1508 ct==py_p64 1508/1508 ct==py_exact 1508/1508 ct==lambda1 1007/1007 ct==rust_exact_gauss 1508/1508 ct_in_ideal 1508/1508 rust_lll_b1==lambda1 1004/1007 (lll b1 > lambda1: 3) maxbits(T)=838 bound=838 gmp_baselines_agree=1007/1007
+  p376 rolletschek_conj_alt: exact steps 411 schedule 446 ct==lambda1 true
+  p376 rolletschek_i_rot: exact steps 411 schedule 446 ct==lambda1 true
+  p376 zero_xy: exact steps 1 schedule 446 ct==lambda1 true
+  p376 half_tie: exact steps 3 schedule 446 ct==lambda1 true
+  p376 skew_large_q: exact steps 2 schedule 446 ct==lambda1 true
+  p376 equal_norms: exact steps 3 schedule 446 ct==lambda1 true
+  p376 pingpong: exact steps 2 schedule 446 ct==lambda1 true
+  p376 adversarial rows: 7
+p376 rows=1508 ct==py_p64 1508/1508 ct==py_exact 1508/1508 ct==lambda1 1007/1007 ct==rust_exact_gauss 1508/1508 ct_in_ideal 1508/1508 rust_lll_b1==lambda1 999/1007 (lll b1 > lambda1: 8) maxbits(T)=971 bound=971 gmp_baselines_agree=1007/1007
+  p500 rolletschek_conj_alt: exact steps 542 schedule 587 ct==lambda1 true
+  p500 rolletschek_i_rot: exact steps 542 schedule 587 ct==lambda1 true
+  p500 zero_xy: exact steps 1 schedule 587 ct==lambda1 true
+  p500 half_tie: exact steps 3 schedule 587 ct==lambda1 true
+  p500 skew_large_q: exact steps 2 schedule 587 ct==lambda1 true
+  p500 equal_norms: exact steps 3 schedule 587 ct==lambda1 true
+  p500 pingpong: exact steps 2 schedule 587 ct==lambda1 true
+  p500 adversarial rows: 7
+p500 rows=1508 ct==py_p64 1508/1508 ct==py_exact 1508/1508 ct==lambda1 1007/1007 ct==rust_exact_gauss 1508/1508 ct_in_ideal 1508/1508 rust_lll_b1==lambda1 1004/1007 (lll b1 > lambda1: 3) maxbits(T)=1280 bound=1280 gmp_baselines_agree=1007/1007
+  p664 rolletschek_conj_alt: exact steps 714 schedule 773 ct==lambda1 true
+  p664 rolletschek_i_rot: exact steps 714 schedule 773 ct==lambda1 true
+  p664 zero_xy: exact steps 1 schedule 773 ct==lambda1 true
+  p664 half_tie: exact steps 3 schedule 773 ct==lambda1 true
+  p664 skew_large_q: exact steps 2 schedule 773 ct==lambda1 true
+  p664 equal_norms: exact steps 3 schedule 773 ct==lambda1 true
+  p664 pingpong: exact steps 2 schedule 773 ct==lambda1 true
+  p664 adversarial rows: 7
+p664 rows=1508 ct==py_p64 1508/1508 ct==py_exact 1508/1508 ct==lambda1 1007/1007 ct==rust_exact_gauss 1508/1508 ct_in_ideal 1508/1508 rust_lll_b1==lambda1 1001/1007 (lll b1 > lambda1: 6) maxbits(T)=1690 bound=1690 gmp_baselines_agree=1007/1007
+ALL PASS

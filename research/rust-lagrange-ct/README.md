@@ -21,6 +21,10 @@ P248/P324/P376/P500/P664), finds λ₁ on every sample at about 0.28× exact
 LLL's multiply-and-divide count. Step counts are not cycles. Does that
 hold up as real constant-time code?
 
+## Schedule
+
+Primary: the certified T_prov = 301/387/446/587/773 (research/lagrange-tour-bound) plus one exact cleanup step. Secondary (`--features empirical`): the empirical 189/239/283/359/465 with no cleanup, which is unsafe on Rolletschek inputs.
+
 ## Files
 
 | file | what |
@@ -34,13 +38,15 @@ hold up as real constant-time code?
 | `asm_scan.py` | Static scan of the compiled reduction. |
 | `ctgrind/` | Valgrind memcheck as a constant-time checker (secrets marked undefined), with positive controls. |
 | `analyze.py` | Tables and `results/summary.json`. |
-| `results/` | `check.txt`, `bench.csv`, `tables.md`, `asm_scan.txt`, `ctgrind.txt`, `summary.json`, `dudect/*.csv.gz`. |
+| `gen_adversarial.py` | Rolletschek chains, corner cases and the ping-pong input, from research/lagrange-tour-bound (unchanged generators). |
+| `results/` | `check.txt`, `bench.csv` (primary, T_prov + cleanup), `bench_empirical.csv` (secondary), `parts.txt`, `tables.md`, `asm_scan.txt`, `ctgrind.txt` (`ctgrind_empirical.txt` for the first schedule), `summary.json`, `dudect/*.csv.gz`. |
 
 ## Running
 
 ```sh
 PY=/workspace/mamba/envs/sage/bin/python
 FSR_DIR=../fixed-schedule-reduction JOBS=2 $PY gen_vectors.py 500 2000   # ~5 min, deterministic
+$PY gen_adversarial.py                                     # needs ../lagrange-tour-bound
 cargo build --release -j2                                  # check/bench/dudect without GMP
 ./build_gmp.sh                                             # with the GMP baselines
 ./target/gmp/release/rlc check                             # cross-check, all sets

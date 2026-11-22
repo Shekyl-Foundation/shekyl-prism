@@ -363,12 +363,16 @@ fn parts_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo, reps
     let q = med(&mut || { std::hint::black_box(quotient_part::<N>(&h0, &nu)); });
     let n = med(&mut || { std::hint::black_box(nrd_part::<C, N, PL>(&v, &pl)); });
     let up = med(&mut || { update_part::<C>(&mut v, &u, std::hint::black_box(3), std::hint::black_box(-2)); std::hint::black_box(&v); });
+    let (mut uu, mut vv, mut nnu) = (u, v, nu);
+    let mut nnv = nu;
+    let cl = med(&mut || { cleanup_part::<C, N, PL>(&mut uu, &mut vv, &mut nnu, &mut nnv, &pl); std::hint::black_box(&uu); });
     let full = h + 2 * q + n + up;
     println!(
-        "{},herm={},quotient={} (x2),nrd={},update={},sum_per_step={},herm%={:.0},quot%={:.0},nrd%={:.0},upd%={:.0}",
+        "{},herm={},quotient={} (x2),nrd={},update={},sum_per_step={},herm%={:.0},quot%={:.0},nrd%={:.0},upd%={:.0},cleanup_once={},steps={},est_total={}",
         si.name, h, q, n, up, full,
         100.0 * h as f64 / full as f64, 200.0 * q as f64 / full as f64,
-        100.0 * n as f64 / full as f64, 100.0 * up as f64 / full as f64
+        100.0 * n as f64 / full as f64, 100.0 * up as f64 / full as f64,
+        cl, si.steps, full as usize * si.steps + cl as usize
     );
 }
 
@@ -408,7 +412,7 @@ fn main() {
                 pin(c);
             }
             for si in SETS.iter() {
-                with_set!(si.name, parts_set, si, 20000);
+                with_set!(si.name, parts_set, si, 5000);
             }
         }
         #[cfg(feature = "ctgrind")]

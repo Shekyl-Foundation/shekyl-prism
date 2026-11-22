@@ -17,13 +17,13 @@ nm = subprocess.run(['nm', '-S', '-C', BIN], capture_output=True, text=True).std
 funcs = []
 for line in nm.splitlines():
     f = line.split(None, 3)
-    if len(f) == 4 and f[3] == 'rust_lagrange_ct::zi::reduce':
-        funcs.append((int(f[0], 16), int(f[1], 16)))
+    if len(f) == 4 and f[3] in ('rust_lagrange_ct::zi::reduce', 'rust_lagrange_ct::ct::exact_round'):
+        funcs.append((int(f[0], 16), int(f[1], 16), f[3].split('::')[-1]))
 funcs.sort()
 # instantiation order follows the set order in which they were emitted; we
 # identify each by the PL-limb constant p it multiplies by: report size only
 JCC = re.compile(r'^j(?!mp)[a-z]+$')
-for start, size in funcs:
+for start, size, fname in funcs:
     out = subprocess.run(['objdump', '-d', '--no-show-raw-insn', '-C',
                           f'--start-address={start:#x}', f'--stop-address={start + size:#x}', BIN],
                          capture_output=True, text=True).stdout
@@ -76,7 +76,8 @@ for start, size in funcs:
     sizes = [int(k.split('n=$')[1], 16) for k in calls if 'n=$' in k]
     nl = max(sizes) // 16 if sizes else 0
     label = {22: 'p248', 28: 'p324', 32: 'p376', 42: 'p500', 54: 'p664'}.get(nl, '?')
-    print(f'reduce::<N={nl}> ({label}) @ {start:#x} size {size} bytes: ' + ', '.join(f'{k}={v}' for k, v in sorted(c.items())))
+    tag = f'::<N={nl}> ({label})' if fname == 'reduce' else ' (one instantiation per set; N not inferred)'
+    print(f'{fname}{tag} @ {start:#x} size {size} bytes: ' + ', '.join(f'{k}={v}' for k, v in sorted(c.items())))
     print('   jcc flag sources: ' + ', '.join(f'{k}={v}' for k, v in flagsrc.most_common()))
     print('   calls: ' + ', '.join(f'{k} x{v}' for k, v in calls.most_common()))
     for r in review:

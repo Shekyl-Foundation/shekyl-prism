@@ -203,6 +203,12 @@ pub mod parts {
         nrd::<C, N, PL>(v, p)
     }
     #[inline(never)]
+    pub fn cleanup_part<const C: usize, const N: usize, const PL: usize>(
+        u: &mut Vec4<C>, v: &mut Vec4<C>, nu: &mut [u64; N], nv: &mut [u64; N], p: &[u64; PL],
+    ) {
+        exact_cleanup::<C, N, PL>(u, v, nu, nv, p)
+    }
+    #[inline(never)]
     pub fn update_part<const C: usize>(v: &mut Vec4<C>, u: &Vec4<C>, m0: i64, m1: i64) {
         let mut a0 = mul_scalar(&u[0], m0);
         sub_assign(&mut a0, &mul_scalar(&u[1], m1));
