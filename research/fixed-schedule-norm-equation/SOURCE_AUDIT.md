@@ -14,26 +14,26 @@ Reference: mariascrs/PRISM_v2 at
   17-bit generator bound, 20,000 multiples, exponent e−2, and the
   extended-Cornacchia parameters (q=1, bad-prime product=1, 101 primes
   2 or 1 mod 4, 32 primality rounds).
-- `src/quaternion/ref/generic/qlapoti.c:560–579`: first maps the input to
+- `src/quaternion/ref/generic/qlapoti.c:511–567`: first maps the input to
   a **shortest equivalent ideal**, then reduces that basis. Thus the N
   inside this search is NOT necessarily the input secret ideal's norm.
   Measure both input bits(N_sec) and the post-reduction small norm.
-- `qlapoti.c:580–676`: 400,000 passes. On a new generator, sample four
+- `qlapoti.c:50–100,571–700`: 400,000 passes. On a new generator, sample four
   bounded coefficients until the scalar part is invertible modulo n
   and gcd(nrd(alpha),n²)=n. On reuse, advance lambda until coprime to n.
   Reuse requires gcd(2a,2b)=1 and the second reduced 2-D vector shorter
   than sqrt(p). A failed mod/Cornacchia test keeps an eligible generator;
   an unsuitable successful output resets it. Reset also every 20,000
   passes. m<0 merely continues (does not reset the generator).
-- `qlapoti.c:330–425,735–785`: nearest-plane vector in the reduced 2-D
+- `qlapoti.c:327–430,454–510,735–790`: nearest-plane vector in the reduced 2-D
   lattice produces a target M4. Check residue conditions, solve M4 as
   a sum of two squares, then check the output quaternion's end type or
   odd-norm shape. Those postconditions matter to the success rate.
-- `integers.c:192–252`: trial-factor M4 by the 101 good primes; the
+- `integers.c:47–110,192–275`: trial-factor M4 by the 101 good primes; the
   residual must be 1 or a probable prime with −1 a quadratic residue.
   Extra data-dependent loops include valuations, Cornacchia's Euclidean
   descent, and complex powering, besides the two uncapped outer helpers.
-- `lll/lll_applications.c:50–124`: keygen samples coefficients uniformly
+- `lll/lll_applications.c:48–126`: keygen samples coefficients uniformly
   from [−64,64]^4 on a reduced basis; tests the quotient norm for primality;
   cap 129^4 = 276,922,881 samples. `keygen.c:29–40` also has an uncapped
   outer retry around sampling, prime-norm equivalence, and translation.
