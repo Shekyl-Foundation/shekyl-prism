@@ -1010,3 +1010,18 @@ The first expectation held, and by more than expected: 49 to 51 times the length
 Not done. The crate: it waits for the section's review. A CI step that holds the patch applicable to the pinned tree: proposed for step 2. The committed table was written by the driver and the build script before their copyright headers were added; the headers are the only difference, and the patch that ran is the committed one, byte for byte.
 
 Who. The reviewer wrote the brief. The coding agent (Claude Code, `claude-fable-5-2`) wrote the patch, the scripts and the section, and ran the measurement; a research agent it started read `sqisign-rs`; the session's advisor model reviewed the plan before the run.
+
+## 2026-11-22 — Signer stage 2a, step 1: the review's six corrections to section 2.1
+
+The reviewer read section 2.1 at `8524255` and approved it with six corrections, all to 2.1.2 and 2.1.3. Each was a gap in what the draft said, and none changes a width or a number.
+
+1. The overflow mark was read at one exit of three. A comparison of an overflowed integer gave a clean secret bit, which left through its own exit with no error. Now the bit carries the mark, comparison, equality, selection and swap pass it on, and all three exits refuse a marked value.
+2. The error an exit returns is itself a disclosure about a secret. It has a treatment of its own in the table's rules: unreachable by proof.
+3. Sign and magnitude in the secret type: the sign is a secret bit, an addition computes the sum and both differences and selects, and a zero's sign is normalized by a mask.
+4. `Debug` of the public type printed its value, and a declassified secret lives in that type. Neither type prints a value now; a value known to be public is formatted by a method with its own name.
+5. "An overflow is a path the signer can take" is temporary. The aim is that it is unreachable by proof once Q4 and Q5 hold, and a retry is the defence if the proof is wrong. A retry that depends on a secret is a channel.
+6. The compile-fail tests are `compile_fail` documentation tests, with no new dependency.
+
+The reviewer's recommendations on the four proposals put to Rick (the secret norm's bound as the budget's assumption with the rule ruled at stage 5; both types wiped; three exits; the sticky overflow mark) are recorded here as recommendations. They are rulings when Rick makes them.
+
+Who. The reviewer found all six. The coding agent (Claude Code, `claude-fable-5-2`) wrote them into the section.

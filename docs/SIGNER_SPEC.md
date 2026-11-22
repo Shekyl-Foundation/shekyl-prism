@@ -596,7 +596,7 @@ Credited in `docs/lab/CONTRIBUTIONS.md`. An oracle for the choice, and not its s
 3. **The generic shape of a normal form** (row 4). Not used: the budget takes row 3, which is proven.
 4. **Anything at `p324` and `p664`** that is typical and not proven, for want of a signer to measure. The same two items, 1 and 2.
 
-Because of items 1 and 2 an overflow is a path the signer can take, and not only a defect. Stage 5 says what key generation and signing do when a layer reports one: the proposal is that the attempt is abandoned and drawn again, as for the failures the signer already has.
+Because of items 1 and 2 an overflow is, for now, a path the signer can take. That is temporary, and it is not the design. The aim: once stage 5 has Q4 and stage 2c has Q5, an overflow in signing is unreachable by proof. Abandoning the attempt and drawing again is then the defence if that proof is wrong, and nothing more. A retry caused by an overflow that depends on a secret is a channel: how often the signer retries would show something of the key. Until both obligations are met, the ledger holds this as open (O33).
 
 #### 2.1.3 The two types
 
@@ -604,29 +604,34 @@ A public integer, `Int<N>`, and a secret integer, `SecretInt<N>`, of `N` limbs e
 
 **What they share.**
 
-- **Sign and magnitude.** `N` limbs of 64 bits hold the magnitude, least significant first, and a sign is held beside them. The range is symmetric, `−(2^(64N) − 1)` to `2^(64N) − 1`, so negation and the absolute value cannot overflow, and zero has one representation, with the sign of a non-negative number. (Two's complement has one more negative value than positive, and negating it overflows.)
+- **Sign and magnitude.** `N` limbs of 64 bits hold the magnitude, least significant first, and a sign is held beside them. The range is symmetric, `−(2^(64N) − 1)` to `2^(64N) − 1`, so negation and the absolute value cannot overflow, and zero has one representation, with the sign of a non-negative number. (Two's complement has one more negative value than positive, and negating it overflows.) In the secret type the sign is a secret bit. An addition does not look at the signs to choose its work: it computes the sum of the magnitudes and both orders of their difference, and selects among the three in fixed time. After every operation the sign of a zero magnitude is set to non-negative by a mask and without a branch; otherwise a negative zero would be unequal to zero.
 - **Not `Copy`.** A value is 208 to 520 bytes, and a secret one must not be duplicated by an assignment. Both are `Clone`.
 - **Wiped on drop, both.** See below.
 
-**The public type** has the variable-time operations of 2.1.4, `Debug`, `PartialEq`, `Eq`, `Ord` and `Hash`. An operation whose result does not fit returns an error and no value.
+**The public type** has the variable-time operations of 2.1.4, `PartialEq`, `Eq`, `Ord` and `Hash`. An operation whose result does not fit returns an error and no value.
+
+**Neither type prints a value.** A declassified secret lives in `Int<N>`, and an `assert_eq!`, an `unwrap` or a `{:?}` on an error path would print it. So `Debug` of both types prints the type's name and no value, neither has `Display`, and no error of either type carries a value. A value the caller knows to be public (a constant, a test's operand) is formatted by a method with a name of its own, `Int::public_hex`, which the secret type does not have.
 
 **The secret type.**
 
-- No `Debug`, no `Display`, no `PartialEq`, `Eq`, `Ord` or `Hash`, no `AsRef`, `Deref` or `From` into the public type, no serialization. No error it returns carries a value.
+- A `Debug` that prints no value (above), no `Display`, no `PartialEq`, `Eq`, `Ord` or `Hash`, no `AsRef`, `Deref` or `From` into the public type, no serialization, and no method that formats its value.
 - Its operations are those whose time depends on `N` alone: addition, subtraction, negation, schoolbook multiplication, shifts by a public amount, selection between two values by a secret bit, and comparison and equality that return a secret bit. A secret bit is a type of this crate, `SecretBit`. It is not a `bool` and does not convert to one, because a caller who may branch on comparisons with public values recovers the integer one bit at a time.
-- **Overflow, without a branch on the value.** A secret integer carries one more secret bit: *overflowed*. An operation whose true result does not fit sets it, and every operation passes it on from its operands. Multiplication forms all `N²` limb products and sets the bit if any of them lands above limb `N`. The bit is read in one place, the conversion below, which returns an error and no value when it is set. So a secret computation runs the same instructions whether it overflows or not, and a caller cannot obtain a wrapped value.
+- **Overflow, without a branch on the value.** A secret integer carries one more secret bit: *overflowed*. An operation whose true result does not fit sets it, and every operation passes it on from its operands. Multiplication forms all `N²` limb products and sets the bit if any of them lands above limb `N`. A `SecretBit` carries the mark too: a comparison or an equality of a marked integer gives a marked bit, and a selection or a swap by a marked bit marks what it returns. The mark is read at the exits below and nowhere else, and **each of the three** returns an error and no value when it is set. So a secret computation runs the same instructions whether it overflows or not, and a caller can obtain neither a wrapped value nor a clean bit computed from one. Step 2 has a test for each operation that the mark is passed on.
+- **The error is itself a disclosure.** To learn that an overflow happened is to learn something about a secret. It has a treatment like any other exit: the one expected is **U**, unreachable by proof, once Q4 and Q5 hold (see "bounds not proven"). Until then each exit's row says so.
 - **Three exits, each with one name, and no other.** `SecretInt::declassify` gives the public integer: every operation the secret type does not have (division, a greatest common divisor, inversion, a square root, a bit length, a valuation) is reached through it. `SecretBit::declassify` gives a `bool`: every branch on a secret comparison is reached through it. `SecretInt::export_le_bytes` writes the magnitude and the sign into a buffer the caller owns: the secret key's encoding (stage 5) and a scalar handed to the curve layer (stage 4) are reached through it. CI counts the call sites of the three names outside the crate and requires the count to equal the number of rows of the table below. The brief asked for one conversion with one name; the other two are here because without them a secret would leave by a door the table does not count.
 
-**The secret-treatment table.** One row for each call site of an exit: the file and function, which exit, what leaves, why the operation needs it, and the treatment it gets at the last stage (G4), one of four:
+**The secret-treatment table.** One row for each call site of an exit: the file and function, which exit, what leaves, why the operation needs it, and the treatment it gets at the last stage (G4), one of four, and the treatment of its overflow error:
 
 - **F**: a fixed-time routine replaces the variable-time one;
 - **I**: an argument that the value, or what the routine's time shows of it, is independent of the secret key and of anything a signature does not already show;
 - **B**: blinding, so that the declassified value is a masked one;
 - **E**: export, for `export_le_bytes` only: the bytes go to a layer that holds them as secrets, and that layer's section says how.
 
-| # | Stage | Call site | Exit | What leaves | Operation | Treatment at the last stage |
-| --- | --- | --- | --- | --- | --- | --- |
-| — | — | none yet | | | | |
+And for the error an exit returns when the overflow mark is set, **U**: a proof that the mark cannot be set at that call site.
+
+| # | Stage | Call site | Exit | What leaves | Operation | Treatment at the last stage | Its overflow error |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| — | — | none yet | | | | | |
 
 The table is empty: this part has no consumer, and its own code declassifies nothing. Nearly every routine of stages 2b to 3 is variable-time in the first signer (the normal form's greatest common divisors, the reduction, Cornacchia, each division), so the rows will be many, and the table is the list of what the last stage has to do.
 
@@ -699,4 +704,4 @@ Not merged in this part, and not decided. Ledger O34 holds the question for stag
 - `prism-int`: no workspace dependency; `forbid(unsafe_code)`, `deny(missing_docs)`; in the no-upward-edge order beneath every signer layer, in the research-boundary check, re-exported under `hazmat`, its public surface listed and held.
 - Dependencies proposed: `zeroize` (already in the workspace's lock file) for the wipe, and `subtle` for the secret bit and selection. Both are justified, and `cargo-deny` run, in the pull request. Nothing else in the library.
 - Carries are computed by widening to `u128`, the idiom of the verifier's limbs. No `overflowing_add` after a `+` of the same operands, and no hand-written clamp: the two shapes of ledger O32 that this crate could have.
-- Its tests are in the brief: committed vectors from a script with `--check`, every operation at every width and at the edges; the conventions marked "Replay" compared with the reference's `ibz_*` through the exporter's build; the secret type's promises as compile-fail tests.
+- Its tests are in the brief: committed vectors from a script with `--check`, every operation at every width and at the edges; the conventions marked "Replay" compared with the reference's `ibz_*` through the exporter's build; the secret type's promises as `compile_fail` documentation tests, which need no new dependency.
