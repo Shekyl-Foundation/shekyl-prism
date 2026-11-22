@@ -27,6 +27,8 @@ and timings, and checks each response. Its signing number includes the
 key regeneration required by the isolated seed-based interface. It is not
 a steady-state cached-secret signing benchmark.
 
+**Every figure in this file was measured with Rust 1.94.0.** The toolchain moved to 1.97.1 on 2026-11-22 (ledger O31). Operation counts do not depend on the compiler and are held equal across the change by the count records; timings do, and the figures below are not comparable with any measured on 1.97.1 until they are re-measured (O7).
+
 ## Raspberry Pi 4 gate
 
 Run `bash scripts/bench_floor.sh > prism-pi4.txt` on a 64-bit Raspberry Pi 4
