@@ -1,0 +1,107 @@
+# The public surface of prism-int. Written by scripts/ci/check_int_surface.py --write;
+# CI holds the sources to it.
+
+[division.rs]
+impl<const N: usize> Dividend<N>
+impl<const N: usize> Int<N>
+    pub fn div_rem_trunc(&self, divisor: &Self) -> Result<(Self, Self), IntError>
+    pub fn div_rem_floor(&self, divisor: &Self) -> Result<(Self, Self), IntError>
+    pub fn rem_euclid(&self, modulus: &Self) -> Result<Self, IntError>
+    pub fn rem_centred(&self, modulus: &Self) -> Result<Self, IntError>
+    pub fn div_round(&self, divisor: &Self) -> Result<Self, IntError>
+    pub fn div_exact(&self, divisor: &Self) -> Result<Self, IntError>
+
+[error.rs]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum IntError
+        Overflow
+        DivisionByZero
+        Inexact
+        Negative
+        Modulus
+        Count
+impl fmt::Display for IntError
+impl std::error::Error for IntError
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SecretError
+        Overflowed
+        DoesNotFit
+impl fmt::Display for SecretError
+impl std::error::Error for SecretError
+
+[lib.rs]
+pub use error::{IntError, SecretError}
+pub use public::Int
+pub use secret::{SecretBit, SecretInt}
+
+[number.rs]
+impl<const N: usize> Int<N>
+    pub fn gcd(&self, other: &Self) -> Self
+    pub fn xgcd(&self, other: &Self) -> Result<(Self, Self, Self), IntError>
+    pub fn inv_mod(&self, modulus: &Self) -> Result<Option<Self>, IntError>
+    pub fn sqrt_floor(&self) -> Result<Self, IntError>
+    pub fn sqrt_exact(&self) -> Option<Self>
+    pub fn jacobi(&self, n: &Self) -> Result<i8, IntError>
+    pub fn mul_mod(&self, rhs: &Self, modulus: &Self) -> Result<Self, IntError>
+    pub fn pow_mod(&self, exponent: &Self, modulus: &Self) -> Result<Self, IntError>
+
+[public.rs]
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub struct Int<const N: usize>
+impl<const N: usize> fmt::Debug for Int<N>
+impl<const N: usize> Drop for Int<N>
+impl<const N: usize> PartialOrd for Int<N>
+impl<const N: usize> Ord for Int<N>
+impl<const N: usize> Int<N>
+    pub const BITS: u32
+    pub fn zero() -> Self
+    pub fn one() -> Self
+    pub fn from_u64(value: u64) -> Self
+    pub fn from_i64(value: i64) -> Self
+    pub fn from_le_limbs(magnitude: &[u64], negative: bool) -> Result<Self, IntError>
+    pub fn from_le_bytes(bytes: &[u8]) -> Result<Self, IntError>
+    pub fn to_le_bytes(&self, out: &mut [u8]) -> Result<(), IntError>
+    pub fn public_hex(&self) -> String
+    pub fn is_negative(&self) -> bool
+    pub fn is_zero(&self) -> bool
+    pub fn is_odd(&self) -> bool
+    pub fn low_bits(&self, count: u32) -> Result<u64, IntError>
+    pub fn residue_pow2(&self, count: u32) -> Result<u64, IntError>
+    pub fn bit_length(&self) -> u32
+    pub fn trailing_zeros(&self) -> Option<u32>
+    pub fn neg(&self) -> Self
+    pub fn add(&self, rhs: &Self) -> Result<Self, IntError>
+    pub fn sub(&self, rhs: &Self) -> Result<Self, IntError>
+    pub fn mul(&self, rhs: &Self) -> Result<Self, IntError>
+    pub fn shl(&self, count: u32) -> Result<Self, IntError>
+    pub fn shr(&self, count: u32) -> Self
+
+[secret.rs]
+pub struct SecretBit
+impl fmt::Debug for SecretBit
+impl Drop for SecretBit
+impl SecretBit
+    pub fn declassify(&self) -> Result<bool, SecretError>
+pub struct SecretInt<const N: usize>
+impl<const N: usize> fmt::Debug for SecretInt<N>
+impl<const N: usize> Clone for SecretInt<N>
+impl<const N: usize> Drop for SecretInt<N>
+impl<const N: usize> SecretInt<N>
+    pub fn zero() -> Self
+    pub fn one() -> Self
+    pub fn from_u64(value: u64) -> Self
+    pub fn from_i64(value: i64) -> Self
+    pub fn from_public(value: &Int<N>) -> Self
+    pub fn from_le_bytes(bytes: &[u8]) -> Self
+    pub fn neg(&self) -> Self
+    pub fn add(&self, rhs: &Self) -> Self
+    pub fn sub(&self, rhs: &Self) -> Self
+    pub fn mul(&self, rhs: &Self) -> Self
+    pub fn shl(&self, count: u32) -> Self
+    pub fn shr(&self, count: u32) -> Self
+    pub fn select(if_clear: &Self, if_set: &Self, bit: &SecretBit) -> Self
+    pub fn swap(a: &mut Self, b: &mut Self, bit: &SecretBit)
+    pub fn ct_eq(&self, rhs: &Self) -> SecretBit
+    pub fn ct_lt(&self, rhs: &Self) -> SecretBit
+    pub fn declassify(&self) -> Result<Int<N>, SecretError>
+    pub fn export_le_bytes(&self, magnitude: &mut [u8], negative: &mut u8) -> Result<(), SecretError>

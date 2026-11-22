@@ -125,6 +125,22 @@ jobs:
         run: |
           python3 scripts/ci/check_no_upward_edge.py --selftest
           python3 scripts/ci/check_no_upward_edge.py
+      # The signer's integers, `prism-int`. Its committed vectors are what
+      # the script writes from Python's integers; the Rust tests read the
+      # file. Its public surface is the committed list, and no trait that
+      # would let a secret out is implemented for the secret types. Every
+      # call of one of the three exits of the secret types, outside the
+      # crate, has a row in the secret-treatment table of
+      # docs/SIGNER_SPEC.md 2.1.3; the self-tests plant each breach. A few
+      # seconds in all.
+      - name: The integer crate's vectors, surface and secret exits are what is committed
+        run: |
+          set -euo pipefail
+          python3 scripts/int_vectors.py --check
+          python3 scripts/ci/check_int_surface.py --selftest
+          python3 scripts/ci/check_int_surface.py
+          python3 scripts/ci/check_secret_exits.py --selftest
+          python3 scripts/ci/check_secret_exits.py
       # The script reads the parameter sets out of the field crate's source.
       # Nothing else runs it, so a change to how the sets are declared
       # would break it unseen.
@@ -191,7 +207,7 @@ jobs:
       - name: Documentation of the library crates, default features
         env:
           RUSTDOCFLAGS: -D warnings
-        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit -p prism-field -p prism-isogeny -p prism-verify --no-deps --locked
+        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit -p prism-int -p prism-field -p prism-isogeny -p prism-verify --no-deps --locked
       # The counter's module and the verifier's stage names are public only
       # with this feature, which the verifier's turns on in the field crate.
       - name: Documentation of the library crates, operation counter
@@ -415,6 +431,20 @@ jobs:
       # committed file byte for byte, with the digests of the source files.
       - name: The committed C oracle values are what the pinned tree holds
         run: python3 scripts/signer_constants.py --extract-c
+      # The integer widths of docs/SIGNER_SPEC.md 2.1.2 were measured in a
+      # build of the pinned tree with two patches applied to a copy
+      # (scripts/build_traced_reference.sh). Nothing builds that here; this
+      # holds that both patches still apply to the pin, so the measurement
+      # can be run again.
+      - name: The measurement's patches apply to the pinned tree
+        run: |
+          set -euo pipefail
+          work=$(mktemp -d)
+          cp -R external/PRISM_v2/src "$work/src"
+          patch -d "$work/src" -p4 --forward --input="$PWD/scripts/c/cornacchia-positive.patch"
+          patch -d "$work/src" -p4 --forward --input="$PWD/scripts/c/ibz-trace.patch"
+          grep -q 'ibz_trace_record' "$work/src/quaternion/ref/generic/intbig.c"
+          rm -rf "$work"
 
   c-vectors:
     name: c-vectors
@@ -443,6 +473,12 @@ jobs:
         run: bash scripts/ci/diff_vectors_data.sh
       - name: C Q is the cleared difference
         run: python3 scripts/check_even_basis.py 100
+      # The integer crate's committed vectors, given to the reference's
+      # ibz_* functions in the build made above: every convention a replay
+      # of the reference depends on (docs/SIGNER_SPEC.md 2.1.4). The Rust
+      # tests read the same file. A second of compiling and running.
+      - name: The reference's integers agree with the integer crate's vectors
+        run: PRISM_REF_BUILD=/tmp/prism-v2-ref sh scripts/check_int_conventions.sh
 
   native-signer:
     name: native-signer

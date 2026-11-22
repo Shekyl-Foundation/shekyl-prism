@@ -175,7 +175,9 @@
 //! field arithmetic, isogenies, and the verifier's steps. That is where
 //! the algorithm can be read, measured and extended. Its functions assume
 //! invariants that only this interface checks in full, and nothing there
-//! is promised stable.
+//! is promised stable. It also re-exports the first layer of the signer
+//! that is being written, the fixed-width integers, which nothing here
+//! calls yet.
 //!
 //! # What is missing
 //!

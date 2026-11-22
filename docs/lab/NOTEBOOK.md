@@ -1025,3 +1025,41 @@ The reviewer read section 2.1 at `8524255` and approved it with six corrections,
 The reviewer's recommendations on the four proposals put to Rick (the secret norm's bound as the budget's assumption with the rule ruled at stage 5; both types wiped; three exits; the sticky overflow mark) are recorded here as recommendations. They are rulings when Rick makes them.
 
 Who. The reviewer found all six. The coding agent (Claude Code, `claude-fable-5-2`) wrote them into the section.
+
+## 2026-11-22 — Signer stage 2a, step 2: the integer crate, `prism-int`
+
+Rick ruled on the four proposals of section 2.1 (2026-11-22, in session): yes to all. The secret norm's bound is the width's assumption now and the rule itself is ruled at stage 5 with the refusal probability in hand; both types are wiped and neither prints a value; three named exits; overflow in a secret is a sticky mark, carried by secret bits too. He noted the one with a later cost: if stage 5 rejects the bound, each width grows by about half, which is one constant in the code and a slower signer.
+
+**Built.** The crate of `docs/SIGNER_SPEC.md` 2.1.6: a public integer `Int<N>` with the variable-time operations of 2.1.4, a secret integer `SecretInt<N>` with the fixed-shape ones, `SecretBit`, and the three exits. No workspace dependency. `zeroize` 1.8.2 and `subtle` 2.6.1 in the library, `num-bigint` 0.4.6 in the tests; `cargo deny check` passes. Nothing calls it: this part has no consumer, the secret-treatment table is empty, and the count of exit call sites outside the crate is zero.
+
+**Run** (a build VM, x86_64, Rust 1.97.1).
+
+| What | Result |
+| --- | --- |
+| `cargo test -p prism-int`, debug and release | 62 passed in each: 6 unit, 16 in `marks`, 2 in `oracle`, 1 in `oracle_number`, 13 in `vectors`, 24 documentation tests |
+| `cargo test --workspace`, debug and release | 351 passed, 0 failed, 2 ignored, in each profile (47 test binaries) |
+| `scripts/check_int_conventions.sh` against the reference build | 26,299 comparisons over 18 `ibz_*` functions, 0 differences |
+| `cargo deny check` | advisories, bans, licenses, sources: ok |
+| `sh scripts/op_counts.sh` | the three records change in their source digest line and nowhere else |
+| `cargo mutants -p prism-int --test-package prism-int` | final code: 497 mutants, 443 caught, 53 unviable, 1 missed (second run, 45 minutes on two cores); that one removed, and `division.rs` alone again: 119 mutants, 113 caught, 6 unviable, none missed, none timed out |
+
+The vectors passed at their first complete run. Two failures before it were faults of the oracle test's own operands (a square that could not fit one limb; a modulus that could be zero).
+
+**What the first mutation run found** (519 mutants: 432 caught, 17 missed, 17 timeouts, 53 unviable, 59 minutes on two cores), and what was done. None is left to the record of mutants that stay. `cargo fmt --check` and `cargo clippy --workspace --all-targets -- -D warnings` were run on the development machine, and `cargo doc` with warnings denied on the build VM.
+
+- *Sixteen timeouts in the division.* A mutant that breaks the division's invariant makes its estimate of a quotient limb enormous, and the correction loop, a `while`, counted it down one at a time. The loop is now counted to two, which is all algorithm D can need; on correct code it is the same loop. The other cause was the order of the tests: the routines that loop on a remainder ran in the same test binary as the division's own checks. They are in a binary Cargo runs later.
+- *One timeout:* `partial_cmp` returning `None` made the square root's iteration endless before any test asked for `partial_cmp`. The oracle test asks first.
+- *Missed, equivalent as written, rewritten:* `|` joining two halves that share no bit (three in the division, now sums); the secret comparison, three exclusive cases joined by `|` (now two selections); `value < 0` for a sign that a zero's normalization hides (now `is_negative`); a bound in a private bit accessor that no caller could reach (removed).
+- *Missed for want of a test, tested:* the mark when both operands carry it; a lost limb product whose two halves are equal (`274177 · 67280421310721 = 2^64 + 1`, at every width); limbs past the width; the errors' messages.
+- *Missed in the second run, equivalent as written, rewritten:* the test for the add-back, `difference >> 64 != 0`, which a shift the other way satisfied on the same inputs. It is now the borrow bit, as in the loop above it.
+- *Missed and removed:* a hand-written drop of the division's scratch limb, which no safe test can see. The limb is in a wrapper that wipes itself.
+
+**What the code showed of section 2.1.** Four statements were incomplete and are corrected in the section: the byte export needs a second refusal, for a buffer shorter than the value; the cofactor bound of the extended greatest common divisor fails when an operand is zero; a selection passes on the mark of the value selected, not of both; bytes that do not fit set the mark, since the secret type has no constructor that can fail. No width, no number and no convention changed.
+
+**A departure from the brief.** The brief has the crate join the nightly layer job. It is a job of its own, `mutants-int`, in four shards: the crate depends on no other, so in the layer job each of its mutants would run four packages' tests that cannot reach it, and each of the verifier's 835 mutants would run its tests. In the report for Rick to reverse.
+
+**The watch list (ledger O32)** was read against the crate's source: none of its shapes is there. Frame sizes were not measured.
+
+**Not done, and not claimed.** No constant-time claim: the secret operations are written without a branch or an index on a secret limb, and whether the compiled code keeps that is for the last stage (O6). The wipe is shown as far as safe code can show it. The vector file is 3.3 MB, the largest text file in the repository. aarch64 is CI's: no aarch64 host ran these tests before the push.
+
+Who. Rick ruled. The reviewer wrote the brief and the six corrections. The coding agent (Claude Code, `claude-fable-5-2`) wrote the crate, the scripts and the checks and ran them; the session's advisor model reviewed the plan before the code, and its points on the selection trait, the hand-written ordering, the add-back's vectors and the vacuous exit count are in what was built.

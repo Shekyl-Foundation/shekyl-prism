@@ -27,6 +27,8 @@ def wanted(path: str) -> bool:
         (
             "scripts/",
             "external/",
+            # The integer crate's vectors are given to the reference's ibz_*.
+            "prism-int/",
             "prism-field/",
             "prism-isogeny/",
             "prism-verify/",
@@ -138,6 +140,7 @@ def selftest() -> int:
         "prism-isogeny/src/torsion.rs": True,
         "prism-compare/src/lib.rs": True,
         "prism-isogeny/src/jac.rs": True,
+        "prism-int/tests/data/vectors.tsv": True,
         "prism-field/src/lib.rs": True,
         "prism-field/Cargo.toml": True,
         "Cargo.toml": True,

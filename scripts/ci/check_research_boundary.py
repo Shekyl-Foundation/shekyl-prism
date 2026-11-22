@@ -68,7 +68,7 @@ def main():
     if FEATURE not in verifier_features("prism-verify", "--features", f"prism-verify/{FEATURE}"):
         raise SystemExit("the graph reader does not see the research feature when it is requested")
     for name in (
-        "prism-field", "prism-isogeny", "prism-verify", "prism-signer", "shekyl-prism",
+        "prism-int", "prism-field", "prism-isogeny", "prism-verify", "prism-signer", "shekyl-prism",
         "prism-testkit",
     ):
         text = (ROOT / name / "Cargo.toml").read_text()

@@ -12,6 +12,8 @@ publish.workspace = true
 # enabled by no manifest; scripts/ci holds this crate to that.
 
 [dependencies]
+# Named for `hazmat::int` alone: no code of this crate calls it.
+prism-int = { workspace = true }
 prism-field = { workspace = true }
 prism-isogeny = { workspace = true }
 prism-verify = { workspace = true }
