@@ -1,0 +1,49 @@
+--- /tmp/PRISM_v2/src/quaternion/ref/generic/qlapoti.c	2026-11-22 15:32:28.191782281 -0500
++++ /tmp/prism_c/src/quaternion/ref/generic/qlapoti.c	2026-11-22 15:58:56.897864741 -0500
+@@ -4,6 +4,8 @@
+ // get shortest equivalent ideal
+ 
+ #define DEBUG_PRINTS 1
++#include <stdio.h>
++static int qlapoti_stat_last_pos = 0, qlapoti_stat_last_mod = 0;
+ 
+ void
+ quat_lideal_shortest_equivalent(quat_left_ideal_t *equiv,
+@@ -385,8 +387,10 @@
+     if ((DEBUG_PRINTS > 2) && found && !(ibz_cmp(&ibz_const_zero, &m2) < 0))
+         ibz_printf("size\n");
+ #endif
++    qlapoti_stat_last_pos = (ibz_cmp(&ibz_const_zero, &m2) < 0);
+     if (found)
+         found = quat_qlapoti_check_mod_condition(&m2, &A, &B);
++    qlapoti_stat_last_mod = found;
+     if (found) {
+         // cornacchia
+         found = ibz_cornacchia_extended(&(a[0]), &(b[0]), &m2, q_params->cornacchia_params);
+@@ -568,8 +572,10 @@
+ 
+     // int num_alphas_tried = 0;
+     // int num_loops_total = 0;
++    int qlstat_passes = 0, qlstat_m4pos = 0, qlstat_modok = 0;
+     for (int counter = 0; counter < max_counter_alpha * 20; counter++) {
+         found = 1;
++        qlstat_passes++;
+ 
+         // compute alpha, lam, alpha_0, alpha0norm
+         {
+@@ -678,6 +684,8 @@
+         params.m = &m;
+         params.n = &n;
+         found = quat_dim2_lattice_qlapoti_cvp_condition(&encoding, &v_diff, &params);
++        qlstat_modok += qlapoti_stat_last_mod;
++        qlstat_m4pos += qlapoti_stat_last_pos;
+ 
+         if (!found) {
+             continue;
+@@ -814,5 +822,6 @@
+     ibz_mat_2x2_finalize(&L_inv);
+     ibz_mat_4x4_finalize(&gram);
+ 
++    fprintf(stderr, "QLSTAT %d %d %d %d %d\n", qlstat_passes, found, transformed, qlstat_modok, qlstat_m4pos);
+     return (found + found * transformed * 2);
+ }
