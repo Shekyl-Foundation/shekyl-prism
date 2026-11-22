@@ -976,3 +976,37 @@ Not done. Windows. A measurement of stack frame sizes (one fault needs a frame o
 
 Who. Rick ruled R4 and the 1.97 pin. The reviewer wrote the brief and read "1.97" as 1.97.1. The coding agent (Claude Code; `claude-fable-5-2`, and from this part `claude-opus-5-5`) wrote the canaries, moved the pin, ran everything, and wrote these records; a research agent it started searched upstream's issues. The structural-cleanup lane of `shekyl-core` ran the reproduction on 1.94.0 and 1.97.0 (ledger O31).
 
+## 2026-11-22 — Signer stage 2a, step 1: the specification of the integers, and what the reference's integers reach
+
+Question. The signer's integers are to be fixed-width (S5). How wide, at each set, before any algorithm above them is written? And what does the reference, whose integers grow to fit, actually reach?
+
+Rule (the brief of 2026-11-22). Step 1 is the section alone (`docs/SIGNER_SPEC.md` 2.1), pushed and reported, and the crate waits for its review (G3). The width is derived, by consumer, and measured in the reference at the three sets it has; `sqisign-rs` is read as an oracle. The formula is to be derived and not fitted, with the margin at `p324` and `p664` stated.
+
+Expected before running. That the reference's largest integers are in its lattice normal form, from the determinant it reduces modulo, several times what any method needs. That the value that binds is the Gram matrix of an ideal before reduction. That five times the length of `p` is about right, since that is `sqisign-rs`'s rule.
+
+**The instrument** (`scripts/c/ibz-trace.patch`, `scripts/build_traced_reference.sh`, `scripts/measure_integer_widths.py`). A patch to a copy of the pinned tree: each of 25 `ibz_*` functions that write an integer is renamed and wrapped, and the wrapper records the bit length written and its return address. The record is written at exit, and also from a handler of SIGFPE, SIGABRT, SIGSEGV and SIGTERM, because the pinned reference is known to divide by zero on some seeds and has loops with no cap. Addresses are resolved with `addr2line -i`; the build has `-g`, no PIE and no sibling-call optimization. Where the link-time optimizer kept no inlining record, a row is the emitted function and stands for what was inlined into it.
+
+Two things were wrong in the first draft of the driver and were caught before the run (the session's advisor model read the plan): the challenge scalars were random odd numbers, so `q` was almost never prime and the signing runs would have walked a path the protocol never takes; and a run that crashed would have left no record. The scalars are now the first odd `s` at or after a derived starting point for which `q` is prime, and `s` is the smallest such for the first signature of each key.
+
+**The runs** (Ran, a shared build VM, two cores, beside other lanes' work; 43 minutes). 256 key generations and 2,048 signatures at each of `p248`, `p376`, `p500`. Every run returned 0: none failed, none was stopped by the time limit. A run of the first 64 keys of the same sequence, made before, is a subset of this one and not a replication of it: four times the runs moved the largest value of a class by at most 7 bits.
+
+| Largest integer written, bits | `p248` | `p376` | `p500` |
+| --- | ---: | ---: | ---: |
+| Key generation | 12,746 | 19,188 | 25,531 |
+| Signing | 12,328 | 18,767 | 24,953 |
+| With the reference's method set aside (class C of the section) | 1,268 | 1,911 | 2,527 |
+| `need` of the section | 1,553 | 2,329 | 3,069 |
+
+The first expectation held, and by more than expected: 49 to 51 times the length of `p`, against about 6 for what the objects need. The second held: the largest value that is not the reference's method is the Gram matrix in `quat_lideal_reduce_basis`, `2·b(N) + 4` bits for the norm `N`, in signing, where the ideal reduced is the intersection of the challenge ideal with the secret one. The third was wrong for this protocol: five times the length of `p` is 20, 30 and 40 limbs at the three sets, below `need` at each (25, 37, 48), because our response ideal has norm near `p²` where SQIsign's and salt-PRISM's have a norm tied to the security level. `sqisign-rs`'s generator says as much in a comment, for exactly our two round-2 primes.
+
+**A bound of the first draft that the measurement refuted.** The draft bounded "the norm equation" at `2.5·L + 80` bits and the table showed 755 bits against 707 at `p248`. The row of `quat_qlapoti` has the step to the shortest equivalent ideal inlined into it, and the 755 bits are that step's product of the ideal's norm with the new norm. The section now compares that row with the bound of the step (its row 8) and keeps the norm equation's own bound for the same function in key generation, where the ideal is small. Recorded because it is the comparison column doing its work.
+
+**A method the first draft named wrongly** (the advisor model, before the push). The draft said an ideal's normal form is "computed modulo `2N`". The reference's routine and the textbook modular algorithm need a multiple of the determinant, `4N²` here, and divide the modulus by each pivot; with `2N` they are wrong, and with `4N²` their intermediates are near `4b` bits, above the width proposed. The section now names the method the budget is for: the four vectors `2N·eᵢ` among the generators, every entry reduced modulo `2N`, the modulus never divided. The same review found that a secret comparison's result and the secret key's bytes were exits the single named conversion did not count; the section now has three named exits and counts all three.
+
+**What is not proven** (ledger O33). The reduction's intermediates, and the secret ideal's norm, for which the section proposes that key generation refuse a norm above `2^(⌈L/2⌉ + 32)`. Nothing at `p324` and `p664` is measured.
+
+**Read.** `sqisign-rs` at `7a4a01b`, by a research agent of this session, and its report checked at the source for every statement the section makes: the type, the three limb counts, the generator's rule and comment, and what `add` and `mul` do when a result does not fit.
+
+Not done. The crate: it waits for the section's review. A CI step that holds the patch applicable to the pinned tree: proposed for step 2. The committed table was written by the driver and the build script before their copyright headers were added; the headers are the only difference, and the patch that ran is the committed one, byte for byte.
+
+Who. The reviewer wrote the brief. The coding agent (Claude Code, `claude-fable-5-2`) wrote the patch, the scripts and the section, and ran the measurement; a research agent it started read `sqisign-rs`; the session's advisor model reviewed the plan before the run.
