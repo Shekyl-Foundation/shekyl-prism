@@ -6,11 +6,13 @@
 """Runs for the secret-ideal re-randomization experiment.
 
 Panels (per set):
+  sampg         as samp, Gaussian-then-round sampler (prime/odd);
   samp          sampler only: many keys x signatures, all four sampler
                 variants (accept prime/odd x coefficient shape plain/norm);
                 retry counts, primality tests, N' length, key features.
   pair          same (key, msg): baseline product I ∩ I_q vs the
-                re-randomized product J*K_J (variants prime-norm, odd-norm);
+                re-randomized product J*K_J (variants prime-norm, odd-norm,
+                odd-gauss);
                 exact LLL op counts and the fixed Z[i] schedule on each;
                 map-back and output-identity checks.
   dudect_fixed  one fixed key (its N at the bound B), many messages;
@@ -29,12 +31,12 @@ from hdl import (SETS, prime_of, shake, stream_job_data, select_xy,
 from fsr import lll_exact, zi_gauss_fixed
 from run_fsr import (sk_of, msg_of, secret_class_var, n_bound, tmax,
                      write_csv)
-from rr import (ACCEPT, SHAPES, keygen_reduce, sample, rerandomized_product,
+from rr import (ACCEPT, SHAPES, keygen_reduce, sample_any, rerandomized_product,
                 is_standard, map_back, canon)
 
 SET_MAP = {n: (n, e, f) for n, e, f in SETS}
 C_COEF = 1 << 8
-DOWN_VARIANTS = (('prime', 'norm'), ('odd', 'norm'))
+DOWN_VARIANTS = (('prime', 'norm'), ('odd', 'norm'), ('odd', 'gauss'))
 
 
 def key_material(set_name, sk, force_nb=None):
@@ -49,7 +51,7 @@ def key_material(set_name, sk, force_nb=None):
 
 
 def job_samp(args):
-    set_name, kid, nsig = args
+    set_name, kid, nsig, shapes = args
     sk = shake(b'sk-rr-samp', set_name.encode(), kid.to_bytes(4, 'little'), n=32)
     p, e, f, N, xN, yN, kr, feat = key_material(set_name, sk)
     rows = []
@@ -58,9 +60,9 @@ def job_samp(args):
         row = dict(set=set_name, key=kid, sig=m, p_bits=p.bit_length(),
                    N_bound=n_bound(p), **feat)
         for acc in ACCEPT:
-            for sh in SHAPES:
+            for sh in shapes:
                 t0 = time.perf_counter()
-                r = sample(kr, N, p, seed, acc, sh, C_COEF, n_bound(p))
+                r = sample_any(kr, N, p, seed, acc, sh, C_COEF, n_bound(p))
                 pre = f'{acc}_{sh}'
                 row[f'{pre}_time'] = round(time.perf_counter() - t0, 6)
                 row[f'{pre}_tries'] = r['tries']
@@ -121,7 +123,7 @@ def job_down(args):
         salt = data['salt']
         seed = shake(b'rr-seed', sk, msg, salt)   # hedged model: H(sk, msg, salt[, rnd])
         t0 = time.perf_counter()
-        r = sample(kr, N, p, seed, acc, sh, C_COEF, n_bound(p))
+        r = sample_any(kr, N, p, seed, acc, sh, C_COEF, n_bound(p))
         Br = rerandomized_product(Bp, r['beta'], N, p)
         Tr = r['Np'] * q
         row[f'{pre}_samp_time'] = round(time.perf_counter() - t0, 5)
@@ -162,14 +164,15 @@ def main():
     with Pool(a.procs) as pool:
         for panel in a.panels:
             for set_name in a.sets:
-                if panel == 'samp':
+                if panel in ('samp', 'sampg'):
                     blk = 250
+                    shapes = SHAPES if panel == 'samp' else ('gauss',)
                     for k0 in range(0, a.samp_keys, blk):
-                        path = out / f'samp_{set_name}_k{k0:04d}.csv'
+                        path = out / f'{panel}_{set_name}_k{k0:04d}.csv'
                         if path.exists():
                             continue
                         t0 = time.time()
-                        jobs = [(set_name, k, a.samp_sigs) for k in range(k0, min(a.samp_keys, k0 + blk))]
+                        jobs = [(set_name, k, a.samp_sigs, shapes) for k in range(k0, min(a.samp_keys, k0 + blk))]
                         rows = [r for rs in pool.map(job_samp, jobs, chunksize=5) for r in rs]
                         write_csv(path, rows)
                         print(f'wrote {path} ({len(rows)}) {time.time() - t0:.0f}s', flush=True)

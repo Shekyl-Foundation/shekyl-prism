@@ -138,3 +138,97 @@ def canon(u):
     iu = ileft(u)
     cands = [tuple(u), tuple(-x for x in u), tuple(iu), tuple(-x for x in iu)]
     return max(cands)
+
+
+# --------------------------------------------- Gaussian-then-round sampler
+# The box sampler's coefficient box is shaped by the key's reduced basis,
+# so the law of nrd(beta) depends (slightly) on that shape. Here x is a
+# continuous Gaussian that is isotropic for the reduced norm (independent
+# of any basis), with width far above the basis lengths, and beta is x
+# rounded to the lattice (Babai rounding on the stored reduced basis).
+import math as _math
+from gmpy2 import mpfr as _mpfr
+
+_GPREC = 512
+
+
+def _inv4(M):
+    """Inverse of a 4x4 matrix (rows), mpfr Gauss-Jordan."""
+    with gmpy2.local_context(gmpy2.get_context(), precision=_GPREC):
+        n = 4
+        A = [[_mpfr(M[r][c]) for c in range(n)] + [_mpfr(int(r == c)) for c in range(n)]
+             for r in range(n)]
+        for c in range(n):
+            piv = max(range(c, n), key=lambda r: abs(A[r][c]))
+            A[c], A[piv] = A[piv], A[c]
+            pv = A[c][c]
+            A[c] = [x / pv for x in A[c]]
+            for r in range(n):
+                if r != c:
+                    f = A[r][c]
+                    A[r] = [a - f * b for a, b in zip(A[r], A[c])]
+        return [row[n:] for row in A]
+
+
+def gauss_setup(kr, p, extra_bits=16):
+    """Precomputable at key generation: basis rows, inverse, width."""
+    u, v = kr['u'], kr['v']
+    rows = [tuple(u), ileft(u), tuple(v), ileft(v)]
+    L = p.bit_length()
+    kr['g_rows'] = rows
+    kr['g_inv'] = _inv4(rows)
+    kr['g_tbits'] = (L + 1) // 2 + extra_bits   # target E[bits(N')] scale
+    return kr
+
+
+def draw_beta_gauss(kr, N, p, seed, ctr):
+    with gmpy2.local_context(gmpy2.get_context(), precision=_GPREC):
+        raw = shake(b'rr-gauss', seed, ctr.to_bytes(4, 'little'), n=4 * 32)
+        us = [(_mpfr(int.from_bytes(raw[32 * t:32 * t + 32], 'little')) + 1) / _mpfr(2) ** 256
+              for t in range(4)]
+        g = []
+        for a, b in ((us[0], us[1]), (us[2], us[3])):
+            rad = gmpy2.sqrt(-2 * gmpy2.log(a))
+            g += [rad * gmpy2.cos(2 * gmpy2.const_pi() * b),
+                  rad * gmpy2.sin(2 * gmpy2.const_pi() * b)]
+        # nrd(x) = sigma^2 * sum g_t^2, E = 4 sigma^2; target nrd/N ~ 2^tbits
+        sigma = gmpy2.sqrt(_mpfr(N) * _mpfr(2) ** kr['g_tbits'] / 4)
+        w = (1, 1, p, p)
+        x = [sigma * g[t] / gmpy2.sqrt(_mpfr(w[t])) for t in range(4)]
+        # coefficients c = x * B^-1 (row-vector convention), rounded
+        inv = kr['g_inv']
+        c = [int(gmpy2.rint(sum(x[r] * inv[r][s] for r in range(4)))) for s in range(4)]
+    rows = kr['g_rows']
+    beta = tuple(sum(c[s] * rows[s][t] for s in range(4)) for t in range(4))
+    return beta, c
+
+
+def sample_gauss(kr, N, p, seed, accept, nb_max, kmax=100_000):
+    if 'g_inv' not in kr:
+        gauss_setup(kr, p)
+    mr = hn = 0
+    for ctr in range(kmax):
+        beta, c = draw_beta_gauss(kr, N, p, seed, ctr)
+        n = nrd(beta, p)
+        if n == 0:
+            continue
+        assert n % N == 0
+        Np = n // N
+        if Np % 2 == 0 or Np.bit_length() > nb_max or Np == 1:
+            continue
+        if accept == 'prime':
+            mr += 1
+            if not gmpy2.is_prime(Np):
+                continue
+        hn += 1
+        JB = J_basis(kr['B'], beta, N, p)
+        if not is_standard(JB, Np):
+            continue
+        return dict(beta=beta, Np=Np, tries=ctr + 1, mr=mr, hnf=hn, JB=JB)
+    raise RuntimeError('sampler exhausted')
+
+
+def sample_any(kr, N, p, seed, accept, shape, C, nb_max):
+    if shape == 'gauss':
+        return sample_gauss(kr, N, p, seed, accept, nb_max)
+    return sample(kr, N, p, seed, accept, shape, C, nb_max)
