@@ -1,0 +1,6 @@
+set,n_fixed,n_rand,fixed_N_bits,t_base_ex_mul,t_base_ex_lovasz,t_base_zi_mul,t_prime_norm_ex_mul,t_prime_norm_ex_lovasz,t_prime_norm_zi_mul,t_prime_norm_tries,t_prime_norm_Np_bits,t_odd_norm_ex_mul,t_odd_norm_ex_lovasz,t_odd_norm_zi_mul,t_odd_norm_tries,t_odd_norm_Np_bits,t_odd_gauss_ex_mul,t_odd_gauss_ex_lovasz,t_odd_gauss_zi_mul,t_odd_gauss_tries,t_odd_gauss_Np_bits
+p248,1000,1000,158,21.63,19.7,0.0,-0.6,-0.74,0.0,-0.5,0.15,1.64,1.49,0.0,0.7,-2.0,-0.1,-0.38,0.0,-1.79,1.13
+p324,1000,1000,195,17.39,15.57,0.0,1.16,0.99,0.0,-0.06,-1.19,-0.77,-1.16,0.0,-0.53,-1.14,0.8,0.49,0.0,0.27,0.75
+p376,1000,1000,224,17.91,16.34,0.0,0.51,0.0,0.0,0.13,-0.66,-0.53,-0.87,0.0,-1.01,0.77,-1.34,-0.99,0.0,2.22,-0.32
+p500,1000,1000,285,15.32,14.41,0.0,0.68,0.6,0.0,-0.5,-2.25,3.19,3.14,0.0,0.04,-0.98,0.5,0.09,0.0,-0.68,-1.12
+p664,1000,1000,367,12.47,11.61,0.0,0.9,0.79,0.0,1.28,0.03,1.38,1.11,0.0,0.29,-1.99,0.74,0.31,0.0,-0.31,-0.56
