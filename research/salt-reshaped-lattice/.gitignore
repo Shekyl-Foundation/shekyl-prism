@@ -1,0 +1,4 @@
+results/raw/
+__pycache__/
+*.pyc
+results/run.log

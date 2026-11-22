@@ -1,0 +1,3254 @@
+{
+  "stream": {
+    "p248": {
+      "COF": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 2419.54,
+          "sd": 55.53
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1500.74,
+          "sd": 33.49
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 1865.59,
+          "sd": 37.66
+        },
+        "cv": 0.023,
+        "q_bits": {
+          "n": 512,
+          "mean": 491.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 2897.0,
+          "sd": 0.0
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 833.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0501,
+          "kruskal_H": 25.5,
+          "kruskal_p": 0.7454843182911582
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      },
+      "D0": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 231.66,
+          "sd": 14.84
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 151.79,
+          "sd": 9.9
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 168.31,
+          "sd": 22.75
+        },
+        "cv": 0.0641,
+        "q_bits": {
+          "n": 512,
+          "mean": 491.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 1232.34,
+          "sd": 0.71
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0362,
+          "kruskal_H": 18.6,
+          "kruskal_p": 0.9607042582786406
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "H2": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 741.99,
+          "sd": 29.0
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 458.86,
+          "sd": 17.41
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 571.88,
+          "sd": 20.74
+        },
+        "cv": 0.0391,
+        "q_bits": {
+          "n": 512,
+          "mean": 491.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 1232.34,
+          "sd": 0.71
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0597,
+          "kruskal_H": 27.6,
+          "kruskal_p": 0.6425896701984389
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "Q256": {
+        "n": 512,
+        "ok_q": 0.349609375,
+        "ok_in": 0.349609375,
+        "ok_extra": 0.349609375,
+        "iterations": {
+          "n": 512,
+          "mean": 94.21,
+          "sd": 129.0
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 57.76,
+          "sd": 79.07
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 72.26,
+          "sd": 98.93
+        },
+        "cv": 1.3693,
+        "q_bits": {
+          "n": 512,
+          "mean": 491.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 1232.34,
+          "sd": 0.71
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0783,
+          "kruskal_H": 41.1,
+          "kruskal_p": 0.10587111020840363
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      },
+      "SCALE": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 741.99,
+          "sd": 29.0
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 458.86,
+          "sd": 17.41
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 571.88,
+          "sd": 20.74
+        },
+        "cv": 0.0391,
+        "q_bits": {
+          "n": 512,
+          "mean": 491.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3308.34,
+          "sd": 0.71
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 520.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0597,
+          "kruskal_H": 27.6,
+          "kruskal_p": 0.6425896701984389
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "SUPER": {
+        "n": 512,
+        "ok_q": 0.0,
+        "ok_in": 0.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 3.0,
+          "sd": 0.0
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 4.0,
+          "sd": 0.0
+        },
+        "cv": 0.0,
+        "q_bits": {
+          "n": 512,
+          "mean": 491.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 251.0,
+          "sd": 0.0
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0,
+          "kruskal_H": NaN,
+          "kruskal_p": NaN
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      }
+    },
+    "p324": {
+      "COF": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 2338.78,
+          "sd": 50.44
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1451.23,
+          "sd": 30.8
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 1803.94,
+          "sd": 36.14
+        },
+        "cv": 0.0216,
+        "q_bits": {
+          "n": 512,
+          "mean": 643.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 2972.0,
+          "sd": 0.0
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 681.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0673,
+          "kruskal_H": 34.6,
+          "kruskal_p": 0.30143054469191377
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      },
+      "D0": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 300.96,
+          "sd": 17.14
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 197.99,
+          "sd": 11.43
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 222.6,
+          "sd": 28.8
+        },
+        "cv": 0.057,
+        "q_bits": {
+          "n": 512,
+          "mean": 643.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 1611.54,
+          "sd": 0.62
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0735,
+          "kruskal_H": 36.3,
+          "kruskal_p": 0.2364764606780314
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "H2": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 972.3,
+          "sd": 33.62
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 601.91,
+          "sd": 20.54
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 749.32,
+          "sd": 24.14
+        },
+        "cv": 0.0346,
+        "q_bits": {
+          "n": 512,
+          "mean": 643.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 1611.54,
+          "sd": 0.62
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0272,
+          "kruskal_H": 15.7,
+          "kruskal_p": 0.9894851994281424
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "Q256": {
+        "n": 512,
+        "ok_q": 0.349609375,
+        "ok_in": 0.349609375,
+        "ok_extra": 0.349609375,
+        "iterations": {
+          "n": 512,
+          "mean": 93.65,
+          "sd": 128.32
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 57.45,
+          "sd": 78.7
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 72.05,
+          "sd": 98.63
+        },
+        "cv": 1.3702,
+        "q_bits": {
+          "n": 512,
+          "mean": 643.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 1611.54,
+          "sd": 0.62
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.072,
+          "kruskal_H": 40.6,
+          "kruskal_p": 0.11651000488186265
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      },
+      "SCALE": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 972.3,
+          "sd": 33.62
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 601.91,
+          "sd": 20.54
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 749.32,
+          "sd": 24.14
+        },
+        "cv": 0.0346,
+        "q_bits": {
+          "n": 512,
+          "mean": 643.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3307.81,
+          "sd": 0.75
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 425.07,
+          "sd": 0.25
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0272,
+          "kruskal_H": 15.7,
+          "kruskal_p": 0.9894851994281424
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "SUPER": {
+        "n": 512,
+        "ok_q": 0.0,
+        "ok_in": 0.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 3.0,
+          "sd": 0.0
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 4.0,
+          "sd": 0.0
+        },
+        "cv": 0.0,
+        "q_bits": {
+          "n": 512,
+          "mean": 643.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 326.0,
+          "sd": 0.0
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0,
+          "kruskal_H": NaN,
+          "kruskal_p": NaN
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      }
+    },
+    "p376": {
+      "COF": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 2284.66,
+          "sd": 52.49
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1417.37,
+          "sd": 31.84
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 1763.16,
+          "sd": 34.63
+        },
+        "cv": 0.023,
+        "q_bits": {
+          "n": 512,
+          "mean": 747.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3029.0,
+          "sd": 0.0
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 577.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0311,
+          "kruskal_H": 18.5,
+          "kruskal_p": 0.962877707274354
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      },
+      "D0": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 346.58,
+          "sd": 18.17
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 228.4,
+          "sd": 12.11
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 254.22,
+          "sd": 31.66
+        },
+        "cv": 0.0524,
+        "q_bits": {
+          "n": 512,
+          "mean": 747.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 1875.92,
+          "sd": 0.58
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0579,
+          "kruskal_H": 30.3,
+          "kruskal_p": 0.5011118232398661
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "H2": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 1127.01,
+          "sd": 36.17
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 697.9,
+          "sd": 22.25
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 868.48,
+          "sd": 25.4
+        },
+        "cv": 0.0321,
+        "q_bits": {
+          "n": 512,
+          "mean": 747.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 1875.92,
+          "sd": 0.58
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0364,
+          "kruskal_H": 21.2,
+          "kruskal_p": 0.9073657325276463
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "Q256": {
+        "n": 512,
+        "ok_q": 0.353515625,
+        "ok_in": 0.353515625,
+        "ok_extra": 0.353515625,
+        "iterations": {
+          "n": 512,
+          "mean": 94.48,
+          "sd": 128.36
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 57.93,
+          "sd": 78.69
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 72.58,
+          "sd": 98.51
+        },
+        "cv": 1.3586,
+        "q_bits": {
+          "n": 512,
+          "mean": 747.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 1875.92,
+          "sd": 0.58
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0472,
+          "kruskal_H": 22.6,
+          "kruskal_p": 0.8616226480741158
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      },
+      "SCALE": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 1127.01,
+          "sd": 36.17
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 697.9,
+          "sd": 22.25
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 868.48,
+          "sd": 25.4
+        },
+        "cv": 0.0321,
+        "q_bits": {
+          "n": 512,
+          "mean": 747.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3307.92,
+          "sd": 0.58
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 359.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0364,
+          "kruskal_H": 21.2,
+          "kruskal_p": 0.9073657325276463
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "SUPER": {
+        "n": 512,
+        "ok_q": 0.0,
+        "ok_in": 0.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 3.0,
+          "sd": 0.0
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 4.0,
+          "sd": 0.0
+        },
+        "cv": 0.0,
+        "q_bits": {
+          "n": 512,
+          "mean": 747.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 383.0,
+          "sd": 0.0
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0,
+          "kruskal_H": NaN,
+          "kruskal_p": NaN
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      }
+    },
+    "p500": {
+      "COF": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 2157.0,
+          "sd": 53.8
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1338.06,
+          "sd": 32.96
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 1664.17,
+          "sd": 38.96
+        },
+        "cv": 0.0249,
+        "q_bits": {
+          "n": 512,
+          "mean": 995.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3151.0,
+          "sd": 0.0
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 329.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.054,
+          "kruskal_H": 29.0,
+          "kruskal_p": 0.570774390309243
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      },
+      "D0": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 459.55,
+          "sd": 19.92
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 303.72,
+          "sd": 13.28
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 341.95,
+          "sd": 42.48
+        },
+        "cv": 0.0433,
+        "q_bits": {
+          "n": 512,
+          "mean": 995.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 2494.6,
+          "sd": 0.62
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0515,
+          "kruskal_H": 22.9,
+          "kruskal_p": 0.8532871016148129
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "H2": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 1500.79,
+          "sd": 42.74
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 930.37,
+          "sd": 25.99
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 1158.52,
+          "sd": 29.6
+        },
+        "cv": 0.0285,
+        "q_bits": {
+          "n": 512,
+          "mean": 995.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 2494.6,
+          "sd": 0.62
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0608,
+          "kruskal_H": 31.6,
+          "kruskal_p": 0.4373292920620468
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "Q256": {
+        "n": 512,
+        "ok_q": 0.365234375,
+        "ok_in": 0.365234375,
+        "ok_extra": 0.365234375,
+        "iterations": {
+          "n": 512,
+          "mean": 97.71,
+          "sd": 129.36
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 59.93,
+          "sd": 79.34
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 75.35,
+          "sd": 99.69
+        },
+        "cv": 1.3239,
+        "q_bits": {
+          "n": 512,
+          "mean": 995.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 2494.6,
+          "sd": 0.62
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0622,
+          "kruskal_H": 34.0,
+          "kruskal_p": 0.3245765536729997
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      },
+      "SCALE": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 1500.79,
+          "sd": 42.74
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 930.37,
+          "sd": 25.99
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 1158.52,
+          "sd": 29.6
+        },
+        "cv": 0.0285,
+        "q_bits": {
+          "n": 512,
+          "mean": 995.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3307.93,
+          "sd": 1.34
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 204.33,
+          "sd": 0.47
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0608,
+          "kruskal_H": 31.6,
+          "kruskal_p": 0.4373292920620468
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "SUPER": {
+        "n": 512,
+        "ok_q": 0.0,
+        "ok_in": 0.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 3.0,
+          "sd": 0.0
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 4.0,
+          "sd": 0.0
+        },
+        "cv": 0.0,
+        "q_bits": {
+          "n": 512,
+          "mean": 995.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 505.0,
+          "sd": 0.0
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0,
+          "kruskal_H": NaN,
+          "kruskal_p": NaN
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      }
+    },
+    "p664": {
+      "COF": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 1994.44,
+          "sd": 51.49
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1237.31,
+          "sd": 31.55
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 1537.75,
+          "sd": 35.59
+        },
+        "cv": 0.0258,
+        "q_bits": {
+          "n": 512,
+          "mean": 1323.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3314.06,
+          "sd": 0.68
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0833,
+          "kruskal_H": 44.1,
+          "kruskal_p": 0.05980088581653188
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      },
+      "D0": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 610.54,
+          "sd": 25.93
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 404.38,
+          "sd": 17.29
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 451.78,
+          "sd": 53.93
+        },
+        "cv": 0.0425,
+        "q_bits": {
+          "n": 512,
+          "mean": 1323.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3314.06,
+          "sd": 0.68
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0461,
+          "kruskal_H": 24.4,
+          "kruskal_p": 0.792047839408949
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "H2": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 1994.44,
+          "sd": 51.49
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1237.31,
+          "sd": 31.55
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 1537.75,
+          "sd": 35.59
+        },
+        "cv": 0.0258,
+        "q_bits": {
+          "n": 512,
+          "mean": 1323.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3314.06,
+          "sd": 0.68
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0833,
+          "kruskal_H": 44.1,
+          "kruskal_p": 0.05980088581653188
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "Q256": {
+        "n": 512,
+        "ok_q": 0.36328125,
+        "ok_in": 0.36328125,
+        "ok_extra": 0.36328125,
+        "iterations": {
+          "n": 512,
+          "mean": 97.69,
+          "sd": 129.88
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 59.86,
+          "sd": 79.6
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 75.03,
+          "sd": 99.75
+        },
+        "cv": 1.3295,
+        "q_bits": {
+          "n": 512,
+          "mean": 1323.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3314.06,
+          "sd": 0.68
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0327,
+          "kruskal_H": 16.1,
+          "kruskal_p": 0.987335434781081
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      },
+      "SCALE": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 1994.44,
+          "sd": 51.49
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1237.31,
+          "sd": 31.55
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 1537.75,
+          "sd": 35.59
+        },
+        "cv": 0.0258,
+        "q_bits": {
+          "n": 512,
+          "mean": 1323.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3314.06,
+          "sd": 0.68
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0833,
+          "kruskal_H": 44.1,
+          "kruskal_p": 0.05980088581653188
+        },
+        "pre_after": 1.0,
+        "format_change": 0.0
+      },
+      "SUPER": {
+        "n": 512,
+        "ok_q": 0.0,
+        "ok_in": 0.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 3.0,
+          "sd": 0.0
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 4.0,
+          "sd": 0.0
+        },
+        "cv": 0.0,
+        "q_bits": {
+          "n": 512,
+          "mean": 1323.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 669.0,
+          "sd": 0.0
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0,
+          "kruskal_H": NaN,
+          "kruskal_p": NaN
+        },
+        "pre_after": 1.0,
+        "format_change": 1.0
+      }
+    }
+  },
+  "stream_slope": {
+    "COF": {
+      "across_rows": {
+        "slope": -0.5104,
+        "intercept": 2667.56,
+        "r": -0.9427,
+        "r2": 0.8887,
+        "p": 0.0
+      },
+      "across_set_means": {
+        "slope": -0.5104,
+        "intercept": 2667.56,
+        "r": -0.9999,
+        "r2": 0.9998,
+        "p": 1.1518485076493255e-06
+      },
+      "per_set": {
+        "p248": {
+          "n": 512,
+          "mean": 2419.54,
+          "sd": 55.53
+        },
+        "p324": {
+          "n": 512,
+          "mean": 2338.78,
+          "sd": 50.44
+        },
+        "p376": {
+          "n": 512,
+          "mean": 2284.66,
+          "sd": 52.49
+        },
+        "p500": {
+          "n": 512,
+          "mean": 2157.0,
+          "sd": 53.8
+        },
+        "p664": {
+          "n": 512,
+          "mean": 1994.44,
+          "sd": 51.49
+        }
+      }
+    },
+    "D0": {
+      "across_rows": {
+        "slope": 0.4551,
+        "intercept": 7.65,
+        "r": 0.9893,
+        "r2": 0.9788,
+        "p": 0.0
+      },
+      "across_set_means": {
+        "slope": 0.4551,
+        "intercept": 7.65,
+        "r": 1.0,
+        "r2": 1.0,
+        "p": 9.797264401245245e-08
+      },
+      "per_set": {
+        "p248": {
+          "n": 512,
+          "mean": 231.66,
+          "sd": 14.84
+        },
+        "p324": {
+          "n": 512,
+          "mean": 300.96,
+          "sd": 17.14
+        },
+        "p376": {
+          "n": 512,
+          "mean": 346.58,
+          "sd": 18.17
+        },
+        "p500": {
+          "n": 512,
+          "mean": 459.55,
+          "sd": 19.92
+        },
+        "p664": {
+          "n": 512,
+          "mean": 610.54,
+          "sd": 25.93
+        }
+      }
+    },
+    "H2": {
+      "across_rows": {
+        "slope": 1.5048,
+        "intercept": 3.6,
+        "r": 0.996,
+        "r2": 0.992,
+        "p": 0.0
+      },
+      "across_set_means": {
+        "slope": 1.5048,
+        "intercept": 3.6,
+        "r": 1.0,
+        "r2": 1.0,
+        "p": 1.1747493903110467e-09
+      },
+      "per_set": {
+        "p248": {
+          "n": 512,
+          "mean": 741.99,
+          "sd": 29.0
+        },
+        "p324": {
+          "n": 512,
+          "mean": 972.3,
+          "sd": 33.62
+        },
+        "p376": {
+          "n": 512,
+          "mean": 1127.01,
+          "sd": 36.17
+        },
+        "p500": {
+          "n": 512,
+          "mean": 1500.79,
+          "sd": 42.74
+        },
+        "p664": {
+          "n": 512,
+          "mean": 1994.44,
+          "sd": 51.49
+        }
+      }
+    },
+    "Q256": {
+      "across_rows": {
+        "slope": 0.0054,
+        "intercept": 91.0,
+        "r": 0.0123,
+        "r2": 0.0002,
+        "p": 0.5350423672334057
+      },
+      "across_set_means": {
+        "slope": 0.0054,
+        "intercept": 91.0,
+        "r": 0.8897,
+        "r2": 0.7916,
+        "p": 0.04323798111103842
+      },
+      "per_set": {
+        "p248": {
+          "n": 512,
+          "mean": 94.21,
+          "sd": 129.0
+        },
+        "p324": {
+          "n": 512,
+          "mean": 93.65,
+          "sd": 128.32
+        },
+        "p376": {
+          "n": 512,
+          "mean": 94.48,
+          "sd": 128.36
+        },
+        "p500": {
+          "n": 512,
+          "mean": 97.71,
+          "sd": 129.36
+        },
+        "p664": {
+          "n": 512,
+          "mean": 97.69,
+          "sd": 129.88
+        }
+      }
+    },
+    "SCALE": {
+      "across_rows": {
+        "slope": 1.5048,
+        "intercept": 3.6,
+        "r": 0.996,
+        "r2": 0.992,
+        "p": 0.0
+      },
+      "across_set_means": {
+        "slope": 1.5048,
+        "intercept": 3.6,
+        "r": 1.0,
+        "r2": 1.0,
+        "p": 1.1747493903110467e-09
+      },
+      "per_set": {
+        "p248": {
+          "n": 512,
+          "mean": 741.99,
+          "sd": 29.0
+        },
+        "p324": {
+          "n": 512,
+          "mean": 972.3,
+          "sd": 33.62
+        },
+        "p376": {
+          "n": 512,
+          "mean": 1127.01,
+          "sd": 36.17
+        },
+        "p500": {
+          "n": 512,
+          "mean": 1500.79,
+          "sd": 42.74
+        },
+        "p664": {
+          "n": 512,
+          "mean": 1994.44,
+          "sd": 51.49
+        }
+      }
+    },
+    "SUPER": {
+      "across_rows": {
+        "slope": 0.0,
+        "intercept": 3.0,
+        "r": NaN,
+        "r2": NaN,
+        "p": NaN
+      },
+      "across_set_means": {
+        "slope": 0.0,
+        "intercept": 3.0,
+        "r": NaN,
+        "r2": NaN,
+        "p": NaN
+      },
+      "per_set": {
+        "p248": {
+          "n": 512,
+          "mean": 3.0,
+          "sd": 0.0
+        },
+        "p324": {
+          "n": 512,
+          "mean": 3.0,
+          "sd": 0.0
+        },
+        "p376": {
+          "n": 512,
+          "mean": 3.0,
+          "sd": 0.0
+        },
+        "p500": {
+          "n": 512,
+          "mean": 3.0,
+          "sd": 0.0
+        },
+        "p664": {
+          "n": 512,
+          "mean": 3.0,
+          "sd": 0.0
+        }
+      }
+    }
+  },
+  "cost_vs_H2": {
+    "p248": {
+      "COF": 3.261,
+      "D0": 0.312,
+      "H2": 1.0,
+      "Q256": 0.127,
+      "SCALE": 1.0,
+      "SUPER": 0.004
+    },
+    "p324": {
+      "COF": 2.405,
+      "D0": 0.31,
+      "H2": 1.0,
+      "Q256": 0.096,
+      "SCALE": 1.0,
+      "SUPER": 0.003
+    },
+    "p376": {
+      "COF": 2.027,
+      "D0": 0.308,
+      "H2": 1.0,
+      "Q256": 0.084,
+      "SCALE": 1.0,
+      "SUPER": 0.003
+    },
+    "p500": {
+      "COF": 1.437,
+      "D0": 0.306,
+      "H2": 1.0,
+      "Q256": 0.065,
+      "SCALE": 1.0,
+      "SUPER": 0.002
+    },
+    "p664": {
+      "COF": 1.0,
+      "D0": 0.306,
+      "H2": 1.0,
+      "Q256": 0.049,
+      "SCALE": 1.0,
+      "SUPER": 0.002
+    }
+  },
+  "prod": {
+    "p248": {
+      "COMP": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 3098.35,
+          "sd": 61.8
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1922.94,
+          "sd": 37.98
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 2389.06,
+          "sd": 42.25
+        },
+        "cv": 0.0199,
+        "q_bits": {
+          "n": 512,
+          "mean": 491.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3577.0,
+          "sd": 0.0
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 1048.24,
+          "sd": 0.43
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0621,
+          "kruskal_H": 26.3,
+          "kruskal_p": 0.7083214693654167
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      },
+      "H2PROD": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 994.85,
+          "sd": 34.33
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 615.81,
+          "sd": 21.07
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 766.12,
+          "sd": 23.85
+        },
+        "cv": 0.0345,
+        "q_bits": {
+          "n": 512,
+          "mean": 491.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 1481.38,
+          "sd": 0.83
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0544,
+          "kruskal_H": 28.6,
+          "kruskal_p": 0.5919664313225692
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      },
+      "PCOF": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 2669.65,
+          "sd": 55.03
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1656.35,
+          "sd": 33.58
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 2056.98,
+          "sd": 37.78
+        },
+        "cv": 0.0206,
+        "q_bits": {
+          "n": 512,
+          "mean": 491.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3145.94,
+          "sd": 0.56
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 833.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0535,
+          "kruskal_H": 27.6,
+          "kruskal_p": 0.6435047236128681
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      }
+    },
+    "p324": {
+      "COMP": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 3023.17,
+          "sd": 61.53
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1876.33,
+          "sd": 37.51
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 2330.63,
+          "sd": 44.72
+        },
+        "cv": 0.0204,
+        "q_bits": {
+          "n": 512,
+          "mean": 643.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3652.0,
+          "sd": 0.0
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 858.21,
+          "sd": 0.4
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0723,
+          "kruskal_H": 36.3,
+          "kruskal_p": 0.234722704644685
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      },
+      "H2PROD": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 1301.14,
+          "sd": 39.97
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 805.94,
+          "sd": 24.42
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 1003.2,
+          "sd": 27.43
+        },
+        "cv": 0.0307,
+        "q_bits": {
+          "n": 512,
+          "mean": 643.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 1936.69,
+          "sd": 0.81
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0433,
+          "kruskal_H": 21.1,
+          "kruskal_p": 0.909695913155834
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      },
+      "PCOF": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 2665.73,
+          "sd": 56.34
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1654.46,
+          "sd": 34.52
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 2056.67,
+          "sd": 39.19
+        },
+        "cv": 0.0211,
+        "q_bits": {
+          "n": 512,
+          "mean": 643.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3297.25,
+          "sd": 0.66
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 681.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0705,
+          "kruskal_H": 37.8,
+          "kruskal_p": 0.18602873052501806
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      }
+    },
+    "p376": {
+      "COMP": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 2968.77,
+          "sd": 60.93
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1842.61,
+          "sd": 37.35
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 2289.21,
+          "sd": 43.15
+        },
+        "cv": 0.0205,
+        "q_bits": {
+          "n": 512,
+          "mean": 747.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3709.0,
+          "sd": 0.0
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 726.23,
+          "sd": 0.42
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0556,
+          "kruskal_H": 24.9,
+          "kruskal_p": 0.7703891627545945
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      },
+      "H2PROD": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 1509.44,
+          "sd": 41.62
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 935.67,
+          "sd": 25.11
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 1163.58,
+          "sd": 29.22
+        },
+        "cv": 0.0276,
+        "q_bits": {
+          "n": 512,
+          "mean": 747.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 2257.12,
+          "sd": 0.79
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0539,
+          "kruskal_H": 24.5,
+          "kruskal_p": 0.7900727081350514
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      },
+      "PCOF": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 2670.8,
+          "sd": 59.28
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1657.13,
+          "sd": 36.35
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 2060.47,
+          "sd": 43.06
+        },
+        "cv": 0.0222,
+        "q_bits": {
+          "n": 512,
+          "mean": 747.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3409.62,
+          "sd": 0.48
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 577.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0559,
+          "kruskal_H": 30.2,
+          "kruskal_p": 0.5093101073959583
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      }
+    },
+    "p500": {
+      "COMP": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 2846.62,
+          "sd": 62.79
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1766.16,
+          "sd": 37.88
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 2194.97,
+          "sd": 44.57
+        },
+        "cv": 0.0221,
+        "q_bits": {
+          "n": 512,
+          "mean": 995.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3831.0,
+          "sd": 0.0
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 417.23,
+          "sd": 0.42
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0591,
+          "kruskal_H": 26.9,
+          "kruskal_p": 0.6755297930049275
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      },
+      "H2PROD": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 2004.5,
+          "sd": 49.04
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1243.31,
+          "sd": 30.24
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 1547.64,
+          "sd": 34.06
+        },
+        "cv": 0.0245,
+        "q_bits": {
+          "n": 512,
+          "mean": 995.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 2997.9,
+          "sd": 0.88
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0531,
+          "kruskal_H": 28.2,
+          "kruskal_p": 0.6092545857614662
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      },
+      "PCOF": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 2673.76,
+          "sd": 60.95
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1658.8,
+          "sd": 36.93
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 2061.63,
+          "sd": 41.92
+        },
+        "cv": 0.0228,
+        "q_bits": {
+          "n": 512,
+          "mean": 995.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3654.53,
+          "sd": 0.56
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 329.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0529,
+          "kruskal_H": 27.5,
+          "kruskal_p": 0.6476783637713632
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      }
+    },
+    "p664": {
+      "COMP": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 2685.99,
+          "sd": 59.87
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1666.91,
+          "sd": 36.32
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 2073.61,
+          "sd": 41.2
+        },
+        "cv": 0.0223,
+        "q_bits": {
+          "n": 512,
+          "mean": 1323.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 4002.57,
+          "sd": 2.51
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 11.15,
+          "sd": 1.19
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0693,
+          "kruskal_H": 32.6,
+          "kruskal_p": 0.38722890586983383
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      },
+      "H2PROD": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 2668.99,
+          "sd": 58.9
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1656.64,
+          "sd": 35.88
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 2059.34,
+          "sd": 41.05
+        },
+        "cv": 0.0221,
+        "q_bits": {
+          "n": 512,
+          "mean": 1323.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3981.17,
+          "sd": 0.8
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 0.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0693,
+          "kruskal_H": 39.1,
+          "kruskal_p": 0.14992171138231974
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      },
+      "PCOF": {
+        "n": 512,
+        "ok_q": 1.0,
+        "ok_in": 1.0,
+        "ok_extra": 1.0,
+        "iterations": {
+          "n": 512,
+          "mean": 2668.99,
+          "sd": 58.9
+        },
+        "swaps": {
+          "n": 512,
+          "mean": 1656.64,
+          "sd": 35.88
+        },
+        "sizered": {
+          "n": 512,
+          "mean": 2059.34,
+          "sd": 41.05
+        },
+        "cv": 0.0221,
+        "q_bits": {
+          "n": 512,
+          "mean": 1323.0,
+          "sd": 0.0
+        },
+        "covol_bits": {
+          "n": 512,
+          "mean": 3981.17,
+          "sd": 0.8
+        },
+        "r_bits": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "scale": {
+          "n": 512,
+          "mean": 1.0,
+          "sd": 0.0
+        },
+        "slope_vs_q": {
+          "slope": NaN,
+          "intercept": NaN,
+          "r": NaN,
+          "r2": NaN,
+          "p": NaN
+        },
+        "eta2_vs_q": null,
+        "eta2_vs_key": {
+          "eta2": 0.0693,
+          "kruskal_H": 39.1,
+          "kruskal_p": 0.14992171138231974
+        },
+        "pre_after": 0.0,
+        "format_change": 0.0
+      }
+    }
+  },
+  "prod_slope": {
+    "COMP": {
+      "across_rows": {
+        "slope": -0.4958,
+        "intercept": 3340.96,
+        "r": -0.9208,
+        "r2": 0.8479,
+        "p": 0.0
+      },
+      "across_set_means": {
+        "slope": -0.4958,
+        "intercept": 3340.96,
+        "r": -1.0,
+        "r2": 0.9999,
+        "p": 2.323938743037407e-07
+      },
+      "per_set": {
+        "p248": {
+          "n": 512,
+          "mean": 3098.35,
+          "sd": 61.8
+        },
+        "p324": {
+          "n": 512,
+          "mean": 3023.17,
+          "sd": 61.53
+        },
+        "p376": {
+          "n": 512,
+          "mean": 2968.77,
+          "sd": 60.93
+        },
+        "p500": {
+          "n": 512,
+          "mean": 2846.62,
+          "sd": 62.79
+        },
+        "p664": {
+          "n": 512,
+          "mean": 2685.99,
+          "sd": 59.87
+        }
+      }
+    },
+    "H2PROD": {
+      "across_rows": {
+        "slope": 2.0105,
+        "intercept": 7.39,
+        "r": 0.997,
+        "r2": 0.994,
+        "p": 0.0
+      },
+      "across_set_means": {
+        "slope": 2.0105,
+        "intercept": 7.39,
+        "r": 1.0,
+        "r2": 1.0,
+        "p": 1.10966463526053e-08
+      },
+      "per_set": {
+        "p248": {
+          "n": 512,
+          "mean": 994.85,
+          "sd": 34.33
+        },
+        "p324": {
+          "n": 512,
+          "mean": 1301.14,
+          "sd": 39.97
+        },
+        "p376": {
+          "n": 512,
+          "mean": 1509.44,
+          "sd": 41.62
+        },
+        "p500": {
+          "n": 512,
+          "mean": 2004.5,
+          "sd": 49.04
+        },
+        "p664": {
+          "n": 512,
+          "mean": 2668.99,
+          "sd": 58.9
+        }
+      }
+    },
+    "PCOF": {
+      "across_rows": {
+        "slope": 0.0023,
+        "intercept": 2667.85,
+        "r": 0.0116,
+        "r2": 0.0001,
+        "p": 0.5568627458906057
+      },
+      "across_set_means": {
+        "slope": 0.0023,
+        "intercept": 2667.85,
+        "r": 0.2593,
+        "r2": 0.0672,
+        "p": 0.6735643788914394
+      },
+      "per_set": {
+        "p248": {
+          "n": 512,
+          "mean": 2669.65,
+          "sd": 55.03
+        },
+        "p324": {
+          "n": 512,
+          "mean": 2665.73,
+          "sd": 56.34
+        },
+        "p376": {
+          "n": 512,
+          "mean": 2670.8,
+          "sd": 59.28
+        },
+        "p500": {
+          "n": 512,
+          "mean": 2673.76,
+          "sd": 60.95
+        },
+        "p664": {
+          "n": 512,
+          "mean": 2668.99,
+          "sd": 58.9
+        }
+      }
+    }
+  },
+  "sweep": {
+    "p248:D0": {
+      "slope": {
+        "slope": 0.6112,
+        "intercept": -69.02,
+        "r": 0.9946,
+        "r2": 0.9893,
+        "p": 3.716458400655453e-266
+      },
+      "iterations_by_bits": {
+        "400": {
+          "n": 30,
+          "mean": 175.77,
+          "sd": 12.2
+        },
+        "491": {
+          "n": 30,
+          "mean": 234.83,
+          "sd": 14.46
+        },
+        "550": {
+          "n": 30,
+          "mean": 266.03,
+          "sd": 16.91
+        },
+        "643": {
+          "n": 30,
+          "mean": 318.8,
+          "sd": 16.58
+        },
+        "747": {
+          "n": 30,
+          "mean": 389.13,
+          "sd": 15.95
+        },
+        "850": {
+          "n": 30,
+          "mean": 451.67,
+          "sd": 20.78
+        },
+        "995": {
+          "n": 30,
+          "mean": 539.67,
+          "sd": 19.25
+        },
+        "1100": {
+          "n": 30,
+          "mean": 599.87,
+          "sd": 25.52
+        },
+        "1323": {
+          "n": 30,
+          "mean": 741.73,
+          "sd": 20.81
+        }
+      },
+      "ok_q": 1.0
+    },
+    "p248:H2": {
+      "slope": {
+        "slope": 2.0179,
+        "intercept": -248.02,
+        "r": 0.9974,
+        "r2": 0.9947,
+        "p": 3.0637349010582026e-307
+      },
+      "iterations_by_bits": {
+        "400": {
+          "n": 30,
+          "mean": 563.77,
+          "sd": 25.1
+        },
+        "491": {
+          "n": 30,
+          "mean": 739.8,
+          "sd": 31.29
+        },
+        "550": {
+          "n": 30,
+          "mean": 860.47,
+          "sd": 39.16
+        },
+        "643": {
+          "n": 30,
+          "mean": 1051.0,
+          "sd": 50.78
+        },
+        "747": {
+          "n": 30,
+          "mean": 1256.47,
+          "sd": 33.65
+        },
+        "850": {
+          "n": 30,
+          "mean": 1464.33,
+          "sd": 48.96
+        },
+        "995": {
+          "n": 30,
+          "mean": 1768.4,
+          "sd": 50.83
+        },
+        "1100": {
+          "n": 30,
+          "mean": 1964.77,
+          "sd": 56.62
+        },
+        "1323": {
+          "n": 30,
+          "mean": 2424.0,
+          "sd": 38.7
+        }
+      },
+      "ok_q": 1.0
+    },
+    "p664:D0": {
+      "slope": {
+        "slope": 0.6102,
+        "intercept": -196.38,
+        "r": 0.996,
+        "r2": 0.992,
+        "p": 8.33721613916941e-283
+      },
+      "iterations_by_bits": {
+        "400": {
+          "n": 30,
+          "mean": 47.6,
+          "sd": 6.81
+        },
+        "491": {
+          "n": 30,
+          "mean": 105.73,
+          "sd": 8.94
+        },
+        "550": {
+          "n": 30,
+          "mean": 143.83,
+          "sd": 10.26
+        },
+        "643": {
+          "n": 30,
+          "mean": 190.43,
+          "sd": 11.8
+        },
+        "747": {
+          "n": 30,
+          "mean": 258.97,
+          "sd": 16.23
+        },
+        "850": {
+          "n": 30,
+          "mean": 321.13,
+          "sd": 19.78
+        },
+        "995": {
+          "n": 30,
+          "mean": 406.33,
+          "sd": 20.55
+        },
+        "1100": {
+          "n": 30,
+          "mean": 476.37,
+          "sd": 18.49
+        },
+        "1323": {
+          "n": 30,
+          "mean": 613.63,
+          "sd": 21.24
+        }
+      },
+      "ok_q": 1.0
+    },
+    "p664:H2": {
+      "slope": {
+        "slope": 2.0062,
+        "intercept": -661.45,
+        "r": 0.9982,
+        "r2": 0.9963,
+        "p": 0.0
+      },
+      "iterations_by_bits": {
+        "400": {
+          "n": 30,
+          "mean": 143.0,
+          "sd": 16.03
+        },
+        "491": {
+          "n": 30,
+          "mean": 321.43,
+          "sd": 20.04
+        },
+        "550": {
+          "n": 30,
+          "mean": 433.43,
+          "sd": 27.07
+        },
+        "643": {
+          "n": 30,
+          "mean": 630.87,
+          "sd": 33.75
+        },
+        "747": {
+          "n": 30,
+          "mean": 841.4,
+          "sd": 36.65
+        },
+        "850": {
+          "n": 30,
+          "mean": 1051.57,
+          "sd": 30.8
+        },
+        "995": {
+          "n": 30,
+          "mean": 1334.23,
+          "sd": 46.7
+        },
+        "1100": {
+          "n": 30,
+          "mean": 1541.0,
+          "sd": 39.01
+        },
+        "1323": {
+          "n": 30,
+          "mean": 1991.97,
+          "sd": 52.23
+        }
+      },
+      "ok_q": 1.0
+    }
+  }
+}
