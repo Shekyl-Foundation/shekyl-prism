@@ -227,6 +227,36 @@ def job_equiv(args):
     return str(path), len(rows)
 
 
+def job_pS(args):
+    """Per-ideal success rate: R independent fixed-order searches per ideal."""
+    name, j0, j1, R = args
+    path = OUT / name / f'pS_{j0:05d}_{j1:05d}.csv'
+    if path.exists():
+        return str(path), 'skip'
+    _, e, f = SET_MAP[name]
+    p = prime_of(e, f)
+    SEC = sec_degree(name)
+    rows = []
+    for j in range(j0, j1):
+        kid = 7 * 10 ** 6 + j
+        Is, _ = keygen(name, kid, p, SEC)
+        q, rng = challenge(name, e, kid, 0, p)
+        S = prepare_small(intersect_coprime(Is, random_prime_ideal(q, p, rng)), p)
+        tot = m4 = cv = 0
+        for t in range(R):
+            c = Ctr()
+            qlapoti(S, p, e - 2, tape(b'pS', name, j, t), c, policy='fresh')
+            tot += c.passes
+            m4 += c.m4pos
+            cv += c.cvp
+        row = dict(set=name, j=j, R=R, passes=tot, p_hat=R / tot, m4pos_share=m4 / max(cv, 1),
+                   N_bits=int(Is.norm).bit_length())
+        row.update(small_bits_info(S))
+        rows.append(row)
+    write(path, rows)
+    return str(path), len(rows)
+
+
 def lattice_equal(S, T):
     from fne import hnf
     a = hnf(S.cols, S.den)
@@ -268,11 +298,17 @@ if __name__ == '__main__':
     ap.add_argument('--fixS_T', type=int, default=1000)
     ap.add_argument('--equiv', type=int, default=50)
     ap.add_argument('--workers', type=int, default=2)
+    ap.add_argument('--pS_only', type=int, default=0, help='number of ideals for the per-ideal panel only')
+    ap.add_argument('--pS_R', type=int, default=30)
     a = ap.parse_args()
     jobs = []
     for name in a.sets.split(','):
         (OUT / name).mkdir(parents=True, exist_ok=True)
-        jobs += plan(name, a.K, a.M, a.fixkey, a.rnd, a.fixS_cls, a.fixS_T, a.equiv)
+        if a.pS_only:
+            jobs += [(job_pS, (name, j0, min(a.pS_only, j0 + 10), a.pS_R))
+                     for j0 in range(0, a.pS_only, 10)]
+        else:
+            jobs += plan(name, a.K, a.M, a.fixkey, a.rnd, a.fixS_cls, a.fixS_T, a.equiv)
     print('jobs', len(jobs), flush=True)
     with mp.get_context('spawn').Pool(a.workers) as pool:
         for r, dt in pool.imap_unordered(_run, jobs):

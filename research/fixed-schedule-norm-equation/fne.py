@@ -102,7 +102,7 @@ class Ctr:
               'pt', 'pt_bits', 'pt_pass', 'legendre', 'sqrt_modp',
               'tonelli_steps', 'corn_steps', 'cpow', 'post', 'resets',
               'bigops', 'success_pass', 'transformed',
-              'mx_gen', 'mx_lat', 'mx_corn', 'mx_tonelli')
+              'mx_gen', 'mx_lat', 'mx_corn', 'mx_tonelli', 'm4pos')
 
     def __init__(self):
         for f in self.FIELDS:
@@ -655,6 +655,7 @@ def qlapoti(S, p, e2, rng, c, max_counter=ITER_BOUND, total=None,
         M4 = 2 * (m2 - A * A - B * B) + A * A + B * B
         c.bigops += 8
         enc = None
+        c.m4pos += int(M4 > 0)
         if check_mod_condition(M4, A, B):
             c.mod_ok += 1
             sol = cornacchia_extended(M4, c)
