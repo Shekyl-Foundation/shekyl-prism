@@ -24,6 +24,8 @@ are not Shekyl parameter sets.
 | [`higher-dim-lattice/`](higher-dim-lattice/) | Does raising dimension — or any other single lattice characteristic — change the steps-per-bit law or flatten the trace? | One-characteristic-at-a-time ablation against 4-D H2: dimension 6–16, a direct sum, covolume padding, starting skew, the Euclidean form, 256-bit precision, a weaker LLL delta, selection (H1, D0), and ignore-the-problem controls. | No. Extra dimensions add a fixed overhead per axis and leave the 1.5 steps/bit growth untouched. A worse basis or form costs more or varies more. A weaker delta changes nothing material. Padding again flattens only by making every lattice large (3.26× at P248). The 2-D→4-D flattening was fresh-lattice selection (H2), not dimension, and it does not remove the size slope. | `experiment/higher-dim-lattice` @ [`54dbc9f`](https://github.com/Shekyl-Foundation/shekyl-prism/commit/54dbc9f15bcabc129403ba5e4461b95183f102df) |
 | [`fixed-schedule-reduction/`](fixed-schedule-reduction/) | Does a reduction with a schedule set by the parameter set, or a fixed-budget enumeration or sieve, flatten the exact-LLL count without leaking bits of the secret norm N? | Exact LLL versus a fixed-tour 4-D reduction and Z[i]-Lagrange with a fixed step count (plus 8–64-bit quotients), and a shortened pre-reduction plus a fixed-budget Schnorr–Euchner enumeration or a pairwise sieve. Tour counts sized from B = ⌈L/2⌉+32, never from N. 400 keys × 10 messages with varied bits(N); a 3,000-trace fixed-versus-random-key Welch t-test. D0 excluded; H2 with a secret seed. | Yes. Exact LLL leaks about 2.0–2.1 steps per bit of N (r = 0.31–0.49 on 4,000 traces; a t-test flags a key whose N-length sits away from the typical value). A fixed schedule sized from B has one operation trace per set (CV 0) and does not track bits(N). Z[i]-Lagrange is the cheaper correct method: λ₁ on every sample, including at B, at about 0.28× exact LLL's multiply-and-divide count. A generic 4-D up-down tour also works, at about 0.80–0.89×, with the same λ₁ rate as exact LLL. A 16- to 64-bit quotient is enough; 8 bits is not. A fixed-budget search can cover a few missed tours but cannot replace a large cut of the schedule. | `experiment/fixed-schedule-reduction` @ [`eea63ea`](https://github.com/Shekyl-Foundation/shekyl-prism/commit/eea63eadfaee23f40bc96ba11eb738b02161f7a5) |
 
+| [`lagrange-tour-bound/`](lagrange-tour-bound/) | Can the fixed-schedule Z[i]-Lagrange tour count be bounded provably from public parameter sizes instead of empirical maxima, and do bounded-precision quotients or Lehmer batching yield a provably smaller schedule? | Analytical step-recurrence and endgame proofs paired with exact GMP rational (`mpq`) interval branch-and-bound (`certify.py`), 300 PRISM ideals/set (`P248`–`P664`), explicit Rolletschek worst-case chains, 160,230 toy valid ideals, 8–64-bit truncated quotients, and `W=64/128` certified Z[i]-Lehmer batching. (Rolletschek 1986, Collins 2002, Vallée 1991, Napias 1996, arXiv:1806.03113/1904.05285 read from abstracts/excerpts.) | Yes—and the empirical schedule `T_emp` (189/239/283/359/465) is unsafe against worst-case inputs, which hit 276/356/411/542/714 steps under Rolletschek `2+sqrt(3)` chains. GMP-certified 2-step Lyapunov contraction (`rho_2 = 87/1000`, `<= 4` tail swaps for `lam >= 10^-3`) yields provable tour counts **301 / 387 / 446 / 587 / 773** (`0.47x–0.48x` exact LLL, within 8.2–8.8% of the Rolletschek lower bound). Bounded precision never saves tours and hits half-integer 2-cycles (fixable for `prec >= 16` with 1 exact cleanup step). Exact-certified Lehmer batching (`W=128, m=24`) runs in 12–30 batches (`~0.012x–0.015x` exact LLL) with zero fallbacks on random and Rolletschek inputs, though a small fixed batch count is not unconditionally provable against boundary-tie chains. | `experiment/lagrange-tour-bound` @ [`51e290c`](https://github.com/Shekyl-Foundation/shekyl-prism/commit/51e290c252bdd22facebe250478b025d563e8cd7) |
+
 ## In progress
 
 None.
@@ -90,6 +92,18 @@ rest on, and from the fixed-schedule experiment that followed:
    and kernels. Those retry loops are far larger channels than LLL's
    step count, and none of the experiments here measures them against
    the key.
+
+8. **Provable Z[i]-Lagrange tour bounds replace the unsafe empirical
+   maxima.** Empirical maxima `189/239/283/359/465` reflect typical
+   PRISM ideals (~0.32 steps/bit), whereas explicit Rolletschek
+   `2+sqrt(3)` chains reach `276/356/411/542/714`. GMP-rational
+   interval certification gives unconditional worst-case bounds
+   **`301/387/446/587/773`** (still `0.47x–0.48x` exact LLL). Bounded
+   precision (`prec <= 64`) never shrinks the tour count and enters
+   half-integer 2-cycles unless followed by an exact cleanup step;
+   `W=128, m=24` Lehmer batching reduces work by ~20x (`12–30` batches,
+   `0.012x–0.015x` LLL) on random and Rolletschek inputs, subject to
+   handling boundary-tie fallbacks.
 
 The quantized-precision runs (Q256, PREC_256) were sometimes flat where
 they worked, which hints that bounded-precision reduction is size-blind
