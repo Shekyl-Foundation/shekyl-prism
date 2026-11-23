@@ -1063,3 +1063,35 @@ The vectors passed at their first complete run. Two failures before it were faul
 **Not done, and not claimed.** No constant-time claim: the secret operations are written without a branch or an index on a secret limb, and whether the compiled code keeps that is for the last stage (O6). The wipe is shown as far as safe code can show it. The vector file is 3.3 MB, the largest text file in the repository. aarch64 is CI's: no aarch64 host ran these tests before the push.
 
 Who. Rick ruled. The reviewer wrote the brief and the six corrections. The coding agent (Claude Code, `claude-fable-5-2`) wrote the crate, the scripts and the checks and ran them; the session's advisor model reviewed the plan before the code, and its points on the selection trait, the hand-written ordering, the add-back's vectors and the vacuous exit count are in what was built.
+
+## 2026-11-22 — Signer stage 2a, step 2: the review's two fixes, and three rulings
+
+The reviewer read the crate and asked for two fixes. Rick ruled on the three decisions the report of step 2 left open (2026-11-22, in session; the reviewer's recommendations, which he made his rulings).
+
+**Fix 1: four loops were not counted.** The greatest common divisor, the extended one, the floor square root and the Jacobi symbol looped until the arithmetic said stop. The standing rule is that no loop's end rests on the arithmetic being right. Each is now a counted loop: `2·BITS` steps for Euclid and for the Jacobi symbol, `BITS` for Newton's iteration, each bound derived in the code beside its constant, and `IntError::StepBound`, a variant of its own, if the count runs out. No operand reaches that branch through the public functions. It is tested through the private function that takes the count: at one, two and three limbs and at the five widths, the least count that answers is found, every refusal on the way is required to be this one, and for Euclid on the two largest Fibonacci neighbours of the width the least count is required to be the index less two (and less one with the operands the other way round). Two signatures changed: `gcd` returns a `Result`, and `sqrt_exact` a `Result` of an `Option`, since folding a root that was not found into "not a square" would be a wrong answer and not a refusal.
+
+**Fix 2: secret temporaries were left on the stack.** Every intermediate a secret operation names is now held in a private wrapper that writes zeros over it when the operation returns: the three magnitudes and the two selected ones of an addition, a product, a shifted magnitude, carries, borrows and flags. A selection writes into limbs its caller owns, and a swap copies in place and wipes what it selected. A test counts the wipes of each operation. Not covered, and said so in the type's documentation and in the specification: what the shared limb functions hold and return by value, the result in the place it was built before its move, arguments and registers, and the public operations run on a declassified value. No safe code clears those.
+
+**D1: the mutation job of its own stays** (`mutants-int`). The shard time is confirmed by the first nightly.
+
+**D2: the signer side of the front crate is behind a feature, `signer`, off by default, from now.** A node that only verifies builds no signer code: the default build graph of `shekyl-prism` holds 14 crates and none of `prism-int`, `zeroize`, `subtle`; with the feature, 17. `scripts/ci/check_consumer_build.py` holds the feature table and both graphs, with a self-test of 15 planted breaches. CI lints and documents the front crate with the feature and runs the test that requires it in both profiles on both architectures. It does not run the verifier's tests a second time with it: the feature gates one re-export, and that suite is about three minutes a profile. That is a choice inside the ruling's "second build-and-test configuration", reported to Rick.
+
+**D3: the 3.3 MB vector file is accepted on two conditions.** It is out of the crate's package, with the test that reads it (`exclude`; the same script reads `cargo package --list`). It is written again only when an operation or a width is added; the generator's header says so. This change did not touch it.
+
+**Run** (a build VM, x86_64, Rust 1.97.1; the VM was shared and loaded, so times are upper figures).
+
+| What | Result |
+| --- | --- |
+| `cargo test -p prism-int`, debug and release | 67 passed in each: 11 unit (5 new), 16 in `marks`, 2 in `oracle`, 1 in `oracle_number`, 13 in `vectors`, 24 documentation tests |
+| `cargo test --workspace`, debug and release | 356 passed, 0 failed, 2 ignored, in each profile (47 test binaries) |
+| `cargo test -p shekyl-prism --features signer --test signer_layers`, debug and release | 1 passed in each; the whole front suite with the feature, once in each profile: 61 passed |
+| `cargo doc`, warnings denied: `prism-int`, `shekyl-prism`, and `shekyl-prism --features signer` | no warning |
+| `cargo mutants -p prism-int --test-package prism-int`, the three changed files | 194 mutants: 144 caught, 50 unviable, none missed, none timed out, 27 minutes on two cores |
+| `sh scripts/op_counts.sh` | the three records come out byte for byte as committed: no source the digest covers changed (the front crate and `prism-int` are not among them) |
+| `python3 scripts/int_vectors.py --check` | the committed file is what the script writes; not regenerated |
+
+**Two faults of the new tests, found by running them.** The first form of the Euclid test multiplied a cofactor by a Fibonacci number at full width, which does not fit: removed, and the oracle test does that check on operands of every size. The first form of the search for the least count tried every count from zero, which is the square of the bound in divisions: 31 minutes in debug at the widths of the sets. It is a bisection now, and the crate's unit tests take seconds.
+
+**Not run.** The comparison with the reference's `ibz_*` functions was not run again on a build VM: no result of the crate changed, and CI's `c-vectors` job runs it. aarch64 is CI's. `cargo fmt --check` and `cargo clippy` were run on the development machine.
+
+Who. Rick ruled D1 to D3. The reviewer found the two faults and wrote the recommendations. The coding agent (Claude Code, `claude-fable-5-2`) made the changes and ran them; the session's advisor model reviewed the plan first, and its points on the swallowed error in `sqrt_exact`, the unnamed temporaries of the comparison, and the broken documentation link in a default build are in what was built.

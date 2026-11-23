@@ -141,6 +141,18 @@ jobs:
           python3 scripts/ci/check_int_surface.py
           python3 scripts/ci/check_secret_exits.py --selftest
           python3 scripts/ci/check_secret_exits.py
+      # A node that only verifies builds no signer code: the front crate's
+      # `signer` feature is off by default, its default build graph holds
+      # none of the integer crate, `zeroize` or `subtle`, and the graph
+      # with the feature holds all three. And the integer crate's package
+      # does not hold its 3.3 MB of vectors. The self-test plants each
+      # breach. Two `cargo tree` and one `cargo package --list`: under a
+      # second.
+      - name: A default build is the verifier alone, and no package holds the vectors
+        run: |
+          set -euo pipefail
+          python3 scripts/ci/check_consumer_build.py --selftest
+          python3 scripts/ci/check_consumer_build.py
       # The script reads the parameter sets out of the field crate's source.
       # Nothing else runs it, so a change to how the sets are declared
       # would break it unseen.
@@ -226,6 +238,11 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
         run: cargo doc -p prism-verify --features research-reduced-width --no-deps --locked
+      # `hazmat::int` is public only with this feature of the front crate.
+      - name: Documentation of the front crate, signer
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc -p shekyl-prism --features signer --no-deps --locked
       # The counter is compiled only when asked for, so its code and the
       # reporter (an example of the testkit that requires the feature) are
       # linted in a pass of their own.
@@ -233,6 +250,10 @@ jobs:
         run: cargo clippy -p prism-field -p prism-verify -p prism-testkit -p shekyl-prism --features prism-verify/op-count --all-targets --locked -- -D warnings
       # The workspace run leaves the research feature off, so the real-backend
       # adapter and the experiment drivers need their own pass.
+      # The workspace run leaves the front crate's `signer` feature off, so
+      # what it gates, and the test that requires it, need their own pass.
+      - name: Clippy, the front crate with the signer feature
+        run: cargo clippy -p shekyl-prism --features signer --all-targets --locked -- -D warnings
       - name: Clippy, comparison drivers
         run: cargo clippy -p prism-compare --features experiments --all-targets --locked -- -D warnings
 
@@ -267,6 +288,20 @@ jobs:
           grep -q 'test result: ok. 1 passed' pairs.log
       - name: The research module's tests
         run: "cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::"
+      # The second configuration of the front crate: `signer` on, which the
+      # workspace run above leaves off. The feature gates one re-export and
+      # no code of the verifier, so what runs is the test that requires it,
+      # and not the verifier's tests a second time (about three minutes a
+      # profile). When signing is behind the feature, this step runs the
+      # crate's whole suite with it. The test is skipped without the
+      # feature, so the log must show it ran.
+      - name: The front crate with the signer feature, debug and release
+        run: |
+          set -euo pipefail
+          for profile in "" "--release"; do
+            cargo test -p shekyl-prism --features signer --locked $profile --test signer_layers > signer.log 2>&1 || { cat signer.log; exit 1; }
+            grep -q 'test result: ok. 1 passed' signer.log
+          done
 
   test-aarch64:
     name: test-aarch64
@@ -302,6 +337,20 @@ jobs:
           grep -q 'test result: ok. 1 passed' pairs.log
       - name: The research module's tests
         run: "cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::"
+      # The second configuration of the front crate: `signer` on, which the
+      # workspace run above leaves off. The feature gates one re-export and
+      # no code of the verifier, so what runs is the test that requires it,
+      # and not the verifier's tests a second time (about three minutes a
+      # profile). When signing is behind the feature, this step runs the
+      # crate's whole suite with it. The test is skipped without the
+      # feature, so the log must show it ran.
+      - name: The front crate with the signer feature, debug and release
+        run: |
+          set -euo pipefail
+          for profile in "" "--release"; do
+            cargo test -p shekyl-prism --features signer --locked $profile --test signer_layers > signer.log 2>&1 || { cat signer.log; exit 1; }
+            grep -q 'test result: ok. 1 passed' signer.log
+          done
 
   # The field operations of a verification are deterministic, so the two
   # committed records are an exact match on both architectures. A change in

@@ -31,6 +31,12 @@ pub enum IntError {
     Modulus,
     /// A count of bits is above what the operation takes.
     Count,
+    /// A loop reached the number of steps its width allows and had not
+    /// ended. No operand does this: the bound is derived from the width,
+    /// in the documentation of the function that returns it. It is
+    /// returned so that no loop of this crate runs on the word of its own
+    /// arithmetic, and seeing it means that arithmetic is wrong.
+    StepBound,
 }
 
 impl fmt::Display for IntError {
@@ -42,6 +48,7 @@ impl fmt::Display for IntError {
             Self::Negative => "the operand is negative",
             Self::Modulus => "the modulus is not one this operation takes",
             Self::Count => "the count of bits is too large",
+            Self::StepBound => "a loop reached the bound of its steps",
         })
     }
 }

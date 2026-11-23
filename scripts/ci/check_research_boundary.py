@@ -12,9 +12,11 @@ research feature. Production dependencies may not enable that feature or
 import prism-compare. This tests API absence, not just a source grep.
 
 The front crate `shekyl-prism` is production code under the same rules. It
-declares no feature at all, and the verifier in its resolved build graph
-has the research feature off; the graph reader is shown to see the feature
-when it is requested.
+declares one feature, `signer`, which names an optional dependency and no
+feature of any crate (`check_consumer_build.py` holds the table to exactly
+that), and the verifier in its resolved build graph has the research
+feature off, with `signer` and without; the graph reader is shown to see
+the feature when it is requested.
 
 The testkit `prism-testkit` is not production code, but the front crate's
 tests are built with it, so it is held to the same two rules: no feature
@@ -29,6 +31,9 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
 FEATURE = "research-reduced-width"
+# The front crate's whole feature table: nothing on by default, and one
+# feature that turns on an optional dependency and no feature of a crate.
+FRONT_FEATURES = {"default": [], "signer": ["dep:prism-int"]}
 
 
 def verifier_features(package, *extra):
@@ -56,10 +61,16 @@ def main():
     if verifier["features"].get("default") != []:
         raise SystemExit("verifier default features must be empty")
     front = tomllib.loads((ROOT / "shekyl-prism/Cargo.toml").read_text())
-    if "features" in front:
-        raise SystemExit("the front crate declares features; it must declare none")
+    if front.get("features") != FRONT_FEATURES:
+        raise SystemExit(
+            "the front crate's features must be exactly " + json.dumps(FRONT_FEATURES)
+        )
     if FEATURE in verifier_features("shekyl-prism"):
         raise SystemExit("the front crate's build has the research feature on the verifier")
+    if FEATURE in verifier_features("shekyl-prism", "--features", "signer"):
+        raise SystemExit(
+            "the front crate's build with `signer` has the research feature on the verifier"
+        )
     testkit = tomllib.loads((ROOT / "prism-testkit/Cargo.toml").read_text())
     if "features" in testkit:
         raise SystemExit("the testkit declares features; it must declare none")
@@ -108,8 +119,9 @@ def main():
             raise SystemExit("explicit research consumer failed:\n" + enabled.stderr)
     print(
         "Default verifier API excludes research; explicit opt-in works; production "
-        "manifests are isolated; the front crate and the testkit declare no "
-        "feature and build the verifier without it."
+        "manifests are isolated; the front crate declares `signer` alone, "
+        "the testkit no feature, and both build the verifier without it, "
+        "the front crate with `signer` as well."
     )
 
 

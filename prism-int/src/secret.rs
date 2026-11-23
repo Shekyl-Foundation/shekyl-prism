@@ -8,8 +8,14 @@
 //! Nothing here calls a routine of the public type. The arithmetic is the
 //! fixed-shape limb functions of `limbs.rs`, and every choice between two
 //! values is a selection by a mask.
+//!
+//! Every value an operation here gives a name to on its way to the result
+//! is held in a [`Scratch`], which overwrites it with zeros when the
+//! operation returns. [`SecretInt`] says, under *Wiped on drop*, what
+//! that reaches and what it does not.
 
 use core::fmt;
+use core::ops::{Deref, DerefMut};
 
 use subtle::{Choice, ConditionallySelectable, ConstantTimeEq};
 use zeroize::Zeroize;
@@ -23,14 +29,70 @@ fn is_zero(limb: u64) -> u8 {
     limb.ct_eq(&0).unwrap_u8()
 }
 
-/// `if_set` when `bit` is 1 and `if_clear` when it is 0, limb by limb.
-fn select_limbs<const N: usize>(if_clear: &[u64; N], if_set: &[u64; N], bit: u8) -> [u64; N] {
+/// Writes `if_set` to `out` when `bit` is 1 and `if_clear` when it is 0,
+/// limb by limb. The caller owns `out`, so nothing selected is left in a
+/// place this function made.
+fn select_limbs<const N: usize>(
+    if_clear: &[u64; N],
+    if_set: &[u64; N],
+    bit: u8,
+    out: &mut [u64; N],
+) {
     let choice = Choice::from(bit);
-    let mut out = [0u64; N];
     for i in 0..N {
         out[i] = u64::conditional_select(&if_clear[i], &if_set[i], choice);
     }
-    out
+}
+
+/// A value a secret operation holds on the way to its result: limbs, a
+/// carry, a flag. It is overwritten with zeros when it goes out of scope,
+/// which is when the operation returns, by whichever path.
+///
+/// Once an operation has bound it to a name it is read and written through
+/// a reference and not moved again, so the zeros are written where the
+/// value was. The move that put it there is another matter: see *Wiped on
+/// drop* of [`SecretInt`].
+struct Scratch<T: Zeroize>(T);
+
+impl<T: Zeroize> Scratch<T> {
+    /// Holds `value`.
+    fn new(value: T) -> Self {
+        Self(value)
+    }
+
+    /// Overwrites the value with zero.
+    fn wipe(&mut self) {
+        self.0.zeroize();
+        #[cfg(test)]
+        crate::wipes::count();
+    }
+}
+
+impl<A: Zeroize, B: Zeroize> Scratch<(A, B)> {
+    /// Holds the two results of a limb function, each on its own.
+    fn pair((first, second): (A, B)) -> (Scratch<A>, Scratch<B>) {
+        (Scratch(first), Scratch(second))
+    }
+}
+
+impl<T: Zeroize> Drop for Scratch<T> {
+    fn drop(&mut self) {
+        self.wipe();
+    }
+}
+
+impl<T: Zeroize> Deref for Scratch<T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.0
+    }
+}
+
+impl<T: Zeroize> DerefMut for Scratch<T> {
+    fn deref_mut(&mut self) -> &mut T {
+        &mut self.0
+    }
 }
 
 /// `if_set` when `bit` is 1 and `if_clear` when it is 0.
@@ -339,6 +401,35 @@ impl SecretBit {
 /// The limbs, the sign and the mark are overwritten with zeros when a
 /// value is dropped. As for [`Int`], that clears the place it was dropped
 /// from and not what a move left behind.
+///
+/// An operation wipes what it held as well. Every intermediate it names
+/// (the sum and the two differences an addition selects from, a product,
+/// a shifted magnitude, a carry, a borrow, a flag) is overwritten with
+/// zeros before the operation returns, and [`SecretInt::swap`] copies into
+/// its two operands in place and wipes the two values it selected.
+///
+/// **What that does not cover.** No safe code can clear these, and this
+/// crate forbids the other kind:
+///
+/// - what a limb function holds while it works, and its result before the
+///   operation has taken hold of it: the limb functions are shared with
+///   the public type, return their limbs by value, and widen each carry
+///   to 128 bits on the way;
+/// - the result of an operation, in the place it was built before it was
+///   moved to the caller, and any other copy a move leaves: a compiler
+///   usually builds a result where the caller wants it, and promises
+///   nothing;
+/// - a sign or a mark passed between two functions of this crate as an
+///   argument, and anything the compiler keeps in a register or spills to
+///   the stack on its own account;
+/// - the public integer [`SecretInt::declassify`] returns. It is wiped
+///   when dropped, as every [`Int`] is, and the intermediates of the
+///   public operations run on it are not, but for the dividend of a
+///   division.
+///
+/// What the tests show is that each wipe runs and writes zeros. They
+/// cannot read a stack after the fact, and nobody has measured what the
+/// compiled code leaves.
 pub struct SecretInt<const N: usize> {
     limbs: [u64; N],
     negative: u8,
@@ -371,13 +462,22 @@ impl<const N: usize> SecretInt<N> {
     /// A value from its parts. The sign of a zero magnitude is cleared by
     /// a mask, so that zero has one representation and equality can
     /// compare the parts.
-    fn from_parts(limbs: [u64; N], negative: u8, overflowed: u8) -> Self {
-        let negative = negative & (is_zero(limbs::fold(&limbs)) ^ 1);
+    ///
+    /// The limbs are copied from where the caller holds them, which the
+    /// caller then wipes.
+    fn from_parts(limbs: &[u64; N], negative: u8, overflowed: u8) -> Self {
         Self {
-            limbs,
-            negative,
+            limbs: *limbs,
+            negative: negative & (is_zero(limbs::fold(limbs)) ^ 1),
             overflowed,
         }
+    }
+
+    /// Makes `self` a copy of `other`, in place.
+    fn assign(&mut self, other: &Self) {
+        self.limbs = other.limbs;
+        self.negative = other.negative;
+        self.overflowed = other.overflowed;
     }
 
     /// Overwrites the value with zero.
@@ -412,7 +512,7 @@ impl<const N: usize> SecretInt<N> {
     /// The secret integer with the value of a public one. This direction
     /// is not an exit.
     pub fn from_public(value: &Int<N>) -> Self {
-        Self::from_parts(*value.magnitude(), u8::from(value.is_negative()), 0)
+        Self::from_parts(value.magnitude(), u8::from(value.is_negative()), 0)
     }
 
     /// A non-negative value from the bytes of its magnitude, least
@@ -422,21 +522,21 @@ impl<const N: usize> SecretInt<N> {
     /// `8·N` that is not zero does not fit: the overflow mark is set, as
     /// by any other operation, and nothing is returned early.
     pub fn from_le_bytes(bytes: &[u8]) -> Self {
-        let mut limbs = [0u64; N];
-        let mut lost = 0u8;
-        for (i, &byte) in bytes.iter().enumerate() {
+        let mut magnitude = Scratch::new([0u64; N]);
+        let mut lost = Scratch::new(0u8);
+        for (i, byte) in bytes.iter().enumerate() {
             if i / 8 < N {
-                limbs[i / 8] |= u64::from(byte) << (8 * (i % 8));
+                magnitude[i / 8] |= u64::from(*byte) << (8 * (i % 8));
             } else {
-                lost |= byte;
+                *lost |= *byte;
             }
         }
-        Self::from_parts(limbs, 0, is_zero(u64::from(lost)) ^ 1)
+        Self::from_parts(&magnitude, 0, is_zero(u64::from(*lost)) ^ 1)
     }
 
     /// `−self`. It always fits.
     pub fn neg(&self) -> Self {
-        Self::from_parts(self.limbs, self.negative ^ 1, self.overflowed)
+        Self::from_parts(&self.limbs, self.negative ^ 1, self.overflowed)
     }
 
     /// `self + rhs`. The mark is set if the sum does not fit.
@@ -454,56 +554,62 @@ impl<const N: usize> SecretInt<N> {
     /// The sum of the magnitudes and both orders of their difference are
     /// all computed, and one is selected: the signs choose nothing.
     fn add_signed(&self, rhs: &Self, rhs_negative: u8) -> Self {
-        let (sum, carry) = limbs::add(&self.limbs, &rhs.limbs);
-        let (forward, borrow) = limbs::sub(&self.limbs, &rhs.limbs);
-        let (backward, _) = limbs::sub(&rhs.limbs, &self.limbs);
-        let same_sign = self.negative ^ rhs_negative ^ 1;
-        // 1 when |self| < |rhs|: the difference is then `backward`, with
-        // the sign of `rhs`.
-        let smaller = borrow as u8;
-        let difference = select_limbs(&forward, &backward, smaller);
-        let difference_sign = select_flag(self.negative, rhs_negative, smaller);
-        let magnitude = select_limbs(&difference, &sum, same_sign);
-        let negative = select_flag(difference_sign, self.negative, same_sign);
-        let overflowed = self.overflowed | rhs.overflowed | (same_sign & carry as u8);
-        Self::from_parts(magnitude, negative, overflowed)
+        let (sum, carry) = Scratch::pair(limbs::add(&self.limbs, &rhs.limbs));
+        // The borrow is 1 when |self| < |rhs|: the difference is then
+        // `backward`, with the sign of `rhs`.
+        let (forward, smaller) = Scratch::pair(limbs::sub(&self.limbs, &rhs.limbs));
+        let (backward, _) = Scratch::pair(limbs::sub(&rhs.limbs, &self.limbs));
+        let same_sign = Scratch::new(self.negative ^ rhs_negative ^ 1);
+        let mut difference = Scratch::new([0u64; N]);
+        select_limbs(&forward, &backward, *smaller as u8, &mut difference);
+        let difference_sign =
+            Scratch::new(select_flag(self.negative, rhs_negative, *smaller as u8));
+        let mut magnitude = Scratch::new([0u64; N]);
+        select_limbs(&difference, &sum, *same_sign, &mut magnitude);
+        Self::from_parts(
+            &magnitude,
+            select_flag(*difference_sign, self.negative, *same_sign),
+            self.overflowed | rhs.overflowed | (*same_sign & *carry as u8),
+        )
     }
 
     /// `self · rhs`, by all `N²` limb products. The mark is set if the
     /// product does not fit.
     pub fn mul(&self, rhs: &Self) -> Self {
-        let (product, lost) = limbs::mul(&self.limbs, &rhs.limbs);
-        let overflowed = self.overflowed | rhs.overflowed | (is_zero(lost) ^ 1);
-        Self::from_parts(product, self.negative ^ rhs.negative, overflowed)
+        let (product, lost) = Scratch::pair(limbs::mul(&self.limbs, &rhs.limbs));
+        Self::from_parts(
+            &product,
+            self.negative ^ rhs.negative,
+            self.overflowed | rhs.overflowed | (is_zero(*lost) ^ 1),
+        )
     }
 
     /// `self · 2^count`, for a public `count`. The mark is set if a set
     /// bit leaves at the top.
     pub fn shl(&self, count: u32) -> Self {
-        let (shifted, lost) = limbs::shl(&self.limbs, count);
+        let (shifted, lost) = Scratch::pair(limbs::shl(&self.limbs, count));
         Self::from_parts(
-            shifted,
+            &shifted,
             self.negative,
-            self.overflowed | (is_zero(lost) ^ 1),
+            self.overflowed | (is_zero(*lost) ^ 1),
         )
     }
 
     /// The magnitude divided by `2^count` and rounded down, with the sign
     /// kept, for a public `count`: `self / 2^count` rounded toward zero.
     pub fn shr(&self, count: u32) -> Self {
-        Self::from_parts(
-            limbs::shr(&self.limbs, count),
-            self.negative,
-            self.overflowed,
-        )
+        let shifted = Scratch::new(limbs::shr(&self.limbs, count));
+        Self::from_parts(&shifted, self.negative, self.overflowed)
     }
 
     /// `if_set` when the bit is set and `if_clear` when it is not.
     ///
     /// The result has the mark of the value selected, and the bit's.
     pub fn select(if_clear: &Self, if_set: &Self, bit: &SecretBit) -> Self {
+        let mut chosen = Scratch::new([0u64; N]);
+        select_limbs(&if_clear.limbs, &if_set.limbs, bit.bit, &mut chosen);
         Self::from_parts(
-            select_limbs(&if_clear.limbs, &if_set.limbs, bit.bit),
+            &chosen,
             select_flag(if_clear.negative, if_set.negative, bit.bit),
             select_flag(if_clear.overflowed, if_set.overflowed, bit.bit) | bit.overflowed,
         )
@@ -513,34 +619,36 @@ impl<const N: usize> SecretInt<N> {
     /// is not. Each keeps the mark of the value it ends with, and both
     /// take the bit's.
     pub fn swap(a: &mut Self, b: &mut Self, bit: &SecretBit) {
+        // Copied into place, and not moved: `first` and `second` are then
+        // dropped where they are, which wipes them.
         let first = Self::select(a, b, bit);
         let second = Self::select(b, a, bit);
-        *a = first;
-        *b = second;
+        a.assign(&first);
+        b.assign(&second);
     }
 
     /// Whether `self` and `rhs` are equal, as a secret bit.
     pub fn ct_eq(&self, rhs: &Self) -> SecretBit {
         // Zero is never negative, so equal values have equal parts.
-        let same_magnitude = is_zero(limbs::difference(&self.limbs, &rhs.limbs));
-        let same_sign = self.negative ^ rhs.negative ^ 1;
         SecretBit {
-            bit: same_magnitude & same_sign,
+            bit: is_zero(limbs::difference(&self.limbs, &rhs.limbs))
+                & (self.negative ^ rhs.negative ^ 1),
             overflowed: self.overflowed | rhs.overflowed,
         }
     }
 
     /// Whether `self` is below `rhs`, as a secret bit.
     pub fn ct_lt(&self, rhs: &Self) -> SecretBit {
-        let below = limbs::sub(&self.limbs, &rhs.limbs).1 as u8;
-        let above = limbs::sub(&rhs.limbs, &self.limbs).1 as u8;
+        // The two differences are computed for their borrows alone, and
+        // wiped at the end of the line that made them.
+        let (_, below) = Scratch::pair(limbs::sub(&self.limbs, &rhs.limbs));
+        let (_, above) = Scratch::pair(limbs::sub(&rhs.limbs, &self.limbs));
         // Of the same sign: two non-negative values compare as their
         // magnitudes, two negative ones the other way round. Of different
         // signs: the negative one is below.
-        let same_sign = select_flag(below, above, self.negative);
-        let bit = select_flag(same_sign, self.negative, self.negative ^ rhs.negative);
+        let same_sign = Scratch::new(select_flag(*below as u8, *above as u8, self.negative));
         SecretBit {
-            bit,
+            bit: select_flag(*same_sign, self.negative, self.negative ^ rhs.negative),
             overflowed: self.overflowed | rhs.overflowed,
         }
     }
@@ -561,6 +669,11 @@ impl<const N: usize> SecretInt<N> {
             return Err(SecretError::Overflowed);
         }
         Ok(Int::from_parts(self.limbs, self.negative != 0))
+    }
+
+    /// Byte `index` of the magnitude, counted from the least significant.
+    fn byte(&self, index: usize) -> u8 {
+        (self.limbs[index / 8] >> (8 * (index % 8))) as u8
     }
 
     /// Writes the magnitude into `magnitude`, least significant byte
@@ -585,12 +698,11 @@ impl<const N: usize> SecretInt<N> {
         magnitude: &mut [u8],
         negative: &mut u8,
     ) -> Result<(), SecretError> {
-        let mut lost = 0u8;
+        let mut lost = Scratch::new(0u8);
         for i in 0..8 * N {
-            let byte = (self.limbs[i / 8] >> (8 * (i % 8))) as u8;
             match magnitude.get_mut(i) {
-                Some(place) => *place = byte,
-                None => lost |= byte,
+                Some(place) => *place = self.byte(i),
+                None => *lost |= self.byte(i),
             }
         }
         for place in magnitude.iter_mut().skip(8 * N) {
@@ -599,7 +711,7 @@ impl<const N: usize> SecretInt<N> {
         *negative = self.negative;
         let refusal = if self.overflowed != 0 {
             Some(SecretError::Overflowed)
-        } else if lost != 0 {
+        } else if *lost != 0 {
             Some(SecretError::DoesNotFit)
         } else {
             None
@@ -621,8 +733,69 @@ mod tests {
     //! leaves zeros, and that a drop runs the wipe. It cannot read the
     //! memory of a value after its drop, nor what a move left behind.
 
-    use super::{SecretBit, SecretInt};
+    use super::{Scratch, SecretBit, SecretInt};
     use crate::wipes;
+
+    /// The wipes `run` does, the drop of its result not among them.
+    fn wipes_of<T>(run: impl FnOnce() -> T) -> usize {
+        let before = wipes::seen();
+        let result = run();
+        let after = wipes::seen();
+        drop(result);
+        after - before
+    }
+
+    #[test]
+    fn the_wipe_of_a_scratch_value_leaves_zeros() {
+        let mut limbs = Scratch::new([1u64, 2, 3]);
+        limbs.wipe();
+        assert_eq!(*limbs, [0, 0, 0]);
+        let mut flag = Scratch::new(1u8);
+        flag.wipe();
+        assert_eq!(*flag, 0);
+        let (mut limbs, mut carry) = Scratch::pair(([4u64, 5], 1u64));
+        assert_eq!((*limbs, *carry), ([4, 5], 1));
+        limbs.wipe();
+        carry.wipe();
+        assert_eq!((*limbs, *carry), ([0, 0], 0));
+    }
+
+    #[test]
+    fn a_scratch_value_is_wiped_when_it_goes_out_of_scope() {
+        assert_eq!(wipes_of(|| drop(Scratch::new([7u64; 3]))), 1);
+        assert_eq!(wipes_of(|| drop(Scratch::pair(([7u64; 3], 1u64)))), 2);
+    }
+
+    /// Each operation wipes every intermediate it names. The counts are
+    /// those of the code above: an addition holds the sum and its carry,
+    /// two differences and their borrows, the difference and the
+    /// magnitude selected, and two flags.
+    #[test]
+    fn every_operation_wipes_what_it_held() {
+        let a = SecretInt::<3>::from_i64(-9).shl(70);
+        let b = SecretInt::<3>::from_u64(5);
+        assert_eq!(wipes_of(|| a.add(&b)), 10);
+        assert_eq!(wipes_of(|| a.sub(&b)), 10);
+        assert_eq!(wipes_of(|| a.mul(&b)), 2);
+        assert_eq!(wipes_of(|| a.shl(3)), 2);
+        assert_eq!(wipes_of(|| a.shr(3)), 1);
+        assert_eq!(wipes_of(|| a.neg()), 0);
+        assert_eq!(wipes_of(|| a.ct_eq(&b)), 0);
+        assert_eq!(wipes_of(|| a.ct_lt(&b)), 5);
+        assert_eq!(wipes_of(|| SecretInt::<3>::from_le_bytes(&[1; 30])), 2);
+        let bit = a.ct_lt(&b);
+        assert_eq!(wipes_of(|| SecretInt::select(&a, &b, &bit)), 1);
+        // A swap selects twice, and wipes the two values it selected.
+        let (mut x, mut y) = (a.clone(), b.clone());
+        assert_eq!(wipes_of(|| SecretInt::swap(&mut x, &mut y, &bit)), 4);
+        assert!(x.ct_eq(&b).declassify().unwrap() && y.ct_eq(&a).declassify().unwrap());
+        let (mut bytes, mut sign) = ([0u8; 24], 0u8);
+        assert_eq!(wipes_of(|| a.export_le_bytes(&mut bytes, &mut sign)), 1);
+        assert_eq!(
+            wipes_of(|| a.export_le_bytes(&mut bytes[..1], &mut sign)),
+            1
+        );
+    }
 
     #[test]
     fn the_wipe_of_a_secret_integer_leaves_zeros() {

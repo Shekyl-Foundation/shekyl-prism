@@ -6,6 +6,12 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
+# The committed vectors are 3.3 MB, and the test that reads them cannot be
+# built without them, so neither is in the package. They are regenerated
+# only when an operation or a width is added: each new copy is 3.3 MB more
+# in the repository's history (`scripts/int_vectors.py` says the same).
+# `scripts/ci/check_consumer_build.py` reads the package's list.
+exclude = ["/tests/data/", "/tests/vectors.rs"]
 
 # No features, and no dependency on a crate of this workspace: this is the
 # lowest crate of the order `scripts/ci/check_no_upward_edge.py` holds.

@@ -20,6 +20,7 @@ pub enum IntError
         Negative
         Modulus
         Count
+        StepBound
 impl fmt::Display for IntError
 impl std::error::Error for IntError
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -36,11 +37,11 @@ pub use secret::{SecretBit, SecretInt}
 
 [number.rs]
 impl<const N: usize> Int<N>
-    pub fn gcd(&self, other: &Self) -> Self
+    pub fn gcd(&self, other: &Self) -> Result<Self, IntError>
     pub fn xgcd(&self, other: &Self) -> Result<(Self, Self, Self), IntError>
     pub fn inv_mod(&self, modulus: &Self) -> Result<Option<Self>, IntError>
     pub fn sqrt_floor(&self) -> Result<Self, IntError>
-    pub fn sqrt_exact(&self) -> Option<Self>
+    pub fn sqrt_exact(&self) -> Result<Option<Self>, IntError>
     pub fn jacobi(&self, n: &Self) -> Result<i8, IntError>
     pub fn mul_mod(&self, rhs: &Self, modulus: &Self) -> Result<Self, IntError>
     pub fn pow_mod(&self, exponent: &Self, modulus: &Self) -> Result<Self, IntError>
@@ -77,6 +78,11 @@ impl<const N: usize> Int<N>
     pub fn shr(&self, count: u32) -> Self
 
 [secret.rs]
+impl<T: Zeroize> Scratch<T>
+impl<A: Zeroize, B: Zeroize> Scratch<(A, B)>
+impl<T: Zeroize> Drop for Scratch<T>
+impl<T: Zeroize> Deref for Scratch<T>
+impl<T: Zeroize> DerefMut for Scratch<T>
 pub struct SecretBit
 impl fmt::Debug for SecretBit
 impl Drop for SecretBit

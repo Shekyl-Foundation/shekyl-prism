@@ -23,7 +23,7 @@ fn number<const N: usize>(stream: &mut Stream) {
         let (x, y) = (big(&a), big(&b));
         let (g, u, v) = a.xgcd(&b).unwrap();
         assert_eq!(big(&g), x.gcd(&y), "gcd at {N} limbs");
-        assert!(a.gcd(&b) == g);
+        assert!(a.gcd(&b).unwrap() == g);
         assert_eq!(
             big(&u) * &x + big(&v) * &y,
             big(&g),
@@ -58,14 +58,14 @@ fn number<const N: usize>(stream: &mut Stream) {
         let root = square.sqrt_floor().unwrap();
         assert_eq!(big(&root), big(&square).sqrt(), "sqrt_floor at {N} limbs");
         assert_eq!(
-            square.sqrt_exact().is_some(),
+            square.sqrt_exact().unwrap().is_some(),
             big(&root) * big(&root) == big(&square)
         );
         let half = stream.int::<N>(N / 2);
         let squared = half.mul(&half).unwrap();
         let magnitude = if half.is_negative() { half.neg() } else { half };
         assert!(
-            squared.sqrt_exact().unwrap() == magnitude,
+            squared.sqrt_exact().unwrap().unwrap() == magnitude,
             "sqrt_exact at {N} limbs"
         );
     }

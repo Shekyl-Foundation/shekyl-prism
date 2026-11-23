@@ -290,8 +290,8 @@ fn div<const N: usize>(operands: &[&str], results: &[&str], line: &str) {
 
 fn xgcd<const N: usize>(operands: &[&str], results: &[&str], line: &str) {
     let (a, b) = (int::<N>(operands[0]), int::<N>(operands[1]));
-    same(Ok(a.gcd(&b)), results[0], line);
-    same(Ok(b.gcd(&a)), results[0], line);
+    same(a.gcd(&b), results[0], line);
+    same(b.gcd(&a), results[0], line);
     let (g, u, v) = a.xgcd(&b).unwrap();
     same(Ok(g), results[0], line);
     same(Ok(u), results[1], line);
@@ -312,8 +312,8 @@ fn sqrt<const N: usize>(operands: &[&str], results: &[&str], line: &str) {
     let a = int::<N>(operands[0]);
     same(a.sqrt_floor(), results[0], line);
     match (a.sqrt_exact(), results[1]) {
-        (None, "none") => {}
-        (Some(root), want) if want != "none" => same(Ok(root), want, line),
+        (Ok(None), "none") => {}
+        (Ok(Some(root)), want) if want != "none" => same(Ok(root), want, line),
         (got, want) => panic!("got {got:?}, want {want}, on line: {line}"),
     }
 }

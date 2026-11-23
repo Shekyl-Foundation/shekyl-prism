@@ -266,6 +266,7 @@ fn every_error_has_its_own_message() {
         IntError::Negative,
         IntError::Modulus,
         IntError::Count,
+        IntError::StepBound,
     ];
     let mut messages: BTreeSet<String> = public.iter().map(ToString::to_string).collect();
     messages.insert(SecretError::Overflowed.to_string());
