@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "prism-int",
     "prism-field",
     "prism-isogeny",
     "prism-verify",
@@ -22,6 +23,7 @@ publish = false
 [workspace.dependencies]
 fp2 = { version = "=0.6.0", default-features = false }
 sha3 = "=0.10.9"
+prism-int = { version = "0.1.0", path = "prism-int" }
 prism-field = { version = "0.1.0", path = "prism-field" }
 prism-isogeny = { version = "0.1.0", path = "prism-isogeny" }
 prism-verify = { version = "0.1.0", path = "prism-verify" }

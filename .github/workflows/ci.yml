@@ -125,6 +125,34 @@ jobs:
         run: |
           python3 scripts/ci/check_no_upward_edge.py --selftest
           python3 scripts/ci/check_no_upward_edge.py
+      # The signer's integers, `prism-int`. Its committed vectors are what
+      # the script writes from Python's integers; the Rust tests read the
+      # file. Its public surface is the committed list, and no trait that
+      # would let a secret out is implemented for the secret types. Every
+      # call of one of the three exits of the secret types, outside the
+      # crate, has a row in the secret-treatment table of
+      # docs/SIGNER_SPEC.md 2.1.3; the self-tests plant each breach. A few
+      # seconds in all.
+      - name: The integer crate's vectors, surface and secret exits are what is committed
+        run: |
+          set -euo pipefail
+          python3 scripts/int_vectors.py --check
+          python3 scripts/ci/check_int_surface.py --selftest
+          python3 scripts/ci/check_int_surface.py
+          python3 scripts/ci/check_secret_exits.py --selftest
+          python3 scripts/ci/check_secret_exits.py
+      # A node that only verifies builds no signer code: the front crate's
+      # `signer` feature is off by default, its default build graph holds
+      # none of the integer crate, `zeroize` or `subtle`, and the graph
+      # with the feature holds all three. And the integer crate's package
+      # does not hold its 3.3 MB of vectors. The self-test plants each
+      # breach. Two `cargo tree` and one `cargo package --list`: under a
+      # second.
+      - name: A default build is the verifier alone, and no package holds the vectors
+        run: |
+          set -euo pipefail
+          python3 scripts/ci/check_consumer_build.py --selftest
+          python3 scripts/ci/check_consumer_build.py
       # The script reads the parameter sets out of the field crate's source.
       # Nothing else runs it, so a change to how the sets are declared
       # would break it unseen.
@@ -191,7 +219,7 @@ jobs:
       - name: Documentation of the library crates, default features
         env:
           RUSTDOCFLAGS: -D warnings
-        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit -p prism-field -p prism-isogeny -p prism-verify --no-deps --locked
+        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit -p prism-int -p prism-field -p prism-isogeny -p prism-verify --no-deps --locked
       # The counter's module and the verifier's stage names are public only
       # with this feature, which the verifier's turns on in the field crate.
       - name: Documentation of the library crates, operation counter
@@ -210,6 +238,11 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
         run: cargo doc -p prism-verify --features research-reduced-width --no-deps --locked
+      # `hazmat::int` is public only with this feature of the front crate.
+      - name: Documentation of the front crate, signer
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc -p shekyl-prism --features signer --no-deps --locked
       # The counter is compiled only when asked for, so its code and the
       # reporter (an example of the testkit that requires the feature) are
       # linted in a pass of their own.
@@ -217,6 +250,10 @@ jobs:
         run: cargo clippy -p prism-field -p prism-verify -p prism-testkit -p shekyl-prism --features prism-verify/op-count --all-targets --locked -- -D warnings
       # The workspace run leaves the research feature off, so the real-backend
       # adapter and the experiment drivers need their own pass.
+      # The workspace run leaves the front crate's `signer` feature off, so
+      # what it gates, and the test that requires it, need their own pass.
+      - name: Clippy, the front crate with the signer feature
+        run: cargo clippy -p shekyl-prism --features signer --all-targets --locked -- -D warnings
       - name: Clippy, comparison drivers
         run: cargo clippy -p prism-compare --features experiments --all-targets --locked -- -D warnings
 
@@ -251,6 +288,20 @@ jobs:
           grep -q 'test result: ok. 1 passed' pairs.log
       - name: The research module's tests
         run: "cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::"
+      # The second configuration of the front crate: `signer` on, which the
+      # workspace run above leaves off. The feature gates one re-export and
+      # no code of the verifier, so what runs is the test that requires it,
+      # and not the verifier's tests a second time (about three minutes a
+      # profile). When signing is behind the feature, this step runs the
+      # crate's whole suite with it. The test is skipped without the
+      # feature, so the log must show it ran.
+      - name: The front crate with the signer feature, debug and release
+        run: |
+          set -euo pipefail
+          for profile in "" "--release"; do
+            cargo test -p shekyl-prism --features signer --locked $profile --test signer_layers > signer.log 2>&1 || { cat signer.log; exit 1; }
+            grep -q 'test result: ok. 1 passed' signer.log
+          done
 
   test-aarch64:
     name: test-aarch64
@@ -286,6 +337,20 @@ jobs:
           grep -q 'test result: ok. 1 passed' pairs.log
       - name: The research module's tests
         run: "cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::"
+      # The second configuration of the front crate: `signer` on, which the
+      # workspace run above leaves off. The feature gates one re-export and
+      # no code of the verifier, so what runs is the test that requires it,
+      # and not the verifier's tests a second time (about three minutes a
+      # profile). When signing is behind the feature, this step runs the
+      # crate's whole suite with it. The test is skipped without the
+      # feature, so the log must show it ran.
+      - name: The front crate with the signer feature, debug and release
+        run: |
+          set -euo pipefail
+          for profile in "" "--release"; do
+            cargo test -p shekyl-prism --features signer --locked $profile --test signer_layers > signer.log 2>&1 || { cat signer.log; exit 1; }
+            grep -q 'test result: ok. 1 passed' signer.log
+          done
 
   # The field operations of a verification are deterministic, so the two
   # committed records are an exact match on both architectures. A change in
@@ -415,6 +480,20 @@ jobs:
       # committed file byte for byte, with the digests of the source files.
       - name: The committed C oracle values are what the pinned tree holds
         run: python3 scripts/signer_constants.py --extract-c
+      # The integer widths of docs/SIGNER_SPEC.md 2.1.2 were measured in a
+      # build of the pinned tree with two patches applied to a copy
+      # (scripts/build_traced_reference.sh). Nothing builds that here; this
+      # holds that both patches still apply to the pin, so the measurement
+      # can be run again.
+      - name: The measurement's patches apply to the pinned tree
+        run: |
+          set -euo pipefail
+          work=$(mktemp -d)
+          cp -R external/PRISM_v2/src "$work/src"
+          patch -d "$work/src" -p4 --forward --input="$PWD/scripts/c/cornacchia-positive.patch"
+          patch -d "$work/src" -p4 --forward --input="$PWD/scripts/c/ibz-trace.patch"
+          grep -q 'ibz_trace_record' "$work/src/quaternion/ref/generic/intbig.c"
+          rm -rf "$work"
 
   c-vectors:
     name: c-vectors
@@ -443,6 +522,12 @@ jobs:
         run: bash scripts/ci/diff_vectors_data.sh
       - name: C Q is the cleared difference
         run: python3 scripts/check_even_basis.py 100
+      # The integer crate's committed vectors, given to the reference's
+      # ibz_* functions in the build made above: every convention a replay
+      # of the reference depends on (docs/SIGNER_SPEC.md 2.1.4). The Rust
+      # tests read the same file. A second of compiling and running.
+      - name: The reference's integers agree with the integer crate's vectors
+        run: PRISM_REF_BUILD=/tmp/prism-v2-ref sh scripts/check_int_conventions.sh
 
   native-signer:
     name: native-signer

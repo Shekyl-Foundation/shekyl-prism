@@ -7,11 +7,25 @@ rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
 
-# No features. The operation counter and the reduced-width research code
-# are features of the layer crates, asked for on the command line and
-# enabled by no manifest; scripts/ci holds this crate to that.
+# One feature, `signer`, off by default. A default build is the verifier
+# and nothing of the signer: a node that only verifies compiles no signer
+# code and none of the signer's dependencies. With `signer`, the layers of
+# the signer that exist are re-exported under `hazmat` (today the
+# integers, `hazmat::int`), and signing will appear behind it when it is
+# written. `scripts/ci/check_consumer_build.py` holds the feature table to
+# exactly this, and the default build graph to holding no signer crate.
+#
+# The operation counter and the reduced-width research code are features
+# of the layer crates, asked for on the command line and enabled by no
+# manifest; scripts/ci holds this crate to that.
+[features]
+default = []
+signer = ["dep:prism-int"]
 
 [dependencies]
+# Built with `signer` alone, for `hazmat::int`: no code of this crate
+# calls it.
+prism-int = { workspace = true, optional = true }
 prism-field = { workspace = true }
 prism-isogeny = { workspace = true }
 prism-verify = { workspace = true }
@@ -29,6 +43,12 @@ prism-testkit = { workspace = true }
 [[test]]
 name = "tag_layer_counts"
 required-features = ["prism-verify/op-count"]
+
+# Shows that the signer's layers are reachable through `hazmat` when the
+# feature is on. A plain `cargo test` skips it, and CI names the feature.
+[[test]]
+name = "signer_layers"
+required-features = ["signer"]
 
 [lints]
 workspace = true
