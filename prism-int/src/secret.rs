@@ -422,10 +422,11 @@ impl SecretBit {
 /// - a sign or a mark passed between two functions of this crate as an
 ///   argument, and anything the compiler keeps in a register or spills to
 ///   the stack on its own account;
-/// - the public integer [`SecretInt::declassify`] returns. It is wiped
-///   when dropped, as every [`Int`] is, and the intermediates of the
-///   public operations run on it are not, but for the dividend of a
-///   division.
+/// - the public integer [`SecretInt::declassify`] returns. The magnitude
+///   is handed to it by value, which is one more copy the compiler may
+///   leave. It is wiped when dropped, as every [`Int`] is, and the
+///   intermediates of the public operations run on it are not, but for
+///   the dividend of a division.
 ///
 /// What the tests show is that each wipe runs and writes zeros. They
 /// cannot read a stack after the fact, and nobody has measured what the

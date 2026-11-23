@@ -8,7 +8,7 @@
 //! (`required-features` in the manifest), and CI's step that asks for it
 //! requires the log to show this test ran.
 
-use shekyl_prism::hazmat::int::{Int, SecretInt};
+use shekyl_prism::hazmat::int::{Int, SecretBit, SecretInt};
 
 /// The integer crate is the one behind `hazmat::int`: its two types are
 /// there and compute. No exit of the secret type is called: a call site
@@ -17,6 +17,6 @@ use shekyl_prism::hazmat::int::{Int, SecretInt};
 fn the_integers_are_under_hazmat() {
     let sum = Int::<4>::from_u64(40).add(&Int::from_u64(2)).unwrap();
     assert!(sum == Int::from_u64(42));
-    let secret = SecretInt::<4>::from_public(&sum);
-    assert_eq!(format!("{:?}", secret.ct_eq(&secret)), "SecretBit");
+    let wrapped = SecretInt::<4>::from_public(&sum);
+    let _: SecretBit = wrapped.ct_eq(&wrapped);
 }

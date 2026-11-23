@@ -366,13 +366,19 @@ mod tests {
     /// operands Euclid's algorithm is slowest on: every quotient but the
     /// last is one.
     fn fibonacci<const N: usize>() -> (Int<N>, Int<N>, u32) {
-        let (mut before, mut last, mut index) = (Int::<N>::one(), Int::<N>::one(), 2u32);
-        while let Ok(next) = last.add(&before) {
+        let (mut before, mut last) = (Int::<N>::one(), Int::<N>::one());
+        // Counted, as the loops under test are: the numbers grow by more
+        // than a bit every two steps, so the width is passed well within
+        // two steps a bit. An addition that never refused would otherwise
+        // keep this going for ever.
+        for index in 2..2 * Int::<N>::BITS {
+            let Ok(next) = last.add(&before) else {
+                return (last, before, index);
+            };
             before = last;
             last = next;
-            index += 1;
         }
-        (last, before, index)
+        panic!("the Fibonacci numbers did not pass {N} limbs");
     }
 
     fn euclid<const N: usize>() {
