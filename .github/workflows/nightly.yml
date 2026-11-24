@@ -22,6 +22,24 @@
 # The schedule runs the default branch's copy of this file. The level III
 # floor-device measurement is not this workflow, and it is not started by
 # a pull request: a public fork must not execute on owned hardware.
+#
+# The jobs that do the night's work run on the Foundation's own runners,
+# `[self-hosted, shekyl-gate]`: `fuzz`, `differential-prime`,
+# `c-vectors-full`, `coverage`, and every mutants shard
+# (`mutants-shard.yml`). That keeps the rule above: this workflow starts
+# on a schedule or by a dispatch, which only someone with write access
+# can do, and never on a pull request. `scripts/ci/check_runner_boundary.py`
+# holds every workflow to it. Those runners give a job a container that
+# is thrown away, with no root and no package manager: what a job needs
+# is in the image, and the job checks that it is there
+# (`scripts/ci/require_tools.sh`).
+#
+# Four jobs stay on GitHub's runners. `big-endian` needs Docker for
+# `cross`. `dispatch`, `mutants-summary` and `report-red` are the run's
+# control: they take seconds, and they must not wait in the queue of the
+# runners whose absence or failure they are there to report. If no owned
+# runner is online, the jobs above wait and are then cancelled, and
+# `report-red`, which reports a cancelled job, still runs.
 
 name: nightly
 
@@ -91,7 +109,7 @@ jobs:
     name: fuzz (${{ matrix.target }})
     needs: dispatch
     if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.other_jobs == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, shekyl-gate]
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -112,10 +130,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
           toolchain: 1.97.1
+      # clang is in the runner's image: nothing can be installed here.
       - name: Nightly toolchain and clang
         run: |
           set -euo pipefail
-          bash scripts/ci/apt_install.sh clang
+          sh scripts/ci/require_tools.sh clang
           rustup toolchain install nightly --profile minimal --component rust-src
       - name: Install cargo-fuzz 0.13.2
         run: python3 scripts/ci/install_pinned_tool.py cargo-fuzz
@@ -173,7 +192,7 @@ jobs:
     name: differential-prime
     needs: dispatch
     if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.other_jobs == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, shekyl-gate]
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -221,15 +240,17 @@ jobs:
     name: c-vectors-full
     needs: dispatch
     if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.other_jobs == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, shekyl-gate]
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
           submodules: true
+      # The C compiler, make and cmake are in the runner's image:
+      # nothing can be installed here.
       - name: Compiler
-        run: bash scripts/ci/apt_install.sh build-essential cmake
+        run: sh scripts/ci/require_tools.sh cc make cmake
       - name: Rebuild the vectors from the pin
         run: python3 scripts/export_c_basis_hints.py
       - name: The committed vectors match
@@ -398,7 +419,7 @@ jobs:
     name: coverage
     needs: dispatch
     if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.other_jobs == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, shekyl-gate]
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0

@@ -1,0 +1,13 @@
+# Copyright (c) 2025-2026, The Shekyl Foundation
+#
+# All rights reserved.
+# BSD-3-Clause
+#
+# `actionlint` is run by hand before a change to a workflow. It knows
+# GitHub's runner labels and has to be told the Foundation's own, or it
+# reports every job of the nightly that runs there.
+# `scripts/ci/check_runner_boundary.py` is what holds which workflow may
+# use the label.
+self-hosted-runner:
+  labels:
+    - shekyl-gate

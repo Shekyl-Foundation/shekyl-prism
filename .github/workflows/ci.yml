@@ -162,6 +162,17 @@ jobs:
       # does not hold its 4.0 MB of vectors. The self-test plants each
       # breach. Two `cargo tree` and one `cargo package --list`: under a
       # second.
+      # This repository is public, and a pull request runs its author's
+      # code. No workflow a pull request can start has a job on the
+      # Foundation's own runners, directly or through a workflow it calls:
+      # only the nightly reaches them, from its schedule or a dispatch.
+      # Every runner label is one the check knows. The self-test plants
+      # each breach. It reads four files.
+      - name: No pull request starts a job on the Foundation's own runners
+        run: |
+          set -euo pipefail
+          python3 scripts/ci/check_runner_boundary.py --selftest
+          python3 scripts/ci/check_runner_boundary.py
       - name: A default build is the verifier alone, and no package holds the vectors
         run: |
           set -euo pipefail

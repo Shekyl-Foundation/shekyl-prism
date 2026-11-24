@@ -77,7 +77,10 @@ permissions:
 jobs:
   shard:
     name: ${{ inputs.job }} (${{ inputs.shard }}/${{ inputs.of }})
-    runs-on: ubuntu-latest
+    # The Foundation's own runners. Only the nightly calls this file, and
+    # `scripts/ci/check_runner_boundary.py` refuses a call from a workflow
+    # that a pull request can start.
+    runs-on: [self-hosted, shekyl-gate]
     timeout-minutes: 90
     steps:
       - name: The shard is one of the dealing
