@@ -145,6 +145,8 @@ jobs:
           python3 scripts/ci/check_int_surface.py
           python3 scripts/ci/check_secret_exits.py --selftest
           python3 scripts/ci/check_secret_exits.py
+      - name: Check the Stage 2c basis reduction against its mathematical fixtures
+        run: python3 -B -S scripts/stage2c_oracle.py
       # A node that only verifies builds no signer code: the front crate's
       # `signer` feature is off by default, its default build graph holds
       # none of the integer crate, `zeroize` or `subtle`, and the graph
