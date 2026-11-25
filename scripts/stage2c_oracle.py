@@ -33,6 +33,13 @@ def combine(basis, coefficients):
     return tuple(sum(a*b for a, b in zip(row, coefficients)) for row in zip(*basis))
 
 
+def size_reduce(p, u, v, a):
+    ju = times_i(u)
+    real = (2*inner(p, v, u) + a) // (2*a)
+    imag = (2*inner(p, v, ju) + a) // (2*a)
+    return combine((v, u, ju), (1, -real, -imag))
+
+
 def reduce_exact(p, u, v):
     """Public-fixture reference. The production schedule needs a separate proof."""
     if inner(p, v, v) < inner(p, u, u):
@@ -41,10 +48,7 @@ def reduce_exact(p, u, v):
         a = inner(p, u, u)
         if a == 0:
             raise ValueError("the Gaussian generators must be independent")
-        ju = times_i(u)
-        real = (2*inner(p, v, u) + a) // (2*a)
-        imag = (2*inner(p, v, ju) + a) // (2*a)
-        v = combine((v, u, ju), (1, -real, -imag))
+        v = size_reduce(p, u, v, a)
         if inner(p, v, v) >= a:
             return u, v
         u, v = v, u
@@ -145,6 +149,21 @@ class Stage2cOracle(unittest.TestCase):
         self.assertEqual(self.check_reduction(7, (1, -1, 1, 1), u), (u, (-1, -1, 1, 1)))
         with self.assertRaises(ValueError):
             reduce_exact(7, u, times_i(u))
+
+    def test_final_size_reduction_after_last_swap(self):
+        # A norm-five ideal at toy prime 3. Exactly one swap, two active steps.
+        u, v = (10, 0, 0, 0), (4, 9, 1, 0)
+        first = size_reduce(3, u, v, inner(3, u, u))
+        self.assertEqual(first, (4, -1, 1, 0))
+        a = inner(3, first, first)
+        self.assertLess(a, inner(3, u, u))
+        # After swapping, the first vector is already shortest. The imaginary
+        # projection of the second is exactly +1/2, outside the terminal range.
+        self.assertEqual(2*inner(3, u, times_i(first)), a)
+        last = size_reduce(3, first, u, a)
+        self.assertEqual(last, (1, -2, -2, -1))
+        self.assertEqual(inner(3, last, last), a)
+        self.assertEqual(self.check_reduction(3, u, v), (first, last))
 
     def test_exhaustive_minima(self):
         for p, u, v in ((3, (4, 0, 0, 0), (2, 1, 1, 0)),

@@ -763,6 +763,8 @@ For every integer coefficient column `c`, `cᵀFc = N4(Bc)/(4T) = nrd(Bc/2)/T`. 
 
 #### Executable acceptance cases
 
+At toy prime `p=3` with ideal norm `T=5`, start with `U=(10,0,0,0)` and `V=(4,9,1,0)`. The first step subtracts `iU` and swaps. The new first vector `(4,−1,1,0)` already has the minimum numerator norm 20. The second vector still has projections `2` and `+1/2` on the first vector and its rotation (inner products divided by 20). The second step subtracts the multiple `2+i`, producing `(1,−2,−2,−1)`, also of norm 20. Equal norms preserve the order. A count of one swap therefore requires two active steps on this input.
+
 Run `python3 -B -S scripts/stage2c_oracle.py`. It exhausts six-bit restoring division and signed rounding, then checks strict swaps, the span of the original columns, and the norm form on explicit combinations. Tiny lattices admit an exhaustive shortest-vector check. All five field weights are exercised. The P500 input in `scripts/fixtures/stage2c_p500.json` comes from the pinned width study's `crafted_saturation.py` (seed 77). It includes the model-order lattice where the bounded quotient stalls and the associated O0 numerator lattice. The two minimum values were computed independently with PARI/GP 2.17.2. For the input columns B, form `G=Bᵀ diag(1,1,p,p) B`, compute `L=qflllgram(G,1)`, then run `qfminim(LᵀGL,,1,2)` at 1000 decimal digits and evaluate the returned minimizing vector in the exact integer form. The model-order minimum is in integer coordinates; the O0 minimum is in numerator units.
 
 The Rust implementation must agree with these conventions, preserve each lattice, obey the certified schedule, and provide release-build timing, control-flow and secret-address evidence on the targets it supports.
