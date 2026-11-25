@@ -399,7 +399,7 @@ Constants the signer's path reads that are written in the reference's code and n
 
 ## 2. Integers and the quaternion algebra
 
-Stage 2 is written in parts, each with its own section: the integers (2.1, stage 2a), then lattices, the algebra and ideals (2b to 2d, to be written). Rulings that stand over 2.1, from Round 0 (2026-11-14) and the plan of 2026-11-21:
+Section 2.1 covers the integers (Stage 2a). Section 2.3 proposes Gaussian basis reduction (Stage 2c). The lattice and ideal sections (2b and 2d) are pending. Rulings that stand over 2.1, from Round 0 (2026-11-14) and the plan of 2026-11-21:
 
 - **S5.** Integers are fixed-width. No value decides a length.
 - **S6.** The first signer is correct, wipes its secrets, and classifies every step as secret or public. It makes no constant-time claim.
@@ -528,7 +528,7 @@ The budget below is for these methods. Each is an obligation on the stage named,
 - **Q2 (2b, 2d).** An ideal's norm is carried with it and never recovered from an index. An element that generates an ideal together with `N` is reduced modulo `N·O0` before it is used.
 - **Q3 (2d).** The intersection of two left ideals of `O0` of coprime norms `N₁` and `N₂` is `N₂·I₁ + N₁·I₂`, one normal form of eight generators by the method of Q1 with the fixed modulus `2·N₁·N₂`, and no dual. (**Derived**: both terms lie in the intersection, and at each prime dividing `N₁` the sum is `I₁` and at each prime dividing `N₂` it is `I₂`.) Our signing intersects an ideal of prime norm `q` with the secret ideal of prime norm. The two norms are never equal: `s` has at most `e − 3` bits, so `q > 2^(2e−6)`, which is above every secret norm Q4 admits.
 - **Q4 (stage 5).** Key generation accepts a secret ideal only if its norm is below `2^B`, `B = ⌈L/2⌉ + 32`, and otherwise goes on searching. The same bound is tested wherever a secret key enters, so also when one is decoded: a replay of signing runs on keys imported from the reference (1.6). See "the secret norm" below.
-- **Q5 (2c).** The reduction of a basis states, in its own section, the largest intermediate it holds, as a formula. This section cannot: the algorithm is not chosen. See "bounds not proven".
+- **Q5 (2c).** The reduction of a basis states, in its own section, the largest intermediate it holds, as a formula. Section 2.3 proposes exact Gaussian reduction and identifies the starting-basis bounds needed to apply it.
 
 ##### The budget, by consumer (Derived)
 
@@ -753,3 +753,71 @@ Not merged in this part, and not decided. Ledger O34 holds the question for stag
 **What the code showed of this section.** Four statements of 2.1.3 and 2.1.4 were incomplete, and are corrected above where they stand: the export needs a second refusal (a buffer shorter than the value); the cofactor bound of the extended greatest common divisor fails when an operand is zero; a selection passes on the mark of the value it selects, not of both; and the secret type has no constructor that can fail, so bytes that do not fit set the mark. No width and no convention changed.
 
 **Call sites of an exit outside the crate: none.** `scripts/ci/check_secret_exits.py` counts them against the table of 2.1.3, and both are zero.
+
+### 2.3 Gaussian-integer basis reduction (Stage 2c, design for review)
+
+The reduction returns a basis of the same left ideal and a quadratic form for evaluating a linear combination of its columns. Key generation samples combinations of those columns. Shortest-equivalent-ideal construction needs the first column to attain the shortest nonzero norm. The mathematical oracle below uses variable-time integers on public fixtures. The exact rule defines the oracle. The production candidate is exp64 with the native schedules below. O33 remains open for the operand widths of the port and the construction of its admitted inputs. G7 also requires compiled-code evidence.
+
+#### Input contract with the lattice and ideal layers
+
+Use the numerator coordinates of 2.1.2 throughout. Write `J(a,b,c,d) = (−b,a,−d,c)` for left multiplication by `i`. An ordered pair `U,V` represents the four columns `U, JU, V, JV`, each with denominator two. The caller supplies the parameter set and the positive ideal norm `T` it already carries under Q2. It must establish that these columns form a full basis of its ideal over the integers. Membership of the two columns alone permits a proper sublattice. Numerators in O0 satisfy `a ≡ d` and `b ≡ c` modulo two.
+
+For a generic odd-norm ideal, the interface includes the basis `U=(2T,0,0,0)`, `V=(x,y,1,0)` from the HNF, with `x` even and `y` odd and both in `[0,2T)`. An HNF of another shape requires a spanning Gaussian pair and a bound for its starting norms. Its first and third columns cannot be assumed to be that pair. Stage 2b/2d owns this conversion and its width argument. With a pre-reduced key representation, the analogous obligation belongs to its constructor and decoder. For signing, Q4 gives `N < 2^B` and `T=Nq` with `q < 2^(2e−5)`. Key generation's starting norm is the separate item 33. The reducer takes typed internal inputs. Raw key validation belongs at import. The set and operation (e.g. signing or key generation) may select the public schedule. Ideal shape, norm, basis and quotients derived from a secret are secret.
+
+#### Exact step and terminal state
+
+Define `D(X,Y) = X₀Y₀ + X₁Y₁ + p(X₂Y₂ + X₃Y₃)` and `N4(X)=D(X,X)`. Its unit is four times the quaternion's reduced norm. Initially swap the pair precisely when `N4(V) < N4(U)`. Each logical exact step has these semantics:
+
+1. Set `A=N4(U)`, `h₀=D(V,U)` and `h₁=D(V,JU)`. Full rank implies `A>0`.
+2. For both components take `mⱼ=floor(hⱼ/A + 1/2)`. Ties go toward positive infinity. In particular `+1/2 ↦ 1` and `−1/2 ↦ 0`.
+3. Replace `V` with `V − m₀U − m₁JU`. Swap precisely when the new `N4(V) < A`. Equal norms keep their order.
+
+The subtraction and swap are invertible changes of Gaussian basis. At the fixed point `N4(U) ≤ N4(V)` and `−A ≤ 2hⱼ < A` for both updated inner products. Another exact step then leaves both columns unchanged. Within a deterministic run these conventions fix the output for its input basis. Different starting bases of one ideal can choose different shortest vectors of equal norm.
+
+**Arithmetic width of the exact step.** Let `M` be the larger initial numerator norm. The exact Gaussian quotient minimizes the norm over all Gaussian multiples of the first vector, including zero. After the Gaussian multiple has been subtracted, both norms remain at most `M`, regardless of how many swaps occur. Cauchy–Schwarz bounds the sum of the absolute weighted products in either inner product by `M`. With `A=N4(U)`, each rounded component has magnitude at most `√(M/A)+1/2`. A product of that component and a coordinate of `U` or `JU` is therefore at most `3√M/2` in magnitude. Compute the new coordinate by subtracting one product and then the other. The first partial difference is at most `5√M/2`, and the final coordinate is at most `√M`. The norm-form numerator is at most `2M`, and the denominator `4T` is at most `M` for an integral ideal, since every nonzero element norm is a positive multiple of `T`. Thus `3M` bounds these mathematical intermediates, including when `M=1`. Applying that formula to a concrete fixed-width implementation requires the constructor's bound on `M` and a check of the limb operations in their actual evaluation order.
+
+#### Production candidate and public schedule
+
+Choose **exp64**. For `k=max(0,bl(A)−64)`, set `n=A >> k` and `eₕ=max(bl(|h₀|),bl(|h₁|))−bl(A)`, with `bl(0)=0`. Use the same exponent for both components.
+
+- For `eₕ ≤ 60`, form `m=floor((2 floor(h/2ᵏ)+n)/(2n))` per component. Compute `X=2h+A−2mA`. Decrement the estimate for `X<0` or increment it for `X≥2A`. The result equals the exact half-up quotient, including for negative ties.
+- For `eₕ > 60`, set `s=eₕ−60`. For each component set `qtop=floor((|h| >> (k+s))/n)` and use the signed multiple `sign(h)·max(qtop−1,0)·2ˢ`. This undershoots, leaves the first vector in place, and decreases the exponent by at least 58. Rounding commutes with subtracting these Gaussian integers. The next window step completes the same logical step as the exact oracle.
+
+Execute both paths and select by a secret mask. Keep lengths and shift amounts inside secret arithmetic. The additions to `prism-int` are a secret magnitude bit length, masked left and right shifts by a secret count, fixed-iteration 128-by-64 division, and multiplication of an N-limb value by a secret scalar. The window calculation uses a floor shift on signed values; the large-quotient calculation shifts magnitudes. Bound the values used on both paths, including discarded correction products and shifts, and propagate the existing arithmetic marks correctly. Compute the exact same rounding with the 64-bit divisor `n`, for example as `floor((floor(h/2ᵏ)+floor(n/2))/n)`; `2n` itself can require 65 bits. G7 review includes release assembly, trace comparison, secret-dependent memory and branch checks, and timing on the supported targets. The research bench measured about 1.17 times the prototype cycles at P500 under the research schedule. That timing and its static assembly scan leave G7 open. The old clamp fails the P500 fixture and making saturation an abort introduces a reachable key-dependent exit. [Progress proof and measurements](https://github.com/Shekyl-Foundation/shekyl-prism/blob/2b10431bef686b8ebfe4f5bfbaccf86062a58f8e/research/clamped-quotient-progress/REPORT.md)
+
+**Native input normalization.** In numerator units the Hermitian determinant is `Δ=A·C−h₀²−h₁²`, where `C=N4(V)`. Substitution of the generic O0 columns gives `Δ=4pT²`. More generally, the O0 numerator lattice has index four in the integer coordinate lattice, and a norm-T ideal has index `T²` in O0. Thus `|det B|=4T²` for a full basis. The real Gram determinant is both `p²(det B)²` and `Δ²`, giving the same identity for a pre-reduced ideal basis. Dividing all Gram entries by four gives **`Δ=pT²/4` in reduced-norm units**.[^o0-gram-units] The research count generator uses `pT²` in these units for its model-order lattice. The native input requires a factor of four in the upper bound for `Φ₁²/Δ`. The exact-rational contractions, strict swap, and half-up tie rule carry over. [Model count generator](https://github.com/Shekyl-Foundation/shekyl-prism/blob/2b10431bef686b8ebfe4f5bfbaccf86062a58f8e/research/clamped-quotient-progress/progress_check.py) · [O0 starting basis and width bounds](https://github.com/Shekyl-Foundation/shekyl-prism/blob/53e2eb4fdd772ff8a53708ba60314c3dabea9d05/research/q5-width-proof/REPORT.md)
+
+[^o0-gram-units]: On the same O0 basis, the numerator Gram has determinant `4pT²`. Dividing each entry by four for the reduced norm divides the two-by-two determinant by sixteen, giving `pT²/4`. In either convention the certificate ratio `A₀/√Δ` is invariant under this rescaling. Its generic O0 upper bound is `2T/√p` in both conventions, one bit above the model-order bound `T/√p`.
+
+Pin the native signer to **O0 numerator coordinates**. Each cell gives **exact steps / exp64 any-basis steps** after the initial strict ordering, from tables 1-O0 and 2-O0 respectively. [Corrected O0 handoff](https://github.com/Shekyl-Foundation/shekyl-prism/blob/452b5ecbbdf7972949a59883b4b9aed015bbb5e3/research/clamped-quotient-progress/REPORT.md) Both counts include the final size reduction. The fixed schedule runs through its last step, including when the pair is already reduced. Production uses the exp64 count with the conservative lower bound of one on a nonzero integral reduced norm.
+
+| Native input class | P248 | P324 | P376 | P500 | P664 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Signing, generic HNF | 301 / 312 | 387 / 401 | 447 / 463 | 587 / 609 | 774 / 803 |
+| Signing, pre-reduced, guard 256 | 287 / 297 | 373 / 387 | 432 / 448 | 573 / 594 | 759 / 787 |
+| Key generation, norm D | 223 / 231 | 347 / 360 | 331 / 344 | 442 / 459 | 686 / 712 |
+| Secret ideal pre-reduction, Q4 | 22 / 24 | 22 / 25 | 23 / 26 | 22 / 26 | 23 / 29 |
+| Challenge alone | 212 / 220 | 276 / 287 | 319 / 331 | 425 / 442 | 565 / 587 |
+
+The oracle recomputes every cell from the five committed parameter vectors. Write `Tmax` for the class norm bound, `qmax=2^(2e−5)`, and `Nmax=2^B`. In reduced-norm units the generic starting pair satisfies `A₀≤T²` after ordering and `C₀≤2Tmax²+p`. Use `Tmax=Nmax·qmax, D, Nmax, qmax` respectively for generic signing, norm-D key generation, secret ideal pre-reduction and challenge alone. The contraction is `Φ₁²/Δ` with `Φ₁≤2·A₀`, so the ratio bound is `4·A₀²/Δ`. For the generic pair that equals `16Tmax²/p`. For the guarded pre-reduced construction, the starting columns are `q·vₛ` and `uₛ+γ·vₛ`, with a centred Gaussian residue `|γ|≤q`. There `A₀²≤256²·p·Nmax²·qmax⁴` and `Δ=p·(Nmax·qmax)²/4`, so the same ratio equals `16·256²·qmax²`, and `C₀≤(qmax+1)²·256·⌈√p⌉·Nmax`. The oracle stores those bounds and evaluates `4·A₀²/Δ`; it does not start from the cancelled numeral.
+
+Use the research recurrence with those native bounds. For `S≥1`, let `ρ(S)=(87/1000)^floor((S−1)/2)·(31/100)^((S−1) mod 2)`. Take the largest `S` with `ρ(S)²·(Φ₁²/Δ bound)≥1000`, reserving at least one main-phase step, then add five for the tail and final size reduction: four tail swaps and the final size reduction. For exp64 add the largest positive `E` satisfying `4^(58E+2)<C₀ bound`, or zero if none exists. The 58 is the window's 60 minus the two bits a big step loses, and the added 2 is that same loss. Using `λ₁≥1` here relies only on integrality of the reduced norm. The exact-step budget still requires the class bounds, rank, and ideal determinant above.
+
+Key generation and decode both establish Q4 and check the same factor-256 guard for a stored pre-reduced basis, `0<nrd(uₛ)≤nrd(vₛ)≤256√p·N`. In numerator units the upper check is `N4(vₛ)²≤p·(1024N)²`; compare in a width justified for the accepted input encoding. Verify the ideal, its span and the basis invariants at construction or import. A decoder rejects a basis that fails these conditions before selecting the schedule. The operation and key format selecting a row must be public. Factor 256 had zero observed rejections in 10,000 sampled keys per set; valid inputs can still fail the guard.
+
+#### Basis and norm form passed to a consumer
+
+Let `B=(U,JU,V,JV)` in column order. Its numerator Gram matrix is `Wᵢⱼ=D(Bᵢ,Bⱼ)`. The upper-right two-by-two block has rows `(h₀,−h₁)` and `(h₁,h₀)`. The integral class norm form for the native consumer is lower triangular:
+
+- `Fᵢᵢ = Wᵢᵢ/(4T)`.
+- `Fᵢⱼ = 2Wᵢⱼ/(4T)` for `i>j`, and zero for `i<j`.
+
+For every integer coefficient column `c`, `cᵀFc = N4(Bc)/(4T) = nrd(Bc/2)/T`. For an integral ideal of norm `T`, element norms are multiples of `T`; evaluating on one column and on each pairwise sum gives the exact divisions above. A remainder is an invariant failure. In the pinned C code, `quat_lideal_class_gram` divides the doubled numerator Gram by `denom²·T`. After reduction, `quat_lideal_reduce_basis` multiplies back by `denom²`, halves the diagonal and clears the upper triangle. Thus with the same basis over two, C's returned triangular form is `4F`. Differential tests using different bases must apply the corresponding change of coordinates before comparing values. [Pinned C class Gram](https://github.com/mariascrs/PRISM_v2/blob/87fad7da5f12f79112521677f4f5530672afe9ba/src/quaternion/ref/generic/ideal.c#L237) · [Pinned C reduced form](https://github.com/mariascrs/PRISM_v2/blob/87fad7da5f12f79112521677f4f5530672afe9ba/src/quaternion/ref/generic/lll/lll_applications.c#L6)
+
+#### Executable acceptance cases
+
+At toy prime `p=3` with ideal norm `T=5`, start with `U=(10,0,0,0)` and `V=(4,9,1,0)`. The first step subtracts `iU` and swaps. The new first vector `(4,−1,1,0)` already has the minimum numerator norm 20. The second vector still has projections `2` and `+1/2` on the first vector and its rotation (inner products divided by 20). The second step subtracts the multiple `2+i`, producing `(1,−2,−2,−1)`, also of norm 20. Equal norms preserve the order. A count of one swap therefore requires two active steps on this input.
+
+Run `python3 -B -S scripts/stage2c_oracle.py`. It recomputes each schedule from the class bounds `A₀`, `Δ` and `C₀`. It checks both exp64 quotient paths, and it requires every in-window quotient on a six-bit box and on divisors wider than 64 bits to equal the exact half-up rounding. It also checks signed half ties, strict swaps, lattice span and the norm form on explicit combinations. Tiny lattices admit an exhaustive shortest-vector check. All five field weights are exercised. The P500 input in `scripts/fixtures/stage2c_p500.json` comes from the pinned width study's `crafted_saturation.py` (seed 77). It includes the model-order lattice where the bounded quotient stalls and the associated O0 numerator lattice. The two minimum values were computed independently with PARI/GP 2.17.2. For the input columns B, form `G=Bᵀ diag(1,1,p,p) B`, compute `L=qflllgram(G,1)`, then run `qfminim(LᵀGL,,1,2)` at 1000 decimal digits and evaluate the returned minimizing vector in the exact integer form. The model-order minimum is in integer coordinates; the O0 minimum is in numerator units.
+
+The Rust implementation must agree with these conventions, preserve each lattice, obey the certified schedule, and provide release-build timing, control-flow and secret-address evidence on the targets it supports.
