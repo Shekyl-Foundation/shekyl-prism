@@ -1,0 +1,12 @@
+fixture p=3 T=5: start U=(10, 0, 0, 0) V=(4, 9, 1, 0) Gram (A,C,h0,h1)=(100, 100, 40, 90) Delta=300 (4pT^2=300)
+  step 1: h=(40,90) A=100 -> q=(2/5,9/10) m=(0, 1) swap=True; U=(4, -1, 1, 0) N4=20, V=(10, 0, 0, 0) N4=100
+  step 2: h=(40,10) A=20 -> q=(2,1/2) m=(2, 1) swap=False; U=(4, -1, 1, 0) N4=20, V=(1, -2, -2, -1) N4=20
+  step 3: h=(0,-10) A=20 -> q=(0,-1/2) m=(0, 0) swap=False; U=(4, -1, 1, 0) N4=20, V=(1, -2, -2, -1) N4=20
+  step 4: h=(0,-10) A=20 -> q=(0,-1/2) m=(0, 0) swap=False; U=(4, -1, 1, 0) N4=20, V=(1, -2, -2, -1) N4=20
+  step 5: h=(0,-10) A=20 -> q=(0,-1/2) m=(0, 0) swap=False; U=(4, -1, 1, 0) N4=20, V=(1, -2, -2, -1) N4=20
+  fixed point reached after 2 active steps (1 swap + the half-tie size reduction); a schedule of 1 step would stop at U=(4, -1, 1, 0) V=(10, 0, 0, 0) (not size-reduced)
+  final N4(U)=20, exhaustive shortest nonzero N4 in span (|c|<=3) = 20
+immediate fixed point: residuals in [-A/2, A/2) round to 0 (incl. -A/2), +A/2 rounds to 1: 20000 cases OK
+Gram recurrence equals the coordinate reducer on 300 random O0 bases x 60 steps
+exp64 Lemma W: window quotient == floor((2h+A)/(2A)) on 199951 random cases (ties, both signs, A of 1..400 bits)
+exp64 Lemma U/B2: 19975 logical steps with big sub-steps; no sub-step swapped or lengthened v; every logical step equals the exact step; e dropped by >= 59 per sub-step (bound 58); log2|q| - (58n+2) >= 0.5 (bound > 0)

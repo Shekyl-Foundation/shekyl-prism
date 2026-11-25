@@ -1,0 +1,30 @@
+OK   O0 numerators: Delta = 4 p T^2
+OK   reduced-norm units (entries/4): Delta = p T^2/4
+OK   normalized Gram (2T, (x^2+y^2+p)/2T, x, y): Delta = p
+OK   A0^2/Delta = 4T^2/p in O0 units (unswapped generic)
+OK   A0^2/Delta = 4T^2/p in reduced-norm units (unswapped generic)
+OK   A0^2/Delta = 4T^2/p in normalized units (unswapped generic)
+OK   4x4 real Gram determinant = Delta^2
+OK   J is D-orthogonal
+OK   D(X, JX) = 0
+OK   H Hermitian: H(Y,X) = conj H(X,Y)
+OK   H(V - mu U, U) = H(V,U) - mu A (mu = m0 + m1 i acting by J)
+OK   N4(V - mu U) = C - 2(m0 h0 + m1 h1) + |mu|^2 A
+OK   A' = (lam + |eps|^2) A  (r = lam + |eps|^2)
+OK   next exact quotient q = conj(eps)/r
+OK   lam' = lam / r^2
+OK   |q|^2 <= 1/r  (r - |eps|^2 = lam >= 0)
+OK   Lemma 1 identity A_{t+1} = A_{t-1}(1 - 2Re(conj mu conj eps)) + |mu|^2 A_t
+OK   Lemma 1, mu = +1+0i: A_{t+1} - A_t = A_{t-1}*(-2*e0 + 1), >= 0 on |e_j| <= 1/2
+OK   Lemma 1, mu = -1+0i: A_{t+1} - A_t = A_{t-1}*(2*e0 + 1), >= 0 on |e_j| <= 1/2
+OK   Lemma 1, mu = +0+1i: A_{t+1} - A_t = A_{t-1}*(2*e1 + 1), >= 0 on |e_j| <= 1/2
+OK   Lemma 1, mu = +0-1i: A_{t+1} - A_t = A_{t-1}*(-2*e1 + 1), >= 0 on |e_j| <= 1/2
+OK   Lemma 1, mu = 0: A_{t+1} = A_{t-1}
+OK   Endgame identity, sign(e) = (+1,+1): A_{t+1}-A_t = A_{t-1}(lam-1+(1-|e0|)^2+(1-|e1|)^2)
+OK   Endgame identity, sign(e) = (+1,-1): A_{t+1}-A_t = A_{t-1}(lam-1+(1-|e0|)^2+(1-|e1|)^2)
+OK   Endgame identity, sign(e) = (-1,+1): A_{t+1}-A_t = A_{t-1}(lam-1+(1-|e0|)^2+(1-|e1|)^2)
+OK   Endgame identity, sign(e) = (-1,-1): A_{t+1}-A_t = A_{t-1}(lam-1+(1-|e0|)^2+(1-|e1|)^2)
+OK   Endgame premise: (1/2)/(1/sqrt2) < 3/2
+OK   Lemma C: third-swap quantity = 1/r - 1
+OK   head: C^2/Delta - 4|Q|^2 = R(|Q|^2 - 1/R)^2
+ALL OK

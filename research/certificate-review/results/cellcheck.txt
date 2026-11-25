@@ -1,0 +1,7 @@
+/workspace/wt-research/research/tighter-progress-certificate/results/cert_2685.txt: 8758 leaves; tiling True (maxdepth 14); min g = 1.0000000002328306 (>= 1: True); G = max g = 1.862201131
+LAM 2^-20: max ratio = 0.268499973 (exact 1927448178907393/7178578663833600) at leaf (6, 63, 58); wild leaves 4; target 537/2000 = 0.268500000: True  [0.9s]
+LAM 2^-16: max ratio = 0.268525145 (exact 77420724088279/288318340268032) at leaf (6, 38, 55); wild leaves 4; target 271313/1000000 = 0.271313000: True  [0.9s]
+LAM 2^-14: max ratio = 0.268605694 (exact 19360986995779/72079585067008) at leaf (6, 38, 55); wild leaves 4; target 30077/100000 = 0.300770000: True  [0.8s]
+LAM 2^-13: max ratio = 0.268713094 (exact 9684364147029/36039792533504) at leaf (6, 38, 55); wild leaves 4; target 150419/500000 = 0.300838000: True  [0.8s]
+LAM 2^-12: max ratio = 0.272906432 (exact 17119062981703595/62728690139660288) at leaf (13, 7111, 7089); wild leaves 4; target 300973/1000000 = 0.300973000: True  [0.8s]
+LAM 2^-11: max ratio = 0.273153947 (exact 13703127359993423/50166316488720384) at leaf (13, 7111, 7088); wild leaves 4; target 304449/1000000 = 0.304449000: True  [0.8s]

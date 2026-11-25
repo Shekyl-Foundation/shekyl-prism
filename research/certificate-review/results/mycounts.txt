@@ -1,0 +1,13 @@
+G = 7998092957/4294967296 (1.862201131); band transition caps for (2^-20,2^-16],...,(2^-12,2^-11]: [3, 2, 1, 1, 1]
+subject-ratios  sign-generic     exact 280/360/415/546/719        exp64 280/360/415/546/719        | claimed 280/360/415/546/719 / 280/360/415/546/719 | match True
+subject-ratios  prered-guard256  exact 267/347/402/533/706        exp64 267/347/402/533/706        | claimed 267/347/402/533/706 / 267/347/402/533/706 | match True
+subject-ratios  keygen-D         exact 208/323/308/411/638        exp64 208/323/308/411/638        | claimed 208/323/308/411/638 / 208/323/308/411/638 | match True
+subject-ratios  keygen-Isec      exact 21/21/21/21/21             exp64 21/22/22/22/23             | claimed 21/21/21/21/21 / 21/22/22/22/23 | match True
+subject-ratios  challenge        exact 197/257/297/396/525        exp64 197/257/297/396/525        | claimed 197/257/297/396/525 / 197/257/297/396/525 | match True
+subject-ratios  prered-guard2    exact 263/344/398/529/702        exp64 263/344/398/529/702        | claimed 263/344/398/529/702 / 263/344/398/529/702 | match True
+review-ratios   sign-generic     exact 280/360/415/545/718        exp64 280/360/415/545/718        | claimed 280/360/415/546/719 / 280/360/415/546/719 | match False
+review-ratios   prered-guard256  exact 267/347/402/532/705        exp64 267/347/402/532/705        | claimed 267/347/402/533/706 / 267/347/402/533/706 | match False
+review-ratios   keygen-D         exact 208/323/308/410/637        exp64 208/323/308/410/637        | claimed 208/323/308/411/638 / 208/323/308/411/638 | match False
+review-ratios   keygen-Isec      exact 21/21/21/21/21             exp64 21/22/22/22/23             | claimed 21/21/21/21/21 / 21/22/22/22/23 | match True
+review-ratios   challenge        exact 196/257/297/395/525        exp64 196/257/297/395/525        | claimed 197/257/297/396/525 / 197/257/297/396/525 | match False
+review-ratios   prered-guard2    exact 263/343/398/529/702        exp64 263/343/398/529/702        | claimed 263/344/398/529/702 / 263/344/398/529/702 | match False
