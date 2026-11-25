@@ -106,6 +106,28 @@ def main():
     say("5. after 1 step: N4(U)=20=lambda1 (shortest-vector test passes) but F20=4, F21=1=F00"
         " -> terminal test fails; identity alone cannot see it")
 
+    # ---- 5b. mutants the fixture catches (exact output compared with the oracle's pair)
+    def mutant(steps, strict0=True, strict=True, tie_up=True):
+        u, v = U0, V0
+        if (N4(P, v) < N4(P, u)) if strict0 else (N4(P, v) <= N4(P, u)):
+            u, v = v, u
+        for _ in range(steps):
+            a = N4(P, u)
+            ju = J(u)
+            rnd = (lambda h: (2*h + a) // (2*a)) if tie_up else (lambda h: -((-2*h + a) // (2*a)))
+            v = comb((v, u, ju), (1, -rnd(D(P, v, u)), -rnd(D(P, v, ju))))
+            if (N4(P, v) < a) if strict else (N4(P, v) <= a):
+                u, v = v, u
+        return u, v
+    good = (u2, v2)
+    assert mutant(5) == good
+    assert mutant(5, strict0=False) != good          # non-strict initial ordering
+    assert mutant(5, strict=False) != good           # non-strict swap at step 2's equal norms
+    ut, vt = mutant(5, tie_up=False)                 # +1/2 rounded toward zero
+    assert (ut, vt) != good and not form_is_reduced(form_from_basis(P, ut, vt, T))
+    say("5b. mutants caught: non-strict initial swap and non-strict step swap (output differs),"
+        " +1/2 toward zero (output differs and is not reduced)")
+
     # ---- 6. sweep
     runs = 0
     for p in (3, 7, 11, 19, 23, 31, 43, 47, 59, 67, 71, 79, 83):

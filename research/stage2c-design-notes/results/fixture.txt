@@ -3,5 +3,6 @@
 3. carried normalized Gram after the schedule: (A',C',h0',h1') = (2,2,0,-1); decisions match
 4. F (rows, U JU V JV) = [[1,0,0,0],[0,1,0,0],[0,-1,1,0],[1,0,0,1]]; identity holds on 13 probes; reduced
 5. after 1 step: N4(U)=20=lambda1 (shortest-vector test passes) but F20=4, F21=1=F00 -> terminal test fails; identity alone cannot see it
+5b. mutants caught: non-strict initial swap and non-strict step swap (output differs), +1/2 toward zero (output differs and is not reduced)
 6. sweep: 143064 (ideal, schedule length) runs: carried-Gram conversion == fresh form, identity holds, form test == coordinate terminal test
 7. constructor refuses: odd x, even y, 4T not dividing, even T, non-member, proper sublattice
