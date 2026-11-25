@@ -3,3 +3,4 @@ Terminated
 thread 'main' panicked at src/main.rs:366:38:
 called `Result::unwrap()` on an `Err` value: Os { code: 2, kind: NotFound, message: "No such file or directory" }
 note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+OK: 7912 cells (88 wild), rho 2690/10000, lam_max 2^-12, Gmax = 7987109439 / 2^32 = 1.859644, tightest ratio 0.999999900
