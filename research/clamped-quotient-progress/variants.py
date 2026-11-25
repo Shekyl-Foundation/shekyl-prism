@@ -83,9 +83,9 @@ def q_clamp128(h0, h1, A):
     return m0, m1, bool(s0 or s1)
 
 
-def _window_round(h, A, ns, kA):
-    """Top-64-bit rounding inside the window, then the exact +-1 fix."""
-    hs = h >> kA                       # |hs| < 2^(64 + T0 + 2) here
+def _window_round(h, A, ns, kA, w=64):
+    """Top-w-bit rounding inside the window, then the exact +-1 fix."""
+    hs = h >> kA                       # |hs| < 2^(w + T0 + 2) here
     m = (2 * hs + ns) // (2 * ns)
     X = 2 * h + A - 2 * m * A          # exact: m is right iff 0 <= X < 2A
     lo = X < 0
@@ -107,27 +107,38 @@ def q_corr64(h0, h1, A):
     return m0, m1, False
 
 
-def q_exp64(h0, h1, A, stats=None):
-    kA = max(0, A.bit_length() - 64)
+def q_expw(h0, h1, A, w=64, t0=None, info=None):
+    """The exp rule at divisor precision w and window t0 (default w - 4).
+    info, if a dict, receives the path taken and the intermediates the
+    lemma checks need."""
+    if t0 is None:
+        t0 = w - 4
+    kA = max(0, A.bit_length() - w)
     ns = A >> kA
     e = max(bl(h0), bl(h1)) - A.bit_length()
-    if e <= T0:
-        m0, c0 = _window_round(h0, A, ns, kA)
-        m1, c1 = _window_round(h1, A, ns, kA)
-        if stats is not None:
-            stats['corrections'] = stats.get('corrections', 0) + int(c0) + int(c1)
+    if e <= t0:
+        m0, c0 = _window_round(h0, A, ns, kA, w)
+        m1, c1 = _window_round(h1, A, ns, kA, w)
+        if info is not None:
+            info.update(path='window', e=e, corrections=int(c0) + int(c1))
         return m0, m1, False
-    s = e - T0
+    s = e - t0
     out = []
     for h in (h0, h1):
         a = abs(h)
         num = a >> (kA + s)
-        assert num < (1 << 128)       # a 128-bit numerator, as in zi.rs
+        assert num < (1 << (2 * w))   # a 2w-bit numerator (128 bits at w = 64)
         qtop = num // ns
-        assert qtop < (1 << 64)
+        assert qtop < (1 << w)
         mag = ((qtop - 1) << s) if qtop >= 2 else 0
         out.append(-mag if h < 0 else mag)
+    if info is not None:
+        info.update(path='big', e=e, s=s)
     return out[0], out[1], True
+
+
+def q_exp64(h0, h1, A):
+    return q_expw(h0, h1, A, 64, T0)
 
 
 RULES = dict(exact=q_exact, clamp64=q_clamp64, clamp128=q_clamp128,
