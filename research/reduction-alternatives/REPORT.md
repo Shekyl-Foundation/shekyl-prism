@@ -54,6 +54,8 @@ For an integral norm-T O0 ideal with numerator basis over two, divide **all four
 
 A generic HNF gives the normalized entries directly as `2T, (x²+y²+p)/(2T), x, y` before ordering. This opens a concrete design choice for Stage 2b/2d. The constructor can supply the integral class Gram together with a verified basis, or Stage 2c can do the exact division once on entry. Benchmark setup and reduction together. Choose storage widths from public class bounds. For a generic input the larger normalized diagonal is bounded by `4T+p/(2T)≤4Tmax+p/2`. That gives a public starting width even when T is secret. For a guarded pre-reduced intersection the bound from PR #45 gives `2(q+1)²F√p/q` after normalization, cancelling the secret norm N. The coordinate vectors retain their own widths. This Python experiment provides no Rust timing for normalization.
 
+The [native Rust follow-up and three-link certificate](NORMALIZED.md) measures normalization including setup and gives tighter counts for all five classes.
+
 ## Other research paths and what would change the decision
 
 | Direction | Why investigate | Decisive experiment or proof |

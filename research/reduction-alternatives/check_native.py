@@ -5,6 +5,7 @@
 # BSD-3-Clause
 
 """Differential checks on public O0 fixtures for the integral class Gram matrix."""
+import argparse
 import sys
 from pathlib import Path
 
@@ -29,6 +30,7 @@ def check_one(p, t, x, y, steps):
     # Lift each residue to its O0 parity in [0, 2T).
     u = [2*t, 0, 0, 0]
     v = [x + (x % 2)*t, y + ((y+1) % 2)*t, 1, 0]
+    lifted = v[:2]
     ref = run(u, v, p, steps, "exact")
     a, c, h0, h1 = class_gram(u, v, p, t)
     if c < a:
@@ -47,27 +49,38 @@ def check_one(p, t, x, y, steps):
         assert class_gram(u, v, p, t) == (a, c, h0, h1)
     assert (u, v) == (ref["u"], ref["v"])
     assert a <= c and all(-a <= 2*h < a for h in (h0, h1))
-    return raw, width
+    return (raw, width), [t, *lifted, *u, *v, a, c, h0, h1]
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--emit", type=Path, help="directory for full-basis native Rust oracle vectors")
+    args = parser.parse_args()
+    if args.emit:
+        args.emit.mkdir(parents=True, exist_ok=True)
     for name, steps in STEPS.items():
         par = params(name)
         p = par["p"]
-        inputs = set()
+        inputs = {}
+        rows = []
         widths = []
         for line in (EXPERIMENT / "rust-xcheck" / "vectors" / (name + ".txt")).read_text().splitlines():
-            _, t, x, y, *_ = line.split()
+            kind, t, x, y, *_ = line.split()
             t, x, y = (int(n, 16) for n in (t, x, y))
             if t <= 0 or t % 2 == 0 or t >= 1 << par["Tbits"]:
                 continue
             x, y = x % t, y % t
             if (x*x + y*y + p) % t:
                 continue
-            inputs.add((t, x, y))
+            inputs.setdefault((t, x, y), kind)
         assert inputs
         for t, x, y in sorted(inputs):
-            widths.append(check_one(p, t, x, y, steps))
+            width, values = check_one(p, t, x, y, steps)
+            widths.append(width)
+            if args.emit:
+                rows.append(inputs[t,x,y] + " " + " ".join(format(n, "x") for n in values))
+        if args.emit:
+            (args.emit / (name + ".txt")).write_text("\n".join(rows) + "\n")
         print(name, len(inputs), "distinct lifts; max initial Gram bits (raw, normalized):",
               max(w[0] for w in widths), max(w[1] for w in widths))
 

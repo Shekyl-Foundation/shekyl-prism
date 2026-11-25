@@ -133,7 +133,7 @@ fn update_projection<const N: usize>(
 }
 
 #[inline(always)]
-fn step_exp<const C: usize, const N: usize>(
+pub(crate) fn step_exp<const C: usize, const N: usize>(
     u: &mut Vec4<C>, v: &mut Vec4<C>, nu: &mut [u64; N], nv: &mut [u64; N],
     h0: &mut [u64; N], h1: &mut [u64; N],
 ) -> u64 {
