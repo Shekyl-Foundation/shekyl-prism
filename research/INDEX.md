@@ -33,6 +33,7 @@ are not Shekyl parameter sets.
 | [`secret-ideal-rerandomization/`](secret-ideal-rerandomization/) | Does drawing a fresh equivalent secret ideal `J = I · β̄ / N` per signature remove the `bits(N)` leak from 4-D reduction (and `S` leaks in `quat_qlapoti`), and is it worth adding on top of the certified fixed `Z[i]`-Lagrange schedule? | Keygen `Z[i]`-reduction (`{u, iu, v, iv}`) + per-signature sampling (`plain`, `norm`, `gauss` × `prime`/`odd`, 20k sigs/set), 900 paired products/set (`I∩I_q` vs `J·K_J`) with map-back verification, 1,000-trace fixed-key-at-`B` vs random-key `dudect` under exact LLL and certified `Z[i]`-Lagrange (`T_prov = 301/387/446/587/773`), plus a `quat_qlapoti` re-randomization panel (`O₀` model). | Masks `bits(N)` under exact LLL (`1.78–2.20 → −0.21..+0.40` steps/bit; `dudect |t|` `11.6–19.7 → 0.09–0.99` with `odd_gauss`, `2.25–2.28` candidates mean, `K = 76–78` for `2⁻⁶⁴`; `100%` map-back agreement, no format change). However, certified `Z[i]`-Lagrange (`T_prov`) already runs in `1` trace (`t = 0.00`) at `0.464–0.475×` exact LLL with no extra bookkeeping, and re-randomization does **not** alter `n(S)` (`100%` invariant) or remove `S`-dependent `quat_qlapoti` leaks (`fixS |t| = 2.11–3.26` vs `2.21–3.64` baseline). Optional defence in depth only; not worth adding as primary protection. | `experiment/secret-ideal-rerandomization` @ [`a19677f`](https://github.com/Shekyl-Foundation/shekyl-prism/commit/a19677f4108771413b3371131617241b424fa982) |
 
 | [`ct-feasibility-gate/`](ct-feasibility-gate/) | How should `docs/SIGNER_SPEC.md` enforce constant-time feasibility before finalizing stages 2c and 3 while keeping G4 as the final hardening gate? | Design-review synthesis (`dev` at `26ce141`) mapped against `SIGNER_SPEC.md` (G1–G6, Q1–Q5, 2.1.3), `LEDGER.md` (O4–O34), and `research/INDEX.md` findings; drafted Section 0 and proposed ruling G7 in `docs/SIGNER_SPEC.md` plus `research/ct-feasibility-gate/NOTES.md`. | Drafted Section 0 (0.1–0.8) and proposed G7: requires secret-dependence classification, affordable CT strategy + cost estimates across P248–P664, certified bounds (`T_prov` + cleanup), Q5/Q4 proofs without overflow-driven retries, PR-time declassification review + sticky sensitivity, compiled-artifact checks (`x86_64` + `aarch64`, Rust `1.97.1`), non-sensitive transcript provenance, and three-way equivalence checks; leaves G2 `unsafe` barrier policy (`experiment/ct-barrier-policy`) and Stage 3/5 format choices open for Rick. Branch kept alive for PR review. | `experiment/ct-feasibility-gate` @ [`e91ca93`](https://github.com/Shekyl-Foundation/shekyl-prism/commit/e91ca9335a12a653e988a8a970a2627a9838a609) |
+| [`prime-certificates/`](prime-certificates/) | Can independently checkable primality certificates replace perpetual probable-prime retesting of the constants generator's fixed primes (ledger O19)? | PARI 2.17.4 Atkin–Morain ECPP for all 14 unique large primes (five field moduli, four unique secret norms, five item-19 cofactors); independent Python verifier (no `primecertisvalid` for the verdict); Lucas N+1 proofs for the field primes, where `p+1 = f·2^e` is completely factored; next-prime gap compositeness proofs for items 19 and 33; trial division of the 101 `small_primes` and 102 complementary 3-mod-4 primes. | Yes. All 14 ECPP certificates verify independently and with PARI; all five field primes have a second Lucas N+1 proof; all nine next-prime gaps are proved composite. Generation took 6.73 s; verification takes about 5 s with the standard library only. A proposed nightly step (in addition to SymPy) lives in `proposed-ci/` and is not applied to `dev`. O19 can be closed once the certificates are adopted on `dev`. | `experiment/prime-certificates` @ [`58582f8`](https://github.com/Shekyl-Foundation/shekyl-prism/commit/58582f82d2a0e586856ab1752b74ae385b52303c) |
 
 ## In progress
 
@@ -164,6 +165,23 @@ rest on, and from the fixed-schedule experiment that followed:
     `quat_lideal_shortest_equivalent(J · K_J)` collapses back to the
     exact same norm `n(S)` 100% of the time (`fixS |t| = 2.11–3.26`),
     re-randomization is optional defence in depth only.
+
+13. **The signer's fixed primes can be proved, not just retested as
+    probable primes.** Fourteen unique large primes (the five field
+    moduli, four unique secret-ideal starting norms, and five item-19
+    cofactors) have pinned Atkin–Morain ECPP certificates, checked by
+    an independent Python verifier that does not call PARI's
+    `primecertisvalid`. The field primes also have a short Lucas `N+1`
+    proof, as ledger O19 already noted was available because
+    `p+1 = f·2^e` is completely factored. The “next prime after `2^k`”
+    half of items 19 and 33 is proved by a compositeness witness on
+    every integer in the gap. The 101 `small_primes` and the 102
+    complementary primes that are `3 (mod 4)` below 1237 are proved by
+    trial division. Verification takes about five seconds and needs
+    only the standard library. This does not change the signing
+    protocol. A proposed nightly step is recorded under
+    `research/prime-certificates/proposed-ci/` and is not applied to
+    `dev`.
 
 The quantized-precision runs (Q256, PREC_256) were sometimes flat where
 they worked, which hints that bounded-precision reduction is size-blind
