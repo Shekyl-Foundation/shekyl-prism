@@ -285,8 +285,8 @@ jobs:
         run: cargo test --workspace --locked
       - name: Release
         run: cargo test --workspace --locked --release
-      - name: Check the native P500 reducer against the exact fixtures
-        run: cargo run --release --locked -p shekyl-prism --features signer --example stage2c_p500
+      - name: Check the native P500 reducer and record paired wall-clock samples
+        run: cargo run --release --locked -p shekyl-prism --features signer --example stage2c_p500 -- bench
       - name: Install compiled-code inspection tools
         run: bash scripts/ci/apt_install.sh qemu-user valgrind
       - name: Inspect release instructions and compare secret-shift traces
@@ -347,8 +347,8 @@ jobs:
         run: cargo test --workspace --locked
       - name: Release
         run: cargo test --workspace --locked --release
-      - name: Check the native P500 reducer against the exact fixtures
-        run: cargo run --release --locked -p shekyl-prism --features signer --example stage2c_p500
+      - name: Check the native P500 reducer and record paired wall-clock samples
+        run: cargo run --release --locked -p shekyl-prism --features signer --example stage2c_p500 -- bench
       - name: Install compiled-code inspection tools
         run: bash scripts/ci/apt_install.sh qemu-user
       - name: Inspect release instructions and compare secret-shift traces
