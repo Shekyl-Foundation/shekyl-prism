@@ -1,0 +1,71 @@
+[package]
+name = "rust-lagrange-ct"
+# Package/lib name kept from research/rust-lagrange-ct so the scan scripts and symbol names match.
+version = "0.0.0"
+edition = "2021"
+license = "BSD-3-Clause"
+publish = false
+description = "Research (ct-barrier-policy copy): fixed-schedule Z[i]-Lagrange reduction in fixed-width constant-time arithmetic (not part of the workspace)"
+
+# Standalone: an empty workspace table keeps this crate out of the
+# repository workspace, its build and its CI.
+[workspace]
+
+[dependencies]
+num-bigint = "0.4"
+num-integer = "0.1"
+num-traits = "0.2"
+libc = "0.2"
+subtle = { version = "=2.6.1", default-features = false, optional = true }
+cmov = { version = "=0.5.4", optional = true }
+ctutils = { version = "=0.4.8", optional = true }
+prism-ct-barrier = { path = "../prism-ct-barrier", optional = true }
+rug = { version = "1.28", default-features = false, features = ["integer", "std"], optional = true }
+gmp-mpfr-sys = { version = "1.6", default-features = false, features = ["use-system-libs"], optional = true }
+
+[build-dependencies]
+cc = { version = "1", optional = true }
+
+[features]
+# Valgrind memcheck as a constant-time checker (ctgrind method): secret
+# inputs are marked undefined; VALGRIND_INC=<valgrind include dir>
+ctgrind = ["dep:cc"]
+# ---- value-barrier candidates (exactly one b-* feature; none = b-asm) ----
+# b-asm: in-crate inline asm (the research/rust-lagrange-ct barrier; unsafe here)
+b-asm = []
+# b-none: no barrier at all (negative control)
+b-none = []
+# b-weak: black_box on the choice bit (the first barrier; negative control)
+b-weak = []
+# b-bbmask: black_box on the finished mask (safe)
+b-bbmask = []
+# b-bbuse: plain mask, black_box on the mask at every select/cswap use (safe)
+b-bbuse = []
+# b-noinline: mask made in an #[inline(never)] function (safe)
+b-noinline = []
+# b-volatile: read_volatile of the mask (unsafe in this crate)
+b-volatile = []
+# b-subtle-vol: subtle 2.6.1 Choice/ConditionallySelectable, default barrier = read_volatile (unsafe inside subtle)
+b-subtle-vol = ["dep:subtle"]
+# b-subtle-bb: subtle 2.6.1 with feature core_hint_black_box (safe throughout)
+b-subtle-bb = ["dep:subtle", "subtle/core_hint_black_box"]
+# b-cmov: RustCrypto cmov 0.5.4 (inline asm cmov/csel inside the dependency)
+b-cmov = ["dep:cmov"]
+# b-ctutils: RustCrypto ctutils 0.4.8 Choice + CtSelect (built on cmov)
+b-ctutils = ["dep:ctutils"]
+# b-selunpred: core::hint::select_unpredictable (Rust >= 1.88; documented as no CT guarantee)
+b-selunpred = []
+# b-crate: the dedicated internal crate ../prism-ct-barrier (one audited asm block per arch)
+b-crate = ["dep:prism-ct-barrier"]
+# kept for the old ctgrind script
+weak-barrier = ["b-weak"]
+# Secondary comparison only: old empirical count, no exact cleanup
+empirical = []
+# Exact baselines on GMP (needs a system libgmp; see README)
+gmp = ["dep:rug", "dep:gmp-mpfr-sys"]
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "fat"
+debug = 1

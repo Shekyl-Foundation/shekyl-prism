@@ -1,0 +1,11 @@
+p248: runs=1 memcheck_error_contexts=14 static_glibc_allocator_false_positives=8 outside_glibc=6 in_ct_code=6 branch=6 simd_shift_count=0 other=0
+  branch | at 0x187D81: black_box<u64> (hint.rs:475)
+  branch | at 0x188394: black_box<u64> (hint.rs:475)
+  branch | at 0x188FE2: black_box<u64> (hint.rs:475)
+p376: runs=1 memcheck_error_contexts=13 static_glibc_allocator_false_positives=7 outside_glibc=6 in_ct_code=6 branch=6 simd_shift_count=0 other=0
+  branch | at 0x1F0E7F: black_box<u64> (hint.rs:475)
+  branch | at 0x1F16D0: black_box<u64> (hint.rs:475)
+  branch | at 0x1F20EF: black_box<u64> (hint.rs:475)
+p500: runs=1 memcheck_error_contexts=152 static_glibc_allocator_false_positives=150 outside_glibc=2 in_ct_code=2 branch=2 simd_shift_count=0 other=0
+  branch | at 0x11F1C7: black_box<u64> (hint.rs:475)
+  branch | at 0x11F1C7: black_box<u64> (hint.rs:475)

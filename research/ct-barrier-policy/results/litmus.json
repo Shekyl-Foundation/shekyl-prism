@@ -1,0 +1,4898 @@
+{
+ "1.85.1|aarch64-unknown-linux-gnu|asm": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 157
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 8
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 76
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 52
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 46
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 165
+  }
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|bbmask": {
+  "k_barrel": {
+   "br": 2,
+   "calls": 0,
+   "insn": 145
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 13
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 82
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 57
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 51
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 26
+  }
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|bbuse": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 0,
+   "insn": 167
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 13
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 100
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 57
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 61
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 26
+  }
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|cmov": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 170
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 12
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 82
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 55
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 50
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 26
+  }
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|crate": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 157
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 8
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 76
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 52
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 46
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 165
+  }
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|ctutils": {
+  "error": "error: rustc 1.85.1 is not supported by the following package:"
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|noinline": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 4,
+   "insn": 242
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 101
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 57
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 57
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 16,
+   "insn": 231
+  }
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|none": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 0,
+   "insn": 111
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 5
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 51
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 18
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 46
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 182
+  }
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|selunpred": {
+  "error": "error[E0425]: cannot find function `select_unpredictable` in module `core::hint`"
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|subtle-bb": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 167
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 84
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 57
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 52
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 27
+  }
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|subtle-vol": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 4,
+   "insn": 257
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 17
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 104
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 60
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 59
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 16,
+   "insn": 250
+  }
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|volatile": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 155
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 12
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 81
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 56
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 50
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 183
+  }
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|weak": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 0,
+   "insn": 114
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 12
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 58
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 23
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 47
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 249
+  }
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|asm": {
+  "error": "error: type `u64` cannot be used with this register class"
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|bbmask": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 2,
+   "insn": 522
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 195
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 260
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 107
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 87
+  }
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|bbuse": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 2,
+   "insn": 584
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 234
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 260
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 155
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 87
+  }
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|cmov": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 2,
+   "insn": 521
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 191
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 259
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 105
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 82
+  }
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|crate": {
+  "error": "error: prism-ct-barrier: no audited barrier for this target_arch; add one (and its audit note) rather than falling back to a best-effort barrier"
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|ctutils": {
+  "error": "error: rustc 1.85.1 is not supported by the following package:"
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|noinline": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 3,
+   "insn": 558
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 14
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 201
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 258
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 105
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 84
+  }
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|none": {
+  "k_barrel": {
+   "br": 6,
+   "calls": 0,
+   "insn": 398
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 5
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 182
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 125
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 91
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 68
+  }
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|selunpred": {
+  "error": "error[E0425]: cannot find function `select_unpredictable` in module `core::hint`"
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|subtle-bb": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 2,
+   "insn": 521
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 197
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 262
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 109
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 72
+  }
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|subtle-vol": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 3,
+   "insn": 553
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 14
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 202
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 261
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 108
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 74
+  }
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|volatile": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 2,
+   "insn": 522
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 191
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 265
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 106
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 76
+  }
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|weak": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 0,
+   "insn": 420
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 189
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 129
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 115
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 80
+  }
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|asm": {
+  "error": "error: type `u64` cannot be used with this register class"
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|bbmask": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 2,
+   "insn": 630
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 14
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 0,
+   "insn": 285
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 266
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 154
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 74
+  }
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|bbuse": {
+  "k_barrel": {
+   "br": 6,
+   "calls": 2,
+   "insn": 528
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 14
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 0,
+   "insn": 321
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 266
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 174
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 74
+  }
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|cmov": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 2,
+   "insn": 630
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 13
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 0,
+   "insn": 282
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 264
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 157
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 73
+  }
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|crate": {
+  "error": "error: prism-ct-barrier: no audited barrier for this target_arch; add one (and its audit note) rather than falling back to a best-effort barrier"
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|ctutils": {
+  "error": "error: rustc 1.85.1 is not supported by the following package:"
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|noinline": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 4,
+   "insn": 636
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 19
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 1,
+   "insn": 298
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 268
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 175
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 88
+  }
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|none": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 0,
+   "insn": 318
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 4
+  },
+  "k_cond_sub": {
+   "br": 9,
+   "calls": 0,
+   "insn": 230
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 131
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 143
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 55
+  }
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|selunpred": {
+  "error": "error[E0425]: cannot find function `select_unpredictable` in module `core::hint`"
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|subtle-bb": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 2,
+   "insn": 633
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 13
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 0,
+   "insn": 284
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 266
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 157
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 75
+  }
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|subtle-vol": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 4,
+   "insn": 647
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 19
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 1,
+   "insn": 300
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 273
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 178
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 91
+  }
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|volatile": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 2,
+   "insn": 630
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 14
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 0,
+   "insn": 284
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 265
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 153
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 71
+  }
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|weak": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 2,
+   "insn": 270
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 12
+  },
+  "k_cond_sub": {
+   "br": 9,
+   "calls": 0,
+   "insn": 236
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 137
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 151
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 65
+  }
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|asm": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 2,
+   "insn": 263
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 8
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 104
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 131
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 64
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 32
+  }
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|bbmask": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 2,
+   "insn": 269
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 13
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 107
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 136
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 69
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 37
+  }
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|bbuse": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 2,
+   "insn": 282
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 13
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 128
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 136
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 77
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 37
+  }
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|cmov": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 2,
+   "insn": 265
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 9
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 107
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 132
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 66
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 34
+  }
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|crate": {
+  "error": "error: prism-ct-barrier: no audited barrier for this target_arch; add one (and its audit note) rather than falling back to a best-effort barrier"
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|ctutils": {
+  "error": "error: rustc 1.85.1 is not supported by the following package:"
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|noinline": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 4,
+   "insn": 297
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 18
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 133
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 140
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 87
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 59
+  }
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|none": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 0,
+   "insn": 151
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 4
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 89
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 67
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 59
+  },
+  "k_table": {
+   "br": 17,
+   "calls": 0,
+   "insn": 201
+  }
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|selunpred": {
+  "error": "error[E0425]: cannot find function `select_unpredictable` in module `core::hint`"
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|subtle-bb": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 2,
+   "insn": 269
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 13
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 108
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 136
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 70
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 38
+  }
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|subtle-vol": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 4,
+   "insn": 301
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 19
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 134
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 143
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 89
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 61
+  }
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|volatile": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 243
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 12
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 106
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 135
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 68
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 36
+  }
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|weak": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 0,
+   "insn": 169
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 11
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 93
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 72
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 66
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 37
+  }
+ },
+ "1.85.1|thumbv6m-none-eabi|asm": {
+  "error": "error: type `u64` cannot be used with this register class"
+ },
+ "1.85.1|thumbv6m-none-eabi|bbmask": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 3,
+   "insn": 603
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 17
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 253
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 347
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 164
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 96
+  }
+ },
+ "1.85.1|thumbv6m-none-eabi|bbuse": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 3,
+   "insn": 649
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 17
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 299
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 347
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 213
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 96
+  }
+ },
+ "1.85.1|thumbv6m-none-eabi|cmov": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 4,
+   "insn": 615
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 255
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 349
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 164
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 101
+  }
+ },
+ "1.85.1|thumbv6m-none-eabi|crate": {
+  "error": "error: prism-ct-barrier: no audited barrier for this target_arch; add one (and its audit note) rather than falling back to a best-effort barrier"
+ },
+ "1.85.1|thumbv6m-none-eabi|ctutils": {
+  "error": "error: rustc 1.85.1 is not supported by the following package:"
+ },
+ "1.85.1|thumbv6m-none-eabi|noinline": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 4,
+   "insn": 578
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 261
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 340
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 161
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 93
+  }
+ },
+ "1.85.1|thumbv6m-none-eabi|none": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 0,
+   "insn": 438
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 5
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 182
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 132
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 181
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 87
+  }
+ },
+ "1.85.1|thumbv6m-none-eabi|selunpred": {
+  "error": "error[E0425]: cannot find function `select_unpredictable` in module `core::hint`"
+ },
+ "1.85.1|thumbv6m-none-eabi|subtle-bb": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 3,
+   "insn": 581
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 254
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 343
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 166
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 97
+  }
+ },
+ "1.85.1|thumbv6m-none-eabi|subtle-vol": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 4,
+   "insn": 599
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 251
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 336
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 169
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 98
+  }
+ },
+ "1.85.1|thumbv6m-none-eabi|volatile": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 3,
+   "insn": 596
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 17
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 253
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 346
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 163
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 95
+  }
+ },
+ "1.85.1|thumbv6m-none-eabi|weak": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 0,
+   "insn": 447
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 233
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 138
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 180
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 104
+  }
+ },
+ "1.85.1|thumbv7em-none-eabihf|asm": {
+  "error": "error: type `u64` cannot be used with this register class"
+ },
+ "1.85.1|thumbv7em-none-eabihf|bbmask": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 2,
+   "insn": 494
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 188
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 248
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 107
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 73
+  }
+ },
+ "1.85.1|thumbv7em-none-eabihf|bbuse": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 2,
+   "insn": 538
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 216
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 248
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 149
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 73
+  }
+ },
+ "1.85.1|thumbv7em-none-eabihf|cmov": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 2,
+   "insn": 509
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 16
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 189
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 244
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 108
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 72
+  }
+ },
+ "1.85.1|thumbv7em-none-eabihf|crate": {
+  "error": "error: prism-ct-barrier: no audited barrier for this target_arch; add one (and its audit note) rather than falling back to a best-effort barrier"
+ },
+ "1.85.1|thumbv7em-none-eabihf|ctutils": {
+  "error": "error: rustc 1.85.1 is not supported by the following package:"
+ },
+ "1.85.1|thumbv7em-none-eabihf|noinline": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 3,
+   "insn": 510
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 16
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 196
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 240
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 108
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 70
+  }
+ },
+ "1.85.1|thumbv7em-none-eabihf|none": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 0,
+   "insn": 371
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 6
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 152
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 89
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 90
+  },
+  "k_table": {
+   "br": 6,
+   "calls": 0,
+   "insn": 201
+  }
+ },
+ "1.85.1|thumbv7em-none-eabihf|selunpred": {
+  "error": "error[E0425]: cannot find function `select_unpredictable` in module `core::hint`"
+ },
+ "1.85.1|thumbv7em-none-eabihf|subtle-bb": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 2,
+   "insn": 511
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 16
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 191
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 246
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 110
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 78
+  }
+ },
+ "1.85.1|thumbv7em-none-eabihf|subtle-vol": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 3,
+   "insn": 513
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 16
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 196
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 246
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 111
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 75
+  }
+ },
+ "1.85.1|thumbv7em-none-eabihf|volatile": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 2,
+   "insn": 507
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 189
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 248
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 107
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 243
+  }
+ },
+ "1.85.1|thumbv7em-none-eabihf|weak": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 0,
+   "insn": 380
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 17
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 164
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 91
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 118
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 92
+  }
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|asm": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 244
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 9
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 110
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 147
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 67
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 209
+  }
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|bbmask": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 262
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 11
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 108
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 150
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 70
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 226
+  }
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|bbuse": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 0,
+   "insn": 247
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 11
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 129
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 150
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 76
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 226
+  }
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|cmov": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 260
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 12
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 114
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 150
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 71
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 258
+  }
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|crate": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 244
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 9
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 110
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 147
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 67
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 209
+  }
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|ctutils": {
+  "error": "error: rustc 1.85.1 is not supported by the following package:"
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|noinline": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 4,
+   "insn": 338
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 18
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 127
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 154
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 82
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 16,
+   "insn": 272
+  }
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|none": {
+  "k_barrel": {
+   "br": 6,
+   "calls": 0,
+   "insn": 170
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 5
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 79
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 35
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 63
+  },
+  "k_table": {
+   "br": 16,
+   "calls": 0,
+   "insn": 147
+  }
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|selunpred": {
+  "error": "error[E0425]: cannot find function `select_unpredictable` in module `core::hint`"
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|subtle-bb": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 269
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 11
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 123
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 150
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 71
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 31
+  }
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|subtle-vol": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 4,
+   "insn": 352
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 19
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 133
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 158
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 84
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 16,
+   "insn": 304
+  }
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|volatile": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 259
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 11
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 107
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 149
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 69
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 225
+  }
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|weak": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 0,
+   "insn": 134
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 10
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 83
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 37
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 68
+  },
+  "k_table": {
+   "br": 16,
+   "calls": 0,
+   "insn": 196
+  }
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|asm": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 136
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 8
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 76
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 98
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 46
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 165
+  }
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|bbmask": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 141
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 13
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 82
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 103
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 51
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 198
+  }
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|bbuse": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 0,
+   "insn": 225
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 13
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 100
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 103
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 63
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 198
+  }
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|cmov": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 148
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 12
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 82
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 102
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 50
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 213
+  }
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|crate": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 136
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 8
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 76
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 98
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 46
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 165
+  }
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|ctutils": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 154
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 17
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 86
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 107
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 55
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 30
+  }
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|noinline": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 4,
+   "insn": 219
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 16
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 103
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 105
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 60
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 16,
+   "insn": 234
+  }
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|none": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 0,
+   "insn": 73
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 5
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 51
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 18
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 48
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 183
+  }
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|selunpred": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 0,
+   "insn": 73
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 5
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 51
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 18
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 48
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 183
+  }
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|subtle-bb": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 152
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 84
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 104
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 52
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 214
+  }
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|subtle-vol": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 4,
+   "insn": 228
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 18
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 107
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 108
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 62
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 16,
+   "insn": 251
+  }
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|volatile": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 140
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 12
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 81
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 102
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 50
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 182
+  }
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|weak": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 0,
+   "insn": 94
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 12
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 58
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 23
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 56
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 250
+  }
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|asm": {
+  "error": "error: type `u64` cannot be used with this register class"
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|bbmask": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 469
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 197
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 260
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 107
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 85
+  }
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|bbuse": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 530
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 236
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 260
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 127
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 85
+  }
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|cmov": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 466
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 195
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 259
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 105
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 82
+  }
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|crate": {
+  "error": "error: prism-ct-barrier: no audited barrier for this target_arch; add one (and its audit note) rather than falling back to a best-effort barrier"
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|ctutils": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 465
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 20
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 195
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 264
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 108
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 87
+  }
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|noinline": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 2,
+   "insn": 466
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 14
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 201
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 258
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 105
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 79
+  }
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|none": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 2,
+   "insn": 236
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 5
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 182
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 125
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 126
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 72
+  }
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|selunpred": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 2,
+   "insn": 236
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 5
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 182
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 125
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 126
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 72
+  }
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|subtle-bb": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 473
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 16
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 202
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 262
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 109
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 78
+  }
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|subtle-vol": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 2,
+   "insn": 465
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 205
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 261
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 108
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 75
+  }
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|volatile": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 465
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 14
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 197
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 265
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 106
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 84
+  }
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|weak": {
+  "k_barrel": {
+   "br": 5,
+   "calls": 1,
+   "insn": 454
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 189
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 129
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 1,
+   "insn": 148
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 86
+  }
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|asm": {
+  "error": "error: type `u64` cannot be used with this register class"
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|bbmask": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 600
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 14
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 0,
+   "insn": 304
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 525
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 170
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 84
+  }
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|bbuse": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 1,
+   "insn": 501
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 14
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 0,
+   "insn": 324
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 525
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 184
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 84
+  }
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|cmov": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 674
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 13
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 0,
+   "insn": 291
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 530
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 171
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 85
+  }
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|crate": {
+  "error": "error: prism-ct-barrier: no audited barrier for this target_arch; add one (and its audit note) rather than falling back to a best-effort barrier"
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|ctutils": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 600
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 18
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 0,
+   "insn": 286
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 533
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 174
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 90
+  }
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|noinline": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 3,
+   "insn": 726
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 19
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 1,
+   "insn": 301
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 526
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 175
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 88
+  }
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|none": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 2,
+   "insn": 260
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 4
+  },
+  "k_cond_sub": {
+   "br": 9,
+   "calls": 0,
+   "insn": 228
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 179
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 174
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 67
+  }
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|selunpred": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 2,
+   "insn": 260
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 4
+  },
+  "k_cond_sub": {
+   "br": 9,
+   "calls": 0,
+   "insn": 228
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 179
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 174
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 67
+  }
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|subtle-bb": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 654
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 13
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 0,
+   "insn": 292
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 514
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 171
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 89
+  }
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|subtle-vol": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 3,
+   "insn": 715
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 19
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 1,
+   "insn": 299
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 541
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 178
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 91
+  }
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|volatile": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 594
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 14
+  },
+  "k_cond_sub": {
+   "br": 8,
+   "calls": 0,
+   "insn": 301
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 528
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 167
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 81
+  }
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|weak": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 1,
+   "insn": 292
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 12
+  },
+  "k_cond_sub": {
+   "br": 9,
+   "calls": 0,
+   "insn": 234
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 183
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 1,
+   "insn": 179
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 75
+  }
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|asm": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 1,
+   "insn": 248
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 8
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 114
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 224
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 72
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 40
+  }
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|bbmask": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 1,
+   "insn": 235
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 13
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 117
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 227
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 69
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 39
+  }
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|bbuse": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 235
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 13
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 126
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 227
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 77
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 39
+  }
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|cmov": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 1,
+   "insn": 250
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 9
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 115
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 225
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 66
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 34
+  }
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|crate": {
+  "error": "error: prism-ct-barrier: no audited barrier for this target_arch; add one (and its audit note) rather than falling back to a best-effort barrier"
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|ctutils": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 1,
+   "insn": 237
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 14
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 117
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 228
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 71
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 41
+  }
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|noinline": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 3,
+   "insn": 326
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 18
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 133
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 223
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 87
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 59
+  }
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|none": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 1,
+   "insn": 145
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 4
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 95
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 87
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 70
+  },
+  "k_table": {
+   "br": 17,
+   "calls": 0,
+   "insn": 205
+  }
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|selunpred": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 1,
+   "insn": 145
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 4
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 95
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 87
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 70
+  },
+  "k_table": {
+   "br": 17,
+   "calls": 0,
+   "insn": 205
+  }
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|subtle-bb": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 1,
+   "insn": 296
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 13
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 118
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 227
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 70
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 46
+  }
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|subtle-vol": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 3,
+   "insn": 318
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 19
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 136
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 226
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 89
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 61
+  }
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|volatile": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 1,
+   "insn": 297
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 12
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 114
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 226
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 68
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 36
+  }
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|weak": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 159
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 11
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 99
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 90
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 79
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 41
+  }
+ },
+ "1.97.1|thumbv6m-none-eabi|asm": {
+  "error": "error: type `u64` cannot be used with this register class"
+ },
+ "1.97.1|thumbv6m-none-eabi|bbmask": {
+  "k_barrel": {
+   "br": 6,
+   "calls": 2,
+   "insn": 468
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 19
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 256
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 347
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 164
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 96
+  }
+ },
+ "1.97.1|thumbv6m-none-eabi|bbuse": {
+  "k_barrel": {
+   "br": 6,
+   "calls": 2,
+   "insn": 521
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 19
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 309
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 347
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 186
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 96
+  }
+ },
+ "1.97.1|thumbv6m-none-eabi|cmov": {
+  "k_barrel": {
+   "br": 6,
+   "calls": 3,
+   "insn": 457
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 17
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 257
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 349
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 164
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 101
+  }
+ },
+ "1.97.1|thumbv6m-none-eabi|crate": {
+  "error": "error: prism-ct-barrier: no audited barrier for this target_arch; add one (and its audit note) rather than falling back to a best-effort barrier"
+ },
+ "1.97.1|thumbv6m-none-eabi|ctutils": {
+  "k_barrel": {
+   "br": 6,
+   "calls": 3,
+   "insn": 459
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 22
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 265
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 352
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 172
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 104
+  }
+ },
+ "1.97.1|thumbv6m-none-eabi|noinline": {
+  "k_barrel": {
+   "br": 6,
+   "calls": 3,
+   "insn": 461
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 15
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 247
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 340
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 160
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 94
+  }
+ },
+ "1.97.1|thumbv6m-none-eabi|none": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 2,
+   "insn": 266
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 7
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 182
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 132
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 183
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 97
+  }
+ },
+ "1.97.1|thumbv6m-none-eabi|selunpred": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 2,
+   "insn": 266
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 7
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 182
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 132
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 183
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 97
+  }
+ },
+ "1.97.1|thumbv6m-none-eabi|subtle-bb": {
+  "k_barrel": {
+   "br": 6,
+   "calls": 2,
+   "insn": 527
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 18
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 262
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 343
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 166
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 97
+  }
+ },
+ "1.97.1|thumbv6m-none-eabi|subtle-vol": {
+  "k_barrel": {
+   "br": 6,
+   "calls": 3,
+   "insn": 526
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 16
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 256
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 336
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 169
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 93
+  }
+ },
+ "1.97.1|thumbv6m-none-eabi|volatile": {
+  "k_barrel": {
+   "br": 6,
+   "calls": 2,
+   "insn": 459
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 19
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 264
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 346
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 163
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 95
+  }
+ },
+ "1.97.1|thumbv6m-none-eabi|weak": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 445
+  },
+  "k_cmov_u8": {
+   "br": 1,
+   "calls": 0,
+   "insn": 17
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 233
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 138
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 1,
+   "insn": 178
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 113
+  }
+ },
+ "1.97.1|thumbv7em-none-eabihf|asm": {
+  "error": "error: type `u64` cannot be used with this register class"
+ },
+ "1.97.1|thumbv7em-none-eabihf|bbmask": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 428
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 17
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 193
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 248
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 107
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 77
+  }
+ },
+ "1.97.1|thumbv7em-none-eabihf|bbuse": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 442
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 17
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 224
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 248
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 113
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 77
+  }
+ },
+ "1.97.1|thumbv7em-none-eabihf|cmov": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 425
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 18
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 195
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 244
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 108
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 71
+  }
+ },
+ "1.97.1|thumbv7em-none-eabihf|crate": {
+  "error": "error: prism-ct-barrier: no audited barrier for this target_arch; add one (and its audit note) rather than falling back to a best-effort barrier"
+ },
+ "1.97.1|thumbv7em-none-eabihf|ctutils": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 434
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 23
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 198
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 249
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 111
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 74
+  }
+ },
+ "1.97.1|thumbv7em-none-eabihf|noinline": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 2,
+   "insn": 429
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 16
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 205
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 240
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 108
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 73
+  }
+ },
+ "1.97.1|thumbv7em-none-eabihf|none": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 2,
+   "insn": 208
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 8
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 152
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 89
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 107
+  },
+  "k_table": {
+   "br": 5,
+   "calls": 0,
+   "insn": 231
+  }
+ },
+ "1.97.1|thumbv7em-none-eabihf|selunpred": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 2,
+   "insn": 208
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 8
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 152
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 89
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 107
+  },
+  "k_table": {
+   "br": 5,
+   "calls": 0,
+   "insn": 231
+  }
+ },
+ "1.97.1|thumbv7em-none-eabihf|subtle-bb": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 447
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 19
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 201
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 246
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 110
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 82
+  }
+ },
+ "1.97.1|thumbv7em-none-eabihf|subtle-vol": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 2,
+   "insn": 443
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 17
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 209
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 246
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 111
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 1,
+   "insn": 73
+  }
+ },
+ "1.97.1|thumbv7em-none-eabihf|volatile": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 451
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 17
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 195
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 248
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 107
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 244
+  }
+ },
+ "1.97.1|thumbv7em-none-eabihf|weak": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 1,
+   "insn": 342
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 19
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 164
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 91
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 1,
+   "insn": 136
+  },
+  "k_table": {
+   "br": 2,
+   "calls": 0,
+   "insn": 95
+  }
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|asm": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 230
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 9
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 119
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 147
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 65
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 209
+  }
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|bbmask": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 224
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 11
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 108
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 150
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 68
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 226
+  }
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|bbuse": {
+  "k_barrel": {
+   "br": 3,
+   "calls": 0,
+   "insn": 225
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 11
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 129
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 150
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 74
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 226
+  }
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|cmov": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 248
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 12
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 125
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 150
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 71
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 257
+  }
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|crate": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 230
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 9
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 119
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 147
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 65
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 209
+  }
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|ctutils": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 259
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 14
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 128
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 153
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 74
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 34
+  }
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|noinline": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 4,
+   "insn": 327
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 18
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 131
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 154
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 82
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 16,
+   "insn": 272
+  }
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|none": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 0,
+   "insn": 164
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 5
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 79
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 35
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 66
+  },
+  "k_table": {
+   "br": 16,
+   "calls": 0,
+   "insn": 149
+  }
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|selunpred": {
+  "k_barrel": {
+   "br": 7,
+   "calls": 0,
+   "insn": 164
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 5
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 79
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 35
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 66
+  },
+  "k_table": {
+   "br": 16,
+   "calls": 0,
+   "insn": 149
+  }
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|subtle-bb": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 250
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 11
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 123
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 150
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 69
+  },
+  "k_table": {
+   "br": 1,
+   "calls": 0,
+   "insn": 31
+  }
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|subtle-vol": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 4,
+   "insn": 342
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 1,
+   "insn": 19
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 133
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 1,
+   "insn": 158
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 1,
+   "insn": 84
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 16,
+   "insn": 304
+  }
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|volatile": {
+  "k_barrel": {
+   "br": 0,
+   "calls": 0,
+   "insn": 223
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 11
+  },
+  "k_cond_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 107
+  },
+  "k_cswap": {
+   "br": 0,
+   "calls": 0,
+   "insn": 149
+  },
+  "k_dalek_sub": {
+   "br": 0,
+   "calls": 0,
+   "insn": 67
+  },
+  "k_table": {
+   "br": 0,
+   "calls": 0,
+   "insn": 225
+  }
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|weak": {
+  "k_barrel": {
+   "br": 4,
+   "calls": 0,
+   "insn": 115
+  },
+  "k_cmov_u8": {
+   "br": 0,
+   "calls": 0,
+   "insn": 10
+  },
+  "k_cond_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 83
+  },
+  "k_cswap": {
+   "br": 1,
+   "calls": 0,
+   "insn": 37
+  },
+  "k_dalek_sub": {
+   "br": 1,
+   "calls": 0,
+   "insn": 72
+  },
+  "k_table": {
+   "br": 16,
+   "calls": 0,
+   "insn": 198
+  }
+ }
+}
