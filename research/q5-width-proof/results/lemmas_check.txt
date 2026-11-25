@@ -1,0 +1,19 @@
+PASS L1 N4(v - m0 u - m1 iu) = N4(v) - 2(m0 h0 + m1 h1) + (m0^2+m1^2) N4(u)
+PASS L1b N4(iu) = N4(u), herm(iu,u) = (0, N4(u))
+PASS L2 N4(A v - h0 u - h1 iu) = A (A C - h0^2 - h1^2)  [so h0^2+h1^2 <= A C]
+PASS L2b herm(v - mu u, u) = herm(v,u) - mu N4(u)
+PASS L2' Delta = A C - |h|^2 invariant under the update
+PASS L2c (ac+bd)^2 + (ad-bc)^2 = (a^2+b^2)(c^2+d^2)
+PASS L3a half-up rounding: m(m-2r) <= 0, |m-r| <= 1/2 on 16040 rationals
+PASS L3 PREC=6: N4(v') <= N4(v) + eps M, eps=2^-1.32, 60000 trials (233 clamped), worst excess/M = 4.885e-02, bound 3.996e-01
+PASS L3 PREC=8: N4(v') <= N4(v) + eps M, eps=2^-3.39, 60000 trials (255 clamped), worst excess/M = 6.106e-03, bound 9.523e-02
+PASS L3 PREC=10: N4(v') <= N4(v) + eps M, eps=2^-5.41, 40000 trials (1470 clamped), worst excess/M = 2.270e-03, bound 2.353e-02
+PASS L3 PREC=64: N4(v') <= N4(v) + eps M, eps=2^-59.42, 20000 trials (77 clamped), worst excess/M = 1.187e-19, bound 1.301e-18
+PASS L5a O0 numerators (x0=x3, x1=x2 mod 2): N4 = 4 nrd is divisible by 4
+PASS L5b 50 generic O0 ideals {2T,(x',y',1,0)} are left O0-modules of norm T
+PASS L5c q = 2^(2e-5) - s^2 with s odd is 3 mod 4 (inert in Z[i]) at every set
+     p248: D = nextprime(2^512) = 2^512 + 75, D mod 4 = 3
+     p324: D = nextprime(2^768) = 2^768 + 183, D mod 4 = 3
+     p376: D = nextprime(2^768) = 2^768 + 183, D mod 4 = 3
+     p500: D = nextprime(2^1024) = 2^1024 + 643, D mod 4 = 3
+     p664: D = nextprime(2^1536) = 2^1536 + 75, D mod 4 = 3
