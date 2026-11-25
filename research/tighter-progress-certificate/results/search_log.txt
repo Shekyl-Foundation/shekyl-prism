@@ -1,0 +1,15 @@
+
+real	2m9.183s
+user	2m14.712s
+sys	0m1.562s
+OK: 6715 cells (88 wild), rho 2700/10000, lam_max 2^-20, Gmax = 7953659107 / 2^32 = 1.851856, tightest ratio 0.999999900
+
+real	3m7.606s
+user	3m15.229s
+sys	0m1.896s
+OK: 7753 cells (88 wild), rho 2690/10000, lam_max 2^-20, Gmax = 7983226613 / 2^32 = 1.858740, tightest ratio 0.999999900
+
+real	3m58.185s
+user	4m7.093s
+sys	0m2.556s
+OK: 8758 cells (88 wild), rho 2685/10000, lam_max 2^-20, Gmax = 7998092957 / 2^32 = 1.862201, tightest ratio 0.999999900

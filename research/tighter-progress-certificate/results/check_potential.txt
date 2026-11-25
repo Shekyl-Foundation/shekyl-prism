@@ -1,0 +1,6 @@
+cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-20: max rhi*g(succ)/g = 0.268499973 <= rho 537/2000: True (8s)
+cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-16: max rhi*g(succ)/g = 0.271312501 <= rho 271313/1000000: True (7s)
+cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-14: max rhi*g(succ)/g = 0.300769927 <= rho 300770/1000000: True (8s)
+cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-13: max rhi*g(succ)/g = 0.300837394 <= rho 300838/1000000: True (8s)
+cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-12: max rhi*g(succ)/g = 0.300972329 <= rho 300973/1000000: True (8s)
+cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-11: max rhi*g(succ)/g = 0.304448149 <= rho 304449/1000000: True (7s)
