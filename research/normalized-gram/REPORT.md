@@ -20,6 +20,16 @@ The logical exact steps, the swaps and the final bases are identical to the exac
 
 **Recommendation:** use the normalized Gram with the generic Hensel constructor in the next native prototype. Feed it the combined candidate's step (shared division, carried Gram, power-of-two shifts) at W = C Gram limbs.
 
+### Native prototype handoff
+
+Use the checked HNF constructor and carry its integral Gram through exp64 at 11 / 14 / 16 / 21 / 27 limbs. Keep the upstream parity, membership, span and class-bound checks. For a general basis the constructor also checks the determinant against p. The measurements above use PR #45's schedule, including 609 generic P500 steps.
+
+For the next prototype comparison, the [joint certificate's handoff table](../tighter-progress-certificate/REPORT.md#1-new-versus-old-counts) is the source of the candidate counts for all five classes. Its preceding-swap charge already pays for later large quotient substeps. The first-step bound covers inputs entering directly into the tail. The generic P500 candidate is 546 steps and includes the final size reduction. The 598-step option below and the three-link result are independent upper bounds. Use the joint table directly. [PR #45 signer contract](https://github.com/Shekyl-Foundation/shekyl-prism/blob/84a798a/docs/SIGNER_SPEC.md)
+
+Use the existing key-format contract for the native prototype. The general constructor derives the form from the admitted intersection basis and its norm, with factor 256 enforced at generation and import. At the measured P500 setup cost of about 0.3%, persisting an additional secret Gram would add a second representation that import would have to verify against the basis. Revisit an in-memory derived form only if repeated-signing profiles show material benefit after accounting for validation, lifetime and erasure.
+
+To replay the candidate, build the release `ng` binary as below, then run `python3 -B check_joint_schedule.py rust/target/release/ng` here. The driver reads the joint count CSV, regenerates only the count-dependent expectations in temporary fixture files, and checks all logical traces and terminal basis coordinates against the committed oracles. At the candidate counts all 500 set inputs matched the committed final pair and logical trace, and all 45 rejection fixtures were refused. All 52 toy half-tie controls passed on their original schedules. The benchmark fixtures still reproduce the measured PR #45 baseline.
+
 ## 1. What was built
 
 | File | Contents |
