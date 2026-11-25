@@ -185,6 +185,10 @@ fn one_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo, which:
     let r = &rows[k];
     let inp = prep::<C>(si, r);
     let (t, x, y) = (std::hint::black_box(inp.t), std::hint::black_box(inp.x), std::hint::black_box(inp.y));
+    if std::env::var("RLC_ADDR").is_ok() {
+        // runtime addresses, for qemu -dfilter (load base differs from nm)
+        println!("addr reduce {:#x} exact_round {:#x}", zi::reduce::<C, N, PL> as *const () as usize, rust_lagrange_ct::ct::exact_round::<N> as *const () as usize);
+    }
     let (_u, nu) = zi::reduce::<C, N, PL>(&t, &x, &y, &pl, si.steps);
     let nu_b = from_limbs_unsigned(&std::hint::black_box(nu));
     let want = if r.nu_p64 == BigInt::from(0) { &r.lam1 } else { &r.nu_p64 };

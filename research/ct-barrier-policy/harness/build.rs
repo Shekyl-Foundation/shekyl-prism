@@ -6,7 +6,7 @@ fn main() {
     // Barrier candidate: exactly one `b-*` feature, default "asm".
     const ALL: &[&str] = &[
         "asm", "none", "weak", "bbmask", "bbuse", "noinline", "volatile", "subtle-vol", "subtle-bb",
-        "cmov", "ctutils", "crate",
+        "cmov", "ctutils", "selunpred", "crate",
     ];
     let vals: Vec<String> = ALL.iter().map(|v| format!("\"{v}\"")).collect();
     println!("cargo::rustc-check-cfg=cfg(barrier, values({}))", vals.join(", "));

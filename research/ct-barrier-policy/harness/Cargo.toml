@@ -53,6 +53,8 @@ b-subtle-bb = ["dep:subtle", "subtle/core_hint_black_box"]
 b-cmov = ["dep:cmov"]
 # b-ctutils: RustCrypto ctutils 0.4.8 Choice + CtSelect (built on cmov)
 b-ctutils = ["dep:ctutils"]
+# b-selunpred: core::hint::select_unpredictable (Rust >= 1.88; documented as no CT guarantee)
+b-selunpred = []
 # b-crate: the dedicated internal crate ../prism-ct-barrier (one audited asm block per arch)
 b-crate = ["dep:prism-ct-barrier"]
 # kept for the old ctgrind script

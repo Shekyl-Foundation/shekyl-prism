@@ -113,6 +113,14 @@ pub fn mask(bit: u64) -> u64 {
     0u64.ct_select(&u64::MAX, Choice::from_u64_lsb(bit))
 }
 
+/// Safe, Rust >= 1.88: core::hint::select_unpredictable (a cmov/csel
+/// hint, documented as not a constant-time guarantee).
+#[cfg(barrier = "selunpred")]
+#[inline(always)]
+pub fn mask(bit: u64) -> u64 {
+    core::hint::select_unpredictable(bit & 1 == 1, u64::MAX, 0)
+}
+
 /// The dedicated internal crate: one audited asm block per arch.
 #[cfg(barrier = "crate")]
 #[inline(always)]
