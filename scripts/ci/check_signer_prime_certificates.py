@@ -8,7 +8,12 @@
 
 Run with Python 3.8+ from any directory. The PARI ECPP and Lucas N+1
 certificates are inputs. All proof arithmetic uses Python integers.
+
+A Pratt leaf is prime, composite, or an unfinished search. Only a
+composite is factored. A projective residue is a unit, zero, or a
+rejected proper factor of the modulus.
 """
+import enum
 import json
 import sys
 from functools import lru_cache
@@ -18,6 +23,49 @@ from pathlib import Path
 SIGNER = Path(__file__).resolve().parents[2] / "prism-vectors" / "data" / "signer"
 CERTS = SIGNER / "certificates"
 SETS = ("p248", "p324", "p376", "p500", "p664")
+
+# PARI primecert: the chain's final prime q satisfies q ≤ 2^64. 2^64 is
+# even, so a proven leaf is strictly below this power.
+LEAF_LIMIT = 1 << 64
+# Trial division through the square root is a complete proof below this
+# bound. The square root is 2^10. At and above the bound, Pratt is the proof.
+LEAF_TRIAL_LIMIT = 1 << 20
+# Exclusive end of the Pratt base search. A prime with no witness in
+# range is unfinished: the search stops, and the integer is not composite.
+LEAF_WITNESS_LIMIT = 4096
+# Constants c in the Pollard polynomial x^2 + c. A cycle that returns n
+# itself tries the next offset.
+POLLARD_OFFSETS = (1, 2, 3, 5, 7, 11)
+# Gap compositeness: trial division below this bound, then Miller-Rabin
+# bases in [2, GAP_MILLER_BASE_LIMIT). No witness means the gap check fails.
+GAP_TRIAL_LIMIT = 1000
+GAP_MILLER_BASE_LIMIT = 64
+# SIGNER_SPEC 1.4.4: the prime list ends at 1237.
+SMALL_PRIME_LAST = 1237
+# Identity of the short-Weierstrass group in Jacobian coordinates.
+POINT_AT_INFINITY = (0, 1, 0)
+
+
+class LeafKind(enum.Enum):
+    """A decided leaf. An unfinished search is not a kind: it raises."""
+
+    PRIME = "prime"
+    COMPOSITE = "composite"
+
+
+class LeafSearchIncomplete(ValueError):
+    """The search did not decide. The integer is not shown composite, and it is not split."""
+
+
+class Residue(enum.Enum):
+    """A residue mod N that the group law may use. A proper shared factor is neither."""
+
+    ZERO = "zero"
+    UNIT = "unit"
+
+
+class ImproperResidue(ValueError):
+    """A residue shares a proper factor with the modulus."""
 
 
 def jacobi_pure(a: int, n: int) -> int:
@@ -53,50 +101,101 @@ def is_prime_trial(n: int) -> bool:
     return True
 
 
-def pollard_rho(n: int) -> int:
+def residue(value: int, modulus: int) -> Residue:
+    """`ZERO` or `UNIT`. A proper shared factor raises: it is not a point."""
+    reduced = value % modulus
+    if reduced == 0:
+        return Residue.ZERO
+    if gcd(reduced, modulus) != 1:
+        raise ImproperResidue("residue shares a proper factor with the modulus")
+    return Residue.UNIT
+
+
+def pollard_divisor(n: int) -> int:
+    """A proper divisor of composite `n`.
+
+    Called only after `classify_leaf` has shown `n` composite. A prime has
+    no proper divisor; that raises here, and is not reported as a prime.
+    """
     if n % 2 == 0:
+        if n == 2:
+            raise ValueError(f"no proper divisor of {n}")
         return 2
-    # Retry with another polynomial if a cycle gives the trivial factor n.
-    for c in (1, 2, 3, 5, 7, 11):
+    for offset in POLLARD_OFFSETS:
         x = 2
         y = 2
-        d = 1
-        while d == 1:
-            x = (x * x + c) % n
-            y = (y * y + c) % n
-            y = (y * y + c) % n
-            d = gcd(abs(x - y), n)
-        if d != n:
-            return d
-    raise ValueError(f"pollard rho failed on {n}")
+        divisor = 1
+        while divisor == 1:
+            x = (x * x + offset) % n
+            y = (y * y + offset) % n
+            y = (y * y + offset) % n
+            divisor = gcd(abs(x - y), n)
+        if 1 < divisor < n:
+            return divisor
+    raise ValueError(f"no proper divisor of {n}")
+
+
+def pratt_quotient(order: int, prime: int) -> int:
+    """`order / prime`, exact. Floor division would invent an exponent."""
+    if prime <= 1 or order % prime != 0:
+        raise ValueError(f"prime factor {prime} does not divide the group order {order}")
+    return order // prime
+
+
+def distinct_prime_factors(n: int) -> set:
+    """Distinct prime factors of `n`. A piece the search cannot decide raises."""
+    if n < 2:
+        raise ValueError(f"no prime factorization of {n}")
+    pending = [n]
+    factors = set()
+    while pending:
+        piece = pending.pop()
+        if classify_leaf(piece) is LeafKind.PRIME:
+            factors.add(piece)
+            continue
+        divisor = pollard_divisor(piece)
+        pending.append(divisor)
+        pending.append(piece // divisor)
+    return factors
 
 
 @lru_cache(maxsize=None)
-def prime_leaf(n):
-    """Prove a leaf below 2^64 by trial division or a full-order Pratt witness."""
-    if not 2 <= n < 1 << 64:
-        return False
-    if n < 1 << 20:
-        return is_prime_trial(n)
-    if pow(2, n - 1, n) != 1:
-        return False
+def classify_leaf(n: int, witness_limit: int = LEAF_WITNESS_LIMIT) -> LeafKind:
+    """`PRIME` or `COMPOSITE` for an integer below `LEAF_LIMIT`.
 
-    # Factor n-1 completely. Only a recursively proven prime can end a split.
-    pending = [n - 1]
-    factors = set()
-    while pending:
-        m = pending.pop()
-        if prime_leaf(m):
-            factors.add(m)
-        else:
-            d = pollard_rho(m)
-            pending.extend((d, m // d))
-    for a in range(2, 4096):
-        if pow(a, n - 1, n) != 1:
-            return False
-        if all(pow(a, (n - 1) // p, n) != 1 for p in factors):
-            return True
-    return False
+    `LeafSearchIncomplete` means the search stopped. Callers that factor
+    must not treat that as composite: only `COMPOSITE` is split.
+    `witness_limit` is the exclusive end of the Pratt base search. The
+    factorization of `n - 1` always uses `LEAF_WITNESS_LIMIT`.
+    """
+    if witness_limit < 2:
+        raise LeafSearchIncomplete(
+            f"Pratt witness limit {witness_limit} leaves no base to test"
+        )
+    if n < 2 or n >= LEAF_LIMIT:
+        power = LEAF_LIMIT.bit_length() - 1
+        raise LeafSearchIncomplete(f"{n} is outside the Pratt leaf range [2, 2^{power})")
+    if n < LEAF_TRIAL_LIMIT:
+        if is_prime_trial(n):
+            return LeafKind.PRIME
+        return LeafKind.COMPOSITE
+    if pow(2, n - 1, n) != 1:
+        return LeafKind.COMPOSITE
+
+    factors = distinct_prime_factors(n - 1)
+    quotients = tuple(pratt_quotient(n - 1, prime) for prime in factors)
+    for base in range(2, witness_limit):
+        if pow(base, n - 1, n) != 1:
+            return LeafKind.COMPOSITE
+        if all(pow(base, quotient, n) != 1 for quotient in quotients):
+            return LeafKind.PRIME
+    raise LeafSearchIncomplete(f"no Pratt witness below {witness_limit} for {n}")
+
+
+def require_proven_prime(n: int) -> None:
+    """Raise unless `n` is a proven prime below `LEAF_LIMIT`."""
+    if classify_leaf(n) is not LeafKind.PRIME:
+        raise ValueError(f"{n} is composite")
 
 
 def exceeds_atkin_bound(q: int, n: int) -> bool:
@@ -112,12 +211,11 @@ def exceeds_atkin_bound(q: int, n: int) -> bool:
 
 def ec_double(point, a: int, n: int):
     x, y, z = point
-    if z % n == 0:
-        return (0, 1, 0)
-    if y % n == 0:
-        return (0, 1, 0)
-    if gcd(2 * y, n) != 1:
-        raise ValueError("noninvertible doubling denominator")
+    # Z is decided first. Y = 0 is 2-torsion only on a point whose Z is a unit.
+    if residue(z, n) is Residue.ZERO or residue(y, n) is Residue.ZERO:
+        return POINT_AT_INFINITY
+    if residue(2 * y, n) is not Residue.UNIT:
+        raise ImproperResidue("noninvertible doubling denominator")
     xx = (x * x) % n
     yy = (y * y) % n
     yyyy = (yy * yy) % n
@@ -133,9 +231,9 @@ def ec_double(point, a: int, n: int):
 def ec_add(p, q, a: int, n: int):
     x1, y1, z1 = p
     x2, y2, z2 = q
-    if z1 % n == 0:
+    if residue(z1, n) is Residue.ZERO:
         return q
-    if z2 % n == 0:
+    if residue(z2, n) is Residue.ZERO:
         return p
     z1z1 = (z1 * z1) % n
     z2z2 = (z2 * z2) % n
@@ -148,11 +246,11 @@ def ec_add(p, q, a: int, n: int):
             return ec_double(p, a, n)
         if (s1 + s2) % n != 0:
             raise ValueError("mixed addition and doubling modulo factors of N")
-        return (0, 1, 0)
+        return POINT_AT_INFINITY
     h = (u2 - u1) % n
     r = (s2 - s1) % n
-    if gcd(h, n) != 1:
-        raise ValueError("noninvertible addition denominator")
+    if residue(h, n) is not Residue.UNIT:
+        raise ImproperResidue("noninvertible addition denominator")
     h2 = (h * h) % n
     h3 = (h2 * h) % n
     x3 = (r * r - h3 - 2 * u1 * h2) % n
@@ -162,7 +260,7 @@ def ec_add(p, q, a: int, n: int):
 
 
 def ec_mul(k: int, point, a: int, n: int):
-    result = (0, 1, 0)
+    result = POINT_AT_INFINITY
     addend = point
     while k:
         if k & 1:
@@ -191,14 +289,15 @@ def verify_ecpp(n, steps):
         if gcd(4 * a**3 + 27 * b**2, n) != 1:
             raise ValueError(f"ECPP step {index}: singular curve modulo a factor of N")
 
-        # Each finite intermediate has invertible Z, so every group-law
-        # operation reduces correctly modulo every prime dividing N.
+        # residue() rejects a Z that vanishes on only some factors of N,
+        # so every finite intermediate is a unit on all of them.
         point = ec_mul(s, (x % n, y % n, 1), a, n)
-        if gcd(point[2], n) != 1 or ec_mul(q, point, a, n)[2] != 0:
+        closed = ec_mul(q, point, a, n)
+        finite = residue(point[2], n) is Residue.UNIT
+        if not finite or residue(closed[2], n) is not Residue.ZERO:
             raise ValueError(f"ECPP step {index}: [s]P does not have order q")
         n = q
-    if not prime_leaf(n):
-        raise ValueError("ECPP chain does not end at a proven prime below 2^64")
+    require_proven_prime(n)
 
 
 def lucas_uv(k: int, p: int, q: int, n: int):
@@ -236,8 +335,10 @@ def verify_lucas(n, cert):
     if gcd(q, n) != 1 or jacobi_pure(d, n) != -1:
         raise ValueError("invalid Lucas parameters")
     factors = [(int(r), int(e)) for r, e in cert["np1_factors"].items()]
-    if any(e < 1 or not prime_leaf(r) for r, e in factors):
+    if any(exponent < 1 for _, exponent in factors):
         raise ValueError("invalid prime power in N+1")
+    for prime, _ in factors:
+        require_proven_prime(prime)
     if prod(r**e for r, e in factors) != n + 1:
         raise ValueError("factorization does not give N+1")
     if lucas_uv(n + 1, p, q, n)[0] != 0:
@@ -247,7 +348,7 @@ def verify_lucas(n, cert):
             raise ValueError(f"Lucas rank condition failed for factor {r}")
 
 
-TRIAL_PRIMES = [p for p in range(2, 1000) if is_prime_trial(p)]
+TRIAL_PRIMES = [p for p in range(2, GAP_TRIAL_LIMIT) if is_prime_trial(p)]
 
 
 def has_composite_witness(n):
@@ -262,7 +363,7 @@ def has_composite_witness(n):
     while d % 2 == 0:
         d //= 2
         s += 1
-    for a in range(2, 64):
+    for a in range(2, GAP_MILLER_BASE_LIMIT):
         x = pow(a, d, n)
         if x in (1, n - 1):
             continue
@@ -319,10 +420,10 @@ def check_ecpp(name, expected=None, power=None):
 def verify_all():
     oracle = read_rows("oracle_c_reference.txt")
     shared = read_rows("shared.txt")
-    small = [2] + [p for p in range(5, 1238, 4) if is_prime_trial(p)]
+    small = [2] + [p for p in range(5, SMALL_PRIME_LAST + 1, 4) if is_prime_trial(p)]
     if list(map(int, shared["small_primes"].split())) != small or int(shared["small_primes_length"]) != len(small):
         raise ValueError("shared small-prime list differs from trial division")
-    complementary = [p for p in range(3, small[-1], 4) if is_prime_trial(p)]
+    complementary = [p for p in range(3, SMALL_PRIME_LAST, 4) if is_prime_trial(p)]
     bad_product = prod(complementary)
     norms = {}
     for name in SETS:
