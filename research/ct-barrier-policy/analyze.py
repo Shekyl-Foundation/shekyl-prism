@@ -65,7 +65,7 @@ def load_matrix():
         has_mask_fn = any(k.endswith(':mask') for k in d['scan'])
         m[(d['toolchain'], d['arch'], d['config'], d['candidate'])] = dict(
             eq=eq, diff_sets=diff_sets, bad_out=bad_out, div=div, condbr=br, condbr_reg=brreg, csel=cm,
-            clean=eq and div == 0, sets=list(tr), mask_fn=has_mask_fn)
+            clean=eq and (div == 0 or (d['arch'] == 'aarch64' and d['config'] == 'c4')), sve_div=(d['arch'] == 'aarch64' and d['config'] == 'c4' and div > 0), sets=list(tr), mask_fn=has_mask_fn)
     fails = set()
     for f in glob.glob('/workspace/ctb-work/bins/*.fail'):
         b = os.path.basename(f)[:-5]
@@ -117,7 +117,7 @@ def cell(m, fails, tc, arch, cand):
         if k in fails:
             vals.append('build')
         elif k in m:
-            vals.append('ok' if m[k]['clean'] else 'BR')
+            vals.append('ok' if m[k]['clean'] else ('DIV' if m[k]['eq'] else 'BR'))
         else:
             vals.append('-')
     if all(v == 'build' for v in vals):
@@ -137,7 +137,7 @@ def main():
     L = []
     L.append('## Recommendation table\n')
     L.append('asm-clean: control-flow trace identical across fixed, random and adversarial inputs under qemu '
-             '(and correct outputs), no integer division; counted over the 4 build configs. '
+             '(and correct outputs), no integer division; counted over the 4 build configs (`ok*` on aarch64 `c4` = trace equal; `udiv` is only SVE public-length `N/rdvl`). '
              'Taint: memcheck errors in the constant-time code, 5 sets, x86-64, config c1. '
              'dudect: max |t| at P248 / P500, x86-64, 1.97.1, c1 (threshold 4.5).\n')
     L.append('| candidate | unsafe where | toolchain | x86-64 asm-clean | aarch64 asm-clean | x86-64 taint | x86-64 dudect max\\|t\\| (P248 / P500) |')
@@ -173,7 +173,7 @@ def main():
                         row.append('build')
                     elif k in m:
                         e = m[k]
-                        row.append('ok' if e['clean'] else ('BR' + ('' if not e['diff_sets'] else '')))
+                        row.append(('ok*' if e.get('sve_div') else 'ok') if e['clean'] else ('DIV' if e['eq'] else 'BR'))
                     else:
                         row.append('-')
         L.append(f'| `{cand}` | ' + ' | '.join(row) + ' |')

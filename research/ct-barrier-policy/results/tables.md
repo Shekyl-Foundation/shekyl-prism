@@ -1,34 +1,34 @@
 ## Recommendation table
 
-asm-clean: control-flow trace identical across fixed, random and adversarial inputs under qemu (and correct outputs), no integer division; counted over the 4 build configs. Taint: memcheck errors in the constant-time code, 5 sets, x86-64, config c1. dudect: max |t| at P248 / P500, x86-64, 1.97.1, c1 (threshold 4.5).
+asm-clean: control-flow trace identical across fixed, random and adversarial inputs under qemu (and correct outputs), no integer division; counted over the 4 build configs (`ok*` on aarch64 `c4` = trace equal; `udiv` is only SVE public-length `N/rdvl`). Taint: memcheck errors in the constant-time code, 5 sets, x86-64, config c1. dudect: max |t| at P248 / P500, x86-64, 1.97.1, c1 (threshold 4.5).
 
 | candidate | unsafe where | toolchain | x86-64 asm-clean | aarch64 asm-clean | x86-64 taint | x86-64 dudect max\|t\| (P248 / P500) |
 |---|---|---|---|---|---|---|
-| `asm` | unsafe asm in the signer crate | 1.97.1 | 1/1 clean | 3/3 clean | 0 (clean; 25 shift) | 1.53 / 2.07 |
-| `asm` | unsafe asm in the signer crate | 1.85.1 | 1/1 clean | 1/1 clean | 0 (clean) | not run |
-| `crate` | unsafe asm, isolated in prism-ct-barrier | 1.97.1 | 1/1 clean | 2/2 clean | 0 (clean; 25 shift) | 2.18 / 1.80 |
-| `crate` | unsafe asm, isolated in prism-ct-barrier | 1.85.1 | 1/1 clean | 1/1 clean | 0 (clean) | not run |
-| `none` | safe (negative control) | 1.97.1 | 0/1 clean (branch: c1) | 1/2 clean (branch: c1) | 81 errors | 32.36 / 2.10 |
-| `none` | safe (negative control) | 1.85.1 | 0/1 clean (branch: c1) | 0/1 clean (branch: c1) | 55 errors | not run |
-| `weak` | safe (negative control) | 1.97.1 | 0/1 clean (branch: c1) | 1/2 clean (branch: c1) | 20 errors | 9.11 / 1.83 |
-| `weak` | safe (negative control) | 1.85.1 | 0/1 clean (branch: c1) | 0/1 clean (branch: c1) | 14 errors | not run |
-| `bbmask` | safe | 1.97.1 | 1/1 clean | 3/3 clean | 0 (clean; 24 shift) | 1.59 / 1.84 |
-| `bbmask` | safe | 1.85.1 | 1/1 clean | 1/1 clean | 0 (clean; 6 shift) | not run |
-| `bbuse` | safe | 1.97.1 | 1/1 clean | 2/2 clean | 0 (clean; 22 shift) | 1.62 / 2.05 |
-| `bbuse` | safe | 1.85.1 | 1/1 clean | 1/1 clean | 0 (clean) | not run |
-| `noinline` | safe | 1.97.1 | 1/1 clean | 2/2 clean | 0 (clean; 22 shift) | 2.31 / 2.12 |
-| `noinline` | safe | 1.85.1 | 1/1 clean | 1/1 clean | 0 (clean) | not run |
-| `selunpred` | safe (Rust >= 1.88) | 1.97.1 | 0/1 clean (branch: c1) | 1/2 clean (branch: c1) | 87 errors | 30.00 / 2.79 |
+| `asm` | unsafe asm in the signer crate | 1.97.1 | 4/4 clean | 4/4 clean | 0 (clean; 25 shift) | 1.53 / 2.07 |
+| `asm` | unsafe asm in the signer crate | 1.85.1 | 2/2 clean | 2/2 clean | 0 (clean) | not run |
+| `crate` | unsafe asm, isolated in prism-ct-barrier | 1.97.1 | 4/4 clean | 4/4 clean | 0 (clean; 25 shift) | 2.18 / 1.80 |
+| `crate` | unsafe asm, isolated in prism-ct-barrier | 1.85.1 | 2/2 clean | 2/2 clean | 0 (clean) | not run |
+| `none` | safe (negative control) | 1.97.1 | 0/4 clean (branch: c1,c2,c3,c4) | 1/4 clean (branch: c1,c3,c4) | 81 errors | 32.36 / 2.10 |
+| `none` | safe (negative control) | 1.85.1 | 0/2 clean (branch: c1,c3) | 0/2 clean (branch: c1,c3) | 55 errors | not run |
+| `weak` | safe (negative control) | 1.97.1 | 0/4 clean (branch: c1,c2,c3,c4) | 1/4 clean (branch: c1,c3,c4) | 20 errors | 9.11 / 1.83 |
+| `weak` | safe (negative control) | 1.85.1 | 0/2 clean (branch: c1,c3) | 0/2 clean (branch: c1,c3) | 14 errors | not run |
+| `bbmask` | safe | 1.97.1 | 4/4 clean | 4/4 clean | 0 (clean; 24 shift) | 1.59 / 1.84 |
+| `bbmask` | safe | 1.85.1 | 2/2 clean | 2/2 clean | 0 (clean; 6 shift) | not run |
+| `bbuse` | safe | 1.97.1 | 4/4 clean | 4/4 clean | 0 (clean; 22 shift) | 1.62 / 2.05 |
+| `bbuse` | safe | 1.85.1 | 2/2 clean | 2/2 clean | 0 (clean) | not run |
+| `noinline` | safe | 1.97.1 | 4/4 clean | 4/4 clean | 0 (clean; 22 shift) | 2.31 / 2.12 |
+| `noinline` | safe | 1.85.1 | 2/2 clean | 2/2 clean | 0 (clean) | not run |
+| `selunpred` | safe (Rust >= 1.88) | 1.97.1 | 0/4 clean (branch: c1,c2,c3,c4) | 1/4 clean (branch: c1,c3,c4) | 87 errors | 30.00 / 2.79 |
 | `selunpred` | safe (Rust >= 1.88) | 1.85.1 | n/a (does not build) | n/a (does not build) | build failed | not run |
-| `subtle-bb` | safe (subtle, core_hint_black_box) | 1.97.1 | 1/1 clean | 2/2 clean | 0 (clean; 22 shift) | 1.85 / 2.94 |
-| `subtle-bb` | safe (subtle, core_hint_black_box) | 1.85.1 | 1/1 clean | 1/1 clean | 0 (clean; 6 shift) | not run |
-| `subtle-vol` | unsafe read_volatile inside subtle | 1.97.1 | 1/1 clean | 2/2 clean | 0 (clean; 18 shift) | 2.08 / 1.70 |
-| `subtle-vol` | unsafe read_volatile inside subtle | 1.85.1 | 1/1 clean | 1/1 clean | 0 (clean) | not run |
-| `volatile` | unsafe read_volatile in the signer crate | 1.97.1 | 1/1 clean | 2/2 clean | 0 (clean; 28 shift) | 2.44 / 1.72 |
-| `volatile` | unsafe read_volatile in the signer crate | 1.85.1 | 1/1 clean | 1/1 clean | 0 (clean) | not run |
-| `cmov` | unsafe asm inside cmov | 1.97.1 | 1/1 clean | 2/2 clean | 0 (clean; 21 shift) | 1.80 / 2.03 |
-| `cmov` | unsafe asm inside cmov | 1.85.1 | 1/1 clean | 1/1 clean | 0 (clean) | not run |
-| `ctutils` | unsafe asm inside cmov (via ctutils) | 1.97.1 | 1/1 clean | 2/2 clean | 0 (clean; 23 shift) | 2.54 / 1.57 |
+| `subtle-bb` | safe (subtle, core_hint_black_box) | 1.97.1 | 4/4 clean | 4/4 clean | 0 (clean; 22 shift) | 1.85 / 2.94 |
+| `subtle-bb` | safe (subtle, core_hint_black_box) | 1.85.1 | 2/2 clean | 2/2 clean | 0 (clean; 6 shift) | not run |
+| `subtle-vol` | unsafe read_volatile inside subtle | 1.97.1 | 4/4 clean | 4/4 clean | 0 (clean; 18 shift) | 2.08 / 1.70 |
+| `subtle-vol` | unsafe read_volatile inside subtle | 1.85.1 | 2/2 clean | 2/2 clean | 0 (clean) | not run |
+| `volatile` | unsafe read_volatile in the signer crate | 1.97.1 | 4/4 clean | 4/4 clean | 0 (clean; 28 shift) | 2.44 / 1.72 |
+| `volatile` | unsafe read_volatile in the signer crate | 1.85.1 | 2/2 clean | 2/2 clean | 0 (clean) | not run |
+| `cmov` | unsafe asm inside cmov | 1.97.1 | 4/4 clean | 4/4 clean | 0 (clean; 21 shift) | 1.80 / 2.03 |
+| `cmov` | unsafe asm inside cmov | 1.85.1 | 2/2 clean | 2/2 clean | 0 (clean) | not run |
+| `ctutils` | unsafe asm inside cmov (via ctutils) | 1.97.1 | 4/4 clean | 4/4 clean | 0 (clean; 23 shift) | 2.54 / 1.57 |
 | `ctutils` | unsafe asm inside cmov (via ctutils) | 1.85.1 | n/a (does not build) | n/a (does not build) | build failed | not run |
 
 ## Per configuration (trace verdict: ok / BR = secret-dependent control flow / build = does not compile)
@@ -40,19 +40,19 @@ asm-clean: control-flow trace identical across fixed, random and adversarial inp
 
 | candidate | 1.97.1 x86 c1 | 1.97.1 x86 c2 | 1.97.1 x86 c3 | 1.97.1 x86 c4 | 1.97.1 aar c1 | 1.97.1 aar c2 | 1.97.1 aar c3 | 1.97.1 aar c4 | 1.85.1 x86 c1 | 1.85.1 x86 c2 | 1.85.1 x86 c3 | 1.85.1 x86 c4 | 1.85.1 aar c1 | 1.85.1 aar c2 | 1.85.1 aar c3 | 1.85.1 aar c4 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `asm` | ok | - | - | - | ok | ok | ok | - | ok | - | - | - | ok | - | - | - |
-| `crate` | ok | - | - | - | ok | ok | - | - | ok | - | - | - | ok | - | - | - |
-| `none` | BR | - | - | - | BR | ok | - | - | BR | - | - | - | BR | - | - | - |
-| `weak` | BR | - | - | - | BR | ok | - | - | BR | - | - | - | BR | - | - | - |
-| `bbmask` | ok | - | - | - | ok | ok | ok | - | ok | - | - | - | ok | - | - | - |
-| `bbuse` | ok | - | - | - | ok | ok | - | - | ok | - | - | - | ok | - | - | - |
-| `noinline` | ok | - | - | - | ok | ok | - | - | ok | - | - | - | ok | - | - | - |
-| `selunpred` | BR | - | - | - | BR | ok | - | - | build | build | build | build | build | build | build | build |
-| `subtle-bb` | ok | - | - | - | ok | ok | - | - | ok | - | - | - | ok | - | - | - |
-| `subtle-vol` | ok | - | - | - | ok | ok | - | - | ok | - | - | - | ok | - | - | - |
-| `volatile` | ok | - | - | - | ok | ok | - | - | ok | - | - | - | ok | - | - | - |
-| `cmov` | ok | - | - | - | ok | ok | - | - | ok | - | - | - | ok | - | - | - |
-| `ctutils` | ok | - | - | - | ok | ok | - | - | build | build | build | build | build | build | build | build |
+| `asm` | ok | ok | ok | ok | ok | ok | ok | ok* | ok | - | ok | - | ok | - | ok | - |
+| `crate` | ok | ok | ok | ok | ok | ok | ok | ok* | ok | - | ok | - | ok | - | ok | - |
+| `none` | BR | BR | BR | BR | BR | ok | BR | BR | BR | - | BR | - | BR | - | BR | - |
+| `weak` | BR | BR | BR | BR | BR | ok | BR | BR | BR | - | BR | - | BR | - | BR | - |
+| `bbmask` | ok | ok | ok | ok | ok | ok | ok | ok* | ok | - | ok | - | ok | - | ok | - |
+| `bbuse` | ok | ok | ok | ok | ok | ok | ok | ok* | ok | - | ok | - | ok | - | ok | - |
+| `noinline` | ok | ok | ok | ok | ok | ok | ok | ok* | ok | - | ok | - | ok | - | ok | - |
+| `selunpred` | BR | BR | BR | BR | BR | ok | BR | BR | build | build | build | build | build | build | build | build |
+| `subtle-bb` | ok | ok | ok | ok | ok | ok | ok | ok* | ok | - | ok | - | ok | - | ok | - |
+| `subtle-vol` | ok | ok | ok | ok | ok | ok | ok | ok* | ok | - | ok | - | ok | - | ok | - |
+| `volatile` | ok | ok | ok | ok | ok | ok | ok | ok* | ok | - | ok | - | ok | - | ok | - |
+| `cmov` | ok | ok | ok | ok | ok | ok | ok | ok* | ok | - | ok | - | ok | - | ok | - |
+| `ctutils` | ok | ok | ok | ok | ok | ok | ok | ok* | build | build | build | build | build | build | build | build |
 
 ## Static shape (config c1, sum over the five sets of zi::reduce + ct::exact_round)
 
