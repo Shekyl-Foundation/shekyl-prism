@@ -19,17 +19,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cqp-xcheck"
-version = "0.0.0"
-dependencies = [
- "cc",
- "libc",
- "num-bigint",
- "num-integer",
- "num-traits",
-]
-
-[[package]]
 name = "find-msvc-tools"
 version = "0.1.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -40,6 +29,17 @@ name = "libc"
 version = "0.2.191"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "65cd87c9a6d60536580b316ad985726104730a5151c99845f2490428ef91240a"
+
+[[package]]
+name = "ng-xcheck"
+version = "0.0.0"
+dependencies = [
+ "cc",
+ "libc",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+]
 
 [[package]]
 name = "num-bigint"

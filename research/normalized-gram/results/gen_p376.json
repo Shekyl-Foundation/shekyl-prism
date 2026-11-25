@@ -1604,6 +1604,38 @@
    "M0_norm_bits": 959,
    "M0_num_bits": 1930,
    "setup_num_bits": 1930
+  },
+  {
+   "cls": "sign-generic",
+   "kind": "chain_big61",
+   "need": 6,
+   "tex": 447,
+   "steps": 463,
+   "nbig_num": 6,
+   "nbig_norm": 6,
+   "phys_diff": 0,
+   "logical_steps": 6,
+   "big_group_diff": 0,
+   "ties": 0,
+   "M0_norm_bits": 958,
+   "M0_num_bits": 1929,
+   "setup_num_bits": 1929
+  },
+  {
+   "cls": "sign-generic",
+   "kind": "chain_big61",
+   "need": 6,
+   "tex": 447,
+   "steps": 463,
+   "nbig_num": 6,
+   "nbig_norm": 6,
+   "phys_diff": 8,
+   "logical_steps": 6,
+   "big_group_diff": 4,
+   "ties": 0,
+   "M0_norm_bits": 968,
+   "M0_num_bits": 1940,
+   "setup_num_bits": 1940
   }
  ],
  "widths": {

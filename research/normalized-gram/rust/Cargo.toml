@@ -1,10 +1,10 @@
 [package]
-name = "cqp-xcheck"
+name = "ng-xcheck"
 version = "0.0.0"
 edition = "2021"
 license = "BSD-3-Clause"
 publish = false
-description = "Research cross-check: exp64 quotient rule in the rust-lagrange-ct prototype (not part of the workspace, not the production reducer)"
+description = "Research: normalized class Gram for the exp64 reducer, from the a60fd06 cross-check crate (not part of the workspace, not the production reducer)"
 
 # Standalone: an empty workspace table keeps this crate out of the
 # repository workspace, its build and its CI.

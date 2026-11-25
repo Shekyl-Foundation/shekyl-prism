@@ -201,6 +201,12 @@ def chains(P, rng, q, xq, yq):
     T, us, vs = base()
     mus = grow(T, us, vs, lambda k: ((1 << 62) + 1, 1) if k % 3 == 2 else ((1, 1) if k % 2 == 0 else (1, -1)))
     out.append(('chain_roll_62', T, *chain_from(us, vs, mus)))
+    # (d) quotients just above the window, as many as fit: the most big
+    # sub-steps per unit of size
+    for trial in range(2):
+        T, us, vs = base()
+        mus = grow(T, us, vs, lambda k: (rng.randrange(1 << 61, 1 << 66), rng.randrange(-(1 << 20), 1 << 20)))
+        out.append(('chain_big61', T, *chain_from(us, vs, mus)))
     return out
 
 

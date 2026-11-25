@@ -1,6 +1,6 @@
-p248: 98 accepted, 9 rejects; max big sub-steps num/norm 5/5; inputs with differing physical decisions 5
-p324: 98 accepted, 9 rejects; max big sub-steps num/norm 7/6; inputs with differing physical decisions 8
-p376: 98 accepted, 9 rejects; max big sub-steps num/norm 8/8; inputs with differing physical decisions 8
-p500: 98 accepted, 9 rejects; max big sub-steps num/norm 10/10; inputs with differing physical decisions 6
-p664: 98 accepted, 9 rejects; max big sub-steps num/norm 14/14; inputs with differing physical decisions 8
+p248: 100 accepted, 9 rejects; max big sub-steps num/norm 5/5; inputs with differing physical decisions 7
+p324: 100 accepted, 9 rejects; max big sub-steps num/norm 7/6; inputs with differing physical decisions 10
+p376: 100 accepted, 9 rejects; max big sub-steps num/norm 8/8; inputs with differing physical decisions 9
+p500: 100 accepted, 9 rejects; max big sub-steps num/norm 10/10; inputs with differing physical decisions 7
+p664: 100 accepted, 9 rejects; max big sub-steps num/norm 14/14; inputs with differing physical decisions 10
 toy: 52 runs, 40 with a +1/2 tie, 52 with a -1/2 tie

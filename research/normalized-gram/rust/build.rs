@@ -6,7 +6,7 @@
 fn main() {
     #[cfg(feature = "memcheck")]
     {
-        let source = "../../rust-lagrange-ct/ctgrind/ctgrind.c";
+        let source = "ctgrind/ctgrind.c";
         println!("cargo:rerun-if-changed={source}");
         cc::Build::new().file(source).compile("ctgrind");
     }

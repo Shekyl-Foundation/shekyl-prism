@@ -3,6 +3,9 @@
 // All rights reserved.
 // BSD-3-Clause
 
+//! ORIGINAL exp64 as of 1db834d (copied unchanged except for the module
+//! paths, research/normalized-gram): recomputes the Gram every step.
+//!
 //! The exp64 quotient rule (research/clamped-quotient-progress/variants.py
 //! `q_exp64`) on the rust-lagrange-ct prototype's arithmetic. Research
 //! cross-check and cost measurement only; not the production reducer.
@@ -16,8 +19,8 @@
 //!    m_j 2^s: the update vector is shifted left by the secret s.
 //! No exact cleanup step.
 
-use crate::ct::*;
-use crate::zi::{nrd, quotient, Vec4};
+use crate::orig_ct::*;
+use crate::orig_zi::{nrd, quotient, Vec4};
 
 pub const T0: i64 = 60;
 
@@ -163,4 +166,48 @@ pub fn reduce_exp<const C: usize, const N: usize, const PL: usize>(
         nbig += step_exp::<C, N, PL>(&mut u, &mut v, &mut nu, &mut nv, p);
     }
     (u, nu, nbig)
+}
+
+/// The same reducer from an arbitrary starting pair (research/normalized-gram).
+#[inline(never)]
+pub fn reduce_exp_uv<const C: usize, const N: usize, const PL: usize>(
+    u0: &Vec4<C>, v0: &Vec4<C>, p: &[u64; PL], steps: usize,
+) -> (Vec4<C>, Vec4<C>) {
+    let (mut u, mut v) = (*u0, *v0);
+    let mut nu: [u64; N] = nrd::<C, N, PL>(&u, p);
+    let mut nv: [u64; N] = nrd::<C, N, PL>(&v, p);
+    let m = mask(lt_unsigned(&nv, &nu));
+    for r in 0..4 {
+        cswap(m, &mut u[r], &mut v[r]);
+    }
+    cswap(m, &mut nu, &mut nv);
+    for _ in 0..steps {
+        step_exp::<C, N, PL>(&mut u, &mut v, &mut nu, &mut nv, p);
+    }
+    (u, v)
+}
+
+/// Setup only (both norms and the strict initial swap), for timing.
+#[inline(never)]
+pub fn setup_uv<const C: usize, const N: usize, const PL: usize>(
+    u: &mut Vec4<C>, v: &mut Vec4<C>, p: &[u64; PL],
+) -> ([u64; N], [u64; N]) {
+    let mut nu: [u64; N] = nrd::<C, N, PL>(u, p);
+    let mut nv: [u64; N] = nrd::<C, N, PL>(v, p);
+    let m = mask(lt_unsigned(&nv, &nu));
+    for r in 0..4 {
+        cswap(m, &mut u[r], &mut v[r]);
+    }
+    cswap(m, &mut nu, &mut nv);
+    (nu, nv)
+}
+
+/// Reduction loop only, for timing.
+#[inline(never)]
+pub fn reduce_loop<const C: usize, const N: usize, const PL: usize>(
+    u: &mut Vec4<C>, v: &mut Vec4<C>, nu: &mut [u64; N], nv: &mut [u64; N], p: &[u64; PL], steps: usize,
+) {
+    for _ in 0..steps {
+        step_exp::<C, N, PL>(u, v, nu, nv, p);
+    }
 }

@@ -10,8 +10,8 @@
 //! bench: cycles of the prototype schedule vs the exp64 schedule (its
 //! T_exp64 count, no cleanup) on the honest vectors, pinned to one core.
 
-use cqp_xcheck::sets::{from_limbs_signed, from_limbs_unsigned, to_limbs, SetInfo, SETS};
-use cqp_xcheck::{with_set, zi, zi_exp};
+use ng_xcheck::sets::{from_limbs_signed, from_limbs_unsigned, to_limbs, SetInfo, SETS};
+use ng_xcheck::{with_set, zi, zi_exp};
 use num_bigint::BigInt;
 
 struct Row {

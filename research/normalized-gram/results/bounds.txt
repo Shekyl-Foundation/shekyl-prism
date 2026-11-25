@@ -1,0 +1,37 @@
+== p248: p has 251 bits, Tbits = 649, coordinate limbs C = 11
+  sign-generic     M0 < 2^ 652  Gram needs  656 signed bits  coords need  654  observed max Gram  652 (X 652)  coord  651  ok  E spec 11  E normalized bound 5
+  keygen-Isec      M0 < 2^ 250  Gram needs  254 signed bits  coords need  208  observed max Gram  160 (X 160)  coord  160  ok  E spec 2  E normalized bound 2
+  challenge        M0 < 2^ 494  Gram needs  498 signed bits  coords need  496  observed max Gram  494 (X 494)  coord  493  ok  E spec 8  E normalized bound 4
+  keygen-D         M0 < 2^ 515  Gram needs  519 signed bits  coords need  517  observed max Gram  515 (X 515)  coord  514  ok  E spec 8  E normalized bound 4
+  prered-guard256  M0 < 2^ 626  Gram needs  630 signed bits  coords need  641  observed max Gram  618 (X 618)  coord  634  ok  E spec 10  E normalized bound 5
+  -> Gram limbs W = 11 (704 bits, 48 spare); numerator Gram limbs 2C = 22; coordinate limbs C = 11
+== p324: p has 326 bits, Tbits = 838, coordinate limbs C = 14
+  sign-generic     M0 < 2^ 841  Gram needs  845 signed bits  coords need  843  observed max Gram  841 (X 841)  coord  840  ok  E spec 14  E normalized bound 7
+  keygen-Isec      M0 < 2^ 325  Gram needs  329 signed bits  coords need  264  observed max Gram  197 (X 197)  coord  197  ok  E spec 3  E normalized bound 2
+  challenge        M0 < 2^ 646  Gram needs  650 signed bits  coords need  648  observed max Gram  646 (X 646)  coord  645  ok  E spec 11  E normalized bound 5
+  keygen-D         M0 < 2^ 771  Gram needs  775 signed bits  coords need  773  observed max Gram  771 (X 771)  coord  770  ok  E spec 13  E normalized bound 6
+  prered-guard256  M0 < 2^ 815  Gram needs  819 signed bits  coords need  830  observed max Gram  807 (X 807)  coord  823  ok  E spec 14  E normalized bound 6
+  -> Gram limbs W = 14 (896 bits, 51 spare); numerator Gram limbs 2C = 28; coordinate limbs C = 14
+== p376: p has 383 bits, Tbits = 971, coordinate limbs C = 16
+  sign-generic     M0 < 2^ 974  Gram needs  978 signed bits  coords need  976  observed max Gram  974 (X 974)  coord  973  ok  E spec 16  E normalized bound 8
+  keygen-Isec      M0 < 2^ 382  Gram needs  386 signed bits  coords need  307  observed max Gram  226 (X 226)  coord  225  ok  E spec 3  E normalized bound 3
+  challenge        M0 < 2^ 750  Gram needs  754 signed bits  coords need  752  observed max Gram  749 (X 749)  coord  749  ok  E spec 12  E normalized bound 6
+  keygen-D         M0 < 2^ 771  Gram needs  775 signed bits  coords need  773  observed max Gram  771 (X 771)  coord  770  ok  E spec 13  E normalized bound 6
+  prered-guard256  M0 < 2^ 948  Gram needs  952 signed bits  coords need  963  observed max Gram  940 (X 939)  coord  955  ok  E spec 16  E normalized bound 8
+  -> Gram limbs W = 16 (1024 bits, 46 spare); numerator Gram limbs 2C = 32; coordinate limbs C = 16
+== p500: p has 505 bits, Tbits = 1280, coordinate limbs C = 21
+  sign-generic     M0 < 2^1283  Gram needs 1287 signed bits  coords need 1285  observed max Gram 1283 (X 1283)  coord 1282  ok  E spec 22  E normalized bound 11
+  keygen-Isec      M0 < 2^ 504  Gram needs  508 signed bits  coords need  398  observed max Gram  288 (X 288)  coord  287  ok  E spec 4  E normalized bound 4
+  challenge        M0 < 2^ 998  Gram needs 1002 signed bits  coords need 1000  observed max Gram  998 (X 998)  coord  997  ok  E spec 17  E normalized bound 8
+  keygen-D         M0 < 2^1027  Gram needs 1031 signed bits  coords need 1029  observed max Gram 1027 (X 1027)  coord 1026  ok  E spec 17  E normalized bound 8
+  prered-guard256  M0 < 2^1257  Gram needs 1261 signed bits  coords need 1272  observed max Gram 1249 (X 1249)  coord 1265  ok  E spec 21  E normalized bound 10
+  -> Gram limbs W = 21 (1344 bits, 57 spare); numerator Gram limbs 2C = 42; coordinate limbs C = 21
+== p664: p has 669 bits, Tbits = 1690, coordinate limbs C = 27
+  sign-generic     M0 < 2^1693  Gram needs 1697 signed bits  coords need 1695  observed max Gram 1693 (X 1693)  coord 1691  ok  E spec 29  E normalized bound 14
+  keygen-Isec      M0 < 2^ 668  Gram needs  672 signed bits  coords need  521  observed max Gram  370 (X 370)  coord  368  ok  E spec 6  E normalized bound 5
+  challenge        M0 < 2^1326  Gram needs 1330 signed bits  coords need 1328  observed max Gram 1326 (X 1326)  coord 1325  ok  E spec 22  E normalized bound 11
+  keygen-D         M0 < 2^1539  Gram needs 1543 signed bits  coords need 1541  observed max Gram 1539 (X 1539)  coord 1538  ok  E spec 26  E normalized bound 13
+  prered-guard256  M0 < 2^1667  Gram needs 1671 signed bits  coords need 1682  observed max Gram 1663 (X 1662)  coord 1675  ok  E spec 28  E normalized bound 14
+  -> Gram limbs W = 27 (1728 bits, 31 spare); numerator Gram limbs 2C = 54; coordinate limbs C = 27
+
+W per set: p248 11, p324 14, p376 16, p500 21, p664 27

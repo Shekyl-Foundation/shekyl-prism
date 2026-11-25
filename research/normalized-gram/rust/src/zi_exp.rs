@@ -104,7 +104,7 @@ pub fn quotient_exp<const N: usize>(h0: &[u64; N], h1: &[u64; N], nu: &[u64; N])
 }
 
 #[inline(always)]
-fn herm<const C: usize, const N: usize, const PL: usize>(
+pub fn herm<const C: usize, const N: usize, const PL: usize>(
     v: &Vec4<C>, u: &Vec4<C>, p: &[u64; PL],
 ) -> ([u64; N], [u64; N]) {
     let mut h0: [u64; N] = mul_wide(&v[0], &u[0]);
@@ -137,6 +137,17 @@ fn step_exp<const C: usize, const N: usize>(
     u: &mut Vec4<C>, v: &mut Vec4<C>, nu: &mut [u64; N], nv: &mut [u64; N],
     h0: &mut [u64; N], h1: &mut [u64; N],
 ) -> u64 {
+    step_exp_t(u, v, nu, nv, h0, h1).3
+}
+
+/// The step above, also returning its decisions (m0, m1, s, big, swap
+/// mask) for the normalized-gram equivalence check. Added in
+/// research/normalized-gram; the arithmetic is unchanged from a60fd06.
+#[inline(always)]
+pub fn step_exp_t<const C: usize, const N: usize>(
+    u: &mut Vec4<C>, v: &mut Vec4<C>, nu: &mut [u64; N], nv: &mut [u64; N],
+    h0: &mut [u64; N], h1: &mut [u64; N],
+) -> (i64, i64, u64, u64, u64) {
     let (m0, m1, s, big) = quotient_exp(h0, h1, nu);
     let mut a0 = mul_scalar(&u[0], m0);
     sub_assign(&mut a0, &mul_scalar(&u[1], m1));
@@ -158,7 +169,7 @@ fn step_exp<const C: usize, const N: usize>(
     }
     cswap(m, nu, nv);
     cond_neg(h1, m); // Swapping the vectors conjugates the Hermitian product.
-    big
+    (m0, m1, s, big, m)
 }
 
 /// Initial strict swap, then `steps` exp64 steps; no cleanup. Returns
