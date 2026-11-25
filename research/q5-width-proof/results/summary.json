@@ -2,37 +2,37 @@
  "p248": {
   "guard_stats": {
    "sampled": [
-    201,
-    49
+    803,
+    197
    ],
    "crafted_skew_max": [
     0,
-    75
+    300
    ],
    "crafted_edge_fail": [
     0,
-    75
+    300
    ],
    "crafted_edge_pass": [
-    67,
-    8
+    271,
+    29
    ]
   },
   "guard_rate": {
-   "n": 2500,
+   "n": 10000,
    "rejected": {
-    "2": 567,
-    "4": 150,
-    "16": 11,
+    "2": 2261,
+    "4": 494,
+    "16": 32,
     "256": 0,
     "65536": 0
    },
-   "max_nrd_v_over_sqrtp_N": 132.82918349311691
+   "max_nrd_v_over_sqrtp_N": 77.72813872387589
   },
-  "seconds": 34.2,
+  "seconds": 109.8,
   "variants": {
    "model:sign_generic": {
-    "n": 2409,
+    "n": 9609,
     "families": [
      "model_nvar",
      "model_nbound",
@@ -53,9 +53,9 @@
     "spare_proven": 363,
     "spare_observed": 365,
     "lemma_violations": 0,
-    "oracle_checked": 659,
+    "oracle_checked": 2609,
     "oracle_fail": 0,
-    "saturated_quotients": 152301,
+    "saturated_quotients": 603801,
     "max_log2_Mmax_over_M0": 0.0,
     "fsr_checked": 20,
     "fsr_mismatch": 0,
@@ -119,7 +119,7 @@
     }
    },
    "O0:sign_generic": {
-    "n": 903,
+    "n": 3603,
     "families": [
      "O0_nbound",
      "O0_maxnorm",
@@ -134,7 +134,7 @@
     "spare_proven": 361,
     "spare_observed": 363,
     "lemma_violations": 0,
-    "oracle_checked": 341,
+    "oracle_checked": 1353,
     "oracle_fail": 0,
     "saturated_quotients": 600,
     "max_log2_Mmax_over_M0": 0.0,
@@ -200,19 +200,19 @@
     }
    },
    "model:Iq_only": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "Iq_only"
     ],
     "proven_max_bits": 985,
     "M0_bits": 983,
-    "observed_max_bits": 982,
+    "observed_max_bits": 983,
     "observed_max_bits_excl_input": 982,
     "width": 1664,
     "spare_proven": 679,
-    "spare_observed": 682,
+    "spare_observed": 681,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -221,7 +221,7 @@
     "classes": {
      "starting norms N4 (in)": {
       "proven": 983,
-      "observed": 982
+      "observed": 983
      },
      "coordinates, step and conversion": {
       "proven": 492,
@@ -229,7 +229,7 @@
      },
      "quotient x coordinate (m u)": {
       "proven": 493,
-      "observed": 491
+      "observed": 492
      },
      "update temporaries a = mu u": {
       "proven": 493,
@@ -249,11 +249,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 11
+      "observed": 6
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 76
+      "observed": 70
      },
      "cleanup exact quotient |m|": {
       "proven": 492,
@@ -265,7 +265,7 @@
      },
      "cleanup rounding denominator 2 nu": {
       "proven": 985,
-      "observed": 617
+      "observed": 618
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 984,
@@ -278,7 +278,7 @@
     }
    },
    "model:keygen_D": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "keygen_D"
     ],
@@ -290,7 +290,7 @@
     "spare_proven": 637,
     "spare_observed": 639,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -319,19 +319,19 @@
      },
      "j-part sums before x p": {
       "proven": 775,
-      "observed": 390
+      "observed": 391
      },
      "norms N4 and partial sums": {
       "proven": 1026,
-      "observed": 1022
+      "observed": 1023
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 8
+      "observed": 12
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 73
+      "observed": 76
      },
      "cleanup exact quotient |m|": {
       "proven": 513,
@@ -347,16 +347,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 1026,
-      "observed": 641
+      "observed": 642
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 1027,
-      "observed": 642
+      "observed": 643
      }
     }
    },
    "O0:keygen_D": {
-    "n": 125,
+    "n": 500,
     "families": [
      "keygen_D_O0"
     ],
@@ -368,7 +368,7 @@
     "spare_proven": 635,
     "spare_observed": 637,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -397,15 +397,15 @@
      },
      "j-part sums before x p": {
       "proven": 777,
-      "observed": 391
+      "observed": 392
      },
      "norms N4 and partial sums": {
       "proven": 1028,
-      "observed": 1024
+      "observed": 1025
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 8
+      "observed": 9
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
@@ -425,16 +425,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 1028,
-      "observed": 642
+      "observed": 643
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 1029,
-      "observed": 643
+      "observed": 644
      }
     }
    },
    "model:keygen_prereduce_Isec": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "keygen_prereduce_Isec"
     ],
@@ -446,7 +446,7 @@
     "spare_proven": 1345,
     "spare_observed": 1347,
     "lemma_violations": 0,
-    "oracle_checked": 250,
+    "oracle_checked": 1000,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -475,7 +475,7 @@
      },
      "j-part sums before x p": {
       "proven": 67,
-      "observed": 37
+      "observed": 38
      },
      "norms N4 and partial sums": {
       "proven": 318,
@@ -483,11 +483,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 7
+      "observed": 8
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 71
+      "observed": 72
      },
      "cleanup exact quotient |m|": {
       "proven": 159,
@@ -503,16 +503,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 318,
-      "observed": 288
+      "observed": 289
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 319,
-      "observed": 289
+      "observed": 290
      }
     }
    },
    "model:sign_prereduced_guarded": {
-    "n": 804,
+    "n": 3222,
     "families": [
      "prered_guarded_sampled",
      "prered_guarded_crafted_edge_pass"
@@ -525,7 +525,7 @@
     "spare_proven": 396,
     "spare_observed": 397,
     "lemma_violations": 0,
-    "oracle_checked": 804,
+    "oracle_checked": 3222,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -562,11 +562,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 9
+      "observed": 11
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 74
+      "observed": 76
      },
      "cleanup exact quotient |m|": {
       "proven": 634,
@@ -582,16 +582,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 1267,
-      "observed": 781
+      "observed": 780
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 1268,
-      "observed": 782
+      "observed": 781
      }
     }
    },
    "model:sign_prereduced_unguarded_generic": {
-    "n": 621,
+    "n": 2478,
     "families": [
      "prered_unguarded_sampled",
      "prered_unguarded_crafted_skew_max",
@@ -606,7 +606,7 @@
     "spare_proven": 364,
     "spare_observed": 366,
     "lemma_violations": 0,
-    "oracle_checked": 621,
+    "oracle_checked": 2478,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -635,15 +635,15 @@
      },
      "j-part sums before x p": {
       "proven": 1048,
-      "observed": 1017
+      "observed": 1019
      },
      "norms N4 and partial sums": {
       "proven": 1299,
-      "observed": 1294
+      "observed": 1295
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 10
+      "observed": 11
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
@@ -663,11 +663,11 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 1299,
-      "observed": 781
+      "observed": 780
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 1300,
-      "observed": 782
+      "observed": 781
      }
     }
    }
@@ -681,37 +681,37 @@
  "p324": {
   "guard_stats": {
    "sampled": [
-    189,
-    61
+    779,
+    221
    ],
    "crafted_skew_max": [
     0,
-    75
+    300
    ],
    "crafted_edge_fail": [
     0,
-    75
+    300
    ],
    "crafted_edge_pass": [
-    67,
-    8
+    282,
+    18
    ]
   },
   "guard_rate": {
-   "n": 2500,
+   "n": 10000,
    "rejected": {
-    "2": 577,
-    "4": 129,
-    "16": 10,
+    "2": 2228,
+    "4": 512,
+    "16": 39,
     "256": 0,
     "65536": 0
    },
-   "max_nrd_v_over_sqrtp_N": 51.437054026983176
+   "max_nrd_v_over_sqrtp_N": 92.41430526753656
   },
-  "seconds": 42.5,
+  "seconds": 156.4,
   "variants": {
    "model:sign_generic": {
-    "n": 2409,
+    "n": 9609,
     "families": [
      "model_nvar",
      "model_nbound",
@@ -732,9 +732,9 @@
     "spare_proven": 433,
     "spare_observed": 435,
     "lemma_violations": 0,
-    "oracle_checked": 659,
+    "oracle_checked": 2609,
     "oracle_fail": 0,
-    "saturated_quotients": 195817,
+    "saturated_quotients": 776317,
     "max_log2_Mmax_over_M0": 0.0,
     "fsr_checked": 20,
     "fsr_mismatch": 0,
@@ -798,7 +798,7 @@
     }
    },
    "O0:sign_generic": {
-    "n": 903,
+    "n": 3603,
     "families": [
      "O0_nbound",
      "O0_maxnorm",
@@ -813,7 +813,7 @@
     "spare_proven": 431,
     "spare_observed": 433,
     "lemma_violations": 0,
-    "oracle_checked": 341,
+    "oracle_checked": 1353,
     "oracle_fail": 0,
     "saturated_quotients": 772,
     "max_log2_Mmax_over_M0": 0.0,
@@ -862,7 +862,7 @@
      },
      "cleanup rounding numerator 2h + nu": {
       "proven": 1681,
-      "observed": 1003
+      "observed": 1004
      },
      "cleanup rounding denominator 2 nu": {
       "proven": 1681,
@@ -879,7 +879,7 @@
     }
    },
    "model:Iq_only": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "Iq_only"
     ],
@@ -891,7 +891,7 @@
     "spare_proven": 823,
     "spare_observed": 825,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -920,7 +920,7 @@
      },
      "j-part sums before x p": {
       "proven": 962,
-      "observed": 482
+      "observed": 481
      },
      "norms N4 and partial sums": {
       "proven": 1288,
@@ -932,7 +932,7 @@
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 73
+      "observed": 72
      },
      "cleanup exact quotient |m|": {
       "proven": 644,
@@ -944,20 +944,20 @@
      },
      "cleanup rounding denominator 2 nu": {
       "proven": 1289,
-      "observed": 808
+      "observed": 807
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 1288,
-      "observed": 807
+      "observed": 808
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 1289,
-      "observed": 808
+      "observed": 809
      }
     }
    },
    "model:keygen_D": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "keygen_D"
     ],
@@ -969,7 +969,7 @@
     "spare_proven": 573,
     "spare_observed": 575,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -998,11 +998,11 @@
      },
      "j-part sums before x p": {
       "proven": 1212,
-      "observed": 609
+      "observed": 610
      },
      "norms N4 and partial sums": {
       "proven": 1538,
-      "observed": 1534
+      "observed": 1535
      },
      "64-bit quotient |m|": {
       "proven": 63,
@@ -1010,7 +1010,7 @@
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 73
+      "observed": 74
      },
      "cleanup exact quotient |m|": {
       "proven": 769,
@@ -1026,16 +1026,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 1538,
-      "observed": 935
+      "observed": 936
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 1539,
-      "observed": 936
+      "observed": 937
      }
     }
    },
    "O0:keygen_D": {
-    "n": 125,
+    "n": 500,
     "families": [
      "keygen_D_O0"
     ],
@@ -1047,7 +1047,7 @@
     "spare_proven": 571,
     "spare_observed": 573,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -1076,11 +1076,11 @@
      },
      "j-part sums before x p": {
       "proven": 1214,
-      "observed": 609
+      "observed": 611
      },
      "norms N4 and partial sums": {
       "proven": 1540,
-      "observed": 1536
+      "observed": 1537
      },
      "64-bit quotient |m|": {
       "proven": 63,
@@ -1104,16 +1104,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 1540,
-      "observed": 936
+      "observed": 937
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 1541,
-      "observed": 937
+      "observed": 938
      }
     }
    },
    "model:keygen_prereduce_Isec": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "keygen_prereduce_Isec"
     ],
@@ -1125,7 +1125,7 @@
     "spare_proven": 1719,
     "spare_observed": 1721,
     "lemma_violations": 0,
-    "oracle_checked": 250,
+    "oracle_checked": 1000,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -1154,7 +1154,7 @@
      },
      "j-part sums before x p": {
       "proven": 66,
-      "observed": 35
+      "observed": 38
      },
      "norms N4 and partial sums": {
       "proven": 392,
@@ -1174,24 +1174,24 @@
      },
      "cleanup rounding numerator 2h + nu": {
       "proven": 393,
-      "observed": 359
+      "observed": 360
      },
      "cleanup rounding denominator 2 nu": {
       "proven": 393,
-      "observed": 359
+      "observed": 360
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 392,
-      "observed": 361
+      "observed": 364
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 393,
-      "observed": 362
+      "observed": 365
      }
     }
    },
    "model:sign_prereduced_guarded": {
-    "n": 768,
+    "n": 3183,
     "families": [
      "prered_guarded_sampled",
      "prered_guarded_crafted_edge_pass"
@@ -1204,7 +1204,7 @@
     "spare_proven": 465,
     "spare_observed": 467,
     "lemma_violations": 0,
-    "oracle_checked": 768,
+    "oracle_checked": 3183,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -1233,7 +1233,7 @@
      },
      "j-part sums before x p": {
       "proven": 1320,
-      "observed": 1318
+      "observed": 1319
      },
      "norms N4 and partial sums": {
       "proven": 1645,
@@ -1241,11 +1241,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 10
+      "observed": 12
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 74
+      "observed": 76
      },
      "cleanup exact quotient |m|": {
       "proven": 823,
@@ -1261,16 +1261,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 1645,
-      "observed": 1007
+      "observed": 1006
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 1646,
-      "observed": 1008
+      "observed": 1007
      }
     }
    },
    "model:sign_prereduced_unguarded_generic": {
-    "n": 657,
+    "n": 2517,
     "families": [
      "prered_unguarded_sampled",
      "prered_unguarded_crafted_skew_max",
@@ -1285,7 +1285,7 @@
     "spare_proven": 434,
     "spare_observed": 436,
     "lemma_violations": 0,
-    "oracle_checked": 657,
+    "oracle_checked": 2517,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -1314,7 +1314,7 @@
      },
      "j-part sums before x p": {
       "proven": 1351,
-      "observed": 1320
+      "observed": 1323
      },
      "norms N4 and partial sums": {
       "proven": 1677,
@@ -1322,11 +1322,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 10
+      "observed": 12
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 74
+      "observed": 76
      },
      "cleanup exact quotient |m|": {
       "proven": 839,
@@ -1334,19 +1334,19 @@
      },
      "cleanup rounding numerator 2h + nu": {
       "proven": 1678,
-      "observed": 1002
+      "observed": 1003
      },
      "cleanup rounding denominator 2 nu": {
       "proven": 1678,
-      "observed": 1002
+      "observed": 1003
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 1677,
-      "observed": 1007
+      "observed": 1006
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 1678,
-      "observed": 1008
+      "observed": 1007
      }
     }
    }
@@ -1360,37 +1360,37 @@
  "p376": {
   "guard_stats": {
    "sampled": [
-    193,
-    57
+    777,
+    223
    ],
    "crafted_skew_max": [
     0,
-    75
+    300
    ],
    "crafted_edge_fail": [
     0,
-    75
+    300
    ],
    "crafted_edge_pass": [
-    67,
-    8
+    273,
+    27
    ]
   },
   "guard_rate": {
-   "n": 2500,
+   "n": 10000,
    "rejected": {
-    "2": 584,
-    "4": 138,
-    "16": 11,
+    "2": 2141,
+    "4": 474,
+    "16": 30,
     "256": 0,
     "65536": 0
    },
-   "max_nrd_v_over_sqrtp_N": 38.82419647411908
+   "max_nrd_v_over_sqrtp_N": 72.40327870831293
   },
-  "seconds": 48.9,
+  "seconds": 191.9,
   "variants": {
    "model:sign_generic": {
-    "n": 2409,
+    "n": 9609,
     "families": [
      "model_nvar",
      "model_nbound",
@@ -1411,9 +1411,9 @@
     "spare_proven": 487,
     "spare_observed": 489,
     "lemma_violations": 0,
-    "oracle_checked": 659,
+    "oracle_checked": 2609,
     "oracle_fail": 0,
-    "saturated_quotients": 225671,
+    "saturated_quotients": 894671,
     "max_log2_Mmax_over_M0": 0.0,
     "fsr_checked": 20,
     "fsr_mismatch": 0,
@@ -1477,7 +1477,7 @@
     }
    },
    "O0:sign_generic": {
-    "n": 903,
+    "n": 3603,
     "families": [
      "O0_nbound",
      "O0_maxnorm",
@@ -1492,7 +1492,7 @@
     "spare_proven": 485,
     "spare_observed": 487,
     "lemma_violations": 0,
-    "oracle_checked": 341,
+    "oracle_checked": 1353,
     "oracle_fail": 0,
     "saturated_quotients": 890,
     "max_log2_Mmax_over_M0": 0.0,
@@ -1558,7 +1558,7 @@
     }
    },
    "model:Iq_only": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "Iq_only"
     ],
@@ -1570,7 +1570,7 @@
     "spare_proven": 935,
     "spare_observed": 937,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -1599,7 +1599,7 @@
      },
      "j-part sums before x p": {
       "proven": 1113,
-      "observed": 557
+      "observed": 558
      },
      "norms N4 and partial sums": {
       "proven": 1496,
@@ -1607,11 +1607,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 6
+      "observed": 5
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 71
+      "observed": 70
      },
      "cleanup exact quotient |m|": {
       "proven": 748,
@@ -1619,24 +1619,24 @@
      },
      "cleanup rounding numerator 2h + nu": {
       "proven": 1497,
-      "observed": 939
+      "observed": 940
      },
      "cleanup rounding denominator 2 nu": {
       "proven": 1497,
-      "observed": 939
+      "observed": 940
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 1496,
-      "observed": 939
+      "observed": 941
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 1497,
-      "observed": 940
+      "observed": 942
      }
     }
    },
    "model:keygen_D": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "keygen_D"
     ],
@@ -1648,7 +1648,7 @@
     "spare_proven": 893,
     "spare_observed": 895,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -1677,7 +1677,7 @@
      },
      "j-part sums before x p": {
       "proven": 1155,
-      "observed": 581
+      "observed": 583
      },
      "norms N4 and partial sums": {
       "proven": 1538,
@@ -1685,11 +1685,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 9
+      "observed": 13
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 74
+      "observed": 77
      },
      "cleanup exact quotient |m|": {
       "proven": 769,
@@ -1705,16 +1705,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 1538,
-      "observed": 964
+      "observed": 965
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 1539,
-      "observed": 965
+      "observed": 966
      }
     }
    },
    "O0:keygen_D": {
-    "n": 125,
+    "n": 500,
     "families": [
      "keygen_D_O0"
     ],
@@ -1726,7 +1726,7 @@
     "spare_proven": 891,
     "spare_observed": 893,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -1755,19 +1755,19 @@
      },
      "j-part sums before x p": {
       "proven": 1157,
-      "observed": 581
+      "observed": 582
      },
      "norms N4 and partial sums": {
       "proven": 1540,
-      "observed": 1536
+      "observed": 1537
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 10
+      "observed": 13
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 74
+      "observed": 77
      },
      "cleanup exact quotient |m|": {
       "proven": 770,
@@ -1783,16 +1783,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 1540,
-      "observed": 963
+      "observed": 965
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 1541,
-      "observed": 964
+      "observed": 966
      }
     }
    },
    "model:keygen_prereduce_Isec": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "keygen_prereduce_Isec"
     ],
@@ -1804,7 +1804,7 @@
     "spare_proven": 1981,
     "spare_observed": 1983,
     "lemma_violations": 0,
-    "oracle_checked": 250,
+    "oracle_checked": 1000,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -1833,7 +1833,7 @@
      },
      "j-part sums before x p": {
       "proven": 67,
-      "observed": 35
+      "observed": 38
      },
      "norms N4 and partial sums": {
       "proven": 450,
@@ -1841,11 +1841,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 6
+      "observed": 7
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 71
+      "observed": 72
      },
      "cleanup exact quotient |m|": {
       "proven": 225,
@@ -1861,16 +1861,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 450,
-      "observed": 418
+      "observed": 420
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 451,
-      "observed": 419
+      "observed": 421
      }
     }
    },
    "model:sign_prereduced_guarded": {
-    "n": 780,
+    "n": 3150,
     "families": [
      "prered_guarded_sampled",
      "prered_guarded_crafted_edge_pass"
@@ -1883,7 +1883,7 @@
     "spare_proven": 520,
     "spare_observed": 522,
     "lemma_violations": 0,
-    "oracle_checked": 780,
+    "oracle_checked": 3150,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -1920,11 +1920,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 10
+      "observed": 14
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 75
+      "observed": 78
      },
      "cleanup exact quotient |m|": {
       "proven": 956,
@@ -1949,7 +1949,7 @@
     }
    },
    "model:sign_prereduced_unguarded_generic": {
-    "n": 645,
+    "n": 2550,
     "families": [
      "prered_unguarded_sampled",
      "prered_unguarded_crafted_skew_max",
@@ -1964,7 +1964,7 @@
     "spare_proven": 488,
     "spare_observed": 490,
     "lemma_violations": 0,
-    "oracle_checked": 645,
+    "oracle_checked": 2550,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -1993,7 +1993,7 @@
      },
      "j-part sums before x p": {
       "proven": 1560,
-      "observed": 1528
+      "observed": 1530
      },
      "norms N4 and partial sums": {
       "proven": 1943,
@@ -2001,11 +2001,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 10
+      "observed": 11
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 75
+      "observed": 76
      },
      "cleanup exact quotient |m|": {
       "proven": 972,
@@ -2021,11 +2021,11 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 1943,
-      "observed": 1166
+      "observed": 1169
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 1944,
-      "observed": 1167
+      "observed": 1170
      }
     }
    }
@@ -2039,37 +2039,37 @@
  "p500": {
   "guard_stats": {
    "sampled": [
-    194,
-    56
+    797,
+    203
    ],
    "crafted_skew_max": [
     0,
-    75
+    300
    ],
    "crafted_edge_fail": [
     0,
-    75
+    300
    ],
    "crafted_edge_pass": [
-    70,
-    5
+    283,
+    17
    ]
   },
   "guard_rate": {
-   "n": 2500,
+   "n": 10000,
    "rejected": {
-    "2": 544,
-    "4": 128,
-    "16": 9,
+    "2": 2232,
+    "4": 519,
+    "16": 34,
     "256": 0,
     "65536": 0
    },
-   "max_nrd_v_over_sqrtp_N": 174.26425935269577
+   "max_nrd_v_over_sqrtp_N": 111.87055256055032
   },
-  "seconds": 85.2,
+  "seconds": 304.0,
   "variants": {
    "model:sign_generic": {
-    "n": 2409,
+    "n": 9609,
     "families": [
      "model_nvar",
      "model_nbound",
@@ -2090,9 +2090,9 @@
     "spare_proven": 573,
     "spare_observed": 575,
     "lemma_violations": 0,
-    "oracle_checked": 659,
+    "oracle_checked": 2609,
     "oracle_fail": 0,
-    "saturated_quotients": 297017,
+    "saturated_quotients": 1177517,
     "max_log2_Mmax_over_M0": 0.0,
     "fsr_checked": 20,
     "fsr_mismatch": 0,
@@ -2156,7 +2156,7 @@
     }
    },
    "O0:sign_generic": {
-    "n": 903,
+    "n": 3603,
     "families": [
      "O0_nbound",
      "O0_maxnorm",
@@ -2171,7 +2171,7 @@
     "spare_proven": 571,
     "spare_observed": 573,
     "lemma_violations": 0,
-    "oracle_checked": 341,
+    "oracle_checked": 1353,
     "oracle_fail": 0,
     "saturated_quotients": 1172,
     "max_log2_Mmax_over_M0": 0.0,
@@ -2237,7 +2237,7 @@
     }
    },
    "model:Iq_only": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "Iq_only"
     ],
@@ -2249,7 +2249,7 @@
     "spare_proven": 1143,
     "spare_observed": 1145,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -2266,7 +2266,7 @@
      },
      "quotient x coordinate (m u)": {
       "proven": 997,
-      "observed": 996
+      "observed": 995
      },
      "update temporaries a = mu u": {
       "proven": 997,
@@ -2278,7 +2278,7 @@
      },
      "j-part sums before x p": {
       "proven": 1487,
-      "observed": 744
+      "observed": 743
      },
      "norms N4 and partial sums": {
       "proven": 1992,
@@ -2286,11 +2286,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 6
+      "observed": 7
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 70
+      "observed": 72
      },
      "cleanup exact quotient |m|": {
       "proven": 996,
@@ -2298,7 +2298,7 @@
      },
      "cleanup rounding numerator 2h + nu": {
       "proven": 1993,
-      "observed": 1248
+      "observed": 1249
      },
      "cleanup rounding denominator 2 nu": {
       "proven": 1993,
@@ -2306,16 +2306,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 1992,
-      "observed": 1250
+      "observed": 1249
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 1993,
-      "observed": 1251
+      "observed": 1250
      }
     }
    },
    "model:keygen_D": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "keygen_D"
     ],
@@ -2327,7 +2327,7 @@
     "spare_proven": 1085,
     "spare_observed": 1087,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -2356,15 +2356,15 @@
      },
      "j-part sums before x p": {
       "proven": 1545,
-      "observed": 775
+      "observed": 777
      },
      "norms N4 and partial sums": {
       "proven": 2050,
-      "observed": 2046
+      "observed": 2047
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 9
+      "observed": 10
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
@@ -2384,16 +2384,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 2050,
-      "observed": 1282
+      "observed": 1283
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 2051,
-      "observed": 1283
+      "observed": 1284
      }
     }
    },
    "O0:keygen_D": {
-    "n": 125,
+    "n": 500,
     "families": [
      "keygen_D_O0"
     ],
@@ -2405,7 +2405,7 @@
     "spare_proven": 1083,
     "spare_observed": 1085,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -2434,15 +2434,15 @@
      },
      "j-part sums before x p": {
       "proven": 1547,
-      "observed": 776
+      "observed": 779
      },
      "norms N4 and partial sums": {
       "proven": 2052,
-      "observed": 2048
+      "observed": 2049
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 9
+      "observed": 10
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
@@ -2462,16 +2462,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 2052,
-      "observed": 1282
+      "observed": 1285
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 2053,
-      "observed": 1283
+      "observed": 1286
      }
     }
    },
    "model:keygen_prereduce_Isec": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "keygen_prereduce_Isec"
     ],
@@ -2483,7 +2483,7 @@
     "spare_proven": 2563,
     "spare_observed": 2565,
     "lemma_violations": 0,
-    "oracle_checked": 250,
+    "oracle_checked": 1000,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -2512,7 +2512,7 @@
      },
      "j-part sums before x p": {
       "proven": 67,
-      "observed": 35
+      "observed": 38
      },
      "norms N4 and partial sums": {
       "proven": 572,
@@ -2520,11 +2520,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 8
+      "observed": 9
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 72
+      "observed": 73
      },
      "cleanup exact quotient |m|": {
       "proven": 286,
@@ -2540,16 +2540,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 572,
-      "observed": 540
+      "observed": 543
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 573,
-      "observed": 541
+      "observed": 544
      }
     }
    },
    "model:sign_prereduced_guarded": {
-    "n": 792,
+    "n": 3240,
     "families": [
      "prered_guarded_sampled",
      "prered_guarded_crafted_edge_pass"
@@ -2562,7 +2562,7 @@
     "spare_proven": 606,
     "spare_observed": 607,
     "lemma_violations": 0,
-    "oracle_checked": 792,
+    "oracle_checked": 3240,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -2579,7 +2579,7 @@
      },
      "quotient x coordinate (m u)": {
       "proven": 1265,
-      "observed": 1264
+      "observed": 1265
      },
      "update temporaries a = mu u": {
       "proven": 1265,
@@ -2599,11 +2599,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 13
+      "observed": 11
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 77
+      "observed": 75
      },
      "cleanup exact quotient |m|": {
       "proven": 1265,
@@ -2619,16 +2619,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 2529,
-      "observed": 1540
+      "observed": 1538
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 2530,
-      "observed": 1541
+      "observed": 1539
      }
     }
    },
    "model:sign_prereduced_unguarded_generic": {
-    "n": 633,
+    "n": 2460,
     "families": [
      "prered_unguarded_sampled",
      "prered_unguarded_crafted_skew_max",
@@ -2643,7 +2643,7 @@
     "spare_proven": 574,
     "spare_observed": 576,
     "lemma_violations": 0,
-    "oracle_checked": 633,
+    "oracle_checked": 2460,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -2672,7 +2672,7 @@
      },
      "j-part sums before x p": {
       "proven": 2056,
-      "observed": 2023
+      "observed": 2027
      },
      "norms N4 and partial sums": {
       "proven": 2561,
@@ -2680,11 +2680,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 9
+      "observed": 11
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 74
+      "observed": 75
      },
      "cleanup exact quotient |m|": {
       "proven": 1281,
@@ -2700,11 +2700,11 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 2561,
-      "observed": 1538
+      "observed": 1537
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 2562,
-      "observed": 1539
+      "observed": 1538
      }
     }
    }
@@ -2718,37 +2718,37 @@
  "p664": {
   "guard_stats": {
    "sampled": [
-    199,
-    51
+    759,
+    241
    ],
    "crafted_skew_max": [
     0,
-    75
+    300
    ],
    "crafted_edge_fail": [
     0,
-    75
+    300
    ],
    "crafted_edge_pass": [
-    69,
-    6
+    274,
+    26
    ]
   },
   "guard_rate": {
-   "n": 2500,
+   "n": 10000,
    "rejected": {
-    "2": 578,
-    "4": 139,
-    "16": 11,
+    "2": 2272,
+    "4": 548,
+    "16": 32,
     "256": 0,
     "65536": 0
    },
-   "max_nrd_v_over_sqrtp_N": 81.84979185083455
+   "max_nrd_v_over_sqrtp_N": 153.7141724110878
   },
-  "seconds": 125.8,
+  "seconds": 578.0,
   "variants": {
    "model:sign_generic": {
-    "n": 2409,
+    "n": 9609,
     "families": [
      "model_nvar",
      "model_nbound",
@@ -2769,9 +2769,9 @@
     "spare_proven": 777,
     "spare_observed": 779,
     "lemma_violations": 0,
-    "oracle_checked": 659,
+    "oracle_checked": 2609,
     "oracle_fail": 0,
-    "saturated_quotients": 391133,
+    "saturated_quotients": 1550633,
     "max_log2_Mmax_over_M0": 0.0,
     "fsr_checked": 20,
     "fsr_mismatch": 0,
@@ -2835,7 +2835,7 @@
     }
    },
    "O0:sign_generic": {
-    "n": 903,
+    "n": 3603,
     "families": [
      "O0_nbound",
      "O0_maxnorm",
@@ -2850,7 +2850,7 @@
     "spare_proven": 775,
     "spare_observed": 777,
     "lemma_violations": 0,
-    "oracle_checked": 341,
+    "oracle_checked": 1353,
     "oracle_fail": 0,
     "saturated_quotients": 1544,
     "max_log2_Mmax_over_M0": 0.0,
@@ -2916,7 +2916,7 @@
     }
    },
    "model:Iq_only": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "Iq_only"
     ],
@@ -2928,7 +2928,7 @@
     "spare_proven": 1511,
     "spare_observed": 1513,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -2945,7 +2945,7 @@
      },
      "quotient x coordinate (m u)": {
       "proven": 1325,
-      "observed": 1324
+      "observed": 1323
      },
      "update temporaries a = mu u": {
       "proven": 1325,
@@ -2957,7 +2957,7 @@
      },
      "j-part sums before x p": {
       "proven": 1979,
-      "observed": 990
+      "observed": 991
      },
      "norms N4 and partial sums": {
       "proven": 2648,
@@ -2994,7 +2994,7 @@
     }
    },
    "model:keygen_D": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "keygen_D"
     ],
@@ -3006,7 +3006,7 @@
     "spare_proven": 1085,
     "spare_observed": 1087,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -3035,7 +3035,7 @@
      },
      "j-part sums before x p": {
       "proven": 2405,
-      "observed": 1206
+      "observed": 1207
      },
      "norms N4 and partial sums": {
       "proven": 3074,
@@ -3043,11 +3043,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 8
+      "observed": 10
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 73
+      "observed": 75
      },
      "cleanup exact quotient |m|": {
       "proven": 1537,
@@ -3072,7 +3072,7 @@
     }
    },
    "O0:keygen_D": {
-    "n": 125,
+    "n": 500,
     "families": [
      "keygen_D_O0"
     ],
@@ -3084,7 +3084,7 @@
     "spare_proven": 1083,
     "spare_observed": 1085,
     "lemma_violations": 0,
-    "oracle_checked": 125,
+    "oracle_checked": 500,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -3113,7 +3113,7 @@
      },
      "j-part sums before x p": {
       "proven": 2407,
-      "observed": 1207
+      "observed": 1208
      },
      "norms N4 and partial sums": {
       "proven": 3076,
@@ -3121,7 +3121,7 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 9
+      "observed": 10
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
@@ -3141,16 +3141,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 3076,
-      "observed": 1875
+      "observed": 1877
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 3077,
-      "observed": 1876
+      "observed": 1878
      }
     }
    },
    "model:keygen_prereduce_Isec": {
-    "n": 250,
+    "n": 1000,
     "families": [
      "keygen_prereduce_Isec"
     ],
@@ -3162,7 +3162,7 @@
     "spare_proven": 3423,
     "spare_observed": 3425,
     "lemma_violations": 0,
-    "oracle_checked": 250,
+    "oracle_checked": 1000,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -3191,7 +3191,7 @@
      },
      "j-part sums before x p": {
       "proven": 67,
-      "observed": 36
+      "observed": 37
      },
      "norms N4 and partial sums": {
       "proven": 736,
@@ -3203,7 +3203,7 @@
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 72
+      "observed": 73
      },
      "cleanup exact quotient |m|": {
       "proven": 368,
@@ -3219,95 +3219,16 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 736,
-      "observed": 705
+      "observed": 706
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 737,
-      "observed": 706
-     }
-    }
-   },
-   "model:sign_prereduced_guarded": {
-    "n": 804,
-    "families": [
-     "prered_guarded_sampled",
-     "prered_guarded_crafted_edge_pass"
-    ],
-    "proven_max_bits": 3350,
-    "M0_bits": 3349,
-    "observed_max_bits": 3349,
-    "observed_max_bits_excl_input": 3347,
-    "width": 4160,
-    "spare_proven": 810,
-    "spare_observed": 811,
-    "lemma_violations": 0,
-    "oracle_checked": 804,
-    "oracle_fail": 0,
-    "saturated_quotients": 0,
-    "max_log2_Mmax_over_M0": 0.0,
-    "fsr_checked": 0,
-    "fsr_mismatch": 0,
-    "classes": {
-     "starting norms N4 (in)": {
-      "proven": 3349,
-      "observed": 3349
-     },
-     "coordinates, step and conversion": {
-      "proven": 1675,
-      "observed": 1674
-     },
-     "quotient x coordinate (m u)": {
-      "proven": 1675,
-      "observed": 1674
-     },
-     "update temporaries a = mu u": {
-      "proven": 1675,
-      "observed": 1674
-     },
-     "Hermitian products / partial sums / h": {
-      "proven": 3349,
-      "observed": 3347
-     },
-     "j-part sums before x p": {
-      "proven": 2680,
-      "observed": 2679
-     },
-     "norms N4 and partial sums": {
-      "proven": 3349,
-      "observed": 3345
-     },
-     "64-bit quotient |m|": {
-      "proven": 63,
-      "observed": 11
-     },
-     "64-bit quotient internals (hs, num)": {
-      "proven": 126,
-      "observed": 75
-     },
-     "cleanup exact quotient |m|": {
-      "proven": 1675,
-      "observed": 0
-     },
-     "cleanup rounding numerator 2h + nu": {
-      "proven": 3350,
-      "observed": 2026
-     },
-     "cleanup rounding denominator 2 nu": {
-      "proven": 3350,
-      "observed": 2026
-     },
-     "4-D Gram entries (N4 scale)": {
-      "proven": 3349,
-      "observed": 2029
-     },
-     "4-D Gram entries (reference 2x scale)": {
-      "proven": 3350,
-      "observed": 2030
+      "observed": 707
      }
     }
    },
    "model:sign_prereduced_unguarded_generic": {
-    "n": 621,
+    "n": 2601,
     "families": [
      "prered_unguarded_sampled",
      "prered_unguarded_crafted_skew_max",
@@ -3322,7 +3243,7 @@
     "spare_proven": 778,
     "spare_observed": 780,
     "lemma_violations": 0,
-    "oracle_checked": 621,
+    "oracle_checked": 2601,
     "oracle_fail": 0,
     "saturated_quotients": 0,
     "max_log2_Mmax_over_M0": 0.0,
@@ -3351,7 +3272,7 @@
      },
      "j-part sums before x p": {
       "proven": 2712,
-      "observed": 2681
+      "observed": 2682
      },
      "norms N4 and partial sums": {
       "proven": 3381,
@@ -3359,11 +3280,11 @@
      },
      "64-bit quotient |m|": {
       "proven": 63,
-      "observed": 11
+      "observed": 12
      },
      "64-bit quotient internals (hs, num)": {
       "proven": 126,
-      "observed": 76
+      "observed": 77
      },
      "cleanup exact quotient |m|": {
       "proven": 1691,
@@ -3379,11 +3300,90 @@
      },
      "4-D Gram entries (N4 scale)": {
       "proven": 3381,
-      "observed": 2028
+      "observed": 2029
      },
      "4-D Gram entries (reference 2x scale)": {
       "proven": 3382,
-      "observed": 2029
+      "observed": 2030
+     }
+    }
+   },
+   "model:sign_prereduced_guarded": {
+    "n": 3099,
+    "families": [
+     "prered_guarded_sampled",
+     "prered_guarded_crafted_edge_pass"
+    ],
+    "proven_max_bits": 3350,
+    "M0_bits": 3349,
+    "observed_max_bits": 3349,
+    "observed_max_bits_excl_input": 3347,
+    "width": 4160,
+    "spare_proven": 810,
+    "spare_observed": 811,
+    "lemma_violations": 0,
+    "oracle_checked": 3099,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 3349,
+      "observed": 3349
+     },
+     "coordinates, step and conversion": {
+      "proven": 1675,
+      "observed": 1674
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 1675,
+      "observed": 1674
+     },
+     "update temporaries a = mu u": {
+      "proven": 1675,
+      "observed": 1675
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 3349,
+      "observed": 3347
+     },
+     "j-part sums before x p": {
+      "proven": 2680,
+      "observed": 2679
+     },
+     "norms N4 and partial sums": {
+      "proven": 3349,
+      "observed": 3345
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 11
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 76
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 1675,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 3350,
+      "observed": 2026
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 3350,
+      "observed": 2026
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 3349,
+      "observed": 2030
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 3350,
+      "observed": 2031
      }
     }
    }
