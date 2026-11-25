@@ -1,0 +1,18 @@
+== (a) symbolic (Sage, ZZ[T, x, y, p])
+  O0 numerators  U = (2T,0,0,0), V = (x,y,1,0): Delta = 2^2 * p * T^2
+  model order    U = (T,0,0,0),  V = (x,y,1,0): Delta = p * T^2
+  Delta is invariant under v <- v - m0 u - m1 iu and under the swap (general u, v, m: checked)
+  general: Delta(u, v) = p * (a2^2*b0^2 + a3^2*b0^2 + a2^2*b1^2 + a3^2*b1^2 - 2*a0*a2*b0*b2 - 2*a1*a3*b0*b2 - 2*a1*a2*b1*b2 + 2*a0*a3*b1*b2 + a0^2*b2^2 + a1^2*b2^2 + 2*a1*a2*b0*b3 - 2*a0*a3*b0*b3 - 2*a0*a2*b1*b3 - 2*a1*a3*b1*b3 + a0^2*b3^2 + a1^2*b3^2)
+  so Delta = 4 p T^2 for the O0 numerator basis: the finding is CONFIRMED; 16 p T^2 is refuted
+  (the O0 basis is not 2x the model basis: its j-numerator is 1, not 2)
+== (b) numerical, real O0 numerator bases (o0_basis), five random ideals per set and class
+  p248 sign T 649 b: Delta/(p T^2) = 4 (exact: True); after reduction 4
+  p248: 20/20 O0 bases have Delta = 4 p T^2 (not 16 p T^2), unchanged by reduction, and model Delta = p T^2; lambda_1 a multiple of 4T: 20/20
+  p324 sign T 838 b: Delta/(p T^2) = 4 (exact: True); after reduction 4
+  p324: 20/20 O0 bases have Delta = 4 p T^2 (not 16 p T^2), unchanged by reduction, and model Delta = p T^2; lambda_1 a multiple of 4T: 20/20
+  p376 sign T 971 b: Delta/(p T^2) = 4 (exact: True); after reduction 4
+  p376: 20/20 O0 bases have Delta = 4 p T^2 (not 16 p T^2), unchanged by reduction, and model Delta = p T^2; lambda_1 a multiple of 4T: 20/20
+  p500 sign T 1280 b: Delta/(p T^2) = 4 (exact: True); after reduction 4
+  p500: 20/20 O0 bases have Delta = 4 p T^2 (not 16 p T^2), unchanged by reduction, and model Delta = p T^2; lambda_1 a multiple of 4T: 20/20
+  p664 sign T 1690 b: Delta/(p T^2) = 4 (exact: True); after reduction 4
+  p664: 20/20 O0 bases have Delta = 4 p T^2 (not 16 p T^2), unchanged by reduction, and model Delta = p T^2; lambda_1 a multiple of 4T: 20/20

@@ -1,0 +1,40 @@
+== p248: 24/24 inputs reduced under exact (O0 T_exact) and exp64 (O0 T_exp64)
+  honest_sign_O0                     worst steps needed (excl. final size reduction)  173 of O0 T_exact 301
+  crafted_k1_O0                      worst steps needed (excl. final size reduction)    2 of O0 T_exact 301
+  challenge_O0                       worst steps needed (excl. final size reduction)  125 of O0 T_exact 212
+  keygen_Isec_O0                     worst steps needed (excl. final size reduction)   13 of O0 T_exact 22
+  keygen_D_O0                        worst steps needed (excl. final size reduction)  115 of O0 T_exact 223
+  rolletschek_conj_alt_at_O0_bound   worst steps needed (excl. final size reduction)  276 of O0 T_exact 301
+  rolletschek_i_rot_at_O0_bound      worst steps needed (excl. final size reduction)  276 of O0 T_exact 301
+== p324: 24/24 inputs reduced under exact (O0 T_exact) and exp64 (O0 T_exp64)
+  honest_sign_O0                     worst steps needed (excl. final size reduction)  224 of O0 T_exact 387
+  crafted_k1_O0                      worst steps needed (excl. final size reduction)    2 of O0 T_exact 387
+  challenge_O0                       worst steps needed (excl. final size reduction)  161 of O0 T_exact 276
+  keygen_Isec_O0                     worst steps needed (excl. final size reduction)   13 of O0 T_exact 22
+  keygen_D_O0                        worst steps needed (excl. final size reduction)  198 of O0 T_exact 347
+  rolletschek_conj_alt_at_O0_bound   worst steps needed (excl. final size reduction)  355 of O0 T_exact 387
+  rolletschek_i_rot_at_O0_bound      worst steps needed (excl. final size reduction)  355 of O0 T_exact 387
+== p376: 24/24 inputs reduced under exact (O0 T_exact) and exp64 (O0 T_exp64)
+  honest_sign_O0                     worst steps needed (excl. final size reduction)  258 of O0 T_exact 447
+  crafted_k1_O0                      worst steps needed (excl. final size reduction)    2 of O0 T_exact 447
+  challenge_O0                       worst steps needed (excl. final size reduction)  181 of O0 T_exact 319
+  keygen_Isec_O0                     worst steps needed (excl. final size reduction)   13 of O0 T_exact 23
+  keygen_D_O0                        worst steps needed (excl. final size reduction)  181 of O0 T_exact 331
+  rolletschek_conj_alt_at_O0_bound   worst steps needed (excl. final size reduction)  410 of O0 T_exact 447
+  rolletschek_i_rot_at_O0_bound      worst steps needed (excl. final size reduction)  410 of O0 T_exact 447
+== p500: 24/24 inputs reduced under exact (O0 T_exact) and exp64 (O0 T_exp64)
+  honest_sign_O0                     worst steps needed (excl. final size reduction)  346 of O0 T_exact 587
+  crafted_k1_O0                      worst steps needed (excl. final size reduction)    2 of O0 T_exact 587
+  challenge_O0                       worst steps needed (excl. final size reduction)  238 of O0 T_exact 425
+  keygen_Isec_O0                     worst steps needed (excl. final size reduction)   14 of O0 T_exact 22
+  keygen_D_O0                        worst steps needed (excl. final size reduction)  241 of O0 T_exact 442
+  rolletschek_conj_alt_at_O0_bound   worst steps needed (excl. final size reduction)  541 of O0 T_exact 587
+  rolletschek_i_rot_at_O0_bound      worst steps needed (excl. final size reduction)  541 of O0 T_exact 587
+== p664: 24/24 inputs reduced under exact (O0 T_exact) and exp64 (O0 T_exp64)
+  honest_sign_O0                     worst steps needed (excl. final size reduction)  447 of O0 T_exact 774
+  crafted_k1_O0                      worst steps needed (excl. final size reduction)    2 of O0 T_exact 774
+  challenge_O0                       worst steps needed (excl. final size reduction)  328 of O0 T_exact 565
+  keygen_Isec_O0                     worst steps needed (excl. final size reduction)   13 of O0 T_exact 23
+  keygen_D_O0                        worst steps needed (excl. final size reduction)  384 of O0 T_exact 686
+  rolletschek_conj_alt_at_O0_bound   worst steps needed (excl. final size reduction)  714 of O0 T_exact 774
+  rolletschek_i_rot_at_O0_bound      worst steps needed (excl. final size reduction)  714 of O0 T_exact 774

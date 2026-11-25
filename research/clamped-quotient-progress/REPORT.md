@@ -9,6 +9,111 @@ P664. Research only: nothing here changes `dev`, the signer,
 `SIGNER_SPEC.md` or a parameter set, the production reducer is not
 implemented, and no constant-time claim is made.
 
+## Verification of the finding (added after Rick's review, t37u)
+
+**Rick's finding:** for the O0 numerator basis U = (2T,0,0,0),
+V = (x,y,1,0), the Hermitian determinant is Δ = 4pT², not the 16pT² this
+report assumed, so the O0-coordinate counts were understated. It was
+checked two independent ways before being relied on
+(`verify_finding.sage`, output in `results/verify_finding.txt`).
+
+- **(a) Symbolic, in Sage** (ZZ[T, x, y, p], with the reducer's exact
+  N4(v) = v0² + v1² + p(v2² + v3²) and herm h0 = v0u0 + v1u1 + p(v2u2 + v3u3),
+  h1 = v1u0 − v0u1 + p(v3u2 − v2u3), Δ = N4(U)N4(V) − h0² − h1²):
+  - O0 basis U = (2T,0,0,0), V = (x,y,1,0): **Δ = 2²·p·T² = 4pT²**;
+  - model basis U = (T,0,0,0), V = (x,y,1,0): Δ = pT²;
+  - Δ is invariant under v ← v − m0·u − m1·iu and under the swap
+    (checked for general u, v, m), so it is the same at every step.
+  - Reason: the O0 basis is not twice the model basis. Its j-numerator
+    is 1, not 2, so only U doubles: Δ scales by 4, not 16.
+- **(b) Numeric, on real O0 numerator bases** (`gen_inputs.o0_basis`)
+  at all 5 sets: 5 random ideals each of signing (random T, x, y, half
+  at the norm bound), challenge, keygen-D and keygen-I_sec, so 20 per
+  set and 100 in all. For **100/100**, Δ = 4pT² exactly and ≠ 16pT²,
+  Δ is unchanged after a full exact reduction, the matching model basis
+  has Δ = pT², and λ₁ is a multiple of 4T.
+
+**Verdict: the finding is confirmed**, with the factor exactly 4. It
+holds for every O0 input class, not some of them. The counts change only
+where the extra factor of 4 in Φ₁²/Δ crosses a step boundary.
+
+**Where the 16 came from.** The code that generates the inputs never uses
+Δ. `gen_inputs.py` lines 88–94 return
+`[2 * T, 0, 0, 0], [2 * c0, 2 * c1 + 1, 1, 0]`, the correct O0 basis.
+The count generator `progress_check.py`, as merged at `2b10431`, also
+never computes an O0 Δ. Its `classes()` docstring (lines 81–82) asserted:
+
+> `Model coordinates (N4 = nrd). O0 numerators scale A, C, Delta, lambda_1`
+> `by 4, 4, 16, 4, which leaves every ratio here unchanged.`
+
+On that basis it used the model ratio for both coordinate systems
+(line 95: `Fraction(4 * Tm * Tm, p)`, i.e. Φ₁²/Δ ≤ 4T²/p). This report
+repeated the claim on its old line 82: "N4 scales A, C, Δ and λ₁ by 4, 4,
+16 and 4, which leaves every ratio used here unchanged." So the
+assumption of 16pT² is **confirmed as what the generator used**. It is
+implicit in the docstring and the reuse of the model ratio; no line
+evaluates 16·p·T². (Line 107's `16 * p * Tq * Tq` is the unguarded
+model ratio 16pq², a different quantity, and is correct.) There is no
+other occurrence in the research tree. The certificates of
+`lagrange-tour-bound` and the published T_prov values are stated in
+model coordinates (Δ = pT²) and **remain correct for model-order
+inputs**.
+
+**What is affected, and what is recomputed.** In O0 coordinates A₀, C₀
+and λ₁ scale by 4 but Δ only by 4, so:
+- generic: Φ₁²/Δ ≤ 16T²/p (was taken as 4T²/p);
+- pre-reduced: 16F²q²; unguarded: 64pq²;
+- C₀/λ₁ is unchanged (≤ (8T² + p)/(4T));
+- the any-basis C₀ is 4× larger.
+
+That is one more bit of A₀/√Δ. The new `classes_o0()` in
+`progress_check.py` recomputes every class with integer arithmetic; the
+results are in table 1-O0 and table 2-O0 below. **Changed** (O0 count vs
+model count, exact contract):
+
+- signing generic: P376 447 (was 446), P664 774 (was 773);
+- pre-reduced guard 2: P376 429 (was 428);
+- unguarded: P324 462, P376 537, P500 713;
+- keygen-D: P500 442;
+- keygen I_sec: P376 and P664 23;
+- challenge: P248 212.
+
+Each is +1, and exp64 counts move with them. E never changes, so
+nothing else moves. **P500 signing is unchanged: 587 exact, 598 exp64,
+609 any-basis.**
+
+**Not affected:**
+- the model-coordinate counts (all published values are still
+  reproduced and asserted);
+- the certificates (ρ₁, ρ₂, tail);
+- the clamp verdicts and the counterexample;
+- the exp64 proof (it is per-step, independent of coordinates);
+- E;
+- Q5's width results (they hold for any step count);
+- the Rust cross-check (model coordinates).
+
+**Empirical cross-check** (`verify_o0_counts.py`,
+`results/verify_o0_counts.txt`): 24 O0 inputs per set (honest signing,
+crafted k = 1, challenge, keygen I_sec and D) plus Rolletschek worst-case
+chains built at the O0 signing bound (model shape at size 2^(Tbits+1),
+so A₀ = 4T² and Δ = 4pT²). All 120 reduce under the exact contract at the
+O0 T_exact and under exp64 at the O0 T_exp64. The chains need
+276 / 355 / 410 / 541 / 714 steps. At the model bound they need
+275 / 355 / 410 / 541 / 713, so they gain a step at P248 and P664, as
+the extra bit predicts. This confirms the model counts are not certified
+for O0 inputs, even though in sampling they still had slack.
+
+**Which table the signer needs.** The signer stores bases as O0
+numerators (SIGNER_SPEC Q1), so the O0 tables are the signer's. The
+model tables apply only to a reducer that works on model-order
+coordinates (as the Rust prototype does). The CT gate draft on
+`experiment/ct-feasibility-gate` cites the model T_prov values; it is not
+edited here (see decision 6).
+
+Tooling note: the Sage CLI only failed because the env's bin directory
+was not on PATH (GAP lookup); `PATH=<env>/bin:$PATH sage
+verify_finding.sage` runs it.
+
 ## Summary
 
 - **The reduction contract is what `T_prov` was certified under.** Rick's
@@ -66,9 +171,12 @@ implemented, and no constant-time claim is made.
   deterministically, and it conflicts with O33's "unreachable by proof". A
   wide fixed-size quotient is either unsafe (a 128-bit clamp fails) or must
   hold about 2^(bits(T)/2), which is the exact-quotient cost.
-- **Recommendation.** Adopt the exact contract's counts (table 1) as the
-  public step counts, and `exp64` as the bounded-precision quotient that
-  realises them, with the counts of table 2, dropping the exact cleanup step.
+- **Recommendation.** Adopt the exact contract's counts as the public
+  step counts, **taken from table 1-O0 for the signer's O0 representation**
+  (table 1 is model-order only). Use `exp64` as the bounded-precision
+  quotient that realises them, with the counts of table 2-O0, and drop
+  the exact cleanup step. At P500 the O0 and model signing counts
+  coincide (587 / 598 / 609).
   Constant-time cost: prism-int needs a secret bit length, secret-amount
   shifts in both directions, a fixed-iteration 128/64 division and an
   N-limb scalar multiply (section 7).
@@ -78,11 +186,13 @@ implemented, and no constant-time claim is made.
 Counts are the number of fixed steps after the initial strict swap. Every
 row covers the final size reduction after the last swap: after the
 schedule, u is a shortest vector and v is size-reduced against it
-(|h_j| ≤ A/2, N4(u) ≤ N4(v)). The coordinate system (model order or O0
-numerators) does not change any count: N4 scales A, C, Δ and λ₁ by 4, 4,
-16 and 4, which leaves every ratio used here unchanged.
+(|h_j| ≤ A/2, N4(u) ≤ N4(v)). **The coordinate system matters.** Tables 1
+and 2 are in model-order coordinates (Δ = pT²). Tables 1-O0 and 2-O0 are in
+O0 numerators (Δ = 4pT², N4 = 4·nrd), which is the signer's
+representation. (An earlier version of this report said the coordinates
+do not matter; that was wrong; see "Verification of the finding".)
 
-**Table 1. Exact contract (round-half-up at full width, strict swaps)**
+**Table 1. Exact contract (round-half-up at full width, strict swaps), model-order coordinates**
 
 | Admitted input class | Bound used | P248 | P324 | P376 | P500 | P664 | Source |
 |---|---|---:|---:|---:|---:|---:|---|
@@ -94,12 +204,24 @@ numerators) does not change any count: N4 scales A, C, Δ and λ₁ by 4, 4,
 | Keygen pre-reduction (or decode-time reduction) of I_sec alone, Q4 | A₀ ≤ N², N < 2^B | 22 | 22 | 22 | 22 | 22 | new |
 | Challenge I_q alone (public input) | A₀ ≤ q², q < 2^(2e−5) | 211 | 276 | 319 | 425 | 565 | published, reproduced |
 
+**Table 1-O0. Exact contract, O0 numerator coordinates (the signer's representation)** (bold = differs from table 1)
+
+| Admitted input class | Bound used (O0) | P248 | P324 | P376 | P500 | P664 |
+|---|---|---:|---:|---:|---:|---:|
+| Signing, generic | A₀ ≤ 4T², Δ = 4pT² | 301 | 387 | **447** | 587 | **774** |
+| Signing, pre-reduced, guard 2 | A₀ ≤ 8√p·N·q², Δ = 4p(Nq)² | 283 | 369 | **429** | 569 | 755 |
+| Same, guard 256 | | 287 | 373 | 432 | 573 | 759 |
+| Same, unguarded | A₀ ≤ 8p·N·q² | 354 | **462** | **537** | **713** | 945 |
+| Key generation, norm D | A₀ ≤ 4D² | 223 | 347 | 331 | **442** | 686 |
+| Keygen pre-reduction of I_sec | A₀ ≤ 4N² | 22 | 22 | **23** | 22 | **23** |
+| Challenge alone | A₀ ≤ 4q² | **212** | 276 | 319 | 425 | 565 |
+
 A decoded pre-reduced basis has a public count only if the decoder checks
 N4(u_s) ≤ N4(v_s) ≤ the stated bound. Without that check A₀ is unbounded
 and no count holds. Bases of non-generic HNF shape are excluded by the key
 check of Q5 (lemma 5), not by these counts.
 
-**Table 2. `exp64` (bounded precision, this report), no cleanup step**
+**Table 2. `exp64` (bounded precision, this report), no cleanup step, model-order coordinates**
 
 | Class | E (valid ideal, λ₁ ≥ T) | P248 | P324 | P376 | P500 | P664 | Any integral basis (λ₁ ≥ 1) |
 |---|---|---:|---:|---:|---:|---:|---|
@@ -115,6 +237,18 @@ These counts also cover the final size reduction. The "any integral basis"
 column does not use λ₁ ≥ T, only that N4 of a nonzero vector is at least 1.
 It is the safe choice if the reducer may ever see a basis that is not
 exactly the ideal it claims to be (section 8). It costs 1% to 4% more steps.
+
+**Table 2-O0. `exp64`, O0 numerator coordinates** (E is unchanged from table 2; bold = differs)
+
+| Class | P248 | P324 | P376 | P500 | P664 | Any integral basis |
+|---|---:|---:|---:|---:|---:|---|
+| Signing, generic | 306 | 394 | **455** | 598 | **788** | 312 / 401 / **463** / 609 / **803** |
+| Signing, pre-reduced, guard 2 | 288 | 375 | **437** | 579 | 769 | 293 / 383 / **445** / 590 / 783 |
+| Signing, pre-reduced, guard 256 | 292 | 379 | 440 | 583 | 773 | 297 / 387 / 448 / 594 / 787 |
+| Signing, pre-reduced, unguarded | 360 | **470** | **546** | **725** | 962 | 365 / **477** / **555** / **736** / 976 |
+| Key generation, norm D | 227 | 353 | 337 | **450** | 699 | 231 / 360 / 344 / **459** / 712 |
+| Keygen pre-reduction of I_sec | 23 | 23 | **24** | 24 | **26** | 24 / 25 / **26** / 26 / **29** |
+| Challenge alone | **216** | 281 | 325 | 433 | 576 | **220** / 287 / 331 / 442 / 587 |
 
 **The 64-bit clamp of `rust-lagrange-ct` (T_prov steps plus an exact
 cleanup): no certified count exists.** Table 1's counts do not apply to it.
@@ -513,15 +647,25 @@ For the stage-2c section of `SIGNER_SPEC.md`, once Rick rules:
    the stored basis against the same factor.
 4. **prism-int additions** (section 7): a secret bit length, secret-amount
    shifts, a 128/64 division.
-5. **The key-generation count.** Use the norm-D count (441 at P500) rather
-   than the signing count that Q5 assumed (587). It is smaller, and it is
-   certified.
+5. **The key-generation count.** Use the norm-D count (442 at P500 in O0
+   coordinates, 441 in model order) rather than the signing count that Q5
+   assumed (587). It is smaller, and it is certified.
+6. **Coordinates of the public counts (from the verification).** Pin the
+   counts to the representation the reducer runs on. For O0 numerators,
+   use tables 1-O0 and 2-O0: +1 at P376 and P664 signing (447 / 774),
+   and P500 is unchanged. The CT-gate draft on
+   `experiment/ct-feasibility-gate` (SIGNER_SPEC §0.2 / §0.7) quotes the
+   model T_prov (301 / 387 / 446 / 587 / 773). It should either state
+   "model coordinates" or switch to the O0 values. It was not edited
+   here; Rick to rule.
 
 ## 10. Caveats
 
 - **The model and the signer.** Inputs are model-order ideals, with O0
-  versions for honest and `k = 1` inputs. No ideal from our own key
-  generation exists yet.
+  versions for honest and `k = 1` inputs. `adversarial.py` ran its O0
+  inputs at the model counts; all reduced, and `verify_o0_counts.py` re-ran
+  O0 inputs at the O0 counts. No ideal from our own key generation exists
+  yet.
 - **The certificate.** `certify.py` is trusted as re-run, not
   re-audited box by box. The integer recomputation covers only its final
   formula.

@@ -78,8 +78,11 @@ def float_bound(T_bits, p):
 def classes(P):
     """Admitted input classes. Each: (name, description, Phi1^2/Delta sup,
     C0/lambda_1 sup for E, C0 sup for E_general, published T_prov or None).
-    Model coordinates (N4 = nrd). O0 numerators scale A, C, Delta, lambda_1
-    by 4, 4, 16, 4, which leaves every ratio here unchanged."""
+    Model coordinates (N4 = nrd). The O0 rows are derived in classes_o0:
+    the first version of this file said here that O0 numerators scale A, C,
+    Delta, lambda_1 by 4, 4, 16, 4 and leave every ratio unchanged. That was
+    wrong (Rick, 2026-11-25; verify_finding.sage): for the O0 basis
+    (2T,0,0,0), (x,y,1,0) Delta = 4 p T^2, not 16 p T^2."""
     p, e, B = P['p'], P['e'], P['B']
     qb = 2 * e - 5
     Tsec = 1 << P['Tbits']; Tq = 1 << qb; TN = 1 << B
@@ -107,6 +110,27 @@ def classes(P):
     rows.append(('prered-unguarded', 'signing, pre-reduced, Minkowski bound nrd(v_s) <= 2 p N only', Fraction(16 * p * Tq * Tq),
                  Fraction((1 + Tq) ** 2 * 2 * p, Tq), (1 + Tq) ** 2 * 2 * p * TN, {'p248': 354, 'p324': 461, 'p376': 536, 'p500': 712, 'p664': 945}[P['name']]))
     return rows
+
+
+def classes_o0(P):
+    """The same classes on O0 numerators over 2 (SIGNER_SPEC Q1), the
+    representation the signer stores. N4 = 4 nrd, so A0, C0 and lambda_1 are
+    4x the model's (lambda_1 >= 4T), but Delta = 4 p T^2 (verify_finding.sage),
+    so Phi_1^2/Delta is 4x the model's: one more bit of A0/sqrt(Delta).
+    generic: A0 <= 4T^2 (U = (2T,0,0,0)), C0 <= 4(T-1)^2 + (2T-1)^2 + p < 8T^2 + p.
+    pre-reduced: N4(v_s) = 4 nrd(v_s), Delta = 4 p (N q)^2."""
+    out = []
+    for name, desc, phi, c0l, c0, pub in classes(P):
+        if name in ('sign-generic', 'challenge', 'keygen-Isec', 'keygen-D'):
+            Tm = {'sign-generic': 1 << P['Tbits'], 'challenge': 1 << (2 * P['e'] - 5), 'keygen-Isec': 1 << P['B'],
+                  'keygen-D': int(gmpy2.next_prime(1 << (2 * P['W'])))}[name]
+            p = P['p']
+            assert phi == Fraction(4 * Tm * Tm, p)
+            out.append((name + '@O0', desc + ' [O0 numerators]', Fraction(16 * Tm * Tm, p),
+                        Fraction(8 * Tm * Tm + p, 4 * Tm), 8 * Tm * Tm + p, None))
+        else:
+            out.append((name + '@O0', desc + ' [O0 numerators]', 4 * phi, c0l, 4 * c0, None))
+    return out
 
 
 def E_of(ratio):
@@ -146,13 +170,13 @@ def part_S_E():
     rows = []
     for s in SETS:
         P = params(s[0]); p = P['p']
-        for name, desc, phi_ratio, c0_over_lam, c0, pub in classes(P):
+        for name, desc, phi_ratio, c0_over_lam, c0, pub in classes(P) + classes_o0(P):
             S = s_max(phi_ratio)
             Tp = S + 5
             E = E_of(c0_over_lam)
             Eg = E_of(Fraction(c0))
             fl = None
-            if name in ('sign-generic', 'challenge', 'keygen-Isec', 'keygen-D'):
+            if name in ('sign-generic', 'challenge', 'keygen-Isec', 'keygen-D'):  # model rows only
                 Tb = {'sign-generic': P['Tbits'], 'challenge': 2 * P['e'] - 5, 'keygen-Isec': P['B'], 'keygen-D': 2 * P['W'] + 1}[name]
                 fl = float_bound(Tb, p)
             rows.append(dict(set=P['name'], cls=name, desc=desc, S_max=S, T_exact=Tp, published=pub,
