@@ -1,0 +1,7 @@
+1. admitted: numerator (A,C,h0,h1) = (100,100,40,90); normalized (10,10,4,9); det = 3 = p
+2. step 1: m=(0,1), swap -> U=(4,-1,1,0) N4=20; step 2: m=(2,1) [+1/2 tie] no swap -> V=(1,-2,-2,-1) N4=20; step 3: m=(0,0) [-1/2 tie], fixed point
+3. carried normalized Gram after the schedule: (A',C',h0',h1') = (2,2,0,-1); decisions match
+4. F (rows, U JU V JV) = [[1,0,0,0],[0,1,0,0],[0,-1,1,0],[1,0,0,1]]; identity holds on 13 probes; reduced
+5. after 1 step: N4(U)=20=lambda1 (shortest-vector test passes) but F20=4, F21=1=F00 -> terminal test fails; identity alone cannot see it
+6. sweep: 143064 (ideal, schedule length) runs: carried-Gram conversion == fresh form, identity holds, form test == coordinate terminal test
+7. constructor refuses: odd x, even y, 4T not dividing, even T, non-member, proper sublattice

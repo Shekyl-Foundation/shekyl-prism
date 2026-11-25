@@ -1,0 +1,1 @@
+exp64 word bounds (a)-(f) hold on 200440 operand pairs at Gram widths 11/14/16/21/27 limbs

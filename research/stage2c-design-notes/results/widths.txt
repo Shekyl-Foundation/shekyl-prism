@@ -1,0 +1,45 @@
+Per-class bounds (bits of magnitude):
+set   class               M0   9M0 coord  HNF n gen num  M0^2
+p248  sign-generic       652   655   653   1302    1302  1303
+p248  keygen-Isec        250   253   207    320     409   499
+p248  challenge          494   497   495    986     986   987
+p248  keygen-D           515   518   516   1028    1028  1029
+p248  prered-guard256    626   629   640      0    1276  1251
+p324  sign-generic       841   844   842   1680    1680  1681
+p324  keygen-Isec        325   328   263    394     521   650
+p324  challenge          646   649   647   1290    1290  1291
+p324  keygen-D           771   774   772   1540    1540  1541
+p324  prered-guard256    815   818   829      0    1654  1630
+p376  sign-generic       974   977   975   1946    1946  1947
+p376  keygen-Isec        382   385   306    452     607   763
+p376  challenge          750   753   751   1498    1498  1499
+p376  keygen-D           771   774   772   1540    1540  1541
+p376  prered-guard256    948   951   962      0    1920  1895
+p500  sign-generic      1283  1286  1284   2564    2564  2565
+p500  keygen-Isec        504   507   397    574     790  1008
+p500  challenge          998  1001   999   1994    1994  1995
+p500  keygen-D          1027  1030  1028   2052    2052  2053
+p500  prered-guard256   1257  1260  1271      0    2538  2513
+p664  sign-generic      1693  1696  1694   3384    3384  3385
+p664  keygen-Isec        668   671   520    738    1036  1335
+p664  challenge         1326  1329  1327   2650    2650  2651
+p664  keygen-D          1539  1542  1540   3076    3076  3077
+p664  prered-guard256   1667  1670  1681      0    3358  3333
+
+Limbs per buffer (from the bounds above):
+set   Gram W coord C ctor 2W num bits Q*T bits guard LIMBS
+p248      11      11      22     1303     1354    10    26
+p324      14      14      28     1681     1735    12    33
+p376      16      16      32     1947     1996    14    38
+p500      21      21      42     2565     2625    18    49
+p664      27      27      54     3385     3419    23    65
+
+Spare bits above the binding bound: p248 Gram 49 coord 51, p324 Gram 52 coord 54, p376 Gram 47 coord 49, p500 Gram 58 coord 60, p664 Gram 32 coord 34
+
+Stack census (bytes; estimate, NOTES.md 2.6). Split widths vs the single 2.1.2 width:
+set    state   step  reducer   ctor   PEAK | single-width PEAK
+p248    1152   1232     2576   4160   4160 |              6944
+p324    1440   1472     3152   5216   5216 |              8736
+p376    1632   1632     3536   5920   5920 |             10016
+p500    2112   2032     4496   7680   7680 |             12832
+p664    2688   2528     5664   9792   9792 |             16928
