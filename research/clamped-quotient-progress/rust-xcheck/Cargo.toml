@@ -16,7 +16,11 @@ num-integer = "0.1"
 num-traits = "0.2"
 libc = "0.2"
 
+[build-dependencies]
+cc = { version = "1", optional = true }
+
 [features]
+memcheck = ["dep:cc"]
 weak-barrier = []
 empirical = []
 

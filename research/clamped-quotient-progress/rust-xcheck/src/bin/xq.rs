@@ -160,6 +160,30 @@ fn bench_set<const C: usize, const N: usize, const PL: usize>(si: &SetInfo, reps
     );
 }
 
+// The research harness links rlc_secret from rust-lagrange-ct/ctgrind.
+#[cfg(feature = "memcheck")]
+fn memcheck<const C: usize, const N: usize, const PL: usize>(si: &SetInfo, control: bool) {
+    unsafe extern "C" {
+        fn rlc_secret(p: *mut u64, bytes: usize);
+    }
+    let pl: [u64; PL] = to_limbs(&si.p());
+    let rows = load(si.name);
+    for kind in ["honest", "crafted_q5"] {
+        let r = rows.iter().find(|r| r.kind == kind).expect("missing fixture");
+        let mut t = to_limbs::<C>(&r.t);
+        let mut x = to_limbs::<C>(&r.x);
+        let mut y = to_limbs::<C>(&r.y);
+        for v in [&mut t, &mut x, &mut y] {
+            // SAFETY: the helper annotates the initialized backing array for Memcheck.
+            unsafe { rlc_secret(v.as_mut_ptr(), std::mem::size_of_val(v)) };
+        }
+        if control && std::hint::black_box(t[0]) & 1 != 0 {
+            eprintln!("positive control");
+        }
+        std::hint::black_box(zi_exp::reduce_exp::<C, N, PL>(&t, &x, &y, &pl, r.steps));
+    }
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     match args.get(1).map(|s| s.as_str()) {
@@ -171,6 +195,15 @@ fn main() {
                 all &= with_set!(si.name, check_set, si);
             }
             println!("ALL {}", if all { "OK" } else { "FAILED" });
+            if !all {
+                std::process::exit(1);
+            }
+        }
+        #[cfg(feature = "memcheck")]
+        Some("memcheck") => {
+            let si = info(&args[2]);
+            let control = args.get(3).is_some_and(|value| value == "control");
+            with_set!(si.name, memcheck, si, control);
         }
         Some("bench") => {
             pin(std::env::var("RLC_CPU").ok().and_then(|s| s.parse().ok()).unwrap_or(6));

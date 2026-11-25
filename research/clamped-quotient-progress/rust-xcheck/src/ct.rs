@@ -218,13 +218,23 @@ pub fn bit_length<const N: usize>(a: &[u64; N]) -> u64 {
     bl
 }
 
+/// 2^bits for a secret bits in 0..64. Shift counts are public at all six stages.
+#[inline(always)]
+pub fn bit_scale(bits: u64) -> u64 {
+    let mut factor = 1u64;
+    for j in 0..6 {
+        factor = select(mask((bits >> j) & 1), factor << (1 << j), factor);
+    }
+    factor
+}
+
 /// a >> k for a secret k in [0, 64N): arithmetic (sign fill) if `arith`
 /// (public), else logical. Barrel shifter: every stage always executes.
 #[inline(always)]
 pub fn shr<const N: usize>(a: &[u64; N], k: u64, arith: bool) -> [u64; N] {
     let fill = if arith { sign_mask(a) } else { 0 };
     let ls = k >> 6;
-    let bs = (k & 63) as u32;
+    let scale = u128::from(bit_scale(63 - (k & 63)));
     let mut x = *a;
     let mut j = 0u32;
     while (1usize << j) < N {
@@ -237,10 +247,12 @@ pub fn shr<const N: usize>(a: &[u64; N], k: u64, arith: bool) -> [u64; N] {
         j += 1;
     }
     let mut r = [0u64; N];
-    for i in 0..N {
-        let next = if i + 1 < N { x[i + 1] } else { fill };
-        // (next << 1) << (63 - bs) is next << (64 - bs), and 0 when bs = 0
-        r[i] = (x[i] >> bs) | ((next << 1) << (63 - bs));
+    let mut carry = ((u128::from(fill) * scale) << 1) as u64;
+    for i in (0..N).rev() {
+        // 2*scale = 2^(64-bs), including 2^64 when bs = 0.
+        let wide = (u128::from(x[i]) * scale) << 1;
+        r[i] = (wide >> 64) as u64 | carry;
+        carry = wide as u64;
     }
     r
 }

@@ -2,8 +2,8 @@
 //
 // All rights reserved.
 // BSD-3-Clause
-//! ct.rs, sets.rs, zi.rs and exact.rs are copied unchanged from
-//! research/rust-lagrange-ct (research branch); zi_exp.rs is new.
+//! Fixed-limb primitives from the rust-lagrange-ct research prototype.
+//! The exp64 reducer carries its Gram matrix and uses masked power-of-two scaling.
 pub mod ct;
 pub mod exact;
 pub mod sets;

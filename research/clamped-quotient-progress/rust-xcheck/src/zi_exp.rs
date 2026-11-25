@@ -25,7 +25,7 @@ pub const T0: i64 = 60;
 #[inline(always)]
 pub fn shl<const L: usize>(a: &[u64; L], k: u64) -> [u64; L] {
     let ls = k >> 6;
-    let bs = (k & 63) as u32;
+    let scale = u128::from(bit_scale(k & 63));
     let mut x = *a;
     let mut j = 0u32;
     while (1usize << j) < L {
@@ -38,9 +38,11 @@ pub fn shl<const L: usize>(a: &[u64; L], k: u64) -> [u64; L] {
         j += 1;
     }
     let mut r = [0u64; L];
+    let mut carry = 0;
     for i in 0..L {
-        let prev = if i > 0 { x[i - 1] } else { 0 };
-        r[i] = (x[i] << bs) | ((prev >> 1) >> (63 - bs));
+        let wide = u128::from(x[i]) * scale;
+        r[i] = wide as u64 | carry;
+        carry = (wide >> 64) as u64;
     }
     r
 }
