@@ -105,9 +105,45 @@ Counts are P248 / P324 / P376 / P500 / P664.
 
 ## 5. Adversarial search
 
-SEARCH_TABLE
+Own hill climber (`hillclimb.py`) over integer Hermitian Gram matrices. This is a superset of every admitted class, because the certificate is claimed for any Gram with A₀²/Δ ≤ R₀. Inputs are backward chains of Gaussian quotients from a post-last-swap state, plus an optional big first quotient. Mutations: change or insert quotients, perturb the start, add a head. Need = slots until the fixed point under the exact rule and under exp64. The campaign was planned at 25 min (secret ideal), 20 min (signing) and 7 min (other classes) per cell. It was cut short when the session was interrupted: 13 cells finished, P500 has only 45-second probes, and P664 was not searched.
 
-## 6. Minimum adjustments
+| Set | Class | Seconds | Evaluations | Best need exact / count | Best need exp64 / count |
+|---|---|---:|---:|---|---|
+| p248 | challenge | 420 | 674559 | 195 / 197 | 195 / 197 |
+| p248 | keygen-D | 420 | 633617 | 206 / 208 | 206 / 208 |
+| p248 | keygen-Isec | 1500 | 16632391 | 20 / 21 | 20 / 21 |
+| p248 | prered-guard256 | 420 | 815155 | 220 / 267 | 220 / 267 |
+| p248 | sign-generic | 1200 | 1767092 | 278 / 280 | 278 / 280 |
+| p324 | challenge | 420 | 599875 | 255 / 257 | 255 / 257 |
+| p324 | keygen-D | 420 | 593829 | 321 / 323 | 321 / 323 |
+| p324 | keygen-Isec | 1500 | 16952342 | 20 / 21 | 20 / 22 |
+| p324 | prered-guard256 | 420 | 971279 | 316 / 347 | 316 / 347 |
+| p324 | sign-generic | 1200 | 1613575 | 357 / 360 | 357 / 360 |
+| p376 | challenge | 420 | 119230 | 294 / 297 | 294 / 297 |
+| p376 | keygen-D | 420 | 461681 | 306 / 308 | 306 / 308 |
+| p376 | prered-guard256 | 420 | 785310 | 386 / 402 | 386 / 402 |
+| p500 | sign-generic | 45 (probe) | 37,907 | 542 / 546 | 542 / 546 |
+| p500 | keygen-Isec | 45 (probe) | 514,138 | 20 / 21 | 20 / 22 |
+
+- **No input exceeds any count.**
+- The tightest margin is **1 step**, on the secret-ideal pre-reduction: need 20 against a count of 21 at P248, P324 and P500. The subject's search reported 19 there, so this Gram-space search beats it by one step. It is still inside the count, and inside the review's split-at-2⁻⁹ counts too.
+- Signing comes within 2–4 steps of its count: 278/280, 357/360, 542/546.
+- Key generation (norm D) and the challenge come within 2–3.
+- The guard-256 cells are weak tests (220/267 and others). The search also enforces that class's C₀ bound, R_C ≈ R₀, which truncates the backward chains. They are not evidence of extra slack.
+- No witness needed a big first quotient: exp64 need equalled exact need on every reported witness.
+
+## 6. What this means for 533 / 546 at P500 (Rick, t42u)
+
+**The review supports 546 (signing) and 533 (guard-256 pre-reduced) at P500, for both the exact rule and exp64.** Both numbers come out of two derivations:
+
+- the subject's chain re-derived with its own ratios. That one needs the inherited τ = 4 tail from 2⁻¹¹.
+- the split at 2⁻⁹ that I proved myself. That one needs my band ratios up to 2⁻⁹ and my tail proof from 2⁻⁹, and does **not** depend on the inherited tail.
+
+The same holds for keygen norm D at 411 and the challenge at 396 at P500.
+
+The conditions are the ones PR #45 already states. The constructor or decoder must establish the class bounds: the factor-256 guard at both keygen and decode, the ideal determinant, and the starting norms. Moving from 594 to 533 is a proof decision for Rick; nothing in this review argues against it. The cells where the self-proven split exceeds the claimed counts are not at P500: the secret-ideal pre-reduction at P248, P376 and P664, and the challenge at P664 (§4).
+
+## 7. Minimum adjustments
 
 - **None are needed for soundness**, provided the inherited tail certificate (τ = 4 from 2⁻¹¹, `lagrange-tour-bound`) is accepted. Every other link is independently confirmed.
 - **To rely only on independently re-proved pieces,** take the split-at-2⁻⁹ column:
@@ -117,7 +153,7 @@ SEARCH_TABLE
 - **Cite `df92507`'s head enumeration** in the spec wording, not `8a2615f`'s.
 - **Documentation nit.** The subject says the quadtree has "depth ≤ 28"; the certificate's maximum depth is 14.
 
-## 7. Files
+## 8. Files
 
 | File | Contents |
 |---|---|
