@@ -1,0 +1,13 @@
+{
+  "format": "lucas-np1",
+  "id": "field-p324",
+  "N": "102527377724203683954961041896138501500929817073119332957457997175466546837470746401102180172955647",
+  "P": 1,
+  "Q": -1,
+  "D": 5,
+  "np1_factors": {
+    "2": 324,
+    "3": 1
+  },
+  "theorem": "If N+1 is completely factored and a Lucas sequence U_k(P,Q) with D=P^2-4Q satisfies (D/N)=-1, U_{N+1}\u22610 (mod N), and gcd(U_{(N+1)/q}, N)=1 for every prime q dividing N+1, then N is prime."
+}

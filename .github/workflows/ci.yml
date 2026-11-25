@@ -60,6 +60,10 @@ jobs:
         with:
           persist-credentials: false
           submodules: false
+      - name: Check the certificate verifier against known and invalid proofs
+        run: python3 scripts/ci/test_signer_prime_certificates.py
+      - name: Verify pinned signer primality certificates
+        run: python3 scripts/ci/check_signer_prime_certificates.py
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026-11-08
         with:
           toolchain: 1.97.1
