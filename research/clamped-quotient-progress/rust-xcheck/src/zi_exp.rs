@@ -9,7 +9,7 @@
 //!
 //! Per step, always both paths, selected by a mask:
 //!  * window (e = max bl(|h_j|) - bl(nu) <= 60): the prototype's 64-bit
-//!    quotient, then an exact +-1 fix from X = 2h + nu - 2 m nu, so the
+//!    truncated quotient, then an exact +-1 fix from X = 2h + nu - 2 m nu, so the
 //!    step is the exact round-half-up step;
 //!  * big (e > 60): s = e - 60, qtop_j = floor((|h_j| >> (kA + s)) / ns),
 //!    m_j = sign(h_j) (qtop_j - 1) if qtop_j >= 2 else 0, applied as
@@ -17,7 +17,7 @@
 //! No exact cleanup step.
 
 use crate::ct::*;
-use crate::zi::{nrd, quotient, Vec4};
+use crate::zi::{nrd, Vec4};
 
 pub const T0: i64 = 60;
 
@@ -53,6 +53,9 @@ fn abs_of<const N: usize>(h: &[u64; N]) -> ([u64; N], u64) {
     (a, s)
 }
 
+/// Both paths use the same unsigned truncated quotient. In the window its
+/// signed value is within one integer of the half-up answer. Outside the
+/// window it is precisely the leading quotient used for the undershoot.
 /// Returns (m0, m1, s, big).
 #[inline(always)]
 pub fn quotient_exp<const N: usize>(h0: &[u64; N], h1: &[u64; N], nu: &[u64; N]) -> (i64, i64, u64, u64) {
@@ -72,8 +75,11 @@ pub fn quotient_exp<const N: usize>(h0: &[u64; N], h1: &[u64; N], nu: &[u64; N])
     add_assign(&mut two_nu, nu);
     let mut out = [0i64; 2];
     for (j, (h, a, sg)) in [(h0, &a0, s0), (h1, &a1, s1)].into_iter().enumerate() {
-        // window: prototype quotient, then the exact +-1 fix
-        let mw = quotient(h, nu);
+        let num = shr(a, ka.wrapping_add(s), false);
+        let numl = num[0] as u128 | ((num[1] as u128) << 64);
+        let qtop = div_u128_64q(numl, ns);
+        // Apply the sign after truncation. Exact residual comparisons resolve ties.
+        let mw = ((qtop ^ sg).wrapping_sub(sg)) as i64;
         let mn = mul_scalar(nu, mw);
         let mut x = *h;
         add_assign(&mut x, h);
@@ -86,9 +92,7 @@ pub fn quotient_exp<const N: usize>(h0: &[u64; N], h1: &[u64; N], nu: &[u64; N])
         let hi = 1 ^ (sign_mask(&t) & 1);
         let mw = mw.wrapping_sub(lo as i64).wrapping_add(hi as i64);
         // big: undershoot by one unit of 2^s
-        let num = shr(a, ka.wrapping_add(s), false);
-        let numl = num[0] as u128 | ((num[1] as u128) << 64);
-        let qtop = div_u128_64q(numl, ns);
+
         let ge2 = 1 ^ is_zero(qtop >> 1);
         let mag = select(mask(ge2), qtop.wrapping_sub(1), 0);
         let mb = ((mag ^ sg).wrapping_sub(sg)) as i64;
