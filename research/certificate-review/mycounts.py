@@ -165,9 +165,19 @@ def main():
         'review-ratios': (Fr(537, 2000), [Fr(268525146, 10**9), Fr(268605695, 10**9), Fr(268713095, 10**9),
                                            Fr(272906433, 10**9), Fr(273153948, 10**9)]),
     }
+    variants = {k: (v[0], v[1], edges, 11) for k, v in variants.items()}
+    # Alternative split proved entirely by this review: bands to 2^-9 / 2^-8
+    # (cellcheck_ext.txt) and the tail tau = 4 from 2^-9 / 2^-8 (tailcert).
+    rv = variants['review-ratios'][1]
+    variants['review-split-2^-9'] = (Fr(537, 2000), rv + [Fr(275566686, 10**9), Fr(289625053, 10**9)],
+                                     edges + [10, 9], 9)
+    variants['review-split-2^-8'] = (Fr(537, 2000), rv + [Fr(275566686, 10**9), Fr(289625053, 10**9),
+                                     Fr(322403904, 10**9)], edges + [10, 9, 8], 8)
     rows = []
-    for vname, (rho0, br) in variants.items():
-        K = make_K(rho0, list(zip(cnt, br)), G)
+    for vname, (rho0, br, edg, top) in variants.items():
+        cnt = band_counts(edg, top)
+        print('%s: band caps %s (top 2^-%d)' % (vname, cnt, top))
+        K = make_K(rho0, list(zip(cnt, br)), G, top)
         for cls in CLAIMED:
             ex, e64, kb, kmax = [], [], [], []
             for s in SETS:

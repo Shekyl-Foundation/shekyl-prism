@@ -1,0 +1,4 @@
+LAM 2^-10: max ratio = 0.275566685 (exact 1052315395237197/3818732284018688) at leaf (10, 880, 890); wild leaves 4; target 1/3 = 0.333333333: True  [1.0s]
+LAM 2^-9: max ratio = 0.289625052 (exact 6294137297977/21732019605504) at leaf (8, 90, 255); wild leaves 4; target 1/3 = 0.333333333: True  [1.0s]
+LAM 2^-8: max ratio = 0.322403903 (exact 6680238976869/20720093413376) at leaf (8, 176, 1); wild leaves 4; target 1/3 = 0.333333333: True  [1.0s]
+LAM 2^-7: max ratio = 0.350490519 (exact 29048785136811/82880373653504) at leaf (8, 176, 1); wild leaves 4; target 1/3 = 0.333333333: False  [1.2s]
