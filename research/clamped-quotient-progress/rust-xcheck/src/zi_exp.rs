@@ -118,12 +118,24 @@ fn herm<const C: usize, const N: usize, const PL: usize>(
     (h0, h1)
 }
 
+/// Update one projection h to r = h - m*A, with m = mantissa * 2^s.
+/// Its contribution to the decrease in the second norm is m*(h+r).
 #[inline(always)]
-fn step_exp<const C: usize, const N: usize, const PL: usize>(
-    u: &mut Vec4<C>, v: &mut Vec4<C>, nu: &mut [u64; N], nv: &mut [u64; N], p: &[u64; PL],
+fn update_projection<const N: usize>(
+    h: &mut [u64; N], a: &[u64; N], mantissa: i64, s: u64,
+) -> [u64; N] {
+    let mut sum = *h;
+    sub_assign(h, &shl(&mul_scalar(a, mantissa), s));
+    add_assign(&mut sum, h);
+    shl(&mul_scalar(&sum, mantissa), s)
+}
+
+#[inline(always)]
+fn step_exp<const C: usize, const N: usize>(
+    u: &mut Vec4<C>, v: &mut Vec4<C>, nu: &mut [u64; N], nv: &mut [u64; N],
+    h0: &mut [u64; N], h1: &mut [u64; N],
 ) -> u64 {
-    let (h0, h1) = herm::<C, N, PL>(v, u, p);
-    let (m0, m1, s, big) = quotient_exp(&h0, &h1, nu);
+    let (m0, m1, s, big) = quotient_exp(h0, h1, nu);
     let mut a0 = mul_scalar(&u[0], m0);
     sub_assign(&mut a0, &mul_scalar(&u[1], m1));
     let mut a1 = mul_scalar(&u[1], m0);
@@ -136,12 +148,14 @@ fn step_exp<const C: usize, const N: usize, const PL: usize>(
     sub_assign(&mut v[1], &shl(&a1, s));
     sub_assign(&mut v[2], &shl(&a2, s));
     sub_assign(&mut v[3], &shl(&a3, s));
-    *nv = nrd::<C, N, PL>(v, p);
+    sub_assign(nv, &update_projection(h0, nu, m0, s));
+    sub_assign(nv, &update_projection(h1, nu, m1, s));
     let m = mask(lt_unsigned(nv, nu));
     for r in 0..4 {
         cswap(m, &mut u[r], &mut v[r]);
     }
     cswap(m, nu, nv);
+    cond_neg(h1, m); // Swapping the vectors conjugates the Hermitian product.
     big
 }
 
@@ -162,9 +176,10 @@ pub fn reduce_exp<const C: usize, const N: usize, const PL: usize>(
         cswap(m, &mut u[r], &mut v[r]);
     }
     cswap(m, &mut nu, &mut nv);
+    let (mut h0, mut h1) = herm::<C, N, PL>(&v, &u, p);
     let mut nbig = 0u64;
     for _ in 0..steps {
-        nbig += step_exp::<C, N, PL>(&mut u, &mut v, &mut nu, &mut nv, p);
+        nbig += step_exp(&mut u, &mut v, &mut nu, &mut nv, &mut h0, &mut h1);
     }
     (u, nu, nbig)
 }
