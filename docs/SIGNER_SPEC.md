@@ -1,6 +1,6 @@
 # Signer specification
 
-Status: begun 2026-11-21. Section 1 (the constants) is written, and its values are generated and committed (stage 1b, `scripts/signer_constants.py`, `prism-vectors/data/signer/`); no signer code exists yet. This is a research specification, not an adopted standard, and it makes no security claim.
+Status: begun 2026-11-21. Section 1 (the constants) is written, and its values are generated and committed (stage 1b, `scripts/signer_constants.py`, `prism-vectors/data/signer/`). Section 2.1 (the integers, stage 2a) is written and its crate, `prism-int`, exists; nothing calls it yet, and no other signer code exists. This is a research specification, not an adopted standard, and it makes no security claim. **Draft addition (2026-11-24, not ruled):** Section 0 proposes a constant-time feasibility gate before stages 2c and 3 are finalized, while keeping G4 as the final hardening gate.
 
 ## What this document is
 
@@ -31,6 +31,11 @@ Rulings on this section, the same day:
 - **R2.** The four bounds of the quaternion layer (32 primality rounds, a box of 64, 17 generator bits, 20,000 steps per generator) are the values at all five sets: starting values, fixed at the three reference primes for replay, provisional at `p324` and `p664`, gated on stage 3's measured failure rates.
 - **R3, not ruled.** The Montgomery model of a key (1.6) is looked at again when the work reaches stage 3.
 
+### Proposed rulings (draft, 2026-11-24 — not ruled)
+
+- **G7, not ruled (draft).** Constant-time hardening remains the last stage before the beta gate (**G4**), and **G4** stays in force for full-signer side-channel validation (ledger O6). Before the specification sections for **stage 2c** (lattices and basis reduction) and **stage 3** (norm equations, Cornacchia, and ideal sampling) are finalized under **G3**, each candidate algorithm must pass the **constant-time feasibility gate** of **Section 0**. An algorithm whose control flow or retry behavior depends on long-lived secrets is not accepted solely because it is mathematically correct and fast in variable time when no affordable hardening strategy is identified.
+- **G2 decision point, not ruled (draft).** The no-`unsafe` policy of **G2** is flagged for an explicit decision before stage 2c ports constant-time primitives into production crates (0.4), informed by `experiment/ct-barrier-policy` under Rust 1.97.1 on `x86_64` and `aarch64`.
+
 Standing from Round 0 (2026-11-14): we are not transcribing the C; other code bases are oracles for values and not sources of structure; five sets, one algorithm.
 
 ### The layers, in the order they are built
@@ -38,13 +43,103 @@ Standing from Round 0 (2026-11-14): we are not transcribing the C; other code ba
 | Stage | Layer | Section here |
 | --- | --- | --- |
 | 1 | The constants: what each is (1a, this section) and the generator that produces them (1b) | 1 |
-| 2 | Integers and the quaternion algebra: the algebra, the maximal order, lattices, ideals, lattice reduction | to be written |
+| 2 | Integers and the quaternion algebra: the integers (2a), then the algebra, the maximal order, lattices, ideals, lattice reduction (2b to 2d) | 2.1 for 2a; the rest to be written |
 | 3 | Cornacchia; the norm equation of the ideal-to-isogeny translation; sampling an ideal of prime norm, with the equivalent prime-norm ideal for key generation. No step that represents an integer by the order's norm form (1.2) | to be written |
 | 4 | Ideal to isogeny: first the engine's forward chain as the signer needs it (1.9), then the starting curve, its basis, the action of its endomorphisms, and the translation | to be written |
 | 5 | Key generation and signing | to be written |
 | last | Constant-time hardening (G4) | to be written |
 
-The table of 1.3 names the stage that consumes each constant by these numbers. The plan of 2026-11-21 divides the stages further; this section does not use the finer names.
+The table of 1.3 names the stage that consumes each constant by these numbers. The plan of 2026-11-21 divides the stages further; section 1 does not use the finer names, and section 2 does (2a to 2d).
+
+*Draft note (2026-11-24, proposed G7):* before stages 2c and 3 are finalized under G3, candidate algorithms must pass the constant-time feasibility gate of Section 0; G4 remains the last stage for full-signer hardening.
+
+## 0. Constant-time feasibility gate (draft, 2026-11-24 — not ruled)
+
+This section is a draft proposal for Rick's review. It implements proposed ruling **G7** following the external design review of 2026-11-24 (`dev` at `26ce141`) and the experiments recorded on the `research` branch (`research/INDEX.md`, kept off `dev` and outside CI). All figures cited from `research/INDEX.md` are **Read** from modeled or standalone experimental reports and are not production claims.
+
+### 0.1 Why a pre-finalization gate is needed beside G4
+
+Ruling **G4** schedules constant-time hardening as the last stage before beta (ledger **O6**). The intent was to establish mathematical correctness first and harden afterward. The `research` branch experiments show that constant-time feasibility dictates *which algorithm* must be chosen in stages 2c and 3, so algorithm selection cannot be separated from constant-time analysis:
+
+- **Stage 2c (basis reduction).** Exact variable-time 4-D LLL on `I_sec · I_q` leaks the bit length of the secret norm `N` at about `2.0–2.1` steps per bit (`r = 0.31–0.49` over 4,000 traces; fixed-vs-random `dudect |t|` `11.6–27.3`, **Read** in `research/INDEX.md` conclusions 4 and 11). Lattice reshaping (`salt-reshaped-lattice`, `higher-dim-lattice`, `cornacchia-harness`) does not remove that slope, and **D0** (deterministic smallest ideal) is forbidden under **O4** (`latticeprism-seeding`). Only a fixed schedule sized from public parameters removes the key-length channel: GMP-rational certified `Z[i]`-Lagrange (`T_prov = 301 / 387 / 446 / 587 / 773`, plus one exact cleanup step) produces a single trace (`t = 0` in the model) and ran in a standalone Rust fixed-width prototype (`rust-lagrange-ct`, `rustc 1.85.1`) at `0.19–0.23×` exact LLL on GMP in cycles (`max |t| = 2.93` over 220,000 primary measurements; memcheck clean).
+- **Stage 3 (norm equations).** Section 5 signing and key generation run `quat_qlapoti` (`quat_represent_integer` is not on the signing path). Shortest-equivalent reduction maps `I_sec · I_q` to a small ideal `S` of norm `n ≤ √p`, hiding `bits(N)` (`|ρ| ≤ 0.032`, fixed-key `dudect |t| ≤ 1.59`) but leaking `S` itself (`v₂(n)` shifts weighted work `~27%`, fixed-`S` `dudect |t|` reaches `4.7` at `p248` and `6.4` at `p324`, and per-ideal pass rates `p(S)` vary `2.5×–17.6×`, worst at `p376` where `f = 65`) across four uncapped inner loops (generator draws up to `194`, `λ`-skips up to `59,995`, Gauss steps up to `92`, Euclid steps up to `126`; **Read** in `research/INDEX.md` entry 10). Straight fixed-schedule padding costs **39×–391×** mean work for `99.9%` completion (`23×–229×` two-stage; `132×` at `p500`, `391×` at `p376`) and **249×–2,513×** for `2⁻⁶⁴` (`847×` at `p500`). Deferring hardening to **G4** on an un-hardenable search would lock stages 3–5 into an unacceptable cost or an unfixable leak; the norm equation must be redesigned before stage 3 is finalized (bounded inner loops, settling **O29**, or evaluating SQIsign 3.0's construction).
+- **Cross-set variation is public.** Within a parameter set, `bits(q)` is public and constant, and the set (`p248`, `p324`, `p376`, `p500`, `p664`) is public (**O12**, **D13**). Differences in step counts *across* sets are not a secret channel (`research/INDEX.md` conclusion 3).
+
+**G4** remains the final gate for full-signer integration, end-to-end timing and secret-erasure assessment, and closing **O6** before beta.
+
+### 0.2 Algorithm acceptance criteria (before stages 2c and 3 are finalized)
+
+Before the specification section for stage 2c or stage 3 is approved under **G3**, every candidate algorithm that touches secret-derived values must present all four items below:
+
+1. **Secret-dependence classification.** Classify every branch, loop bound, retry loop, and memory access/index as driven by:
+   - *Public data:* parameter-set constants (`p`, `e`, `f`, `L`, `W`, `B`), `pk`, `msg`, and the committed challenge (`s`, `q`);
+   - *Ephemeral / message-dependent secret state:* per-signature randomness and unrevealed intermediate commitments;
+   - *Long-lived secret state:* `sk`, `I_sec`, `N`, the reduced small ideal `S = shortest_equivalent(I_sec · I_q)`, and secret scalars or kernels.
+   Retry loops must be inventoried explicitly: key generation's prime-norm search (`150–354` mean draws), `quat_qlapoti`'s four inner loops, basis/kernel retries, and any overflow retry are larger channels than reduction step counts (`research/INDEX.md` conclusion 7).
+2. **Identified affordable hardening strategy and cost estimate.** Name the concrete constant-time strategy (fixed schedule, bounded inner loops, algebraic reformulation, keygen precomputation, or public-only justification) and give an estimated cost across all five parameter sets (`p248`, `p324`, `p376`, `p500`, `p664`), highlighting integration cost for Shekyl's selected `p500` (**O12**) and constrained targets such as the Raspberry Pi 4 floor device (**C10**, **O7**). No algorithm whose control flow depends on long-lived secrets may be accepted without an identified, affordable hardening strategy.
+3. **Certified iteration bounds (where fixed schedules are used).** Any fixed-schedule iteration count must be **provably certified** from public parameter bounds, never taken from empirical maxima on random samples. Empirical `Z[i]`-Lagrange maxima (`189 / 239 / 283 / 359 / 465`) fail explicit Rolletschek `2 + √3` adversarial chains (`276 / 356 / 411 / 542 / 714` steps), whereas GMP-rational interval certification gives `T_prov = 301 / 387 / 446 / 587 / 773` (or `283 / 369 / 428 / 569 / 755` under keygen pre-reduction with `nrd(v_sec) ≤ 2√p·N`), paired with one always-executed exact cleanup step when bounded-precision quotients (`prec ≥ 16`) are used (**Read**, `lagrange-tour-bound`).
+4. **Width proofs (Q5), norm-bound enforcement (Q4), and no overflow-driven retries.**
+   - **Q5 (stage 2c):** Prove an upper bound on *every* intermediate value (size-reduction or Lagrange quotients, Gram matrix entries, temporary products, and cleanup-step intermediates) under the **actual chosen reduction algorithm**, showing every intermediate fits within `LIMBS` (`26 / 33 / 38 / 49 / 65`, leaving `67–111` spare bits above `need` in 2.1.2). Test adversarially skewed lattices (Rolletschek chains and inputs at norm bound `B`) as well as sampled inputs.
+   - **Q4 (stage 5 keygen and key import, relied on by stages 2c and 3):** Enforce `N < 2^B` with `B = ⌈L/2⌉ + 32` (`158 / 195 / 224 / 285 / 367` bits) on **both** newly generated keys and imported secret keys (including C-reference imports, 1.6), and quantify the key-generation rejection probability across all five sets (especially `p324` and `p664`, where no reference measurements exist).
+   - **No overflow-driven key-dependent retries (O33):** Once **Q4** and **Q5** hold, `SecretError::Overflowed` (and `SecretError::DoesNotFit`) must carry treatment **U** (unreachable by proof) in 2.1.3. Silent or retry-loop recovery on an overflow triggered by a secret value is prohibited as a design mechanism; if an overflow mark were ever set despite the proof, it must fail explicitly rather than creating a key-dependent retry channel.
+
+### 0.3 Declassification and downstream secret handling (extends 2.1.3)
+
+Section 2.1.3 isolates `SecretInt<N>` and `SecretBit` behind three explicit exits (`SecretInt::declassify`, `SecretBit::declassify`, and `SecretInt::export_le_bytes`), enforced 1-to-1 against the secret-treatment table by `scripts/ci/check_secret_exits.py` (currently 0 outside call sites). Because nothing consumes `prism-int` yet, this gate sets two rules before stages 2b–5 introduce call sites:
+
+1. **Rationale reviewed in the introducing PR.** Every PR that adds a call site of `SecretInt::declassify`, `SecretBit::declassify`, or `SecretInt::export_le_bytes` (and its row in the 2.1.3 table) must state and review its security rationale, target treatment (`F`, `I`, `B`, or `E`), and overflow/fit argument (`U` or documented provisional status) at the time the call site is introduced—not deferred unreviewed until **G4**.
+2. **Downstream sensitivity is retained.** A value moved into `Int<N>` by `SecretInt::declassify` or into bytes by `SecretInt::export_le_bytes` remains secret unless explicitly proved independent (`I`) or blinded (`B`). Downstream code must preserve that classification: no secret-dependent branching, no diagnostic formatting (`Int::public_hex` is forbidden on declassified values), and no variable-time operations (`PartialEq`/`Ord`, division, `gcd`, `invmod`) unless explicitly justified under `I` or `B` or tracked for `F` replacement before **G4**. `Int<N>`'s wipe-on-drop and stack-copy caveat (2.1.3) still apply.
+
+### 0.4 `unsafe` policy decision point for constant-time barriers (G2 vs. `experiment/ct-barrier-policy`)
+
+Ruling **G2** requires `#![forbid(unsafe_code)]` in every new signer crate from its first commit. However, `research/rust-lagrange-ct` (`src/ct.rs`) found that under `rustc 1.85.1`, `core::hint::black_box` on a choice bit allowed LLVM to lower a mask-selected barrel shifter into a secret-dependent conditional jump, which `asm_scan.py` and Valgrind memcheck caught; replacing it with `unsafe { core::arch::asm!(...) }` on the mask eliminated the branch.
+
+Source-level branch-free Rust therefore does not guarantee branch-free machine code. Before stage 2c ports constant-time primitives into production crates, Rick must resolve the **G2** conflict using evidence from the parallel **`experiment/ct-barrier-policy`** branch (this draft does not presuppose the outcome):
+
+- **Option A (preserve G2 unchanged):** Validate a safe, portable construction (e.g., `black_box` on the mask or value, `subtle`-style barriers, or another compiler-resilient safe idiom) whose compiled release artifacts pass all checks of 0.5 under **Rust 1.97.1** on both `x86_64` and `aarch64`.
+- **Option B (narrowly scoped amendment to G2):** Approve an audited `unsafe` exception confined to a minimal internal value-barrier/arithmetic crate, keeping `#![forbid(unsafe_code)]` on all other crates and enforced in CI.
+
+### 0.5 Compiled-artifact evidence (toolchain, architectures, and statistical checks)
+
+Because LLVM can reintroduce branches or variable-time instructions across mask selects, any constant-time primitive proposed for stage 2c or stage 3 (and every secret-touching stage at **G4**) must provide compiled-artifact evidence from **release builds** under the **pinned toolchain (`rustc 1.97.1`, watch list O32)** on **both `x86_64` and `aarch64` (ARM64)**:
+
+1. **Assembly / binary inspection.** Automated scan confirming no secret-dependent conditional branches, no integer `div`/`idiv`, no variable-time bit-scan (`bsr`/`lzcnt`) on secret operands, and no secret-indexed lookups.
+2. **Statistical timing tests (`dudect` fixed-vs-random).** Sample sizes with adequate statistical power (not 24–32 keys, which only detect `η² ≈ 0.08–0.15`; `research/INDEX.md` conclusion 6). Tests must cover both fixed-key-at-bound (`B`) vs. random-key and fixed-small-ideal `S` vs. random panels, targeting Welch `|t| < 4.5` alongside variable-time positive controls.
+3. **Secret-taint instrumentation (Valgrind memcheck / `ctgrind`).** Mark secret inputs undefined/tainted and verify zero secret-dependent branches or addresses across all five parameter sets, with positive leak controls proving the harness flags leaks (where supported on the target architecture).
+4. **O32 watch-list and stack-frame audit.** Check new code shapes against **O32** (`rustc 1.97.1` known miscompilations: `#163728`/`#164736`/`#165828` clamp, `#163779` carry-fold, `#164469` TailCallElim, `#165204` `x86_64` >32 KiB stack probe, `#165156` vectorized array-slice read, `#162398` `aarch64` negate/sub reduction) and verify function stack frames remain well below 32 KiB.
+
+### 0.6 Testing provenance, representation equivalence, and Stage 5 proposals
+
+- **Non-sensitive signing-transcript provenance logging (stages 2–5 tests).** Test and differential harnesses should record full signing-transcript provenance in a non-sensitive log: public stage identifiers, public mathematical invariants, pass/retry/refusal categories, and operation counts, while **excluding** secret coordinates, secret bases, secret scalars, and sensitive intermediates (consistent with 2.1.3's ban on printing `Int<N>`/`SecretInt<N>` values). This supports differential debugging against C/Sage/PARI across all five sets (including `p324` and `p664` for **O14**) without creating a key-leaking diagnostic interface.
+- **Three-way distinction for representation changes (stage 3, stage 5, keygen pre-reduction, O28).** Any candidate design that alters key/ideal representation or public-key normalization—such as **keygen pre-reduction** (`research/keygen-precompute`: storing pre-reduced `{u_sec, v_sec}`, `+20–24 B` compact or `+212–524 B` with `E_vk` canonical basis) or a **canonical public-key model** (**O28**, **R3**, **D5**)—must separate three assertions in specs and tests:
+  1. *Same ideal / isomorphic curve:* the new representation defines the same left ideal (up to equivalence/order basis) or isomorphic curve.
+  2. *Verifier-accepted signature:* signatures verify under `VERIFIER_SPEC.md` at all five sets.
+  3. *Byte-identical replay:* bytes match the C reference (`scripts/export_s5_vectors.sh`), which is required only when exact C-reference replay is part of the test contract.
+  Changing `SECRETKEY_BYTES` (e.g., adopting `EXP_RED_O0`) or emitting canonical public keys (**O28**) requires a format/versioning design round with Rick and an explicit compatibility rule for imported legacy C-reference keys (such as retaining `(N, gen)` alongside `{u_sec, v_sec}` if exact stage 5 replay testing is preserved, and accepting non-canonical legacy public keys on import).
+- **Stage 5 safety and salt items already proposed by Rick (for Stage 5 spec):**
+  - *Fault checks at layer boundaries and verify-after-sign:* Validate structural invariants at layer boundaries and run verify-after-sign (noting `keygen-precompute` measured `+212–524 B` if `E_vk`'s canonical basis is cached in `sk` vs. derived during signing) so faults or miscomputations cannot release invalid signatures or leak secret structure.
+  - *Hedged salt `H(sk, msg, randomness)`:* Reconcile **D8** (salt derived from seed/key, public key, message, counter, and caller randomness, auditable at zero randomness) with Stage 5 deterministic replay requirements, **O4**, and **O11**.
+
+### 0.7 Mapping to stages, open questions, and `research/INDEX.md`
+
+| Stage | Gate obligations (Section 0) | Open questions / ledger items | `research/INDEX.md` & parallel work |
+| --- | --- | --- | --- |
+| 2a (`prism-int`) | PR-reviewed exits & sticky downstream sensitivity (0.3); O32 check (0.5) | **Q4**, **Q5** (deferred to 5 / 2c), **O32**, **O33** | `check_secret_exits.py` (0 exits today) |
+| 2b, 2d (quaternion, lattices, ideals) | Q1–Q3 fixed-modulus HNF & norm tracking; exit justification (0.3); provenance logging (0.6) | **Q1**, **Q2**, **Q3**, **O34** | `keygen-precompute` (`O0`-coord intersection mod `q`) |
+| 2c (basis reduction) | Classification & affordable CT strategy (0.2); certified `T_prov` + cleanup (0.2); **Q5** proof + adversarial tests (0.2); **G2** `unsafe` resolution (0.4); compiled-artifact checks on `x86_64`+`aarch64` under 1.97.1 (0.5) | **Q5**, **O32**, **O33** | `fixed-schedule-reduction`, `lagrange-tour-bound`, `rust-lagrange-ct`; closed negatives: `cornacchia-harness`, `salt-reshaped-lattice`, `higher-dim-lattice`; parallel: `experiment/ct-barrier-policy`, `experiment/q5-width-proof` |
+| 3 (norm equation, Cornacchia, ideal sampling) | Classification of `quat_qlapoti` / prime-norm loops (0.2); affordable CT redesign + cost at `p248`–`p664` (`p500` highlighted) (0.2); **D0** forbidden; three-way equivalence checks (0.6) | **O4**, **O26** (R2), **O28** (R3), **O29**, **O34** | `fixed-schedule-norm-equation`, `latticeprism-seeding`, `secret-ideal-rerandomization` (defer/optional); parallel: `experiment/qlapoti-redesign` |
+| 4 (ideal to isogeny) | Secret scalar/kernel classification (0.2); exit rationale (0.3); provenance logging (0.6) | **O14**, **O15**, **O20**, **O21** (G5) | `keygen-precompute` (notes `theta_chain` stays per-message) |
+| 5 (keygen & signing) | **Q4** (`B = ⌈L/2⌉+32`) enforced on keygen & import + rejection rate quantified (0.2); no overflow retries (0.2); three-way distinction & key format/migration (0.6); verify-after-sign, boundary fault checks & hedged salt (0.6) | **Q4**, **O4**, **O11**, **O14**, **O15**, **O28**, **O33** | `keygen-precompute` (`EXP_RED_O0`, `+20–24 B` / `+212–524 B`, `T_prov` `283..755`) |
+| Final (**G4**) | End-to-end compiled-artifact suite (`asm_scan`, full-power `dudect`, memcheck/`ctgrind` on `x86_64`+`aarch64`, 1.97.1), zeroization/erasure review, all `F`/`I`/`B`/`E`/`U` treatments closed | **O6**, **O8**, **O17**, **O19**, **O23**, **O32** | All harnesses remain outside CI; production claims made only here |
+
+### 0.8 Open decisions for Rick (to review before adopting this draft)
+
+1. **Adopt proposed ruling G7:** Require the Section 0 CT feasibility gate before finalizing stages 2c and 3 under **G3**, while keeping **G4** as the final hardening gate.
+2. **Resolve G2 (`unsafe` policy) for CT barriers:** Choose Option A (safe barrier validated under `rustc 1.97.1` on `x86_64` and `aarch64`) or Option B (narrowly audited internal crate) once `experiment/ct-barrier-policy` reports.
+3. **Keygen pre-reduction and secret-key format (`EXP_RED_O0`):** Decide whether to store pre-reduced `{u_sec, v_sec}` (`+20–24 B` compact, or `+212–524 B` with `E_vk` canonical basis for verify-after-sign), version `SECRETKEY_BYTES`, and retain `(N, gen)` for stage 5 C-reference replay.
+4. **Canonical public-key model (O28 / R3):** Decide whether newly generated keys emit the **D5** canonical Montgomery model while imported C-reference keys remain accepted in non-canonical models.
+5. **Stage 3 norm-equation redesign:** Select the bounded-loop / **O29** (`e` vs `e − 2`) / SQIsign 3.0 norm-equation direction once `experiment/qlapoti-redesign` reports.
+6. **Stage 5 hardening additions:** Confirm verify-after-sign, layer-boundary fault checks, and hedged-salt replay semantics for Stage 5's specification.
 
 ## 1. The constants
 
@@ -368,3 +463,360 @@ Constants the signer's path reads that are written in the reference's code and n
 - The parameters of the sum-of-two-squares step: the form's coefficient 1, and 1 in place of the bad-primes product (item 18).
 - The maximal order's basis a second time, written by hand in `quat_lattice_O0_set`.
 - In our exporter: 16 attempts at a response and 64 draws of an ideal per attempt.
+
+## 2. Integers and the quaternion algebra
+
+Stage 2 is written in parts, each with its own section: the integers (2.1, stage 2a), then lattices, the algebra and ideals (2b to 2d, to be written). Rulings that stand over 2.1, from Round 0 (2026-11-14) and the plan of 2026-11-21:
+
+- **S5.** Integers are fixed-width. No value decides a length.
+- **S6.** The first signer is correct, wipes its secrets, and classifies every step as secret or public. It makes no constant-time claim.
+- **Plan 2.4.** Secret and public integers are different types from the first integer pull request, and a variable-time routine takes only the public type.
+
+### 2.1 The integers (stage 2a)
+
+Labels in this section. **Ran** means run on a build VM with the output committed: `scripts/build_traced_reference.sh` and `scripts/measure_integer_widths.py`, which wrote `docs/benchmarks/integer-widths-reference.tsv`. **Read**, **Derived** and **Open** are as above.
+
+#### 2.1.1 What the layer is for
+
+The signed integers under everything in stages 2b to 5: the coordinates of quaternions, the entries of lattice bases, norms, the numbers of the norm equation, and the matrices modulo `2^e` of the translation.
+
+The reference uses arbitrary-precision integers: `ibz_t` is GMP's `mpz_t` (here its bundled `mini-gmp`), wrapped by 44 functions in `src/quaternion/ref/generic/intbig.c` and one more, `ibz_xgcd`, in `hnf/ibz_division.c` (**Read**). An `mpz_t` grows to fit its value, on the heap, and the time of every operation follows the value's length.
+
+Ours do not grow. Every integer of a parameter set has the same number of 64-bit limbs, fixed by the set (S5). So the layer has to say how many, before the algorithms that fill them are written. That is 2.1.2, and it is the main question of this part.
+
+#### 2.1.2 The width budget
+
+**Notation.** For a set: `e` and `f` with `p = f·2^e − 1`; `L` the bit length of `p` (251, 326, 383, 505, 669); `W` its `WIDTH_BITS` (256, 384, 384, 512, 768); `D` the first norm of the secret ideal, the next prime after `2^(2W)` (ruling R1), of `2W + 1` bits; `q = 2^(2e−5) − s²` the challenge degree, below `2^(2e−5)`. For an integer `N`, `b(N)` is its bit length. A width is counted in bits of magnitude: 2.1.3 holds a sign beside the limbs.
+
+`L` and `W` are kept apart in every formula. `2W/L` is 2.04, 2.01 and 2.03 at the three sets with a reference and 2.36 and 2.30 at `p324` and `p664`, so a formula in `L` alone that fits the three measured sets is wrong at the two that are not measured.
+
+##### What the reference reaches (Ran)
+
+The reference's key generation, and our exporter's signing (`scripts/c/export_s5_vectors.c`, the only implementation of our signing path, 1.2), were run with every `ibz_*` function that writes an integer recording the bit length of what it wrote and the address it was called from.
+
+- **The instrumentation** is `scripts/c/ibz-trace.patch`, applied to a copy of the pinned tree by `scripts/build_traced_reference.sh`; the submodule is not changed. It renames 24 functions of `intbig.c` and `ibz_xgcd`, and adds a wrapper of each original name that calls the original and records each output. Calls between the functions of `intbig.c` are not recorded, so the temporaries inside the modular square root are not seen; they are below the square of its modulus. The copy also carries `cornacchia-positive.patch`, as the exporter's build does.
+- **A call site is resolved to a function** with `addr2line -i`: the innermost inlined function where the build kept the inlining record, and otherwise the function the compiler emitted, which then stands for what was inlined into it. Two cases the tables below rely on were read in the built binary: it has no symbol for `quat_lattice_gram`, `quat_lideal_class_gram`, `quat_lideal_norm`, `quat_lideal_mul` or `quat_lideal_shortest_equivalent`, so each is inlined where it is called, and the Gram matrix's products are in the row of `quat_lideal_reduce_basis`; and the call that wrote the largest value of `quat_qlapoti`'s row is the multiplication between a call of `quat_alg_norm` and a call of `ibz_div`, which is the body of `quat_lideal_mul`.
+- **The runs**, at `p248`, `p376` and `p500`: 256 key generations, and 8 signatures under each key, 2,048 a set. Every seed is derived from a fixed label. Every challenge scalar `s` is odd, of at most `e − 3` bits, with `q` prime (probable prime to 36 bases), as the protocol's is; the first under each key is the smallest such `s`, so the largest `q`. Every run returned 0: none failed, none was stopped by the time limit.
+- **What it cost**: 43 minutes on two cores of a shared build VM.
+
+The largest integer the reference wrote, in bits:
+
+| | `p248` | `p376` | `p500` |
+| --- | ---: | ---: | ---: |
+| Key generation | 12,746 | 19,188 | 25,531 |
+| Signing | 12,328 | 18,767 | 24,953 |
+| The same, in units of `L` | 50.8, 49.1 | 50.1, 49.0 | 50.6, 49.4 |
+
+These are not our budget. They are the reference's method, in three habits (**Read**, each at the place named):
+
+- **A.** It brings a lattice to Hermite normal form modulo the determinant of a generating matrix (`quat_lattice_hnf`, `quat_lattice_add`, `quat_lattice_mul` in `lattice.c`), and the determinant of a `4×4` matrix of entries near `N` is near `N⁴`. It intersects two lattices through three duals, each an adjugate matrix (`quat_lattice_intersect`), and it finds an ideal's norm as the square root of a lattice index, a quotient of two determinants (`quat_lideal_norm` in `ideal.c`).
+- **B.** It forms a generator as the product of two elements with coordinates below `N` and takes that product's norm, before anything is reduced modulo `N` (`quat_sampling_random_ideal_O0_given_norm` in `normeq.c`, `quat_lideal_create_principal`).
+- **C.** Everything else: values that belong to the mathematical object and that any method holds.
+
+Each function of the table below is put in one class by what its largest value is. A function that does both kinds of work is put in A or B, which can only lower the figure for C.
+
+| Function | Class | Key generation: `p248` | `p376` | `p500` | Signing: `p248` | `p376` | `p500` |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `ibz_vec_4_linear_combination` | A | 12,746 | 19,188 | 25,531 | 12,328 | 18,767 | 24,953 |
+| `ibz_mat_4xn_hnf_mod_core` | A | 10,197 | 15,350 | 20,425 | 9,863 | 15,013 | 19,962 |
+| `ibz_xgcd_with_u_not_0` | A | 8,924 | 13,433 | 17,876 | 8,630 | 13,138 | 17,469 |
+| `ibz_vec_4_linear_combination_mod` | A | 8,415 | 12,661 | 16,858 | 8,124 | 12,364 | 16,452 |
+| `ibz_vec_4_scalar_mul_mod` | A | 7,647 | 11,509 | 15,317 | 7,394 | 11,257 | 14,972 |
+| `ibz_mat_4x4_inv_with_det_as_denom` | A | 5,105 | 7,681 | 10,220 | 6,326 | 9,543 | 12,619 |
+| `ibz_centered_mod` | A | 5,103 | 7,678 | 10,216 | 6,326 | 9,543 | 12,619 |
+| `ibz_mod_not_zero` | A | 5,103 | 7,678 | 10,216 | 6,326 | 9,543 | 12,619 |
+| `ibz_vec_4_copy_mod` | A | 5,103 | 7,678 | 10,216 | 6,326 | 9,543 | 12,619 |
+| `quat_lattice_hnf` | A | 5,103 | 7,678 | 10,216 | 6,326 | 9,543 | 12,619 |
+| `quat_lattice_add` | A | 2,552 | 3,840 | 5,109 | 3,810 | 5,741 | 7,586 |
+| `ibz_mat_4x4_scalar_mul` | A | 2,552 | 3,840 | 5,109 | 2,468 | 3,756 | 4,993 |
+| `ibz_mat_4x4_gcd` | A | 2,551 | 3,839 | 5,108 | 2,467 | 3,755 | 4,992 |
+| `ibz_mat_4x4_scalar_div` | A | 2,551 | 3,839 | 5,108 | 2,467 | 3,755 | 4,992 |
+| `quat_alg_coord_mul` | B | 2,551 | 3,838 | 5,107 | 2,466 | 3,754 | 4,991 |
+| `quat_alg_norm` | B | 2,551 | 3,838 | 5,107 | 2,466 | 3,754 | 4,991 |
+| `quat_lideal_create_principal` | B | 2,551 | 3,838 | 5,107 | 2,466 | 3,754 | 4,991 |
+| `quat_lattice_mat_alg_coord_mul_without_hnf` | B | 1,277 | 1,920 | 2,555 | 1,234 | 1,878 | 2,497 |
+| `quat_alg_conj` | B | 1,276 | 1,919 | 2,554 | 1,233 | 1,877 | 2,496 |
+| `quat_sampling_random_ideal_O0_given_norm` | B | 1,276 | 1,919 | 2,554 | 1,234 | 1,877 | 2,496 |
+| `quat_lattice_index` | A | 1,031 | 1,543 | 2,055 | 1,270 | 1,914 | 2,529 |
+| `quat_lideal_reduce_basis` | C | 1,028 | 1,540 | 2,052 | 1,268 | 1,911 | 2,527 |
+| `quat_alg_mul` | B | 1,027 | 1,539 | 2,051 | 1,266 | 1,910 | 2,525 |
+| `ibz_mat_4x4_copy` | A | — | — | — | 1,266 | 1,910 | 2,525 |
+| `ibz_mat_4x4_transpose` | A | — | — | — | 1,266 | 1,910 | 2,525 |
+| `quat_lattice_dual_without_hnf` | A | — | — | — | 1,266 | 1,910 | 2,525 |
+| `quat_lattice_reduce_denom` | A | 514 | 770 | 1,026 | 1,265 | 1,909 | 2,524 |
+| `dim2id2iso_ideal_to_isogeny_clapotis` | C | 508 | 768 | 1,015 | 1,003 | 1,518 | 2,011 |
+| `endomorphism_application_even_basis` | C | 741 | 1,125 | 1,497 | 933 | 1,415 | 1,879 |
+| `quat_qlapoti` | C | 371 | 565 | 750 | 757 | 1,144 | 1,513 |
+| `quat_lattice_contains` | C | 496 | 752 | 1,000 | 689 | 1,042 | 1,382 |
+| `ibz_mat_4x4_eval` | C | 495 | 751 | 999 | 688 | 1,041 | 1,381 |
+| `ibz_vec_4_copy` | C | 495 | 751 | 999 | 688 | 1,041 | 1,381 |
+| `quat_lideal_mul` | C | 653 | 975 | 1,291 | — | — | — |
+| `ibz_vec_4_copy_ibz` | C | 514 | 770 | 1,026 | 633 | 955 | 1,263 |
+| `quat_lll_core` | C | 514 | 770 | 1,026 | 634 | 955 | 1,263 |
+| `quat_lideal_norm` | C | 513 | 769 | 1,025 | 632 | 954 | 1,262 |
+| `quat_lattice_alg_elem_mul` | C | 515 | 771 | 1,027 | 2 | 2 | 2 |
+| `quat_lideal_prime_norm_reduced_equivalent` | C | 514 | 770 | 1,026 | — | — | — |
+| `ibz_rounded_div` | C | 498 | 762 | 1,007 | 499 | 762 | 1,007 |
+| `ibz_2x2_mul_mod` | C | — | — | — | 496 | 752 | 1,000 |
+| `sign` | C | — | — | — | 496 | 752 | 1,000 |
+| `ibz_vec_4_scalar_div` | C | 246 | 374 | 498 | 439 | 664 | 881 |
+| `ibz_vec_4_scalar_mul` | C | 246 | 374 | 498 | 439 | 664 | 881 |
+| `quat_alg_elem_copy` | C | 193 | 290 | 383 | 439 | 664 | 881 |
+| `ibz_cornacchia_prime` | C | 254 | 378 | 502 | 255 | 378 | 506 |
+| `matrix_application_even_basis` | C | 249 | 377 | 501 | 249 | 377 | 501 |
+| `_change_of_basis_matrix_tate` | C | 248 | 376 | 500 | 248 | 376 | 500 |
+| `ibz_from_bytes` | C | — | — | — | 248 | 376 | 500 |
+| `set_decimal` | C | — | — | — | 245 | 373 | 497 |
+| `ibz_mat_2x2_eval` | C | 191 | 290 | 381 | 192 | 290 | 383 |
+| `ibz_vec_4_add` | C | 187 | 284 | 377 | 187 | 284 | 377 |
+| `quat_alg_equal_denom` | C | 187 | 284 | 376 | 187 | 284 | 376 |
+| `quat_qf_eval` | C | 145 | 209 | 270 | — | — | — |
+| `ibz_to_bytes` | C | 142 | 208 | 267 | — | — | — |
+| `quat_lideal_generator` | C | 141 | 207 | 267 | — | — | — |
+| `ibz_vec_4_content` | C | 143 | 202 | 263 | 139 | 204 | 265 |
+| `quat_alg_normalize` | C | 128 | 194 | 255 | 128 | 194 | 255 |
+| `ibz_complex_mul` | C | 64 | 95 | 126 | 65 | 96 | 127 |
+
+59 functions; 6 more wrote nothing above 64 bits and are left out. The file has every row, by operation.
+
+| Largest value, bits | Key generation: `p248` | `p376` | `p500` | Signing: `p248` | `p376` | `p500` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Class A | 12,746 | 19,188 | 25,531 | 12,328 | 18,767 | 24,953 |
+| Class B | 2,551 | 3,838 | 5,107 | 2,466 | 3,754 | 4,991 |
+| Class C | 1,028 | 1,540 | 2,052 | 1,268 | 1,911 | 2,527 |
+
+The largest value of class C is the Gram matrix of the ideal about to be reduced (`quat_lideal_reduce_basis`): 1,268, 1,911 and 2,527 bits, in signing. It is `2·b(N) + 4` at most for the ideal's norm `N`, at each set (the norm is the row `quat_lideal_norm`).
+
+##### What section 2.1 commits the later stages to
+
+The budget below is for these methods. Each is an obligation on the stage named, and that stage's review checks it. A stage that cannot meet one says so in its own section, and the width is derived again there.
+
+- **Q1 (2b).** A left ideal of `O0` of norm `N` is held by a basis in Hermite normal form with numerators over the denominator 2 (the denominator of `O0`'s basis, 1.4.5). The lattice of numerators contains `2N·Z⁴`: `N·O0` lies in the ideal, and `2N·Z⁴` lies in `N·O0`. So the normal form is computed with the four vectors `2N·eᵢ` among the generators and every entry reduced modulo `2N` as it is made, which changes no lattice. The modulus is **fixed**: it is never divided by a pivot. No determinant is computed. This is not the reference's routine, nor the textbook modular algorithm: both work modulo a multiple of the lattice's determinant, here `4N²`, and divide it by each pivot as they go (`ibz_mat_4xn_hnf_mod_core`); given `2N` they give a wrong form (**Derived**, by hand through the reference's routine: the lattice `2Z ⊕ 2Z` with modulus 2 comes out as `diag(1, 2)`), and given `4N²` their intermediates are near `4b` bits, above the width.
+- **Q2 (2b, 2d).** An ideal's norm is carried with it and never recovered from an index. An element that generates an ideal together with `N` is reduced modulo `N·O0` before it is used.
+- **Q3 (2d).** The intersection of two left ideals of `O0` of coprime norms `N₁` and `N₂` is `N₂·I₁ + N₁·I₂`, one normal form of eight generators by the method of Q1 with the fixed modulus `2·N₁·N₂`, and no dual. (**Derived**: both terms lie in the intersection, and at each prime dividing `N₁` the sum is `I₁` and at each prime dividing `N₂` it is `I₂`.) Our signing intersects an ideal of prime norm `q` with the secret ideal of prime norm. The two norms are never equal: `s` has at most `e − 3` bits, so `q > 2^(2e−6)`, which is above every secret norm Q4 admits.
+- **Q4 (stage 5).** Key generation accepts a secret ideal only if its norm is below `2^B`, `B = ⌈L/2⌉ + 32`, and otherwise goes on searching. The same bound is tested wherever a secret key enters, so also when one is decoded: a replay of signing runs on keys imported from the reference (1.6). See "the secret norm" below.
+- **Q5 (2c).** The reduction of a basis states, in its own section, the largest intermediate it holds, as a formula. This section cannot: the algorithm is not chosen. See "bounds not proven".
+
+##### The budget, by consumer (Derived)
+
+For an ideal `I` of norm `N`, with `b = b(N)`, under Q1 and Q2. An element of `O0` is `(x₀ + x₁i + x₂j + x₃k)/2` with integer numerators, and its norm is `(x₀² + x₁² + p·(x₂² + x₃²))/4`.
+
+| # | Quantity | Consumer | Bound on its bits | Proven? |
+| --- | --- | --- | --- | --- |
+| 1 | An entry of the basis | 2b, 2d | `b + 1`: every entry of the normal form is in `[0, 2N]` | Proven |
+| 2 | An intermediate of the normal form with the fixed modulus `2N` (Q1) | 2b | `2b + 3`: a combination `u·x + v·y` of two entries below `2N` with cofactors of a greatest common divisor, at most `2·(2N)²`, before it is reduced | Proven for that method, and for no method that works modulo the determinant; 2b states its own |
+| 3 | An entry of the Gram matrix of the basis, in the reference's scaling (`2·Σ wₖ·xₖ·yₖ`, weights 1, 1, `p`, `p`) | 2c | `2b + L + 4`: at most `16·(1 + p)·N²` | Proven |
+| 4 | The same, when the normal form has its generic shape (two pivots near `N` in the coordinates of 1 and `i`, two pivots of 1 or 2) | 2c | `2b + 4` | Typical: the other shapes are a fraction near `1/N` of the ideals of a prime norm |
+| 5 | An intermediate of the reduction | 2c | — | **Open** (Q5) |
+| 6 | The norm of a sampled trace-zero element with numerators below `N`; a coordinate of the product of two elements with numerators below `2N` | stage 3 | `2b + L + 4` | Proven |
+| 7 | A product in the square root modulo `N` | stage 3 | `2b` | Proven |
+| 8 | The step to an equivalent ideal `I·β̄/N`, for `β` in `I` of norm `N·n'`: a coordinate of `x·β̄` for `x` in the basis, and the product `N·n'` | 2d, stage 3 | `1.5·b + 0.5·b(n') + 0.5·L + 5` | Proven; below row 3 |
+| 9 | The norm equation: a coefficient of the generator, the target, the lattice of dimension 2, the values given to Cornacchia | stage 3 | `2.5·L + 80`, with the bounds of R2 (17 bits, 20,000 steps) and an ideal of norm below `2^(⌈L/2⌉ + 2)` | Proven, given a reduced basis in 2c's sense |
+| 10 | The translation: a coordinate of an endomorphism of norm `d₁·d₂ < 2^(2e)`, its product with a matrix entry below `2^e`, a degree times a norm | stage 4 | `e + b + ⌈L/2⌉ + 4` | Proven, as row 9 |
+
+Row 3 is the largest, and it is reached twice: by key generation, which reduces the ideal of norm `D`, and by signing, which reduces the intersection of the ideal of norm `q` with the secret ideal. So with `B` the bound on the secret norm's bits (Q4):
+
+    need = max( 2·(2W + 1), 2·(2e − 5 + B) ) + L + 4,    B = ⌈L/2⌉ + 32
+
+| Set | `L` | `W` | Key generation: `2·(2W + 1) + L + 4` | Signing: `2·(2e − 5 + B) + L + 4` | `need` |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `p248` | 251 | 256 | 1,281 | 1,553 | 1,553 |
+| `p324` | 326 | 384 | 1,868 | 2,006 | 2,006 |
+| `p376` | 383 | 384 | 1,925 | 2,329 | 2,329 |
+| `p500` | 505 | 512 | 2,559 | 3,069 | 3,069 |
+| `p664` | 669 | 768 | 3,747 | 4,053 | 4,053 |
+
+Signing binds at all five. Key generation comes nearest at `p324` and `p664`, where `W` is large beside `L`.
+
+What was measured, beside the bound (**Ran**; bits):
+
+| Quantity | Bound | `p248` | `p376` | `p500` |
+| --- | --- | --- | --- | --- |
+| `D`, key generation's first norm (`quat_lideal_norm`) | `2W + 1` | 513 of 513 | 769 of 769 | 1,025 of 1,025 |
+| `q` (the exporter's `sign`, the subtraction) | `2e − 5` | 491 of 491 | 747 of 747 | 995 of 995 |
+| The largest candidate for the secret norm | `B = ⌈L/2⌉ + 32` | 143 of 158 | 207 of 224 | 268 of 285 |
+| The norm of signing's intersection (`quat_lideal_norm`) | `2e − 5 + B` | 632 of 649 | 954 of 971 | 1,262 of 1,280 |
+| Gram matrix, key generation (`quat_lideal_reduce_basis`) | row 3: `2·(2W + 1) + L + 4` | 1,028 of 1,281 | 1,540 of 1,925 | 2,052 of 2,559 |
+| Gram matrix, signing (`quat_lideal_reduce_basis`) | row 3: `2·(2e − 5 + B) + L + 4` | 1,268 of 1,553 | 1,911 of 2,329 | 2,527 of 3,069 |
+| The reduction's integers (`quat_lll_core`), signing | row 5: none | 634 | 955 | 1,263 |
+| The step to the shortest equivalent ideal and the norm equation (`quat_qlapoti`, whose row has `quat_lideal_shortest_equivalent` and a `quat_lideal_mul` inlined), signing | rows 8 and 9; row 8 is the larger | 757 of 1,168 | 1,144 of 1,750 | 1,513 of 2,305 |
+| The same function in key generation, where the ideal's norm is small and the norm equation's own values are its largest | row 9: `2.5·L + 80` | 371 of 707 | 565 of 1,037 | 750 of 1,342 |
+| The translation (`dim2id2iso_ideal_to_isogeny_clapotis`), signing | row 10: `e + b + ⌈L/2⌉ + 4` | 1,003 of 1,027 | 1,518 of 1,543 | 2,011 of 2,037 |
+
+##### The secret norm
+
+Key generation replaces the ideal of norm `D` by an equivalent one of small prime norm: an element `β` with coefficients in `[−64, 64]` (item 22) on a reduced basis, whose norm divided by `D` is prime. That prime is the secret ideal's norm, and signing's largest value grows with twice its length.
+
+- **Typical.** The four reduced basis vectors have norm near `D·√p`, and a combination of them with coefficients up to 64 has up to `2^16` times that, so the secret norm is near `2^16·√p`: about `L/2 + 16` bits. Measured, the largest candidate tested for primality over 256 key generations a set has 143, 207 and 268 bits, which is `L/2` plus 17.5, 15.5 and 15.5.
+- **Proven.** Only that the product of the four vectors' norms is at most `4·p²·D⁴` for an LLL-reduced basis (with the constant of the parameter 3/4; 2c fixes its own), and each is at least `D`, so one of them can be as long as `4·p²·D`, and the secret norm can have `2L + 18` bits. That happens when the ideal's class has very short elements, which is to say when the key's curve is joined to `E0` by an isogeny of very small degree. Its probability is not computed here.
+- **The rule proposed (Q4).** Key generation refuses a candidate norm of more than `B = ⌈L/2⌉ + 32` bits and goes on to the next draw. `B` is 15 to 17 bits above the largest candidate seen. With it row 3 is a proven bound for signing; without it the proven figure would be `4e + 5L + 30` bits, about half as much again.
+- **What it does to replay.** The reference has no such test. A replay of its key generation differs from it only at a seed where it accepts a norm above `2^B`, and none was seen. This is for stage 5's section to adopt or replace, and it is in the report of this part.
+
+##### What `sqisign-rs` does (Read)
+
+`sqisign-rs` at `7a4a01b` has one integer type, `Ibz<const N: usize>` (`crates/sqisign-rs/src/mp/mod.rs`), and **one `N` for each parameter set**, used by every layer: `IBZ_NLIMBS` is 30, 40 and 55 at `p324`, `p500` and `p664` (`crates/sqisign-rs/src/precomp/p324_3.rs`, `p500_27.rs`, `p664_17.rs`). A per-purpose length exists only as a bit bound carried inside each value, not as a type.
+
+- **Its rule** (`tools/gen-precomp/src/emit.rs`, `ibz_nlimbs`): `5·⌈log₂ p / 64⌉` limbs, which its comment attributes to the SQIsign reference, "or more if a reduced ideal needs it. The constant-time reduction of an ideal of norm bound `nb` needs `2 (nb + 3) + log2 p + 3` bits". It takes the largest of three counts: the reference's, the intersection salt-PRISM reduces, and the ideal SQIsign's key generation reduces. The same comment says the rule of five falls short at the two round-2 primes it keeps for comparison, which are ours: "`p248_5`: 21, `p376_65`: 31", against 20 and 30.
+- **The same dominant term.** Its `2·(nb + 3) + log₂ p + 3` is row 3 above with five bits more. So the two derivations agree on what binds: the Gram matrix of the ideal to be reduced. This section's row 3 was derived before that comment was read; the agreement is a check and the formula here is not taken from it.
+- **Its figures are not ours.** Its norms are SQIsign's and salt-PRISM's: an ideal of norm about `p·2^(2λ)` in key generation, and an intersection with an ideal of norm below `2^(2λ + 128)`. Ours are `D`, above `p²`, and an intersection with an ideal of norm near `p²`. Its formula with our norms gives 25, 32, 37, 49, 64 limbs at the five sets, against 25, 32, 37, 48, 64 for `need`.
+- **What its type does on overflow**: nothing reports it. `mul` drops the limbs above the container and caps the bound it carries, and `add` caps the bound likewise (`mp/arith.rs`); the container is sized "so no honest computation ever reaches the top of the container" (`mp/mod.rs`). Ours reports it (2.1.3).
+
+Credited in `docs/lab/CONTRIBUTIONS.md`. An oracle for the choice, and not its source.
+
+##### The rule proposed
+
+**One width for each parameter set**, for every integer of the signer, public or secret:
+
+    LIMBS = ⌈need / 64⌉ + 1
+
+| Set | `need`, bits | `LIMBS` | Width, bits | Spare bits above `need` | Spare above the largest value of class C measured |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `p248` | 1,553 | 26 | 1,664 | 111 | 396 |
+| `p324` | 2,006 | 33 | 2,112 | 106 | not measured |
+| `p376` | 2,329 | 38 | 2,432 | 103 | 521 |
+| `p500` | 3,069 | 49 | 3,136 | 67 | 609 |
+| `p664` | 4,053 | 65 | 4,160 | 107 | not measured |
+
+- **Why one.** A second, narrower width for the values that are never multiplied together would make most operations cheaper and every signature of every function carry a choice. The first signer is to be correct (S6); the cost of one width is recorded here and is a question for the last stage, with the timings.
+- **What one width costs.** A multiplication is `LIMBS²` limb products whatever the operands hold, so 676, 1,089, 1,444, 2,401, 4,225 limb products at the five sets, where most operands fill well under half of the width.
+- **The spare limb** is the margin: between 67 and 111 bits above `need`. It is there for the constants of rows 2 and 8, which are stated to within a few bits, and it is all the reduction's intermediates (row 5) have until 2c states them.
+- **At `p324` and `p664`** nothing is measured. The formula is the same derivation with their `e`, `L` and `W`, and the spare is 106 and 107 bits. What cannot be checked there until our own signer runs is the typical-case figures (row 4, the secret norm), which enter the formula only through `B`, a bound key generation enforces.
+- **The width is the consumer's.** The integer crate is generic in the number of limbs and names no parameter set. A later stage that needs another width at a set changes one constant and says why in its section.
+- **Exceeding the width is an error the caller sees.** It is never a wrap and never a truncation: 2.1.3 says how each type reports it.
+
+##### Bounds not proven
+
+1. **The reduction's intermediates** (row 5, Q5). The reference reduces with floating-point Gram–Schmidt coefficients (`lll/l2.c`) and exact integer updates of the basis and the Gram matrix. In 6,912 runs the largest integer it wrote was within two bits of the largest norm (`quat_lll_core` in signing: 634, 955, 1,263 bits, against norms of 632, 954, 1,262), so about the length of a basis entry. But no bound on a size-reduction coefficient is proven here, and ours is not written.
+2. **The secret norm** (Q4): typical `L/2 + 16`, proven only `2L + 18`. The budget assumes the rule of Q4.
+3. **The generic shape of a normal form** (row 4). Not used: the budget takes row 3, which is proven.
+4. **Anything at `p324` and `p664`** that is typical and not proven, for want of a signer to measure. The same two items, 1 and 2.
+
+Because of items 1 and 2 an overflow is, for now, a path the signer can take. That is temporary, and it is not the design. The aim: once stage 5 has Q4 and stage 2c has Q5, an overflow in signing is unreachable by proof. Abandoning the attempt and drawing again is then the defence if that proof is wrong, and nothing more. A retry caused by an overflow that depends on a secret is a channel: how often the signer retries would show something of the key. Until both obligations are met, the ledger holds this as open (O33).
+
+#### 2.1.3 The two types
+
+A public integer, `Int<N>`, and a secret integer, `SecretInt<N>`, of `N` limbs each. The crate proposed is `prism-int`.
+
+**What they share.**
+
+- **Sign and magnitude.** `N` limbs of 64 bits hold the magnitude, least significant first, and a sign is held beside them. The range is symmetric, `−(2^(64N) − 1)` to `2^(64N) − 1`, so negation and the absolute value cannot overflow, and zero has one representation, with the sign of a non-negative number. (Two's complement has one more negative value than positive, and negating it overflows.) In the secret type the sign is a secret bit. An addition does not look at the signs to choose its work: it computes the sum of the magnitudes and both orders of their difference, and selects among the three in fixed time. After every operation the sign of a zero magnitude is set to non-negative by a mask and without a branch; otherwise a negative zero would be unequal to zero.
+- **Not `Copy`.** A value is 208 to 520 bytes, and a secret one must not be duplicated by an assignment. Both are `Clone`.
+- **Wiped on drop, both.** See below.
+
+**The public type** has the variable-time operations of 2.1.4, `PartialEq`, `Eq`, `Ord` and `Hash`. An operation whose result does not fit returns an error and no value.
+
+**Neither type prints a value.** A declassified secret lives in `Int<N>`, and an `assert_eq!`, an `unwrap` or a `{:?}` on an error path would print it. So `Debug` of both types prints the type's name and no value, neither has `Display`, and no error of either type carries a value. A value the caller knows to be public (a constant, a test's operand) is formatted by a method with a name of its own, `Int::public_hex`, which the secret type does not have.
+
+**The secret type.**
+
+- A `Debug` that prints no value (above), no `Display`, no `PartialEq`, `Eq`, `Ord` or `Hash`, no `AsRef`, `Deref` or `From` into the public type, no serialization, and no method that formats its value.
+- Its operations are those whose time depends on `N` alone: addition, subtraction, negation, schoolbook multiplication, shifts by a public amount, selection between two values by a secret bit, and comparison and equality that return a secret bit. A secret bit is a type of this crate, `SecretBit`. It is not a `bool` and does not convert to one, because a caller who may branch on comparisons with public values recovers the integer one bit at a time.
+- **Overflow, without a branch on the value.** A secret integer carries one more secret bit: *overflowed*. An operation whose true result does not fit sets it, and every operation passes it on from its operands. Multiplication forms all `N²` limb products and sets the bit if any of them lands above limb `N`. A `SecretBit` carries the mark too: a comparison or an equality of a marked integer gives a marked bit, and a selection or a swap by a marked bit marks what it returns. A selection passes on the mark of the value it selects and not of the other: the result is a copy of one operand, and it is as good as that operand. Bytes that do not fit `N` limbs set the mark as well: the secret type has no constructor that returns an error. The mark is read at the exits below and nowhere else, and **each of the three** returns an error and no value when it is set. So a secret computation runs the same instructions whether it overflows or not, and a caller can obtain neither a wrapped value nor a clean bit computed from one. Step 2 has a test for each operation that the mark is passed on.
+- **The error is itself a disclosure.** To learn that an overflow happened is to learn something about a secret. It has a treatment like any other exit: the one expected is **U**, unreachable by proof, once Q4 and Q5 hold (see "bounds not proven"). Until then each exit's row says so.
+- **Three exits, each with one name, and no other.** `SecretInt::declassify` gives the public integer: every operation the secret type does not have (division, a greatest common divisor, inversion, a square root, a bit length, a valuation) is reached through it. `SecretBit::declassify` gives a `bool`: every branch on a secret comparison is reached through it. `SecretInt::export_le_bytes` writes the magnitude into a buffer the caller owns and the sign into a byte beside it: the secret key's encoding (stage 5) and a scalar handed to the curve layer (stage 4) are reached through it. It has a second refusal, which step 2 found it needs: a buffer shorter than the magnitude (`SecretError::DoesNotFit`). Cutting the value short would be a silent truncation, and requiring a buffer of the full width would make every caller cut it short themselves. That refusal shows something of the secret too, and it is treated as the overflow error is: the row's last column covers both. CI counts the call sites of the three names outside the crate and requires the count to equal the number of rows of the table below (`scripts/ci/check_secret_exits.py`; the count is by method name, and `declassify` is one name for two of the three). The brief asked for one conversion with one name; the other two are here because without them a secret would leave by a door the table does not count.
+
+**The secret-treatment table.** One row for each call site of an exit: the file and function, which exit, what leaves, why the operation needs it, and the treatment it gets at the last stage (G4), one of four, and the treatment of its overflow error:
+
+- **F**: a fixed-time routine replaces the variable-time one;
+- **I**: an argument that the value, or what the routine's time shows of it, is independent of the secret key and of anything a signature does not already show;
+- **B**: blinding, so that the declassified value is a masked one;
+- **E**: export, for `export_le_bytes` only: the bytes go to a layer that holds them as secrets, and that layer's section says how.
+
+And for the error an exit returns when the overflow mark is set, **U**: a proof that the mark cannot be set at that call site, and, for `export_le_bytes`, that the value fits the buffer it is given.
+
+| # | Stage | Call site | Exit | What leaves | Operation | Treatment at the last stage | Its overflow error |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| — | — | none yet | | | | | |
+
+The table is empty: this part has no consumer, and its own code declassifies nothing. Nearly every routine of stages 2b to 3 is variable-time in the first signer (the normal form's greatest common divisors, the reduction, Cornacchia, each division), so the rows will be many, and the table is the list of what the last stage has to do.
+
+**Both types are wiped, and why this is more than the brief asked.** The brief asks that the secret type be wiped on drop. But in the first signer a declassified value is still a secret: it is a copy of one, held in the public type so that a variable-time routine may take it. If the public type were not wiped, S6's "wipes its secrets" would fail at every row of the table. So the proposal is that `Int<N>` is wiped on drop too. The cost is one pass over the limbs at each drop. A wipe on drop clears the place a value was dropped from. It does not clear the bytes a move left behind on the stack, and without `unsafe` nothing here can; step 2 states what its tests can show of this and what they cannot. What then separates the types is what S6 and plan 2.4 ask of them: which operations exist, and what may be printed or compared.
+
+**What is not claimed.** This part does not claim constant time. The secret type's operations are *shaped* for it: no branch and no index on a secret limb is written. Whether the compiled code keeps that shape is measured at the last stage (ledger O6), where the claim is made or not.
+
+#### 2.1.4 Operations and conventions
+
+An operation with no consumer is not built. The consumers are the later stages, named as the reference names the work: each row gives the reference function that needs the operation on our path (1.2), read at the pin.
+
+"Replay" marks a convention that a value compared with the reference in stage 5's replay depends on. The others are ours to choose.
+
+**On both types** (fixed time in the secret type; the public type's may be variable):
+
+| Operation | Convention | Consumer |
+| --- | --- | --- |
+| From a `u64` or an `i64`; zero and one; the secret type from a public value | They always fit | constants; every stage |
+| From little-endian bytes of the magnitude | Public type: a value that does not fit `N` limbs is an error. Secret type: it sets the overflow mark. The public type is also made from little-endian limbs and a sign | stage 3 (sampling), stage 5 (the secret key) |
+| Addition, subtraction, negation | Exact, or overflow | every stage |
+| Multiplication | Schoolbook, exact, or overflow | every stage |
+| Shift left by a public count | Exact, or overflow if a set bit leaves | powers of two (`ibz_pow` is called only with base 2) |
+| Shift right by a public count | Of the magnitude: rounds toward zero, as `ibz_div_2exp` | 2c (`quat_lideal_reduce_basis` halves a diagonal) |
+| Selection, and swap, by a bit | Secret type only: by a secret bit, fixed time. The public type needs neither: a branch and `core::mem::swap` | 2c, stage 3 |
+| Equality, and comparison | Secret type: return a secret bit. Public type: `Eq`, `Ord` | every stage |
+
+**On the public type only** (variable time):
+
+| Operation | Convention | Replay | Consumer |
+| --- | --- | --- | --- |
+| To little-endian bytes of a stated length | Of the magnitude; an error if it does not fit. How a sign is encoded is the caller's format. (The secret type's is its exit, `export_le_bytes`, 2.1.3) | — | stage 5 (the secret key), stage 4 (scalars for the curve) |
+| Sign, is zero, is odd, the low `k ≤ 64` bits of the magnitude | The low bits are of the magnitude, with the sign given separately. The reference's `ibz_get` returns the low 31 bits with the sign, and its callers then take `& 1`, `& 3` or `& 7`, which for a negative value in C's two's complement is the residue modulo 2, 4 or 8. Ours offers that residue directly: "modulo `2^k`, non-negative" (`residue_pow2`), beside the low bits of the magnitude (`low_bits`). A count above 64 is an error | Yes: `quat_qlapoti_check_mod_condition`, `get_endtype`, `quat_elem_is_odd_norm` (`qlapoti.c`) branch on these residues | stage 3 |
+| Bit length | Of the magnitude; 0 for zero | — | 2c (if the reduction scales by a length), stage 3 |
+| Division with remainder, truncating | Quotient rounded toward zero, remainder with the sign of the dividend (`ibz_div`, GMP's `tdiv`). Division by zero is an error | Yes: `quat_change_to_O0_basis` and the Euclidean loop of `ibz_cornacchia_prime` divide possibly negative values this way | 2b, 2d, stage 3 |
+| Division with remainder, floor | Quotient rounded down, remainder with the sign of the divisor (`ibz_div_floor`) | Yes: `quat_qlapoti` (the target `m`); not in the normal form, whose result is canonical | 2b, stage 3 |
+| Remainder, non-negative | In `[0, |m|)` whatever the signs (`ibz_mod`, GMP's `mpz_mod`) | Yes | 2b, stages 3 to 5 |
+| Remainder, centred | In `(−m/2, m/2]` for `m > 0` (`ibz_centered_mod`: zero is 0, and the half is positive) | No: it is internal to the normal form | 2b |
+| Division, rounded to nearest | The quotient nearest `a/b`, and a tie goes **toward zero** (`ibz_rounded_div`, `qlapoti.c`: it corrects the truncated quotient only when twice the remainder is strictly greater than the divisor) | Yes: the closest-vector step and the dimension-2 reduction of `quat_qlapoti` | stage 3 |
+| Exact division | An error if the remainder is not zero | — | 2c (the Gram matrix divided by the norm), 2d |
+| Greatest common divisor | Non-negative; `gcd(0, 0) = 0` | — | 2b, 2d, stage 3 |
+| Extended greatest common divisor | `g = u·a + v·b`, `g ≥ 0`, with the cofactors of the Euclidean algorithm on the magnitudes, each given its operand's sign, so `|u| ≤ |b|/g` and `|v| ≤ |a|/g` when neither operand is zero (when `b` is zero they are `(±1, 0)`, which the first draft's bound did not allow for). The reference adds a normalization of its own, `ibz_xgcd_with_u_not_0`, on top of GMP's | No (**Derived**): the cofactors are used only inside the normal form, and the Hermite normal form of a lattice of full rank is unique, so its entries do not depend on them | 2b |
+| Inverse modulo `m > 1` | In `[1, m)`; **none**, as a value the caller must handle, when `gcd(a, m) ≠ 1` (`ibz_invmod` returns 0 then) | Yes | stage 3 (`quat_qlapoti`), stages 4 and 5 (the inverses of `d₁` and of `s` modulo `2^e`) |
+| Square root, floor | `⌊√a⌋` for `a ≥ 0`; an error for `a < 0` (`ibz_sqrt_floor`) | — | stage 3: `⌊√p⌋` in `quat_qlapoti`, once a set, which may become a constant |
+| Square root, exact | The root, or none when `a` is not a perfect square, a negative `a` included (`ibz_sqrt` returns 0 and writes nothing then) | Yes | stage 3 (`ibz_cornacchia_prime`) |
+| Jacobi symbol `(a/n)` | For `n` odd and positive; an error otherwise. −1, 0 or 1, and 0 exactly when `gcd(a, n) ≠ 1`. The reference's `ibz_legendre` is GMP's Legendre symbol, called once, with a probable prime below; the two agree there | Yes: one call, `ibz_cornacchia_extended` | stage 3 |
+| Modular multiplication and exponentiation, modulus odd | Results in `[0, m)`. The modulus has at most half the width's bits, so that a product of two residues fits; a wider modulus is an error. The largest modulus on our path is `D`, of `2W + 1` bits | — | stage 3: the modular square root, and the primality test |
+| Two-adic valuation | The number of trailing zero bits; **none** for zero. (The reference's `ibz_two_adic` has no caller. For zero, GMP's `mpz_scan1` returns the largest `unsigned long`, which the reference returns as an `int`: −1) | — | stage 3 (the strong probable-prime test) and stage 4 (the content of an endomorphism, which the reference removes by repeated halving, `id2iso.c`) |
+
+**Not in this crate, and why:**
+
+- **The modular square root** (`ibz_sqrt_mod_p`) is stage 3's, built on modular exponentiation here. Replay depends on **which root** it returns. In the reference: for a modulus that is 3 modulo 4 it is `a^((m+1)/4)`; for 5 modulo 8 it is `a^((m+3)/8)` when `a^((m−1)/4)` is 1, and `2a·(4a)^((m−5)/8)` otherwise; for 1 modulo 8, Tonelli–Shanks with the least non-residue from 2 up. For `a` divisible by the modulus it writes 0 and reports **no root**, so the sampler that calls it draws again (`intbig.c`, `ibz_sqrt_mod_p`). Both moduli of ideal sampling are 3 modulo 4 at every set: `D` is, at all five (**Derived**: each is `2^(2W)` plus 75, 183, 183, 643 or 75, 1.7, and each of those is 3 modulo 4), and `q = 2^(2e−5) − s²` with `s` odd is 7 modulo 8 (**Derived**). The other two branches are reached from Cornacchia, whose primes are 1 modulo 4.
+- **Random integers** (`ibz_rand_interval` and its three relatives) are stage 3's. Replay depends on how bytes become an integer, draw by draw. From this crate they need: an integer from little-endian bytes, the bit length, a mask to that length, comparison, addition.
+- **Primality** (`ibz_probab_prime`, item 20) is stage 3's. From this crate it needs: modular multiplication and exponentiation, the two-adic valuation, the Jacobi symbol, a remainder by a small integer, the exact square root. Whether it is the reference's randomized test or the verifier's Baillie–PSW is that stage's decision (1.5).
+- **`ibz_pow`** with a base other than 2, **`ibz_pow_mod`** as a public function, **`ibz_mod_ui`**, **`ibz_two_adic`**, the string conversions and `ibz_conditional_assign`: no caller on our path (**Read**: `grep` over `src`, tests and benchmarks excluded).
+- **Rationals** (`ibq_t`, `rationals.c`) and the floating-point type of the reduction (`dpe.h`): 2c decides whether it has either.
+
+#### 2.1.5 The existing integers
+
+`prism-verify/src/prime/mod.rs` has a private natural number, `Nat<W>`, for the verifier's Baillie–PSW test of the challenge degree: unsigned, of the width `ParameterSet::Degree` names, with Montgomery multiplication, a Jacobi symbol by a small integer, and loops that are all counted (**Read**).
+
+Could this layer serve it later? In part.
+
+- The storage and the ring operations of `Nat` are a subset of the public type's.
+- Its Montgomery arithmetic and its test are what stage 3 needs for item 20, if stage 3 takes the deterministic test (1.5). Then there would be two implementations of one test, at two widths, or one.
+- Against merging: the verifier's file is inside the reviewed verifier, pinned by operation counts and by the mutation record, generic over a width trait of `prism-field`, and it has no dependency. The new crate brings a wipe on drop the verifier does not need.
+
+Not merged in this part, and not decided. Ledger O34 holds the question for stage 3's section.
+
+#### 2.1.6 What the crate is (step 2 of this part)
+
+**Ran** here means run on a build VM, x86_64, with Rust 1.97.1.
+
+- **`prism-int`**: generic in the number of limbs, and it names no parameter set and no crate of this workspace. `forbid(unsafe_code)`, `deny(missing_docs)`. It is first in the order of `scripts/ci/check_no_upward_edge.py`, so that check holds it to naming no workspace crate, dev edges included; it is in the research-boundary check; and the front crate re-exports it as `hazmat::int` behind a feature, `signer`, that is off by default (Rick's ruling, 2026-11-22). A default build of the front crate is the verifier alone: a node that only verifies compiles no signer code and none of its dependencies. `scripts/ci/check_consumer_build.py` holds that: the feature table is exactly `default = []` and `signer = ["dep:prism-int"]`, the default build graph holds none of `prism-int`, `zeroize` and `subtle`, and the graph with the feature holds all three. Signing and key generation will be behind the same feature. CI builds, lints, documents and tests the front crate in both configurations.
+- **Dependencies.** `zeroize` 1.8.2 writes the zeros of the wipe so that the compiler may not remove them; it was already in the workspace's lock file. `subtle` 2.6.1, without its default features, gives the selection of a limb by a bit without a branch and the barrier that keeps the compiler from turning the bit back into one; `Choice` converts to `bool`, so it stays private, inside `SecretBit`. In the tests only: `num-bigint` 0.4.6 with `num-integer` and `num-traits`, the oracle. `cargo deny check` passes with all of them (**Ran**).
+- **The limbs.** Carries are sums widened to `u128`. Every limb function (`limbs.rs`) does the same work whatever its operands hold, and the secret type is built on those functions alone: it calls no routine of the public type. A product is not held in `2N` limbs: every limb product that lands at or above limb `N` is gathered into one limb that is zero exactly when the product fits.
+- **Division** is Knuth's algorithm D on limbs. Its correction of an estimated quotient limb is a loop counted to two, which is all the algorithm can need (each lowering adds the divisor's top limb, at least `2^63`, to the partial remainder, which then leaves its limb). A `while` would be the same on correct code and can spin for `2^64` rounds on a mutated one.
+- **No loop ends on the word of the arithmetic alone** (the review of step 2). Four did: Euclid's algorithm in the greatest common divisor and in the extended one, Newton's iteration for the square root, and the reduction of the Jacobi symbol. Each is now counted to a bound from the width, and returns `IntError::StepBound` if the bound is reached first. Euclid and the Jacobi symbol: `2·BITS` steps, since from the second division on each remainder is below half of the one two before it, and the first divisor is below `2^BITS` (two neighbours of the Fibonacci sequence, the slowest operands, take about `1.44·BITS`). The square root: `BITS` steps, since the iteration starts within a factor of two above the root and at least halves its distance from it at each step, so `BITS/2 + 2` are enough (it takes about `log₂ BITS`). No operand reaches the refusal, so the public functions cannot test it. Each loop is in a private function that takes the count, and the crate's unit tests give it one too small: at one, two and three limbs and at the five widths they find the least count that answers, require the refusal at every count below it, and require that count to be the Fibonacci index less two for Euclid on the two largest neighbours the width holds, and within the bound for the others. A bound of `BITS + 2` in place of `2·BITS` fails that test at every width. Two signatures changed with it: the greatest common divisor returns a `Result`, and the exact square root a `Result` of an `Option`, so that a root that was not found is never reported as a number that has none. The error is a variant of its own and is not folded into another.
+- **The surface** is `prism-int/surface.txt`, and `scripts/ci/check_int_surface.py` holds the sources to it and refuses any trait on the secret types that would let a value out.
+
+**Tests** (**Ran**, debug with overflow checks, and release; CI runs both on x86_64 and aarch64).
+
+- **Committed vectors**, `prism-int/tests/data/vectors.tsv`: 10,039 lines, written by `scripts/int_vectors.py` from Python's integers, with `--check` in CI. The file is 3.3 MB and is accepted on two conditions (Rick's ruling, 2026-11-22): it is left out of the crate's package, with the test that reads it (`exclude` in the manifest; `scripts/ci/check_consumer_build.py` reads `cargo package --list`), and it is written again only when an operation or a width is added, since each new copy is 3.3 MB more of history. The review's changes to the crate changed no line of it. Every operation at one and two limbs, where the edges are taken in every combination, and at 26, 33, 38, 49 and 65 limbs. The test requires lines of every operation at every width, and a refused sum, difference, product, shift and byte string at every width. The division's lines include, at each of the five widths, operands that reach each of its corrections: the estimate of `2^64`, one lowering and two, the partial remainder leaving its limb, and the add-back. The script follows the crate's division step by step to find them, and takes nothing else from the Rust code. The secret type is run on the same lines.
+- **Against an oracle**: both types against `num-bigint` on operands from a fixed stream, at one, two and three limbs and at the five widths.
+- **Against the reference**: `scripts/c/int_conventions.c` reads the same vector file and gives each line's operands to the reference's `ibz_*` function for that operation, in the build the exporter uses: 26,299 comparisons over 18 functions, no difference (**Ran**; a step of CI's `c-vectors` job). That covers every convention marked "Replay" in 2.1.4, and `ibz_centered_mod`, `ibz_gcd`, `ibz_sqrt_floor` and the ring besides. The Jacobi symbol is compared with `ibz_legendre` at prime moduli only. So Python, the crate and the reference agree line by line, and the Rust tests link no C.
+- **The overflow mark**: a test for each operation that it passes the mark on, from either operand and from both, and that each of the three exits refuses it (`tests/marks.rs`).
+- **The secret type's promises** are `compile_fail` documentation tests, each beside a program that compiles and differs from it by the forbidden line alone: without that twin a `compile_fail` test passes on any error, a misspelt name included.
+- **The wipe.** What safe code can show: that the wipe leaves zeros in the limbs, the sign and the mark, and that a drop of each of the three types runs the wipe (a counter that exists in test builds only). What it cannot show: the memory of a value after its drop, and what a move left behind on the stack. Scratch values of the division are wiped by their own wrappers.
+- **The secret type's intermediates are wiped** (the review of step 2). An addition of secrets holds three magnitudes it selects from, and a product, a shift and a selection hold their results; none was wiped. Every value a secret operation names on its way to its result (limbs, a carry, a borrow, a flag) is now in a private wrapper that overwrites it with zeros when the operation returns, by any path; a selection writes into limbs its caller owns; and a swap copies into its operands in place and wipes the two values it selected. A unit test counts the wipes of each operation (ten for an addition, five for a comparison) and another shows the wrapper's wipe leaves zeros. **Not covered**, and stated in the type's documentation: what a limb function holds while it works and its result before the operation has hold of it (the limb functions are shared with the public type, return by value, and widen carries to 128 bits); the result of an operation in the place it was built before the move to its caller; a sign or a mark passed as an argument, and anything the compiler keeps in a register or spills; and the intermediates of the public operations run on a declassified value, but for the division's dividend. Safe code cannot clear these and the crate forbids the other kind; what the compiled code leaves is not measured.
+- **Mutation** (**Ran**, cargo-mutants 27.1.0): 519 mutants in the first run, on two cores in 59 minutes: 432 caught, 17 missed, 17 timeouts, 53 unviable. Each miss and each timeout was removed by a test or by writing the code so that the mutant cannot exist (the notebook entry lists them), and one more miss of the second run likewise. On the final code: 497 mutants, 443 caught, 53 unviable, 1 missed, in 45 minutes (the second run, all six files), and that one removed and `division.rs` run again alone, 119 mutants, 113 caught, 6 unviable. So none is missed, none times out, and `docs/lab/MUTANTS.toml` has no entry for this crate. The nightly has the crate as a job of its own, `mutants-int`, dealt into four. The brief asked for it to join the layer job; there each of its mutants would run the tests of four packages that cannot reach it, and each verifier mutant would run its tests, so it is separate, and Rick ruled that it stays so (2026-11-22). The shard time is confirmed by the first nightly. After the review of step 2 (the counted loops and the wiped intermediates), the three files it changed were run again, `number.rs`, `secret.rs` and `error.rs`: 194 mutants, 144 caught, 50 unviable, none missed, none timed out, in 27 minutes on two cores. The crate's unit tests now run before the oracle's, which changes what catches a mutant of the other files first, so the whole crate was run again on the final code: 529 mutants, 455 caught, 74 unviable, none missed, none timed out, in 97 minutes with two at a time on a loaded VM.
+
+**What the code showed of this section.** Four statements of 2.1.3 and 2.1.4 were incomplete, and are corrected above where they stand: the export needs a second refusal (a buffer shorter than the value); the cofactor bound of the extended greatest common divisor fails when an operand is zero; a selection passes on the mark of the value it selects, not of both; and the secret type has no constructor that can fail, so bytes that do not fit set the mark. No width and no convention changed.
+
+**Call sites of an exit outside the crate: none.** `scripts/ci/check_secret_exits.py` counts them against the table of 2.1.3, and both are zero.

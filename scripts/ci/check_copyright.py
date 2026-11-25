@@ -24,6 +24,7 @@ HEADER_LINES = 12
 # Files the walk is not allowed to miss. Deleting one fails the gate even
 # when every other file still has a header.
 REQUIRED = (
+    "prism-int/src/lib.rs",
     "prism-field/src/lib.rs",
     "prism-isogeny/src/lib.rs",
     "prism-verify/src/lib.rs",

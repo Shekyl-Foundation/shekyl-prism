@@ -976,3 +976,123 @@ Not done. Windows. A measurement of stack frame sizes (one fault needs a frame o
 
 Who. Rick ruled R4 and the 1.97 pin. The reviewer wrote the brief and read "1.97" as 1.97.1. The coding agent (Claude Code; `claude-fable-5-2`, and from this part `claude-opus-5-5`) wrote the canaries, moved the pin, ran everything, and wrote these records; a research agent it started searched upstream's issues. The structural-cleanup lane of `shekyl-core` ran the reproduction on 1.94.0 and 1.97.0 (ledger O31).
 
+## 2026-11-22 — Signer stage 2a, step 1: the specification of the integers, and what the reference's integers reach
+
+Question. The signer's integers are to be fixed-width (S5). How wide, at each set, before any algorithm above them is written? And what does the reference, whose integers grow to fit, actually reach?
+
+Rule (the brief of 2026-11-22). Step 1 is the section alone (`docs/SIGNER_SPEC.md` 2.1), pushed and reported, and the crate waits for its review (G3). The width is derived, by consumer, and measured in the reference at the three sets it has; `sqisign-rs` is read as an oracle. The formula is to be derived and not fitted, with the margin at `p324` and `p664` stated.
+
+Expected before running. That the reference's largest integers are in its lattice normal form, from the determinant it reduces modulo, several times what any method needs. That the value that binds is the Gram matrix of an ideal before reduction. That five times the length of `p` is about right, since that is `sqisign-rs`'s rule.
+
+**The instrument** (`scripts/c/ibz-trace.patch`, `scripts/build_traced_reference.sh`, `scripts/measure_integer_widths.py`). A patch to a copy of the pinned tree: each of 25 `ibz_*` functions that write an integer is renamed and wrapped, and the wrapper records the bit length written and its return address. The record is written at exit, and also from a handler of SIGFPE, SIGABRT, SIGSEGV and SIGTERM, because the pinned reference is known to divide by zero on some seeds and has loops with no cap. Addresses are resolved with `addr2line -i`; the build has `-g`, no PIE and no sibling-call optimization. Where the link-time optimizer kept no inlining record, a row is the emitted function and stands for what was inlined into it.
+
+Two things were wrong in the first draft of the driver and were caught before the run (the session's advisor model read the plan): the challenge scalars were random odd numbers, so `q` was almost never prime and the signing runs would have walked a path the protocol never takes; and a run that crashed would have left no record. The scalars are now the first odd `s` at or after a derived starting point for which `q` is prime, and `s` is the smallest such for the first signature of each key.
+
+**The runs** (Ran, a shared build VM, two cores, beside other lanes' work; 43 minutes). 256 key generations and 2,048 signatures at each of `p248`, `p376`, `p500`. Every run returned 0: none failed, none was stopped by the time limit. A run of the first 64 keys of the same sequence, made before, is a subset of this one and not a replication of it: four times the runs moved the largest value of a class by at most 7 bits.
+
+| Largest integer written, bits | `p248` | `p376` | `p500` |
+| --- | ---: | ---: | ---: |
+| Key generation | 12,746 | 19,188 | 25,531 |
+| Signing | 12,328 | 18,767 | 24,953 |
+| With the reference's method set aside (class C of the section) | 1,268 | 1,911 | 2,527 |
+| `need` of the section | 1,553 | 2,329 | 3,069 |
+
+The first expectation held, and by more than expected: 49 to 51 times the length of `p`, against about 6 for what the objects need. The second held: the largest value that is not the reference's method is the Gram matrix in `quat_lideal_reduce_basis`, `2·b(N) + 4` bits for the norm `N`, in signing, where the ideal reduced is the intersection of the challenge ideal with the secret one. The third was wrong for this protocol: five times the length of `p` is 20, 30 and 40 limbs at the three sets, below `need` at each (25, 37, 48), because our response ideal has norm near `p²` where SQIsign's and salt-PRISM's have a norm tied to the security level. `sqisign-rs`'s generator says as much in a comment, for exactly our two round-2 primes.
+
+**A bound of the first draft that the measurement refuted.** The draft bounded "the norm equation" at `2.5·L + 80` bits and the table showed 755 bits against 707 at `p248`. The row of `quat_qlapoti` has the step to the shortest equivalent ideal inlined into it, and the 755 bits are that step's product of the ideal's norm with the new norm. The section now compares that row with the bound of the step (its row 8) and keeps the norm equation's own bound for the same function in key generation, where the ideal is small. Recorded because it is the comparison column doing its work.
+
+**A method the first draft named wrongly** (the advisor model, before the push). The draft said an ideal's normal form is "computed modulo `2N`". The reference's routine and the textbook modular algorithm need a multiple of the determinant, `4N²` here, and divide the modulus by each pivot; with `2N` they are wrong, and with `4N²` their intermediates are near `4b` bits, above the width proposed. The section now names the method the budget is for: the four vectors `2N·eᵢ` among the generators, every entry reduced modulo `2N`, the modulus never divided. The same review found that a secret comparison's result and the secret key's bytes were exits the single named conversion did not count; the section now has three named exits and counts all three.
+
+**What is not proven** (ledger O33). The reduction's intermediates, and the secret ideal's norm, for which the section proposes that key generation refuse a norm above `2^(⌈L/2⌉ + 32)`. Nothing at `p324` and `p664` is measured.
+
+**Read.** `sqisign-rs` at `7a4a01b`, by a research agent of this session, and its report checked at the source for every statement the section makes: the type, the three limb counts, the generator's rule and comment, and what `add` and `mul` do when a result does not fit.
+
+Not done. The crate: it waits for the section's review. A CI step that holds the patch applicable to the pinned tree: proposed for step 2. The committed table was written by the driver and the build script before their copyright headers were added; the headers are the only difference, and the patch that ran is the committed one, byte for byte.
+
+Who. The reviewer wrote the brief. The coding agent (Claude Code, `claude-fable-5-2`) wrote the patch, the scripts and the section, and ran the measurement; a research agent it started read `sqisign-rs`; the session's advisor model reviewed the plan before the run.
+
+## 2026-11-22 — Signer stage 2a, step 1: the review's six corrections to section 2.1
+
+The reviewer read section 2.1 at `8524255` and approved it with six corrections, all to 2.1.2 and 2.1.3. Each was a gap in what the draft said, and none changes a width or a number.
+
+1. The overflow mark was read at one exit of three. A comparison of an overflowed integer gave a clean secret bit, which left through its own exit with no error. Now the bit carries the mark, comparison, equality, selection and swap pass it on, and all three exits refuse a marked value.
+2. The error an exit returns is itself a disclosure about a secret. It has a treatment of its own in the table's rules: unreachable by proof.
+3. Sign and magnitude in the secret type: the sign is a secret bit, an addition computes the sum and both differences and selects, and a zero's sign is normalized by a mask.
+4. `Debug` of the public type printed its value, and a declassified secret lives in that type. Neither type prints a value now; a value known to be public is formatted by a method with its own name.
+5. "An overflow is a path the signer can take" is temporary. The aim is that it is unreachable by proof once Q4 and Q5 hold, and a retry is the defence if the proof is wrong. A retry that depends on a secret is a channel.
+6. The compile-fail tests are `compile_fail` documentation tests, with no new dependency.
+
+The reviewer's recommendations on the four proposals put to Rick (the secret norm's bound as the budget's assumption with the rule ruled at stage 5; both types wiped; three exits; the sticky overflow mark) are recorded here as recommendations. They are rulings when Rick makes them.
+
+Who. The reviewer found all six. The coding agent (Claude Code, `claude-fable-5-2`) wrote them into the section.
+
+## 2026-11-22 — Signer stage 2a, step 2: the integer crate, `prism-int`
+
+Rick ruled on the four proposals of section 2.1 (2026-11-22, in session): yes to all. The secret norm's bound is the width's assumption now and the rule itself is ruled at stage 5 with the refusal probability in hand; both types are wiped and neither prints a value; three named exits; overflow in a secret is a sticky mark, carried by secret bits too. He noted the one with a later cost: if stage 5 rejects the bound, each width grows by about half, which is one constant in the code and a slower signer.
+
+**Built.** The crate of `docs/SIGNER_SPEC.md` 2.1.6: a public integer `Int<N>` with the variable-time operations of 2.1.4, a secret integer `SecretInt<N>` with the fixed-shape ones, `SecretBit`, and the three exits. No workspace dependency. `zeroize` 1.8.2 and `subtle` 2.6.1 in the library, `num-bigint` 0.4.6 in the tests; `cargo deny check` passes. Nothing calls it: this part has no consumer, the secret-treatment table is empty, and the count of exit call sites outside the crate is zero.
+
+**Run** (a build VM, x86_64, Rust 1.97.1).
+
+| What | Result |
+| --- | --- |
+| `cargo test -p prism-int`, debug and release | 62 passed in each: 6 unit, 16 in `marks`, 2 in `oracle`, 1 in `oracle_number`, 13 in `vectors`, 24 documentation tests |
+| `cargo test --workspace`, debug and release | 351 passed, 0 failed, 2 ignored, in each profile (47 test binaries) |
+| `scripts/check_int_conventions.sh` against the reference build | 26,299 comparisons over 18 `ibz_*` functions, 0 differences |
+| `cargo deny check` | advisories, bans, licenses, sources: ok |
+| `sh scripts/op_counts.sh` | the three records change in their source digest line and nowhere else |
+| `cargo mutants -p prism-int --test-package prism-int` | final code: 497 mutants, 443 caught, 53 unviable, 1 missed (second run, 45 minutes on two cores); that one removed, and `division.rs` alone again: 119 mutants, 113 caught, 6 unviable, none missed, none timed out |
+
+The vectors passed at their first complete run. Two failures before it were faults of the oracle test's own operands (a square that could not fit one limb; a modulus that could be zero).
+
+**What the first mutation run found** (519 mutants: 432 caught, 17 missed, 17 timeouts, 53 unviable, 59 minutes on two cores), and what was done. None is left to the record of mutants that stay. `cargo fmt --check` and `cargo clippy --workspace --all-targets -- -D warnings` were run on the development machine, and `cargo doc` with warnings denied on the build VM.
+
+- *Sixteen timeouts in the division.* A mutant that breaks the division's invariant makes its estimate of a quotient limb enormous, and the correction loop, a `while`, counted it down one at a time. The loop is now counted to two, which is all algorithm D can need; on correct code it is the same loop. The other cause was the order of the tests: the routines that loop on a remainder ran in the same test binary as the division's own checks. They are in a binary Cargo runs later.
+- *One timeout:* `partial_cmp` returning `None` made the square root's iteration endless before any test asked for `partial_cmp`. The oracle test asks first.
+- *Missed, equivalent as written, rewritten:* `|` joining two halves that share no bit (three in the division, now sums); the secret comparison, three exclusive cases joined by `|` (now two selections); `value < 0` for a sign that a zero's normalization hides (now `is_negative`); a bound in a private bit accessor that no caller could reach (removed).
+- *Missed for want of a test, tested:* the mark when both operands carry it; a lost limb product whose two halves are equal (`274177 · 67280421310721 = 2^64 + 1`, at every width); limbs past the width; the errors' messages.
+- *Missed in the second run, equivalent as written, rewritten:* the test for the add-back, `difference >> 64 != 0`, which a shift the other way satisfied on the same inputs. It is now the borrow bit, as in the loop above it.
+- *Missed and removed:* a hand-written drop of the division's scratch limb, which no safe test can see. The limb is in a wrapper that wipes itself.
+
+**What the code showed of section 2.1.** Four statements were incomplete and are corrected in the section: the byte export needs a second refusal, for a buffer shorter than the value; the cofactor bound of the extended greatest common divisor fails when an operand is zero; a selection passes on the mark of the value selected, not of both; bytes that do not fit set the mark, since the secret type has no constructor that can fail. No width, no number and no convention changed.
+
+**A departure from the brief.** The brief has the crate join the nightly layer job. It is a job of its own, `mutants-int`, in four shards: the crate depends on no other, so in the layer job each of its mutants would run four packages' tests that cannot reach it, and each of the verifier's 835 mutants would run its tests. In the report for Rick to reverse.
+
+**The watch list (ledger O32)** was read against the crate's source: none of its shapes is there. Frame sizes were not measured.
+
+**Not done, and not claimed.** No constant-time claim: the secret operations are written without a branch or an index on a secret limb, and whether the compiled code keeps that is for the last stage (O6). The wipe is shown as far as safe code can show it. The vector file is 3.3 MB, the largest text file in the repository. aarch64 is CI's: no aarch64 host ran these tests before the push.
+
+Who. Rick ruled. The reviewer wrote the brief and the six corrections. The coding agent (Claude Code, `claude-fable-5-2`) wrote the crate, the scripts and the checks and ran them; the session's advisor model reviewed the plan before the code, and its points on the selection trait, the hand-written ordering, the add-back's vectors and the vacuous exit count are in what was built.
+
+## 2026-11-22 — Signer stage 2a, step 2: the review's two fixes, and three rulings
+
+The reviewer read the crate and asked for two fixes. Rick ruled on the three decisions the report of step 2 left open (2026-11-22, in session; the reviewer's recommendations, which he made his rulings).
+
+**Fix 1: four loops were not counted.** The greatest common divisor, the extended one, the floor square root and the Jacobi symbol looped until the arithmetic said stop. The standing rule is that no loop's end rests on the arithmetic being right. Each is now a counted loop: `2·BITS` steps for Euclid and for the Jacobi symbol, `BITS` for Newton's iteration, each bound derived in the code beside its constant, and `IntError::StepBound`, a variant of its own, if the count runs out. No operand reaches that branch through the public functions. It is tested through the private function that takes the count: at one, two and three limbs and at the five widths, the least count that answers is found, every refusal on the way is required to be this one, and for Euclid on the two largest Fibonacci neighbours of the width the least count is required to be the index less two (and less one with the operands the other way round). Two signatures changed: `gcd` returns a `Result`, and `sqrt_exact` a `Result` of an `Option`, since folding a root that was not found into "not a square" would be a wrong answer and not a refusal.
+
+**Fix 2: secret temporaries were left on the stack.** Every intermediate a secret operation names is now held in a private wrapper that writes zeros over it when the operation returns: the three magnitudes and the two selected ones of an addition, a product, a shifted magnitude, carries, borrows and flags. A selection writes into limbs its caller owns, and a swap copies in place and wipes what it selected. A test counts the wipes of each operation. Not covered, and said so in the type's documentation and in the specification: what the shared limb functions hold and return by value, the result in the place it was built before its move, arguments and registers, and the public operations run on a declassified value. No safe code clears those.
+
+**D1: the mutation job of its own stays** (`mutants-int`). The shard time is confirmed by the first nightly.
+
+**D2: the signer side of the front crate is behind a feature, `signer`, off by default, from now.** A node that only verifies builds no signer code: the default build graph of `shekyl-prism` holds 14 crates and none of `prism-int`, `zeroize`, `subtle`; with the feature, 17. `scripts/ci/check_consumer_build.py` holds the feature table and both graphs, with a self-test of 15 planted breaches. CI lints and documents the front crate with the feature and runs the test that requires it in both profiles on both architectures. It does not run the verifier's tests a second time with it: the feature gates one re-export, and that suite is about three minutes a profile. That is a choice inside the ruling's "second build-and-test configuration", reported to Rick.
+
+**D3: the 3.3 MB vector file is accepted on two conditions.** It is out of the crate's package, with the test that reads it (`exclude`; the same script reads `cargo package --list`). It is written again only when an operation or a width is added; the generator's header says so. This change did not touch it.
+
+**Run** (a build VM, x86_64, Rust 1.97.1; the VM was shared and loaded, so times are upper figures).
+
+| What | Result |
+| --- | --- |
+| `cargo test -p prism-int`, debug and release | 67 passed in each: 11 unit (5 new), 16 in `marks`, 2 in `oracle`, 1 in `oracle_number`, 13 in `vectors`, 24 documentation tests |
+| `cargo test --workspace`, debug and release | 356 passed, 0 failed, 2 ignored, in each profile (47 test binaries) |
+| `cargo test -p shekyl-prism --features signer --test signer_layers`, debug and release | 1 passed in each; the whole front suite with the feature, once in each profile: 61 passed |
+| `cargo doc`, warnings denied: `prism-int`, `shekyl-prism`, and `shekyl-prism --features signer` | no warning |
+| `cargo mutants -p prism-int --test-package prism-int`, the three changed files | 194 mutants: 144 caught, 50 unviable, none missed, none timed out, 27 minutes on two cores |
+| The same over the whole crate, on the final code | 529 mutants: 455 caught, 74 unviable, none missed, none timed out, 97 minutes with two at a time. The unit tests now run before the oracle's, so the earlier figures for the unchanged files did not carry over. At that rate a nightly shard of four is about 49 minutes on that VM under its load, inside the 60 and not by much: the first nightly decides whether the count goes up |
+| `sh scripts/op_counts.sh` | the three records come out byte for byte as committed: no source the digest covers changed (the front crate and `prism-int` are not among them) |
+| `python3 scripts/int_vectors.py --check` | the committed file is what the script writes; not regenerated |
+
+**Two faults of the new tests, found by running them.** The first form of the Euclid test multiplied a cofactor by a Fibonacci number at full width, which does not fit: removed, and the oracle test does that check on operands of every size. The first form of the search for the least count tried every count from zero, which is the square of the bound in divisions: 31 minutes in debug at the widths of the sets. It is a bisection now, and the crate's unit tests take seconds. A third was found by the advisor's reading before the push: the helper that builds the Fibonacci pair looped until an addition refused, which a mutant of the addition would keep going for ever. It is counted.
+
+**Not run.** The comparison with the reference's `ibz_*` functions was not run again on a build VM: no result of the crate changed, and CI's `c-vectors` job runs it. aarch64 is CI's. `cargo fmt --check` and `cargo clippy` were run on the development machine.
+
+Who. Rick ruled D1 to D3. The reviewer found the two faults and wrote the recommendations. The coding agent (Claude Code, `claude-fable-5-2`) made the changes and ran them; the session's advisor model reviewed the plan first, and its points on the swallowed error in `sqrt_exact`, the unnamed temporaries of the comparison, and the broken documentation link in a default build are in what was built.

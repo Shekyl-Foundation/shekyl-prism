@@ -177,6 +177,15 @@
 //! invariants that only this interface checks in full, and nothing there
 //! is promised stable.
 //!
+//! # The `signer` feature
+//!
+//! Off by default, and a default build is the verifier alone: it compiles
+//! no signer code and none of the signer's dependencies. With it,
+//! [`hazmat`] also re-exports the layers of the signer that exist. Today
+//! that is one, the fixed-width integers, as `hazmat::int`, which nothing
+//! here calls. Signing and key generation will be behind this feature
+//! when they are written.
+//!
 //! # What is missing
 //!
 //! - **Signing and key generation.** They will appear here as a

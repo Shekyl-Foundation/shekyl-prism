@@ -1,0 +1,37 @@
+[package]
+name = "prism-int"
+description = "Fixed-width signed integers for the PRISM signer: a public type with variable-time arithmetic and a secret type with fixed-shape operations, a sticky overflow mark and three named exits"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+# The committed vectors are 3.3 MB, and the test that reads them cannot be
+# built without them, so neither is in the package. They are regenerated
+# only when an operation or a width is added: each new copy is 3.3 MB more
+# in the repository's history (`scripts/int_vectors.py` says the same).
+# `scripts/ci/check_consumer_build.py` reads the package's list.
+exclude = ["/tests/data/", "/tests/vectors.rs"]
+
+# No features, and no dependency on a crate of this workspace: this is the
+# lowest crate of the order `scripts/ci/check_no_upward_edge.py` holds.
+#
+# `zeroize` writes the zeros of the wipe on drop in a way the compiler may
+# not remove. `subtle` gives the selection of one limb by a bit without a
+# branch, and the barrier that keeps the compiler from turning the bit back
+# into one. Both are pinned: `deny.toml` refuses two versions of a crate.
+[dependencies]
+zeroize = "=1.8.2"
+subtle = { version = "=2.6.1", default-features = false }
+
+# The oracle of `tests/oracle.rs`: an arbitrary-precision integer the
+# results are compared with, and the two crates it is built on, named for
+# the traits its floor division and its greatest common divisor are in.
+# None is in a library build.
+[dev-dependencies]
+num-bigint = "=0.4.6"
+num-integer = "=0.1.47"
+num-traits = "=0.2.19"
+
+[lints]
+workspace = true

@@ -1,0 +1,433 @@
+--- a/external/PRISM_v2/src/quaternion/ref/generic/hnf/ibz_division.c
++++ b/external/PRISM_v2/src/quaternion/ref/generic/hnf/ibz_division.c
+@@ -5,8 +5,31 @@
+ #include <gmp.h>
+ #endif
+ 
++/* ibz-trace: scripts/c/ibz-trace.patch of shekyl-prism. Every function
++ * below that writes an integer is renamed, and a wrapper of the original
++ * name records the bit length of what it wrote and the address it was
++ * called from. Calls between the functions of this file go to the
++ * renamed originals and are not recorded. */
++#undef ibz_xgcd
++#define ibz_xgcd ibz_xgcd__traced
++void ibz_trace_record(const char *op, void *site, const __mpz_struct *value);
++
+ void
+ ibz_xgcd(ibz_t *gcd, ibz_t *u, ibz_t *v, const ibz_t *a, const ibz_t *b)
+ {
+     mpz_gcdext(*gcd, *u, *v, *a, *b);
+-}
+\ No newline at end of file
++}
++
++/* ibz-trace: the wrappers. */
++#undef ibz_xgcd
++#define ibz_xgcd PRISM_NAMESPACE_GENERIC(ibz_xgcd)
++__attribute__((noinline)) void
++ibz_xgcd(ibz_t *gcd, ibz_t *u, ibz_t *v, const ibz_t *a, const ibz_t *b)
++{
++    void *site = __builtin_return_address(0);
++    ibz_xgcd__traced(gcd, u, v, a, b);
++    ibz_trace_record("ibz_xgcd.gcd", site, *gcd);
++    ibz_trace_record("ibz_xgcd.u", site, *u);
++    ibz_trace_record("ibz_xgcd.v", site, *v);
++}
++
+--- a/external/PRISM_v2/src/quaternion/ref/generic/intbig.c
++++ b/external/PRISM_v2/src/quaternion/ref/generic/intbig.c
+@@ -6,6 +6,60 @@
+ #include <stdarg.h>
+ #include <assert.h>
+ 
++/* ibz-trace: scripts/c/ibz-trace.patch of shekyl-prism. Every function
++ * below that writes an integer is renamed, and a wrapper of the original
++ * name records the bit length of what it wrote and the address it was
++ * called from. Calls between the functions of this file go to the
++ * renamed originals and are not recorded. */
++#undef ibz_add
++#define ibz_add ibz_add__traced
++#undef ibz_sub
++#define ibz_sub ibz_sub__traced
++#undef ibz_mul
++#define ibz_mul ibz_mul__traced
++#undef ibz_neg
++#define ibz_neg ibz_neg__traced
++#undef ibz_abs
++#define ibz_abs ibz_abs__traced
++#undef ibz_div
++#define ibz_div ibz_div__traced
++#undef ibz_div_2exp
++#define ibz_div_2exp ibz_div_2exp__traced
++#undef ibz_div_floor
++#define ibz_div_floor ibz_div_floor__traced
++#undef ibz_mod
++#define ibz_mod ibz_mod__traced
++#undef ibz_pow
++#define ibz_pow ibz_pow__traced
++#undef ibz_pow_mod
++#define ibz_pow_mod ibz_pow_mod__traced
++#undef ibz_set
++#define ibz_set ibz_set__traced
++#undef ibz_copy
++#define ibz_copy ibz_copy__traced
++#undef ibz_copy_digits
++#define ibz_copy_digits ibz_copy_digits__traced
++#undef ibz_rand_interval
++#define ibz_rand_interval ibz_rand_interval__traced
++#undef ibz_rand_interval_i
++#define ibz_rand_interval_i ibz_rand_interval_i__traced
++#undef ibz_rand_interval_minm_m
++#define ibz_rand_interval_minm_m ibz_rand_interval_minm_m__traced
++#undef ibz_rand_interval_bits
++#define ibz_rand_interval_bits ibz_rand_interval_bits__traced
++#undef ibz_probab_prime
++#define ibz_probab_prime ibz_probab_prime__traced
++#undef ibz_gcd
++#define ibz_gcd ibz_gcd__traced
++#undef ibz_invmod
++#define ibz_invmod ibz_invmod__traced
++#undef ibz_sqrt
++#define ibz_sqrt ibz_sqrt__traced
++#undef ibz_sqrt_floor
++#define ibz_sqrt_floor ibz_sqrt_floor__traced
++#undef ibz_sqrt_mod_p
++#define ibz_sqrt_mod_p ibz_sqrt_mod_p__traced
++
+ // #define DEBUG_VERBOSE
+ 
+ #ifdef DEBUG_VERBOSE
+@@ -789,3 +843,333 @@
+ 
+     return ret;
+ }
++
++/* ibz-trace: the recorder. One row per (operation, output, return address):
++ * the largest bit length written and the number of calls. Written at exit
++ * to the file IBZ_TRACE_OUT names, appended, so that many runs of one
++ * binary can be merged; addresses are resolved afterwards with addr2line,
++ * so the binary is linked without PIE. */
++#include <signal.h>
++#include <stdlib.h>
++#include <unistd.h>
++#define IBZ_TRACE_SLOTS 16384
++static struct {
++    const char *op;
++    void *site;
++    unsigned long bits;
++    unsigned long calls;
++} ibz_trace_rows[IBZ_TRACE_SLOTS];
++static int ibz_trace_registered = 0;
++
++static void
++ibz_trace_dump(void)
++{
++    const char *path = getenv("IBZ_TRACE_OUT");
++    if (path == NULL)
++        return;
++    FILE *out = fopen(path, "a");
++    if (out == NULL)
++        return;
++    for (int i = 0; i < IBZ_TRACE_SLOTS; i++) {
++        if (ibz_trace_rows[i].op != NULL)
++            fprintf(out,
++                    "%s %p %lu %lu\n",
++                    ibz_trace_rows[i].op,
++                    ibz_trace_rows[i].site,
++                    ibz_trace_rows[i].bits,
++                    ibz_trace_rows[i].calls);
++    }
++    fclose(out);
++}
++
++/* The pinned reference divides by zero on some inputs and has loops with
++ * no cap. A run that dies of a signal, or is ended by the driver's
++ * SIGTERM, still writes what it recorded. */
++static void
++ibz_trace_signal(int number)
++{
++    ibz_trace_dump();
++    _exit(128 + number);
++}
++
++void
++ibz_trace_record(const char *op, void *site, const __mpz_struct *value)
++{
++    if (!ibz_trace_registered) {
++        ibz_trace_registered = 1;
++        atexit(ibz_trace_dump);
++        signal(SIGFPE, ibz_trace_signal);
++        signal(SIGABRT, ibz_trace_signal);
++        signal(SIGSEGV, ibz_trace_signal);
++        signal(SIGTERM, ibz_trace_signal);
++    }
++    unsigned long bits = value->_mp_size == 0 ? 0 : (unsigned long)mpz_sizeinbase(value, 2);
++    size_t slot = (((size_t)site >> 2) * 31 + (size_t)op) % IBZ_TRACE_SLOTS;
++    for (int probe = 0; probe < IBZ_TRACE_SLOTS; probe++) {
++        if (ibz_trace_rows[slot].op == NULL) {
++            ibz_trace_rows[slot].op = op;
++            ibz_trace_rows[slot].site = site;
++        }
++        if (ibz_trace_rows[slot].op == op && ibz_trace_rows[slot].site == site) {
++            if (bits > ibz_trace_rows[slot].bits)
++                ibz_trace_rows[slot].bits = bits;
++            ibz_trace_rows[slot].calls++;
++            return;
++        }
++        slot = (slot + 1) % IBZ_TRACE_SLOTS;
++    }
++    fprintf(stderr, "ibz-trace: table full\n");
++    abort();
++}
++
++/* ibz-trace: the wrappers. */
++#undef ibz_add
++#define ibz_add PRISM_NAMESPACE_GENERIC(ibz_add)
++__attribute__((noinline)) void
++ibz_add(ibz_t *sum, const ibz_t *a, const ibz_t *b)
++{
++    void *site = __builtin_return_address(0);
++    ibz_add__traced(sum, a, b);
++    ibz_trace_record("ibz_add.sum", site, *sum);
++}
++
++#undef ibz_sub
++#define ibz_sub PRISM_NAMESPACE_GENERIC(ibz_sub)
++__attribute__((noinline)) void
++ibz_sub(ibz_t *diff, const ibz_t *a, const ibz_t *b)
++{
++    void *site = __builtin_return_address(0);
++    ibz_sub__traced(diff, a, b);
++    ibz_trace_record("ibz_sub.diff", site, *diff);
++}
++
++#undef ibz_mul
++#define ibz_mul PRISM_NAMESPACE_GENERIC(ibz_mul)
++__attribute__((noinline)) void
++ibz_mul(ibz_t *prod, const ibz_t *a, const ibz_t *b)
++{
++    void *site = __builtin_return_address(0);
++    ibz_mul__traced(prod, a, b);
++    ibz_trace_record("ibz_mul.prod", site, *prod);
++}
++
++#undef ibz_neg
++#define ibz_neg PRISM_NAMESPACE_GENERIC(ibz_neg)
++__attribute__((noinline)) void
++ibz_neg(ibz_t *neg, const ibz_t *a)
++{
++    void *site = __builtin_return_address(0);
++    ibz_neg__traced(neg, a);
++    ibz_trace_record("ibz_neg.neg", site, *neg);
++}
++
++#undef ibz_abs
++#define ibz_abs PRISM_NAMESPACE_GENERIC(ibz_abs)
++__attribute__((noinline)) void
++ibz_abs(ibz_t *abs, const ibz_t *a)
++{
++    void *site = __builtin_return_address(0);
++    ibz_abs__traced(abs, a);
++    ibz_trace_record("ibz_abs.abs", site, *abs);
++}
++
++#undef ibz_div
++#define ibz_div PRISM_NAMESPACE_GENERIC(ibz_div)
++__attribute__((noinline)) void
++ibz_div(ibz_t *quotient, ibz_t *remainder, const ibz_t *a, const ibz_t *b)
++{
++    void *site = __builtin_return_address(0);
++    ibz_div__traced(quotient, remainder, a, b);
++    ibz_trace_record("ibz_div.quotient", site, *quotient);
++    ibz_trace_record("ibz_div.remainder", site, *remainder);
++}
++
++#undef ibz_div_2exp
++#define ibz_div_2exp PRISM_NAMESPACE_GENERIC(ibz_div_2exp)
++__attribute__((noinline)) void
++ibz_div_2exp(ibz_t *quotient, const ibz_t *a, uint32_t exp)
++{
++    void *site = __builtin_return_address(0);
++    ibz_div_2exp__traced(quotient, a, exp);
++    ibz_trace_record("ibz_div_2exp.quotient", site, *quotient);
++}
++
++#undef ibz_div_floor
++#define ibz_div_floor PRISM_NAMESPACE_GENERIC(ibz_div_floor)
++__attribute__((noinline)) void
++ibz_div_floor(ibz_t *q, ibz_t *r, const ibz_t *n, const ibz_t *d)
++{
++    void *site = __builtin_return_address(0);
++    ibz_div_floor__traced(q, r, n, d);
++    ibz_trace_record("ibz_div_floor.q", site, *q);
++    ibz_trace_record("ibz_div_floor.r", site, *r);
++}
++
++#undef ibz_mod
++#define ibz_mod PRISM_NAMESPACE_GENERIC(ibz_mod)
++__attribute__((noinline)) void
++ibz_mod(ibz_t *r, const ibz_t *a, const ibz_t *b)
++{
++    void *site = __builtin_return_address(0);
++    ibz_mod__traced(r, a, b);
++    ibz_trace_record("ibz_mod.r", site, *r);
++}
++
++#undef ibz_pow
++#define ibz_pow PRISM_NAMESPACE_GENERIC(ibz_pow)
++__attribute__((noinline)) void
++ibz_pow(ibz_t *pow, const ibz_t *x, uint32_t e)
++{
++    void *site = __builtin_return_address(0);
++    ibz_pow__traced(pow, x, e);
++    ibz_trace_record("ibz_pow.pow", site, *pow);
++}
++
++#undef ibz_pow_mod
++#define ibz_pow_mod PRISM_NAMESPACE_GENERIC(ibz_pow_mod)
++__attribute__((noinline)) void
++ibz_pow_mod(ibz_t *pow, const ibz_t *x, const ibz_t *e, const ibz_t *m)
++{
++    void *site = __builtin_return_address(0);
++    ibz_pow_mod__traced(pow, x, e, m);
++    ibz_trace_record("ibz_pow_mod.pow", site, *pow);
++}
++
++#undef ibz_set
++#define ibz_set PRISM_NAMESPACE_GENERIC(ibz_set)
++__attribute__((noinline)) void
++ibz_set(ibz_t *i, int32_t x)
++{
++    void *site = __builtin_return_address(0);
++    ibz_set__traced(i, x);
++    ibz_trace_record("ibz_set.i", site, *i);
++}
++
++#undef ibz_copy
++#define ibz_copy PRISM_NAMESPACE_GENERIC(ibz_copy)
++__attribute__((noinline)) void
++ibz_copy(ibz_t *target, const ibz_t *value)
++{
++    void *site = __builtin_return_address(0);
++    ibz_copy__traced(target, value);
++    ibz_trace_record("ibz_copy.target", site, *target);
++}
++
++#undef ibz_copy_digits
++#define ibz_copy_digits PRISM_NAMESPACE_GENERIC(ibz_copy_digits)
++__attribute__((noinline)) void
++ibz_copy_digits(ibz_t *target, const digit_t *dig, int dig_len)
++{
++    void *site = __builtin_return_address(0);
++    ibz_copy_digits__traced(target, dig, dig_len);
++    ibz_trace_record("ibz_copy_digits.target", site, *target);
++}
++
++#undef ibz_rand_interval
++#define ibz_rand_interval PRISM_NAMESPACE_GENERIC(ibz_rand_interval)
++__attribute__((noinline)) int
++ibz_rand_interval(ibz_t *rand, const ibz_t *a, const ibz_t *b)
++{
++    void *site = __builtin_return_address(0);
++    int ret = ibz_rand_interval__traced(rand, a, b);
++    ibz_trace_record("ibz_rand_interval.rand", site, *rand);
++    return ret;
++}
++
++#undef ibz_rand_interval_i
++#define ibz_rand_interval_i PRISM_NAMESPACE_GENERIC(ibz_rand_interval_i)
++__attribute__((noinline)) int
++ibz_rand_interval_i(ibz_t *rand, int32_t a, int32_t b)
++{
++    void *site = __builtin_return_address(0);
++    int ret = ibz_rand_interval_i__traced(rand, a, b);
++    ibz_trace_record("ibz_rand_interval_i.rand", site, *rand);
++    return ret;
++}
++
++#undef ibz_rand_interval_minm_m
++#define ibz_rand_interval_minm_m PRISM_NAMESPACE_GENERIC(ibz_rand_interval_minm_m)
++__attribute__((noinline)) int
++ibz_rand_interval_minm_m(ibz_t *rand, int32_t m)
++{
++    void *site = __builtin_return_address(0);
++    int ret = ibz_rand_interval_minm_m__traced(rand, m);
++    ibz_trace_record("ibz_rand_interval_minm_m.rand", site, *rand);
++    return ret;
++}
++
++#undef ibz_rand_interval_bits
++#define ibz_rand_interval_bits PRISM_NAMESPACE_GENERIC(ibz_rand_interval_bits)
++__attribute__((noinline)) int
++ibz_rand_interval_bits(ibz_t *rand, uint32_t m)
++{
++    void *site = __builtin_return_address(0);
++    int ret = ibz_rand_interval_bits__traced(rand, m);
++    ibz_trace_record("ibz_rand_interval_bits.rand", site, *rand);
++    return ret;
++}
++
++#undef ibz_probab_prime
++#define ibz_probab_prime PRISM_NAMESPACE_GENERIC(ibz_probab_prime)
++__attribute__((noinline)) int
++ibz_probab_prime(const ibz_t *n, int reps)
++{
++    void *site = __builtin_return_address(0);
++    int ret = ibz_probab_prime__traced(n, reps);
++    ibz_trace_record("ibz_probab_prime.n", site, *n);
++    return ret;
++}
++
++#undef ibz_gcd
++#define ibz_gcd PRISM_NAMESPACE_GENERIC(ibz_gcd)
++__attribute__((noinline)) void
++ibz_gcd(ibz_t *gcd, const ibz_t *a, const ibz_t *b)
++{
++    void *site = __builtin_return_address(0);
++    ibz_gcd__traced(gcd, a, b);
++    ibz_trace_record("ibz_gcd.gcd", site, *gcd);
++}
++
++#undef ibz_invmod
++#define ibz_invmod PRISM_NAMESPACE_GENERIC(ibz_invmod)
++__attribute__((noinline)) int
++ibz_invmod(ibz_t *inv, const ibz_t *a, const ibz_t *mod)
++{
++    void *site = __builtin_return_address(0);
++    int ret = ibz_invmod__traced(inv, a, mod);
++    ibz_trace_record("ibz_invmod.inv", site, *inv);
++    return ret;
++}
++
++#undef ibz_sqrt
++#define ibz_sqrt PRISM_NAMESPACE_GENERIC(ibz_sqrt)
++__attribute__((noinline)) int
++ibz_sqrt(ibz_t *sqrt, const ibz_t *a)
++{
++    void *site = __builtin_return_address(0);
++    int ret = ibz_sqrt__traced(sqrt, a);
++    ibz_trace_record("ibz_sqrt.sqrt", site, *sqrt);
++    return ret;
++}
++
++#undef ibz_sqrt_floor
++#define ibz_sqrt_floor PRISM_NAMESPACE_GENERIC(ibz_sqrt_floor)
++__attribute__((noinline)) void
++ibz_sqrt_floor(ibz_t *sqrt, const ibz_t *a)
++{
++    void *site = __builtin_return_address(0);
++    ibz_sqrt_floor__traced(sqrt, a);
++    ibz_trace_record("ibz_sqrt_floor.sqrt", site, *sqrt);
++}
++
++#undef ibz_sqrt_mod_p
++#define ibz_sqrt_mod_p PRISM_NAMESPACE_GENERIC(ibz_sqrt_mod_p)
++__attribute__((noinline)) int
++ibz_sqrt_mod_p(ibz_t *sqrt, const ibz_t *a, const ibz_t *p)
++{
++    void *site = __builtin_return_address(0);
++    int ret = ibz_sqrt_mod_p__traced(sqrt, a, p);
++    ibz_trace_record("ibz_sqrt_mod_p.sqrt", site, *sqrt);
++    return ret;
++}
++
