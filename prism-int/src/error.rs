@@ -63,8 +63,7 @@ impl std::error::Error for IntError {}
 /// there, or that this is not yet shown.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SecretError {
-    /// The overflow mark is set: an operation somewhere before this exit
-    /// had a result that did not fit `N` limbs.
+    /// A previous operation exceeded its range or a secret admission predicate marked the result.
     Overflowed,
     /// [`SecretInt::export_le_bytes`](crate::SecretInt::export_le_bytes)
     /// was given a buffer shorter than the magnitude.

@@ -111,3 +111,24 @@ impl<const N: usize> SecretInt<N>
     pub fn ct_lt(&self, rhs: &Self) -> SecretBit
     pub fn declassify(&self) -> Result<Int<N>, SecretError>
     pub fn export_le_bytes(&self, magnitude: &mut [u8], negative: &mut u8) -> Result<(), SecretError>
+
+[secret_steps.rs]
+impl SecretBit
+    pub fn and(&self, rhs: &Self) -> Self
+    pub fn or(&self, rhs: &Self) -> Self
+    pub fn not(&self) -> Self
+impl<const N: usize> SecretInt<N>
+    pub fn mark_if(&mut self, condition: &SecretBit)
+    pub fn bit_length(&self) -> SecretInt<1>
+    pub fn abs(&self) -> Self
+    pub fn is_negative(&self) -> SecretBit
+    pub fn is_odd(&self) -> SecretBit
+    pub fn low_bits_zero(&self, bits: u32) -> SecretBit
+    pub fn truncate<const M: usize>(&self) -> SecretInt<M>
+    pub fn resize<const M: usize>(&self) -> SecretInt<M>
+    pub fn mul_low(&self, rhs: &Self) -> Self
+    pub fn mul_word(&self, rhs: &SecretInt<1>) -> Self
+    pub fn shl_secret(&self, count: &SecretInt<1>) -> Self
+    pub fn shr_secret(&self, count: &SecretInt<1>) -> Self
+impl SecretInt<2>
+    pub fn div_word(&self, divisor: &SecretInt<1>) -> SecretInt<1>

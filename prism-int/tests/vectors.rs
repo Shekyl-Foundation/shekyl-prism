@@ -438,7 +438,7 @@ macro_rules! operations {
         /// Every operation the file has is one of the tests above.
         #[test]
         fn every_operation_of_the_file_is_run() {
-            let known = [$(stringify!($name)),*];
+            let known = ["stage", $(stringify!($name)),*];
             for line in VECTORS.lines().filter(|line| !line.starts_with('#')) {
                 let operation = line.split('\t').next().unwrap();
                 assert!(known.contains(&operation), "no test runs {operation}");
@@ -448,3 +448,92 @@ macro_rules! operations {
 }
 
 operations!(ring, unary, shift, bytes, div, xgcd, inv, sqrt, jacobi, legendre, mulm, powm);
+
+fn stage<const N: usize>(f: &[&str], line: &str) {
+    let a = secret(&int::<N>(f[2]));
+    let b = secret(&int::<N>(f[3]));
+    let word = secret(&int::<1>(f[4]));
+    let k = secret(&int::<1>(f[5]));
+    same_secret(&a.shl_secret(&k), f[7], line);
+    same_secret(&a.shr_secret(&k), f[8], line);
+    same_secret(&a.bit_length(), f[9], line);
+    same_secret(&a.mul_low(&b), f[10], line);
+    same_secret(&a.mul_word(&word), f[11], line);
+    same_secret(&a.truncate::<1>(), f[12], line);
+    same_secret(&a.resize::<1>(), f[13], line);
+}
+
+#[test]
+fn reduction_primitives_match_python() {
+    let mut widths = std::collections::BTreeSet::new();
+    for line in VECTORS.lines().filter(|s| s.starts_with("stage\t")) {
+        let f: Vec<_> = line.split('\t').collect();
+        let width: usize = f[1].parse().unwrap();
+        widths.insert(width);
+        match width {
+            1 => stage::<1>(&f, line),
+            2 => stage::<2>(&f, line),
+            11 => stage::<11>(&f, line),
+            14 => stage::<14>(&f, line),
+            16 => stage::<16>(&f, line),
+            21 => stage::<21>(&f, line),
+            27 => stage::<27>(&f, line),
+            22 => stage::<22>(&f, line),
+            28 => stage::<28>(&f, line),
+            32 => stage::<32>(&f, line),
+            42 => stage::<42>(&f, line),
+            54 => stage::<54>(&f, line),
+            _ => panic!("unknown reducer width {width}"),
+        }
+    }
+    assert_eq!(
+        widths.into_iter().collect::<Vec<_>>(),
+        [1, 2, 11, 14, 16, 21, 22, 27, 28, 32, 42, 54]
+    );
+}
+
+#[test]
+fn word_division_and_admission_marks() {
+    for d in [0_u64, 1, 2, 17, 1 << 63, u64::MAX] {
+        for hi in [0, 1, d.saturating_sub(1u64), d, u64::MAX] {
+            for lo in [0, 1, 1 << 63, u64::MAX] {
+                let n = u128::from(hi) << 64 | u128::from(lo);
+                let a = SecretInt::<2>::from_le_bytes(&n.to_le_bytes());
+                let b = SecretInt::from_u64(d);
+                let expected = if hi >= d {
+                    "overflow".into()
+                } else {
+                    format!("{:#x}", n / u128::from(d))
+                };
+                same_secret(&a.div_word(&b), &expected, "fixed division");
+            }
+        }
+    }
+    let one = SecretInt::<1>::one();
+    let yes = one.is_odd();
+    let no = yes.not();
+    let mut invalid = one.clone();
+    invalid.mark_if(&yes);
+    let bad = invalid.is_negative();
+    for bit in [bad.and(&no), yes.or(&bad), bad.not()] {
+        let mut x = one.clone();
+        x.mark_if(&bit);
+        x.mark_if(&no);
+        same_secret(&x, "overflow", "invalid predicate");
+    }
+    for x in [
+        invalid.abs(),
+        invalid.resize(),
+        invalid.truncate(),
+        invalid.bit_length(),
+        one.mul_word(&invalid),
+        invalid.mul_low(&one),
+        one.shl_secret(&invalid),
+        one.shr_secret(&invalid),
+        invalid.resize::<2>().div_word(&one),
+        one.resize::<2>().div_word(&one.neg()),
+        one.neg().resize::<2>().div_word(&one),
+    ] {
+        same_secret(&x, "overflow", "sticky result");
+    }
+}

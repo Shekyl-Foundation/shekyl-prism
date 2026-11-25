@@ -17,7 +17,7 @@ Two rules, both about what leaves the repository.
      `signer = ["dep:prism-int"]`, and `prism-int` is an optional
      dependency;
    - the default graph of the front crate, over normal and build edges,
-     holds none of the signer's crates: `prism-int`, `zeroize`, `subtle`;
+     holds none of the signer's crates: `prism-int`, `zeroize`, `prism-ct-barrier`;
    - the graph with `--features signer` holds every one of them. Without
      this the second rule would pass on a graph reader that sees nothing.
 
@@ -41,7 +41,7 @@ INTEGERS = "prism-int"
 FEATURES = {"default": [], "signer": [f"dep:{INTEGERS}"]}
 # The crates only the signer needs. A default build of the front crate
 # holds none, and a build with `signer` holds all.
-SIGNER_ONLY = (INTEGERS, "zeroize", "subtle")
+SIGNER_ONLY = (INTEGERS, "zeroize", "prism-ct-barrier")
 # In the repository, and not in the package.
 NOT_PACKAGED = ("tests/data/vectors.tsv", "tests/vectors.rs")
 # In the package: the subject of the list is there to be read.
@@ -129,9 +129,9 @@ def selftest(manifest, default, signer, listed):
         "the default build holds the integer crate":
             (manifest, default | {INTEGERS}, signer),
         "the default build holds zeroize": (manifest, default | {"zeroize"}, signer),
-        "the default build holds subtle": (manifest, default | {"subtle"}, signer),
+        "the default build holds prism-ct-barrier": (manifest, default | {"prism-ct-barrier"}, signer),
         "the signer build lacks the integer crate": (manifest, default, signer - {INTEGERS}),
-        "the signer build lacks subtle": (manifest, default, signer - {"subtle"}),
+        "the signer build lacks prism-ct-barrier": (manifest, default, signer - {"prism-ct-barrier"}),
         "the graph reader printed nothing": (manifest, set(), set()),
     }
     for name, arguments in closures.items():

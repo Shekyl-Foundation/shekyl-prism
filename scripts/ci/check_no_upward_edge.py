@@ -8,7 +8,7 @@
 
 The crates of the library and of its tests are in one order:
 
-    prism-int < prism-field < prism-vectors < prism-isogeny < prism-verify
+    prism-ct-barrier < prism-int < prism-field < prism-vectors < prism-isogeny < prism-verify
         < prism-testkit < shekyl-prism
 
 A crate of that list may name, in any dependency table, only crates
@@ -17,7 +17,7 @@ depend on a crate above it, and that is still a loop. A layer crate whose
 tests need the front crate cannot be tested without it, and the loop has
 to be undone before anything is published. So:
 
-- `prism-int`, the signer's integers, is first, so it names no crate of
+- `prism-int`, the signer's integers, may use only the mask barrier of
   this workspace in any table;
 - none of `prism-field`, `prism-vectors`, `prism-isogeny` and
   `prism-verify` names `prism-testkit` or `shekyl-prism`;
@@ -52,6 +52,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 # Lowest first. A crate may name only crates before it.
 ORDER = (
+    "prism-ct-barrier",
     "prism-int",
     "prism-field",
     "prism-vectors",
