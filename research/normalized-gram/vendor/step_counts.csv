@@ -1,0 +1,71 @@
+set,cls,desc,S_max,T_exact,published,float_formula,E_exp64,T_exp64,E_exp64_any_basis,T_exp64_any_basis,half_log2_C0_over_lam1
+p248,sign-generic,"signing: I_sec . I_q, generic HNF, N < 2^B (Q4)",296,301,301,301,5,306,11,312,325.0
+p248,challenge,"I_q alone (public), generic HNF",206,211,211,211,4,215,8,219,246.0
+p248,keygen-Isec,"keygen pre-reduction: I_sec alone, generic HNF, N < 2^B (Q4)",17,22,,22,1,23,2,24,79.5
+p248,keygen-D,"key generation: ideal of norm D = nextprime(2^(2W)), generic HNF",218,223,,223,4,227,8,231,256.5
+p248,prered-guard2,"signing, keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N (decoded key: same check)",278,283,283,,5,288,10,293,308.58
+p248,prered-guard256,"signing, pre-reduced, looser guard nrd(v_s) <= 256 sqrt(p) N",282,287,,,5,292,10,297,312.08
+p248,prered-unguarded,"signing, pre-reduced, Minkowski bound nrd(v_s) <= 2 p N only",349,354,354,,6,360,11,365,371.16
+p248,sign-generic@O0,"signing: I_sec . I_q, generic HNF, N < 2^B (Q4) [O0 numerators]",296,301,,,5,306,11,312,325.0
+p248,challenge@O0,"I_q alone (public), generic HNF [O0 numerators]",207,212,,,4,216,8,220,246.0
+p248,keygen-Isec@O0,"keygen pre-reduction: I_sec alone, generic HNF, N < 2^B (Q4) [O0 numerators]",17,22,,,1,23,2,24,79.5
+p248,keygen-D@O0,"key generation: ideal of norm D = nextprime(2^(2W)), generic HNF [O0 numerators]",218,223,,,4,227,8,231,256.5
+p248,prered-guard2@O0,"signing, keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N (decoded key: same check) [O0 numerators]",278,283,,,5,288,10,293,308.58
+p248,prered-guard256@O0,"signing, pre-reduced, looser guard nrd(v_s) <= 256 sqrt(p) N [O0 numerators]",282,287,,,5,292,10,297,312.08
+p248,prered-unguarded@O0,"signing, pre-reduced, Minkowski bound nrd(v_s) <= 2 p N only [O0 numerators]",349,354,,,6,360,11,365,371.16
+p324,sign-generic,"signing: I_sec . I_q, generic HNF, N < 2^B (Q4)",382,387,387,387,7,394,14,401,419.5
+p324,challenge,"I_q alone (public), generic HNF",271,276,276,276,5,281,11,287,322.0
+p324,keygen-Isec,"keygen pre-reduction: I_sec alone, generic HNF, N < 2^B (Q4)",17,22,,22,1,23,3,25,98.0
+p324,keygen-D,"key generation: ideal of norm D = nextprime(2^(2W)), generic HNF",342,347,,347,6,353,13,360,384.5
+p324,prered-guard2,"signing, keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N (decoded key: same check)",364,369,369,,6,375,14,383,403.4
+p324,prered-guard256,"signing, pre-reduced, looser guard nrd(v_s) <= 256 sqrt(p) N",368,373,,,6,379,14,387,406.9
+p324,prered-unguarded,"signing, pre-reduced, Minkowski bound nrd(v_s) <= 2 p N only",456,461,461,,8,469,15,476,484.79
+p324,sign-generic@O0,"signing: I_sec . I_q, generic HNF, N < 2^B (Q4) [O0 numerators]",382,387,,,7,394,14,401,419.5
+p324,challenge@O0,"I_q alone (public), generic HNF [O0 numerators]",271,276,,,5,281,11,287,322.0
+p324,keygen-Isec@O0,"keygen pre-reduction: I_sec alone, generic HNF, N < 2^B (Q4) [O0 numerators]",17,22,,,1,23,3,25,98.0
+p324,keygen-D@O0,"key generation: ideal of norm D = nextprime(2^(2W)), generic HNF [O0 numerators]",342,347,,,6,353,13,360,384.5
+p324,prered-guard2@O0,"signing, keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N (decoded key: same check) [O0 numerators]",364,369,,,6,375,14,383,403.4
+p324,prered-guard256@O0,"signing, pre-reduced, looser guard nrd(v_s) <= 256 sqrt(p) N [O0 numerators]",368,373,,,6,379,14,387,406.9
+p324,prered-unguarded@O0,"signing, pre-reduced, Minkowski bound nrd(v_s) <= 2 p N only [O0 numerators]",457,462,,,8,470,15,477,484.79
+p376,sign-generic,"signing: I_sec . I_q, generic HNF, N < 2^B (Q4)",441,446,446,446,8,454,16,462,486.0
+p376,challenge,"I_q alone (public), generic HNF",314,319,319,319,6,325,12,331,374.0
+p376,keygen-Isec,"keygen pre-reduction: I_sec alone, generic HNF, N < 2^B (Q4)",17,22,,22,1,23,3,25,112.5
+p376,keygen-D,"key generation: ideal of norm D = nextprime(2^(2W)), generic HNF",326,331,,331,6,337,13,344,384.5
+p376,prered-guard2,"signing, keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N (decoded key: same check)",423,428,428,,8,436,16,444,469.51
+p376,prered-guard256,"signing, pre-reduced, looser guard nrd(v_s) <= 256 sqrt(p) N",427,432,,,8,440,16,448,473.01
+p376,prered-unguarded,"signing, pre-reduced, Minkowski bound nrd(v_s) <= 2 p N only",531,536,536,,9,545,18,554,565.01
+p376,sign-generic@O0,"signing: I_sec . I_q, generic HNF, N < 2^B (Q4) [O0 numerators]",442,447,,,8,455,16,463,486.0
+p376,challenge@O0,"I_q alone (public), generic HNF [O0 numerators]",314,319,,,6,325,12,331,374.0
+p376,keygen-Isec@O0,"keygen pre-reduction: I_sec alone, generic HNF, N < 2^B (Q4) [O0 numerators]",18,23,,,1,24,3,26,112.5
+p376,keygen-D@O0,"key generation: ideal of norm D = nextprime(2^(2W)), generic HNF [O0 numerators]",326,331,,,6,337,13,344,384.5
+p376,prered-guard2@O0,"signing, keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N (decoded key: same check) [O0 numerators]",424,429,,,8,437,16,445,469.51
+p376,prered-guard256@O0,"signing, pre-reduced, looser guard nrd(v_s) <= 256 sqrt(p) N [O0 numerators]",427,432,,,8,440,16,448,473.01
+p376,prered-unguarded@O0,"signing, pre-reduced, Minkowski bound nrd(v_s) <= 2 p N only [O0 numerators]",532,537,,,9,546,18,555,565.01
+p500,sign-generic,"signing: I_sec . I_q, generic HNF, N < 2^B (Q4)",582,587,587,587,11,598,22,609,640.5
+p500,challenge,"I_q alone (public), generic HNF",420,425,425,425,8,433,17,442,498.0
+p500,keygen-Isec,"keygen pre-reduction: I_sec alone, generic HNF, N < 2^B (Q4)",17,22,,22,2,24,4,26,143.0
+p500,keygen-D,"key generation: ideal of norm D = nextprime(2^(2W)), generic HNF",436,441,,442,8,449,17,458,512.5
+p500,prered-guard2,"signing, keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N (decoded key: same check)",564,569,569,,10,579,21,590,624.19
+p500,prered-guard256,"signing, pre-reduced, looser guard nrd(v_s) <= 256 sqrt(p) N",568,573,,,10,583,21,594,627.69
+p500,prered-unguarded,"signing, pre-reduced, Minkowski bound nrd(v_s) <= 2 p N only",707,712,712,,12,724,23,735,750.38
+p500,sign-generic@O0,"signing: I_sec . I_q, generic HNF, N < 2^B (Q4) [O0 numerators]",582,587,,,11,598,22,609,640.5
+p500,challenge@O0,"I_q alone (public), generic HNF [O0 numerators]",420,425,,,8,433,17,442,498.0
+p500,keygen-Isec@O0,"keygen pre-reduction: I_sec alone, generic HNF, N < 2^B (Q4) [O0 numerators]",17,22,,,2,24,4,26,143.0
+p500,keygen-D@O0,"key generation: ideal of norm D = nextprime(2^(2W)), generic HNF [O0 numerators]",437,442,,,8,450,17,459,512.5
+p500,prered-guard2@O0,"signing, keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N (decoded key: same check) [O0 numerators]",564,569,,,10,579,21,590,624.19
+p500,prered-guard256@O0,"signing, pre-reduced, looser guard nrd(v_s) <= 256 sqrt(p) N [O0 numerators]",568,573,,,10,583,21,594,627.69
+p500,prered-unguarded@O0,"signing, pre-reduced, Minkowski bound nrd(v_s) <= 2 p N only [O0 numerators]",708,713,,,12,725,23,736,750.38
+p664,sign-generic,"signing: I_sec . I_q, generic HNF, N < 2^B (Q4)",768,773,773,773,14,787,29,802,845.5
+p664,challenge,"I_q alone (public), generic HNF",560,565,565,565,11,576,22,587,662.0
+p664,keygen-Isec,"keygen pre-reduction: I_sec alone, generic HNF, N < 2^B (Q4)",17,22,,22,3,25,6,28,184.0
+p664,keygen-D,"key generation: ideal of norm D = nextprime(2^(2W)), generic HNF",681,686,,686,13,699,26,712,768.5
+p664,prered-guard2,"signing, keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N (decoded key: same check)",750,755,755,,14,769,28,783,829.02
+p664,prered-guard256,"signing, pre-reduced, looser guard nrd(v_s) <= 256 sqrt(p) N",754,759,,,14,773,28,787,832.52
+p664,prered-unguarded,"signing, pre-reduced, Minkowski bound nrd(v_s) <= 2 p N only",940,945,945,,17,962,31,976,996.04
+p664,sign-generic@O0,"signing: I_sec . I_q, generic HNF, N < 2^B (Q4) [O0 numerators]",769,774,,,14,788,29,803,845.5
+p664,challenge@O0,"I_q alone (public), generic HNF [O0 numerators]",560,565,,,11,576,22,587,662.0
+p664,keygen-Isec@O0,"keygen pre-reduction: I_sec alone, generic HNF, N < 2^B (Q4) [O0 numerators]",18,23,,,3,26,6,29,184.0
+p664,keygen-D@O0,"key generation: ideal of norm D = nextprime(2^(2W)), generic HNF [O0 numerators]",681,686,,,13,699,26,712,768.5
+p664,prered-guard2@O0,"signing, keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N (decoded key: same check) [O0 numerators]",750,755,,,14,769,28,783,829.02
+p664,prered-guard256@O0,"signing, pre-reduced, looser guard nrd(v_s) <= 256 sqrt(p) N [O0 numerators]",754,759,,,14,773,28,787,832.52
+p664,prered-unguarded@O0,"signing, pre-reduced, Minkowski bound nrd(v_s) <= 2 p N only [O0 numerators]",940,945,,,17,962,31,976,996.04

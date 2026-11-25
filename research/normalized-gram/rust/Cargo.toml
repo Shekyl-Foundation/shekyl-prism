@@ -1,0 +1,31 @@
+[package]
+name = "ng-xcheck"
+version = "0.0.0"
+edition = "2021"
+license = "BSD-3-Clause"
+publish = false
+description = "Research: normalized class Gram for the exp64 reducer, from the a60fd06 cross-check crate (not part of the workspace, not the production reducer)"
+
+# Standalone: an empty workspace table keeps this crate out of the
+# repository workspace, its build and its CI.
+[workspace]
+
+[dependencies]
+num-bigint = "0.4"
+num-integer = "0.1"
+num-traits = "0.2"
+libc = "0.2"
+
+[build-dependencies]
+cc = { version = "1", optional = true }
+
+[features]
+memcheck = ["dep:cc"]
+weak-barrier = []
+empirical = []
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "fat"
+debug = 1
