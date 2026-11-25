@@ -1,0 +1,18 @@
+--- a/.github/workflows/nightly.yml
++++ b/.github/workflows/nightly.yml
+@@ -187,6 +187,13 @@
+       # The script that generates the signer's constants finds each secret
+       # norm with its own primality test. sympy must name the same prime.
+       - name: sympy names the same secret norm at all five sets
+         run: python3 scripts/ci/check_signer_primes.py
++      # Pinned ECPP / Lucas certificates for the field primes, the secret
++      # norms, and the item-19 cofactors, plus trial proofs of the tiny
++      # prime lists and the next-prime gaps. This is a proof, not a
++      # probable-prime test. It does not replace the sympy nextprime
++      # check in this first adoption.
++      - name: pinned primality certificates verify
++        run: python3 scripts/ci/check_signer_prime_certificates.py
+       # The doc comment of `nonvanishing` states when its search can fail,
+       # for every `zeta`. This is the computation behind that statement.
+       - name: The theta base-change search fails only where its comment says
+         run: python3 scripts/theta_base_search.py
