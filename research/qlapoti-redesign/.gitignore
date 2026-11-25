@@ -1,0 +1,4 @@
+# raw sweep logs (about 1 GB); regenerate with collect.py (seeded, deterministic)
+data/
+collect.log
+__pycache__/
