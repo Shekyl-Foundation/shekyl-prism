@@ -1,0 +1,101 @@
+set,rep,variant,steps,M0_bits,Mstar_bits,max_intermediate,max_bits,width,spare,need_row3,fits,rust_proto_fits,note
+p248,O0,sign_generic,302,1301,1302,cl.round_num,1303,1664,361,1553,True,True,"I_sec cap I_q, generic Z[i]-HNF, Q4 enforced"
+p248,O0,sign_generic_centered,302,1300,1301,cl.round_num,1302,1664,362,1553,True,True,"same, x,y centred mod T"
+p248,O0,Iq_only,212,985,986,cl.round_num,987,1664,677,1553,True,True,challenge ideal alone
+p248,O0,keygen_D,302,1028,1028,cl.round_num,1029,1664,635,1553,True,True,key generation: ideal of norm D
+p248,O0,keygen_prereduce_Isec,302,320,320,cl.round_num,321,1664,1343,1553,True,True,keygen pre-reduction of I_sec (norm N < 2^B)
+p248,O0,sign_any_shape,302,1552,1552,cl.round_num,1553,1664,111,1553,True,False,"any HNF shape, all |numerators| <= 2T"
+p248,O0,sign_prereduced_guarded,284,1269,1269,cl.round_num,1270,1664,394,1553,True,True,"keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N"
+p248,O0,sign_prereduced_unguarded_generic,355,1301,1301,cl.round_num,1302,1664,362,1553,True,True,"pre-reduced, no guard, generic-shape I_sec"
+p248,O0,sign_prereduced_unguarded_anyshape,355,1391,1391,cl.round_num,1392,1664,272,1553,True,True,"pre-reduced, no guard, any shape (A_s >= N)"
+p248,O0,sign_generic_noQ4,302,2025,2026,cl.round_num,2027,1664,-363,1553,False,False,Q4 NOT enforced (N < 2^(2L+18))
+p248,model,sign_generic,302,1299,1300,cl.round_num,1301,1664,363,1553,True,True,"I_sec cap I_q, generic Z[i]-HNF, Q4 enforced"
+p248,model,sign_generic_centered,302,1298,1299,cl.round_num,1300,1664,364,1553,True,True,"same, x,y centred mod T"
+p248,model,Iq_only,212,983,984,cl.round_num,985,1664,679,1553,True,True,challenge ideal alone
+p248,model,keygen_D,302,1026,1026,cl.round_num,1027,1664,637,1553,True,True,key generation: ideal of norm D
+p248,model,keygen_prereduce_Isec,302,318,318,cl.round_num,319,1664,1345,1553,True,True,keygen pre-reduction of I_sec (norm N < 2^B)
+p248,model,sign_any_shape,302,1550,1550,cl.round_num,1551,1664,113,1553,True,False,"any HNF shape, all |numerators| <= 2T"
+p248,model,sign_prereduced_guarded,284,1267,1267,cl.round_num,1268,1664,396,1553,True,True,"keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N"
+p248,model,sign_prereduced_unguarded_generic,355,1299,1299,cl.round_num,1300,1664,364,1553,True,True,"pre-reduced, no guard, generic-shape I_sec"
+p248,model,sign_prereduced_unguarded_anyshape,355,1391,1391,cl.round_num,1392,1664,272,1553,True,True,"pre-reduced, no guard, any shape (A_s >= N)"
+p248,model,sign_generic_noQ4,302,2023,2024,cl.round_num,2025,1664,-361,1553,False,False,Q4 NOT enforced (N < 2^(2L+18))
+p324,O0,sign_generic,388,1679,1680,cl.round_num,1681,2112,431,2006,True,True,"I_sec cap I_q, generic Z[i]-HNF, Q4 enforced"
+p324,O0,sign_generic_centered,388,1678,1679,cl.round_num,1680,2112,432,2006,True,True,"same, x,y centred mod T"
+p324,O0,Iq_only,277,1289,1290,cl.round_num,1291,2112,821,2006,True,True,challenge ideal alone
+p324,O0,keygen_D,388,1540,1540,cl.round_num,1541,2112,571,2006,True,True,key generation: ideal of norm D
+p324,O0,keygen_prereduce_Isec,388,394,394,cl.round_num,395,2112,1717,2006,True,True,keygen pre-reduction of I_sec (norm N < 2^B)
+p324,O0,sign_any_shape,388,2005,2005,cl.round_num,2007,2112,105,2006,True,False,"any HNF shape, all |numerators| <= 2T"
+p324,O0,sign_prereduced_guarded,370,1647,1647,cl.round_num,1649,2112,463,2006,True,True,"keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N"
+p324,O0,sign_prereduced_unguarded_generic,462,1679,1679,cl.round_num,1680,2112,432,2006,True,True,"pre-reduced, no guard, generic-shape I_sec"
+p324,O0,sign_prereduced_unguarded_anyshape,462,1807,1807,cl.round_num,1809,2112,303,2006,True,False,"pre-reduced, no guard, any shape (A_s >= N)"
+p324,O0,sign_generic_noQ4,388,2629,2630,cl.round_num,2631,2112,-519,2006,False,False,Q4 NOT enforced (N < 2^(2L+18))
+p324,model,sign_generic,388,1677,1678,cl.round_num,1679,2112,433,2006,True,True,"I_sec cap I_q, generic Z[i]-HNF, Q4 enforced"
+p324,model,sign_generic_centered,388,1676,1677,cl.round_num,1678,2112,434,2006,True,True,"same, x,y centred mod T"
+p324,model,Iq_only,277,1287,1288,cl.round_num,1289,2112,823,2006,True,True,challenge ideal alone
+p324,model,keygen_D,388,1538,1538,cl.round_num,1539,2112,573,2006,True,True,key generation: ideal of norm D
+p324,model,keygen_prereduce_Isec,388,392,392,cl.round_num,393,2112,1719,2006,True,True,keygen pre-reduction of I_sec (norm N < 2^B)
+p324,model,sign_any_shape,388,2003,2003,cl.round_num,2005,2112,107,2006,True,False,"any HNF shape, all |numerators| <= 2T"
+p324,model,sign_prereduced_guarded,370,1645,1645,cl.round_num,1647,2112,465,2006,True,True,"keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N"
+p324,model,sign_prereduced_unguarded_generic,462,1677,1677,cl.round_num,1678,2112,434,2006,True,True,"pre-reduced, no guard, generic-shape I_sec"
+p324,model,sign_prereduced_unguarded_anyshape,462,1807,1807,cl.round_num,1809,2112,303,2006,True,False,"pre-reduced, no guard, any shape (A_s >= N)"
+p324,model,sign_generic_noQ4,388,2627,2628,cl.round_num,2629,2112,-517,2006,False,False,Q4 NOT enforced (N < 2^(2L+18))
+p376,O0,sign_generic,447,1945,1946,cl.round_num,1947,2432,485,2329,True,True,"I_sec cap I_q, generic Z[i]-HNF, Q4 enforced"
+p376,O0,sign_generic_centered,447,1944,1945,cl.round_num,1946,2432,486,2329,True,True,"same, x,y centred mod T"
+p376,O0,Iq_only,320,1497,1498,cl.round_num,1499,2432,933,2329,True,True,challenge ideal alone
+p376,O0,keygen_D,447,1540,1540,cl.round_num,1541,2432,891,2329,True,True,key generation: ideal of norm D
+p376,O0,keygen_prereduce_Isec,447,452,452,cl.round_num,453,2432,1979,2329,True,True,keygen pre-reduction of I_sec (norm N < 2^B)
+p376,O0,sign_any_shape,447,2328,2328,cl.round_num,2329,2432,103,2329,True,False,"any HNF shape, all |numerators| <= 2T"
+p376,O0,sign_prereduced_guarded,429,1913,1913,cl.round_num,1914,2432,518,2329,True,True,"keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N"
+p376,O0,sign_prereduced_unguarded_generic,537,1945,1945,cl.round_num,1946,2432,486,2329,True,True,"pre-reduced, no guard, generic-shape I_sec"
+p376,O0,sign_prereduced_unguarded_anyshape,537,2101,2101,cl.round_num,2102,2432,330,2329,True,False,"pre-reduced, no guard, any shape (A_s >= N)"
+p376,O0,sign_generic_noQ4,447,3065,3066,cl.round_num,3067,2432,-635,2329,False,False,Q4 NOT enforced (N < 2^(2L+18))
+p376,model,sign_generic,447,1943,1944,cl.round_num,1945,2432,487,2329,True,True,"I_sec cap I_q, generic Z[i]-HNF, Q4 enforced"
+p376,model,sign_generic_centered,447,1942,1943,cl.round_num,1944,2432,488,2329,True,True,"same, x,y centred mod T"
+p376,model,Iq_only,320,1495,1496,cl.round_num,1497,2432,935,2329,True,True,challenge ideal alone
+p376,model,keygen_D,447,1538,1538,cl.round_num,1539,2432,893,2329,True,True,key generation: ideal of norm D
+p376,model,keygen_prereduce_Isec,447,450,450,cl.round_num,451,2432,1981,2329,True,True,keygen pre-reduction of I_sec (norm N < 2^B)
+p376,model,sign_any_shape,447,2326,2326,cl.round_num,2327,2432,105,2329,True,False,"any HNF shape, all |numerators| <= 2T"
+p376,model,sign_prereduced_guarded,429,1911,1911,cl.round_num,1912,2432,520,2329,True,True,"keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N"
+p376,model,sign_prereduced_unguarded_generic,537,1943,1943,cl.round_num,1944,2432,488,2329,True,True,"pre-reduced, no guard, generic-shape I_sec"
+p376,model,sign_prereduced_unguarded_anyshape,537,2101,2101,cl.round_num,2102,2432,330,2329,True,False,"pre-reduced, no guard, any shape (A_s >= N)"
+p376,model,sign_generic_noQ4,447,3063,3064,cl.round_num,3065,2432,-633,2329,False,False,Q4 NOT enforced (N < 2^(2L+18))
+p500,O0,sign_generic,588,2563,2564,cl.round_num,2565,3136,571,3069,True,True,"I_sec cap I_q, generic Z[i]-HNF, Q4 enforced"
+p500,O0,sign_generic_centered,588,2562,2563,cl.round_num,2564,3136,572,3069,True,True,"same, x,y centred mod T"
+p500,O0,Iq_only,426,1993,1994,cl.round_num,1995,3136,1141,3069,True,True,challenge ideal alone
+p500,O0,keygen_D,588,2052,2052,cl.round_num,2053,3136,1083,3069,True,True,key generation: ideal of norm D
+p500,O0,keygen_prereduce_Isec,588,574,574,cl.round_num,575,3136,2561,3069,True,True,keygen pre-reduction of I_sec (norm N < 2^B)
+p500,O0,sign_any_shape,588,3068,3068,cl.round_num,3070,3136,66,3069,True,False,"any HNF shape, all |numerators| <= 2T"
+p500,O0,sign_prereduced_guarded,570,2531,2531,cl.round_num,2532,3136,604,3069,True,True,"keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N"
+p500,O0,sign_prereduced_unguarded_generic,713,2563,2563,cl.round_num,2564,3136,572,3069,True,True,"pre-reduced, no guard, generic-shape I_sec"
+p500,O0,sign_prereduced_unguarded_anyshape,713,2780,2780,cl.round_num,2782,3136,354,3069,True,False,"pre-reduced, no guard, any shape (A_s >= N)"
+p500,O0,sign_generic_noQ4,588,4049,4050,cl.round_num,4051,3136,-915,3069,False,False,Q4 NOT enforced (N < 2^(2L+18))
+p500,model,sign_generic,588,2561,2562,cl.round_num,2563,3136,573,3069,True,True,"I_sec cap I_q, generic Z[i]-HNF, Q4 enforced"
+p500,model,sign_generic_centered,588,2560,2561,cl.round_num,2562,3136,574,3069,True,True,"same, x,y centred mod T"
+p500,model,Iq_only,426,1991,1992,cl.round_num,1993,3136,1143,3069,True,True,challenge ideal alone
+p500,model,keygen_D,588,2050,2050,cl.round_num,2051,3136,1085,3069,True,True,key generation: ideal of norm D
+p500,model,keygen_prereduce_Isec,588,572,572,cl.round_num,573,3136,2563,3069,True,True,keygen pre-reduction of I_sec (norm N < 2^B)
+p500,model,sign_any_shape,588,3066,3066,cl.round_num,3068,3136,68,3069,True,False,"any HNF shape, all |numerators| <= 2T"
+p500,model,sign_prereduced_guarded,570,2529,2529,cl.round_num,2530,3136,606,3069,True,True,"keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N"
+p500,model,sign_prereduced_unguarded_generic,713,2561,2561,cl.round_num,2562,3136,574,3069,True,True,"pre-reduced, no guard, generic-shape I_sec"
+p500,model,sign_prereduced_unguarded_anyshape,713,2780,2780,cl.round_num,2782,3136,354,3069,True,False,"pre-reduced, no guard, any shape (A_s >= N)"
+p500,model,sign_generic_noQ4,588,4047,4048,cl.round_num,4049,3136,-913,3069,False,False,Q4 NOT enforced (N < 2^(2L+18))
+p664,O0,sign_generic,774,3383,3384,cl.round_num,3385,4160,775,4053,True,True,"I_sec cap I_q, generic Z[i]-HNF, Q4 enforced"
+p664,O0,sign_generic_centered,774,3382,3383,cl.round_num,3384,4160,776,4053,True,True,"same, x,y centred mod T"
+p664,O0,Iq_only,566,2649,2650,cl.round_num,2651,4160,1509,4053,True,True,challenge ideal alone
+p664,O0,keygen_D,774,3076,3076,cl.round_num,3077,4160,1083,4053,True,True,key generation: ideal of norm D
+p664,O0,keygen_prereduce_Isec,774,738,738,cl.round_num,739,4160,3421,4053,True,True,keygen pre-reduction of I_sec (norm N < 2^B)
+p664,O0,sign_any_shape,774,4052,4052,cl.round_num,4053,4160,107,4053,True,False,"any HNF shape, all |numerators| <= 2T"
+p664,O0,sign_prereduced_guarded,756,3351,3351,cl.round_num,3352,4160,808,4053,True,True,"keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N"
+p664,O0,sign_prereduced_unguarded_generic,946,3383,3383,cl.round_num,3384,4160,776,4053,True,True,"pre-reduced, no guard, generic-shape I_sec"
+p664,O0,sign_prereduced_unguarded_anyshape,946,3682,3682,cl.round_num,3683,4160,477,4053,True,False,"pre-reduced, no guard, any shape (A_s >= N)"
+p664,O0,sign_generic_noQ4,774,5361,5362,cl.round_num,5363,4160,-1203,4053,False,False,Q4 NOT enforced (N < 2^(2L+18))
+p664,model,sign_generic,774,3381,3382,cl.round_num,3383,4160,777,4053,True,True,"I_sec cap I_q, generic Z[i]-HNF, Q4 enforced"
+p664,model,sign_generic_centered,774,3380,3381,cl.round_num,3382,4160,778,4053,True,True,"same, x,y centred mod T"
+p664,model,Iq_only,566,2647,2648,cl.round_num,2649,4160,1511,4053,True,True,challenge ideal alone
+p664,model,keygen_D,774,3074,3074,cl.round_num,3075,4160,1085,4053,True,True,key generation: ideal of norm D
+p664,model,keygen_prereduce_Isec,774,736,736,cl.round_num,737,4160,3423,4053,True,True,keygen pre-reduction of I_sec (norm N < 2^B)
+p664,model,sign_any_shape,774,4050,4050,cl.round_num,4051,4160,109,4053,True,False,"any HNF shape, all |numerators| <= 2T"
+p664,model,sign_prereduced_guarded,756,3349,3349,cl.round_num,3350,4160,810,4053,True,True,"keygen pre-reduced, guard nrd(v_s) <= 2 sqrt(p) N"
+p664,model,sign_prereduced_unguarded_generic,946,3381,3381,cl.round_num,3382,4160,778,4053,True,True,"pre-reduced, no guard, generic-shape I_sec"
+p664,model,sign_prereduced_unguarded_anyshape,946,3682,3682,cl.round_num,3683,4160,477,4053,True,False,"pre-reduced, no guard, any shape (A_s >= N)"
+p664,model,sign_generic_noQ4,774,5359,5360,cl.round_num,5361,4160,-1201,4053,False,False,Q4 NOT enforced (N < 2^(2L+18))
