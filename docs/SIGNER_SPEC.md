@@ -1,6 +1,6 @@
 # Signer specification
 
-Status: begun 2026-11-21. Section 1 (the constants) is written, and its values are generated and committed (stage 1b, `scripts/signer_constants.py`, `prism-vectors/data/signer/`). Section 2.1 (the integers, stage 2a) is written and its crate, `prism-int`, exists; nothing calls it yet, and no other signer code exists. This is a research specification, not an adopted standard, and it makes no security claim.
+Status: begun 2026-11-21. Section 1 (the constants) is written, and its values are generated and committed (stage 1b, `scripts/signer_constants.py`, `prism-vectors/data/signer/`). Section 2.1 (the integers, stage 2a) is written and its crate, `prism-int`, exists; nothing calls it yet, and no other signer code exists. This is a research specification, not an adopted standard, and it makes no security claim. **Draft addition (2026-11-24, not ruled):** Section 0 proposes a constant-time feasibility gate before stages 2c and 3 are finalized, while keeping G4 as the final hardening gate.
 
 ## What this document is
 
@@ -31,6 +31,11 @@ Rulings on this section, the same day:
 - **R2.** The four bounds of the quaternion layer (32 primality rounds, a box of 64, 17 generator bits, 20,000 steps per generator) are the values at all five sets: starting values, fixed at the three reference primes for replay, provisional at `p324` and `p664`, gated on stage 3's measured failure rates.
 - **R3, not ruled.** The Montgomery model of a key (1.6) is looked at again when the work reaches stage 3.
 
+### Proposed rulings (draft, 2026-11-24 — not ruled)
+
+- **G7, not ruled (draft).** Constant-time hardening remains the last stage before the beta gate (**G4**), and **G4** stays in force for full-signer side-channel validation (ledger O6). Before the specification sections for **stage 2c** (lattices and basis reduction) and **stage 3** (norm equations, Cornacchia, and ideal sampling) are finalized under **G3**, each candidate algorithm must pass the **constant-time feasibility gate** of **Section 0**. An algorithm whose control flow or retry behavior depends on long-lived secrets is not accepted solely because it is mathematically correct and fast in variable time when no affordable hardening strategy is identified.
+- **G2 decision point, not ruled (draft).** The no-`unsafe` policy of **G2** is flagged for an explicit decision before stage 2c ports constant-time primitives into production crates (0.4), informed by `experiment/ct-barrier-policy` under Rust 1.97.1 on `x86_64` and `aarch64`.
+
 Standing from Round 0 (2026-11-14): we are not transcribing the C; other code bases are oracles for values and not sources of structure; five sets, one algorithm.
 
 ### The layers, in the order they are built
@@ -45,6 +50,96 @@ Standing from Round 0 (2026-11-14): we are not transcribing the C; other code ba
 | last | Constant-time hardening (G4) | to be written |
 
 The table of 1.3 names the stage that consumes each constant by these numbers. The plan of 2026-11-21 divides the stages further; section 1 does not use the finer names, and section 2 does (2a to 2d).
+
+*Draft note (2026-11-24, proposed G7):* before stages 2c and 3 are finalized under G3, candidate algorithms must pass the constant-time feasibility gate of Section 0; G4 remains the last stage for full-signer hardening.
+
+## 0. Constant-time feasibility gate (draft, 2026-11-24 — not ruled)
+
+This section is a draft proposal for Rick's review. It implements proposed ruling **G7** following the external design review of 2026-11-24 (`dev` at `26ce141`) and the experiments recorded on the `research` branch (`research/INDEX.md`, kept off `dev` and outside CI). All figures cited from `research/INDEX.md` are **Read** from modeled or standalone experimental reports and are not production claims.
+
+### 0.1 Why a pre-finalization gate is needed beside G4
+
+Ruling **G4** schedules constant-time hardening as the last stage before beta (ledger **O6**). The intent was to establish mathematical correctness first and harden afterward. The `research` branch experiments show that constant-time feasibility dictates *which algorithm* must be chosen in stages 2c and 3, so algorithm selection cannot be separated from constant-time analysis:
+
+- **Stage 2c (basis reduction).** Exact variable-time 4-D LLL on `I_sec · I_q` leaks the bit length of the secret norm `N` at about `2.0–2.1` steps per bit (`r = 0.31–0.49` over 4,000 traces; fixed-vs-random `dudect |t|` `11.6–27.3`, **Read** in `research/INDEX.md` conclusions 4 and 11). Lattice reshaping (`salt-reshaped-lattice`, `higher-dim-lattice`, `cornacchia-harness`) does not remove that slope, and **D0** (deterministic smallest ideal) is forbidden under **O4** (`latticeprism-seeding`). Only a fixed schedule sized from public parameters removes the key-length channel: GMP-rational certified `Z[i]`-Lagrange (`T_prov = 301 / 387 / 446 / 587 / 773`, plus one exact cleanup step) produces a single trace (`t = 0` in the model) and ran in a standalone Rust fixed-width prototype (`rust-lagrange-ct`, `rustc 1.85.1`) at `0.19–0.23×` exact LLL on GMP in cycles (`max |t| = 2.93` over 220,000 primary measurements; memcheck clean).
+- **Stage 3 (norm equations).** Section 5 signing and key generation run `quat_qlapoti` (`quat_represent_integer` is not on the signing path). Shortest-equivalent reduction maps `I_sec · I_q` to a small ideal `S` of norm `n ≤ √p`, hiding `bits(N)` (`|ρ| ≤ 0.032`, fixed-key `dudect |t| ≤ 1.59`) but leaking `S` itself (`v₂(n)` shifts weighted work `~27%`, fixed-`S` `dudect |t|` reaches `4.7` at `p248` and `6.4` at `p324`, and per-ideal pass rates `p(S)` vary `2.5×–17.6×`, worst at `p376` where `f = 65`) across four uncapped inner loops (generator draws up to `194`, `λ`-skips up to `59,995`, Gauss steps up to `92`, Euclid steps up to `126`; **Read** in `research/INDEX.md` entry 10). Straight fixed-schedule padding costs **39×–391×** mean work for `99.9%` completion (`23×–229×` two-stage; `132×` at `p500`, `391×` at `p376`) and **249×–2,513×** for `2⁻⁶⁴` (`847×` at `p500`). Deferring hardening to **G4** on an un-hardenable search would lock stages 3–5 into an unacceptable cost or an unfixable leak; the norm equation must be redesigned before stage 3 is finalized (bounded inner loops, settling **O29**, or evaluating SQIsign 3.0's construction).
+- **Cross-set variation is public.** Within a parameter set, `bits(q)` is public and constant, and the set (`p248`, `p324`, `p376`, `p500`, `p664`) is public (**O12**, **D13**). Differences in step counts *across* sets are not a secret channel (`research/INDEX.md` conclusion 3).
+
+**G4** remains the final gate for full-signer integration, end-to-end timing and secret-erasure assessment, and closing **O6** before beta.
+
+### 0.2 Algorithm acceptance criteria (before stages 2c and 3 are finalized)
+
+Before the specification section for stage 2c or stage 3 is approved under **G3**, every candidate algorithm that touches secret-derived values must present all four items below:
+
+1. **Secret-dependence classification.** Classify every branch, loop bound, retry loop, and memory access/index as driven by:
+   - *Public data:* parameter-set constants (`p`, `e`, `f`, `L`, `W`, `B`), `pk`, `msg`, and the committed challenge (`s`, `q`);
+   - *Ephemeral / message-dependent secret state:* per-signature randomness and unrevealed intermediate commitments;
+   - *Long-lived secret state:* `sk`, `I_sec`, `N`, the reduced small ideal `S = shortest_equivalent(I_sec · I_q)`, and secret scalars or kernels.
+   Retry loops must be inventoried explicitly: key generation's prime-norm search (`150–354` mean draws), `quat_qlapoti`'s four inner loops, basis/kernel retries, and any overflow retry are larger channels than reduction step counts (`research/INDEX.md` conclusion 7).
+2. **Identified affordable hardening strategy and cost estimate.** Name the concrete constant-time strategy (fixed schedule, bounded inner loops, algebraic reformulation, keygen precomputation, or public-only justification) and give an estimated cost across all five parameter sets (`p248`, `p324`, `p376`, `p500`, `p664`), highlighting integration cost for Shekyl's selected `p500` (**O12**) and constrained targets such as the Raspberry Pi 4 floor device (**C10**, **O7**). No algorithm whose control flow depends on long-lived secrets may be accepted without an identified, affordable hardening strategy.
+3. **Certified iteration bounds (where fixed schedules are used).** Any fixed-schedule iteration count must be **provably certified** from public parameter bounds, never taken from empirical maxima on random samples. Empirical `Z[i]`-Lagrange maxima (`189 / 239 / 283 / 359 / 465`) fail explicit Rolletschek `2 + √3` adversarial chains (`276 / 356 / 411 / 542 / 714` steps), whereas GMP-rational interval certification gives `T_prov = 301 / 387 / 446 / 587 / 773` (or `283 / 369 / 428 / 569 / 755` under keygen pre-reduction with `nrd(v_sec) ≤ 2√p·N`), paired with one always-executed exact cleanup step when bounded-precision quotients (`prec ≥ 16`) are used (**Read**, `lagrange-tour-bound`).
+4. **Width proofs (Q5), norm-bound enforcement (Q4), and no overflow-driven retries.**
+   - **Q5 (stage 2c):** Prove an upper bound on *every* intermediate value (size-reduction or Lagrange quotients, Gram matrix entries, temporary products, and cleanup-step intermediates) under the **actual chosen reduction algorithm**, showing every intermediate fits within `LIMBS` (`26 / 33 / 38 / 49 / 65`, leaving `67–111` spare bits above `need` in 2.1.2). Test adversarially skewed lattices (Rolletschek chains and inputs at norm bound `B`) as well as sampled inputs.
+   - **Q4 (stage 5 keygen and key import, relied on by stages 2c and 3):** Enforce `N < 2^B` with `B = ⌈L/2⌉ + 32` (`158 / 195 / 224 / 285 / 367` bits) on **both** newly generated keys and imported secret keys (including C-reference imports, 1.6), and quantify the key-generation rejection probability across all five sets (especially `p324` and `p664`, where no reference measurements exist).
+   - **No overflow-driven key-dependent retries (O33):** Once **Q4** and **Q5** hold, `SecretError::Overflowed` (and `SecretError::DoesNotFit`) must carry treatment **U** (unreachable by proof) in 2.1.3. Silent or retry-loop recovery on an overflow triggered by a secret value is prohibited as a design mechanism; if an overflow mark were ever set despite the proof, it must fail explicitly rather than creating a key-dependent retry channel.
+
+### 0.3 Declassification and downstream secret handling (extends 2.1.3)
+
+Section 2.1.3 isolates `SecretInt<N>` and `SecretBit` behind three explicit exits (`SecretInt::declassify`, `SecretBit::declassify`, and `SecretInt::export_le_bytes`), enforced 1-to-1 against the secret-treatment table by `scripts/ci/check_secret_exits.py` (currently 0 outside call sites). Because nothing consumes `prism-int` yet, this gate sets two rules before stages 2b–5 introduce call sites:
+
+1. **Rationale reviewed in the introducing PR.** Every PR that adds a call site of `SecretInt::declassify`, `SecretBit::declassify`, or `SecretInt::export_le_bytes` (and its row in the 2.1.3 table) must state and review its security rationale, target treatment (`F`, `I`, `B`, or `E`), and overflow/fit argument (`U` or documented provisional status) at the time the call site is introduced—not deferred unreviewed until **G4**.
+2. **Downstream sensitivity is retained.** A value moved into `Int<N>` by `SecretInt::declassify` or into bytes by `SecretInt::export_le_bytes` remains secret unless explicitly proved independent (`I`) or blinded (`B`). Downstream code must preserve that classification: no secret-dependent branching, no diagnostic formatting (`Int::public_hex` is forbidden on declassified values), and no variable-time operations (`PartialEq`/`Ord`, division, `gcd`, `invmod`) unless explicitly justified under `I` or `B` or tracked for `F` replacement before **G4**. `Int<N>`'s wipe-on-drop and stack-copy caveat (2.1.3) still apply.
+
+### 0.4 `unsafe` policy decision point for constant-time barriers (G2 vs. `experiment/ct-barrier-policy`)
+
+Ruling **G2** requires `#![forbid(unsafe_code)]` in every new signer crate from its first commit. However, `research/rust-lagrange-ct` (`src/ct.rs`) found that under `rustc 1.85.1`, `core::hint::black_box` on a choice bit allowed LLVM to lower a mask-selected barrel shifter into a secret-dependent conditional jump, which `asm_scan.py` and Valgrind memcheck caught; replacing it with `unsafe { core::arch::asm!(...) }` on the mask eliminated the branch.
+
+Source-level branch-free Rust therefore does not guarantee branch-free machine code. Before stage 2c ports constant-time primitives into production crates, Rick must resolve the **G2** conflict using evidence from the parallel **`experiment/ct-barrier-policy`** branch (this draft does not presuppose the outcome):
+
+- **Option A (preserve G2 unchanged):** Validate a safe, portable construction (e.g., `black_box` on the mask or value, `subtle`-style barriers, or another compiler-resilient safe idiom) whose compiled release artifacts pass all checks of 0.5 under **Rust 1.97.1** on both `x86_64` and `aarch64`.
+- **Option B (narrowly scoped amendment to G2):** Approve an audited `unsafe` exception confined to a minimal internal value-barrier/arithmetic crate, keeping `#![forbid(unsafe_code)]` on all other crates and enforced in CI.
+
+### 0.5 Compiled-artifact evidence (toolchain, architectures, and statistical checks)
+
+Because LLVM can reintroduce branches or variable-time instructions across mask selects, any constant-time primitive proposed for stage 2c or stage 3 (and every secret-touching stage at **G4**) must provide compiled-artifact evidence from **release builds** under the **pinned toolchain (`rustc 1.97.1`, watch list O32)** on **both `x86_64` and `aarch64` (ARM64)**:
+
+1. **Assembly / binary inspection.** Automated scan confirming no secret-dependent conditional branches, no integer `div`/`idiv`, no variable-time bit-scan (`bsr`/`lzcnt`) on secret operands, and no secret-indexed lookups.
+2. **Statistical timing tests (`dudect` fixed-vs-random).** Sample sizes with adequate statistical power (not 24–32 keys, which only detect `η² ≈ 0.08–0.15`; `research/INDEX.md` conclusion 6). Tests must cover both fixed-key-at-bound (`B`) vs. random-key and fixed-small-ideal `S` vs. random panels, targeting Welch `|t| < 4.5` alongside variable-time positive controls.
+3. **Secret-taint instrumentation (Valgrind memcheck / `ctgrind`).** Mark secret inputs undefined/tainted and verify zero secret-dependent branches or addresses across all five parameter sets, with positive leak controls proving the harness flags leaks (where supported on the target architecture).
+4. **O32 watch-list and stack-frame audit.** Check new code shapes against **O32** (`rustc 1.97.1` known miscompilations: `#163728`/`#164736`/`#165828` clamp, `#163779` carry-fold, `#164469` TailCallElim, `#165204` `x86_64` >32 KiB stack probe, `#165156` vectorized array-slice read, `#162398` `aarch64` negate/sub reduction) and verify function stack frames remain well below 32 KiB.
+
+### 0.6 Testing provenance, representation equivalence, and Stage 5 proposals
+
+- **Non-sensitive signing-transcript provenance logging (stages 2–5 tests).** Test and differential harnesses should record full signing-transcript provenance in a non-sensitive log: public stage identifiers, public mathematical invariants, pass/retry/refusal categories, and operation counts, while **excluding** secret coordinates, secret bases, secret scalars, and sensitive intermediates (consistent with 2.1.3's ban on printing `Int<N>`/`SecretInt<N>` values). This supports differential debugging against C/Sage/PARI across all five sets (including `p324` and `p664` for **O14**) without creating a key-leaking diagnostic interface.
+- **Three-way distinction for representation changes (stage 3, stage 5, keygen pre-reduction, O28).** Any candidate design that alters key/ideal representation or public-key normalization—such as **keygen pre-reduction** (`research/keygen-precompute`: storing pre-reduced `{u_sec, v_sec}`, `+20–24 B` compact or `+212–524 B` with `E_vk` canonical basis) or a **canonical public-key model** (**O28**, **R3**, **D5**)—must separate three assertions in specs and tests:
+  1. *Same ideal / isomorphic curve:* the new representation defines the same left ideal (up to equivalence/order basis) or isomorphic curve.
+  2. *Verifier-accepted signature:* signatures verify under `VERIFIER_SPEC.md` at all five sets.
+  3. *Byte-identical replay:* bytes match the C reference (`scripts/export_s5_vectors.sh`), which is required only when exact C-reference replay is part of the test contract.
+  Changing `SECRETKEY_BYTES` (e.g., adopting `EXP_RED_O0`) or emitting canonical public keys (**O28**) requires a format/versioning design round with Rick and an explicit compatibility rule for imported legacy C-reference keys (such as retaining `(N, gen)` alongside `{u_sec, v_sec}` if exact stage 5 replay testing is preserved, and accepting non-canonical legacy public keys on import).
+- **Stage 5 safety and salt items already proposed by Rick (for Stage 5 spec):**
+  - *Fault checks at layer boundaries and verify-after-sign:* Validate structural invariants at layer boundaries and run verify-after-sign (noting `keygen-precompute` measured `+212–524 B` if `E_vk`'s canonical basis is cached in `sk` vs. derived during signing) so faults or miscomputations cannot release invalid signatures or leak secret structure.
+  - *Hedged salt `H(sk, msg, randomness)`:* Reconcile **D8** (salt derived from seed/key, public key, message, counter, and caller randomness, auditable at zero randomness) with Stage 5 deterministic replay requirements, **O4**, and **O11**.
+
+### 0.7 Mapping to stages, open questions, and `research/INDEX.md`
+
+| Stage | Gate obligations (Section 0) | Open questions / ledger items | `research/INDEX.md` & parallel work |
+| --- | --- | --- | --- |
+| 2a (`prism-int`) | PR-reviewed exits & sticky downstream sensitivity (0.3); O32 check (0.5) | **Q4**, **Q5** (deferred to 5 / 2c), **O32**, **O33** | `check_secret_exits.py` (0 exits today) |
+| 2b, 2d (quaternion, lattices, ideals) | Q1–Q3 fixed-modulus HNF & norm tracking; exit justification (0.3); provenance logging (0.6) | **Q1**, **Q2**, **Q3**, **O34** | `keygen-precompute` (`O0`-coord intersection mod `q`) |
+| 2c (basis reduction) | Classification & affordable CT strategy (0.2); certified `T_prov` + cleanup (0.2); **Q5** proof + adversarial tests (0.2); **G2** `unsafe` resolution (0.4); compiled-artifact checks on `x86_64`+`aarch64` under 1.97.1 (0.5) | **Q5**, **O32**, **O33** | `fixed-schedule-reduction`, `lagrange-tour-bound`, `rust-lagrange-ct`; closed negatives: `cornacchia-harness`, `salt-reshaped-lattice`, `higher-dim-lattice`; parallel: `experiment/ct-barrier-policy`, `experiment/q5-width-proof` |
+| 3 (norm equation, Cornacchia, ideal sampling) | Classification of `quat_qlapoti` / prime-norm loops (0.2); affordable CT redesign + cost at `p248`–`p664` (`p500` highlighted) (0.2); **D0** forbidden; three-way equivalence checks (0.6) | **O4**, **O26** (R2), **O28** (R3), **O29**, **O34** | `fixed-schedule-norm-equation`, `latticeprism-seeding`, `secret-ideal-rerandomization` (defer/optional); parallel: `experiment/qlapoti-redesign` |
+| 4 (ideal to isogeny) | Secret scalar/kernel classification (0.2); exit rationale (0.3); provenance logging (0.6) | **O14**, **O15**, **O20**, **O21** (G5) | `keygen-precompute` (notes `theta_chain` stays per-message) |
+| 5 (keygen & signing) | **Q4** (`B = ⌈L/2⌉+32`) enforced on keygen & import + rejection rate quantified (0.2); no overflow retries (0.2); three-way distinction & key format/migration (0.6); verify-after-sign, boundary fault checks & hedged salt (0.6) | **Q4**, **O4**, **O11**, **O14**, **O15**, **O28**, **O33** | `keygen-precompute` (`EXP_RED_O0`, `+20–24 B` / `+212–524 B`, `T_prov` `283..755`) |
+| Final (**G4**) | End-to-end compiled-artifact suite (`asm_scan`, full-power `dudect`, memcheck/`ctgrind` on `x86_64`+`aarch64`, 1.97.1), zeroization/erasure review, all `F`/`I`/`B`/`E`/`U` treatments closed | **O6**, **O8**, **O17**, **O19**, **O23**, **O32** | All harnesses remain outside CI; production claims made only here |
+
+### 0.8 Open decisions for Rick (to review before adopting this draft)
+
+1. **Adopt proposed ruling G7:** Require the Section 0 CT feasibility gate before finalizing stages 2c and 3 under **G3**, while keeping **G4** as the final hardening gate.
+2. **Resolve G2 (`unsafe` policy) for CT barriers:** Choose Option A (safe barrier validated under `rustc 1.97.1` on `x86_64` and `aarch64`) or Option B (narrowly audited internal crate) once `experiment/ct-barrier-policy` reports.
+3. **Keygen pre-reduction and secret-key format (`EXP_RED_O0`):** Decide whether to store pre-reduced `{u_sec, v_sec}` (`+20–24 B` compact, or `+212–524 B` with `E_vk` canonical basis for verify-after-sign), version `SECRETKEY_BYTES`, and retain `(N, gen)` for stage 5 C-reference replay.
+4. **Canonical public-key model (O28 / R3):** Decide whether newly generated keys emit the **D5** canonical Montgomery model while imported C-reference keys remain accepted in non-canonical models.
+5. **Stage 3 norm-equation redesign:** Select the bounded-loop / **O29** (`e` vs `e − 2`) / SQIsign 3.0 norm-equation direction once `experiment/qlapoti-redesign` reports.
+6. **Stage 5 hardening additions:** Confirm verify-after-sign, layer-boundary fault checks, and hedged-salt replay semantics for Stage 5's specification.
 
 ## 1. The constants
 
