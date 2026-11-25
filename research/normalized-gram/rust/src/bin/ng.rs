@@ -156,6 +156,7 @@ struct Tally {
     rick_reduce_exp: usize,
     rick_reduce_exp_n: usize,
     orig_final: usize,
+    inv_ok: usize,
     phys_differ: usize,
     bad: Vec<String>,
 }
@@ -179,6 +180,24 @@ fn check_line<const C: usize, const N: usize, const PL: usize>(l: &Line, t: &mut
         return;
     }
     t.n += 1;
+    // Hensel inverse: T T^-1 = 1, and the warm composition N^-1 q^-1 = (N q)^-1
+    // (here with q = 2^(2e-5) - 3^2-shaped odd b = 2^61 - 9 times the low limb, odd).
+    {
+        let mut one = [0u64; C];
+        one[0] = 1;
+        let mut b = [0u64; C];
+        b[0] = ((1u64 << 61) - 9).wrapping_mul(tt[0] | 1) | 1;
+        b[C - 1] = tt[0] >> 1;
+        let tb = ngram::mul_lo(&tt, &b);
+        if l.t.bit(0) && ngram::mul_lo(&tt, &tinv) == one
+            && ngram::mul_lo(&tinv, &ngram::inv_pow2(&b)) == ngram::inv_pow2(&tb)
+        {
+            t.inv_ok += 1;
+        } else {
+            eprintln!("FAIL inverse {}", l.kind);
+            t.bad.push(format!("inverse {}", l.kind));
+        }
+    }
     let mut ok_all = true;
     let mut fail = |what: &str, ok: bool, cnt: &mut usize| {
         if ok {
@@ -244,9 +263,9 @@ fn check_file<const C: usize, const N: usize, const PL: usize>(file: &str) -> bo
     }
     let all = t.bad.is_empty();
     println!(
-        "{file}: accepted {} | ctor {} restoring {} general {} | normalized final {} phys {} nbig {} | combined final {} phys {} nbig {} | logical equal {} | a60fd06 reduce_exp {}/{} | original final {} | inputs whose physical traces differ {} | rejects refused {}/{} | {}",
+        "{file}: accepted {} | ctor {} restoring {} general {} | normalized final {} phys {} nbig {} | combined final {} phys {} nbig {} | logical equal {} | a60fd06 reduce_exp {}/{} | original final {} | inverse checks {} | inputs whose physical traces differ {} | rejects refused {}/{} | {}",
         t.n, t.ctor_ok, t.ctor_restoring_ok, t.ctor_general_ok, t.norm_final, t.norm_phys, t.norm_nbig, t.comb_final,
-        t.comb_phys, t.comb_nbig, t.logical_same, t.rick_reduce_exp, t.rick_reduce_exp_n, t.orig_final, t.phys_differ,
+        t.comb_phys, t.comb_nbig, t.logical_same, t.rick_reduce_exp, t.rick_reduce_exp_n, t.orig_final, t.inv_ok, t.phys_differ,
         t.rejects_ok, t.rejects, if all { "OK" } else { "FAILED" }
     );
     if !all {
