@@ -1,0 +1,3397 @@
+{
+ "p248": {
+  "guard_stats": {
+   "sampled": [
+    201,
+    49
+   ],
+   "crafted_skew_max": [
+    0,
+    75
+   ],
+   "crafted_edge_fail": [
+    0,
+    75
+   ],
+   "crafted_edge_pass": [
+    67,
+    8
+   ]
+  },
+  "guard_rate": {
+   "n": 2500,
+   "rejected": {
+    "2": 567,
+    "4": 150,
+    "16": 11,
+    "256": 0,
+    "65536": 0
+   },
+   "max_nrd_v_over_sqrtp_N": 132.82918349311691
+  },
+  "seconds": 34.2,
+  "variants": {
+   "model:sign_generic": {
+    "n": 2409,
+    "families": [
+     "model_nvar",
+     "model_nbound",
+     "model_maxnorm",
+     "adv_rolletschek",
+     "adv_corners",
+     "adv_max_entries",
+     "adv_pingpong",
+     "adv_tail_stress",
+     "adv_saturation",
+     "adv_saturation_skewj"
+    ],
+    "proven_max_bits": 1301,
+    "M0_bits": 1299,
+    "observed_max_bits": 1299,
+    "observed_max_bits_excl_input": 1299,
+    "width": 1664,
+    "spare_proven": 363,
+    "spare_observed": 365,
+    "lemma_violations": 0,
+    "oracle_checked": 659,
+    "oracle_fail": 0,
+    "saturated_quotients": 152301,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 20,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1299,
+      "observed": 1299
+     },
+     "coordinates, step and conversion": {
+      "proven": 650,
+      "observed": 649
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 651,
+      "observed": 650
+     },
+     "update temporaries a = mu u": {
+      "proven": 651,
+      "observed": 650
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1300,
+      "observed": 1298
+     },
+     "j-part sums before x p": {
+      "proven": 1049,
+      "observed": 799
+     },
+     "norms N4 and partial sums": {
+      "proven": 1300,
+      "observed": 1299
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 63
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 126
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 650,
+      "observed": 649
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1301,
+      "observed": 776
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1301,
+      "observed": 776
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1300,
+      "observed": 1298
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1301,
+      "observed": 1299
+     }
+    }
+   },
+   "O0:sign_generic": {
+    "n": 903,
+    "families": [
+     "O0_nbound",
+     "O0_maxnorm",
+     "adv_rolletschek_O0scaled",
+     "adv_max_entries_O0"
+    ],
+    "proven_max_bits": 1303,
+    "M0_bits": 1301,
+    "observed_max_bits": 1301,
+    "observed_max_bits_excl_input": 1301,
+    "width": 1664,
+    "spare_proven": 361,
+    "spare_observed": 363,
+    "lemma_violations": 0,
+    "oracle_checked": 341,
+    "oracle_fail": 0,
+    "saturated_quotients": 600,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1301,
+      "observed": 1301
+     },
+     "coordinates, step and conversion": {
+      "proven": 651,
+      "observed": 650
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 652,
+      "observed": 651
+     },
+     "update temporaries a = mu u": {
+      "proven": 652,
+      "observed": 651
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1302,
+      "observed": 1300
+     },
+     "j-part sums before x p": {
+      "proven": 1051,
+      "observed": 802
+     },
+     "norms N4 and partial sums": {
+      "proven": 1302,
+      "observed": 1300
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 61
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 126
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 651,
+      "observed": 401
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1303,
+      "observed": 777
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1303,
+      "observed": 777
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1302,
+      "observed": 1300
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1303,
+      "observed": 1301
+     }
+    }
+   },
+   "model:Iq_only": {
+    "n": 250,
+    "families": [
+     "Iq_only"
+    ],
+    "proven_max_bits": 985,
+    "M0_bits": 983,
+    "observed_max_bits": 982,
+    "observed_max_bits_excl_input": 982,
+    "width": 1664,
+    "spare_proven": 679,
+    "spare_observed": 682,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 983,
+      "observed": 982
+     },
+     "coordinates, step and conversion": {
+      "proven": 492,
+      "observed": 491
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 493,
+      "observed": 491
+     },
+     "update temporaries a = mu u": {
+      "proven": 493,
+      "observed": 492
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 984,
+      "observed": 982
+     },
+     "j-part sums before x p": {
+      "proven": 733,
+      "observed": 367
+     },
+     "norms N4 and partial sums": {
+      "proven": 984,
+      "observed": 980
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 11
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 76
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 492,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 985,
+      "observed": 617
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 985,
+      "observed": 617
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 984,
+      "observed": 618
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 985,
+      "observed": 619
+     }
+    }
+   },
+   "model:keygen_D": {
+    "n": 250,
+    "families": [
+     "keygen_D"
+    ],
+    "proven_max_bits": 1027,
+    "M0_bits": 1026,
+    "observed_max_bits": 1025,
+    "observed_max_bits_excl_input": 1024,
+    "width": 1664,
+    "spare_proven": 637,
+    "spare_observed": 639,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1026,
+      "observed": 1025
+     },
+     "coordinates, step and conversion": {
+      "proven": 513,
+      "observed": 513
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 514,
+      "observed": 513
+     },
+     "update temporaries a = mu u": {
+      "proven": 514,
+      "observed": 513
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1026,
+      "observed": 1024
+     },
+     "j-part sums before x p": {
+      "proven": 775,
+      "observed": 390
+     },
+     "norms N4 and partial sums": {
+      "proven": 1026,
+      "observed": 1022
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 8
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 73
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 513,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1027,
+      "observed": 639
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1027,
+      "observed": 639
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1026,
+      "observed": 641
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1027,
+      "observed": 642
+     }
+    }
+   },
+   "O0:keygen_D": {
+    "n": 125,
+    "families": [
+     "keygen_D_O0"
+    ],
+    "proven_max_bits": 1029,
+    "M0_bits": 1028,
+    "observed_max_bits": 1027,
+    "observed_max_bits_excl_input": 1026,
+    "width": 1664,
+    "spare_proven": 635,
+    "spare_observed": 637,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1028,
+      "observed": 1027
+     },
+     "coordinates, step and conversion": {
+      "proven": 514,
+      "observed": 514
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 515,
+      "observed": 514
+     },
+     "update temporaries a = mu u": {
+      "proven": 515,
+      "observed": 514
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1028,
+      "observed": 1026
+     },
+     "j-part sums before x p": {
+      "proven": 777,
+      "observed": 391
+     },
+     "norms N4 and partial sums": {
+      "proven": 1028,
+      "observed": 1024
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 8
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 73
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 514,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1029,
+      "observed": 640
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1029,
+      "observed": 640
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1028,
+      "observed": 642
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1029,
+      "observed": 643
+     }
+    }
+   },
+   "model:keygen_prereduce_Isec": {
+    "n": 250,
+    "families": [
+     "keygen_prereduce_Isec"
+    ],
+    "proven_max_bits": 319,
+    "M0_bits": 318,
+    "observed_max_bits": 317,
+    "observed_max_bits_excl_input": 316,
+    "width": 1664,
+    "spare_proven": 1345,
+    "spare_observed": 1347,
+    "lemma_violations": 0,
+    "oracle_checked": 250,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 318,
+      "observed": 317
+     },
+     "coordinates, step and conversion": {
+      "proven": 159,
+      "observed": 158
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 160,
+      "observed": 159
+     },
+     "update temporaries a = mu u": {
+      "proven": 160,
+      "observed": 159
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 318,
+      "observed": 316
+     },
+     "j-part sums before x p": {
+      "proven": 67,
+      "observed": 37
+     },
+     "norms N4 and partial sums": {
+      "proven": 318,
+      "observed": 314
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 7
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 71
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 159,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 319,
+      "observed": 285
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 319,
+      "observed": 285
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 318,
+      "observed": 288
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 319,
+      "observed": 289
+     }
+    }
+   },
+   "model:sign_prereduced_guarded": {
+    "n": 804,
+    "families": [
+     "prered_guarded_sampled",
+     "prered_guarded_crafted_edge_pass"
+    ],
+    "proven_max_bits": 1268,
+    "M0_bits": 1267,
+    "observed_max_bits": 1267,
+    "observed_max_bits_excl_input": 1266,
+    "width": 1664,
+    "spare_proven": 396,
+    "spare_observed": 397,
+    "lemma_violations": 0,
+    "oracle_checked": 804,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1267,
+      "observed": 1267
+     },
+     "coordinates, step and conversion": {
+      "proven": 634,
+      "observed": 633
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 634,
+      "observed": 633
+     },
+     "update temporaries a = mu u": {
+      "proven": 634,
+      "observed": 633
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1267,
+      "observed": 1266
+     },
+     "j-part sums before x p": {
+      "proven": 1016,
+      "observed": 1015
+     },
+     "norms N4 and partial sums": {
+      "proven": 1267,
+      "observed": 1263
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 9
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 74
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 634,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1268,
+      "observed": 776
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1268,
+      "observed": 776
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1267,
+      "observed": 781
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1268,
+      "observed": 782
+     }
+    }
+   },
+   "model:sign_prereduced_unguarded_generic": {
+    "n": 621,
+    "families": [
+     "prered_unguarded_sampled",
+     "prered_unguarded_crafted_skew_max",
+     "prered_unguarded_crafted_edge_fail",
+     "prered_unguarded_crafted_edge_pass"
+    ],
+    "proven_max_bits": 1300,
+    "M0_bits": 1299,
+    "observed_max_bits": 1298,
+    "observed_max_bits_excl_input": 1297,
+    "width": 1664,
+    "spare_proven": 364,
+    "spare_observed": 366,
+    "lemma_violations": 0,
+    "oracle_checked": 621,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1299,
+      "observed": 1298
+     },
+     "coordinates, step and conversion": {
+      "proven": 650,
+      "observed": 649
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 650,
+      "observed": 650
+     },
+     "update temporaries a = mu u": {
+      "proven": 650,
+      "observed": 650
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1299,
+      "observed": 1297
+     },
+     "j-part sums before x p": {
+      "proven": 1048,
+      "observed": 1017
+     },
+     "norms N4 and partial sums": {
+      "proven": 1299,
+      "observed": 1294
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 10
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 75
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 650,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1300,
+      "observed": 776
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1300,
+      "observed": 776
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1299,
+      "observed": 781
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1300,
+      "observed": 782
+     }
+    }
+   }
+  },
+  "max_B_fit": {
+   "O0:sign_generic": 338,
+   "O0:sign_any_shape": 213
+  },
+  "B": 158
+ },
+ "p324": {
+  "guard_stats": {
+   "sampled": [
+    189,
+    61
+   ],
+   "crafted_skew_max": [
+    0,
+    75
+   ],
+   "crafted_edge_fail": [
+    0,
+    75
+   ],
+   "crafted_edge_pass": [
+    67,
+    8
+   ]
+  },
+  "guard_rate": {
+   "n": 2500,
+   "rejected": {
+    "2": 577,
+    "4": 129,
+    "16": 10,
+    "256": 0,
+    "65536": 0
+   },
+   "max_nrd_v_over_sqrtp_N": 51.437054026983176
+  },
+  "seconds": 42.5,
+  "variants": {
+   "model:sign_generic": {
+    "n": 2409,
+    "families": [
+     "model_nvar",
+     "model_nbound",
+     "model_maxnorm",
+     "adv_rolletschek",
+     "adv_corners",
+     "adv_max_entries",
+     "adv_pingpong",
+     "adv_tail_stress",
+     "adv_saturation",
+     "adv_saturation_skewj"
+    ],
+    "proven_max_bits": 1679,
+    "M0_bits": 1677,
+    "observed_max_bits": 1677,
+    "observed_max_bits_excl_input": 1677,
+    "width": 2112,
+    "spare_proven": 433,
+    "spare_observed": 435,
+    "lemma_violations": 0,
+    "oracle_checked": 659,
+    "oracle_fail": 0,
+    "saturated_quotients": 195817,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 20,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1677,
+      "observed": 1677
+     },
+     "coordinates, step and conversion": {
+      "proven": 839,
+      "observed": 838
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 840,
+      "observed": 839
+     },
+     "update temporaries a = mu u": {
+      "proven": 840,
+      "observed": 839
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1678,
+      "observed": 1676
+     },
+     "j-part sums before x p": {
+      "proven": 1352,
+      "observed": 1026
+     },
+     "norms N4 and partial sums": {
+      "proven": 1678,
+      "observed": 1677
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 63
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 126
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 839,
+      "observed": 838
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1679,
+      "observed": 1003
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1679,
+      "observed": 1003
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1678,
+      "observed": 1676
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1679,
+      "observed": 1677
+     }
+    }
+   },
+   "O0:sign_generic": {
+    "n": 903,
+    "families": [
+     "O0_nbound",
+     "O0_maxnorm",
+     "adv_rolletschek_O0scaled",
+     "adv_max_entries_O0"
+    ],
+    "proven_max_bits": 1681,
+    "M0_bits": 1679,
+    "observed_max_bits": 1679,
+    "observed_max_bits_excl_input": 1679,
+    "width": 2112,
+    "spare_proven": 431,
+    "spare_observed": 433,
+    "lemma_violations": 0,
+    "oracle_checked": 341,
+    "oracle_fail": 0,
+    "saturated_quotients": 772,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1679,
+      "observed": 1679
+     },
+     "coordinates, step and conversion": {
+      "proven": 840,
+      "observed": 839
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 841,
+      "observed": 840
+     },
+     "update temporaries a = mu u": {
+      "proven": 841,
+      "observed": 840
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1680,
+      "observed": 1678
+     },
+     "j-part sums before x p": {
+      "proven": 1354,
+      "observed": 1030
+     },
+     "norms N4 and partial sums": {
+      "proven": 1680,
+      "observed": 1678
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 61
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 126
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 840,
+      "observed": 515
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1681,
+      "observed": 1003
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1681,
+      "observed": 1004
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1680,
+      "observed": 1678
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1681,
+      "observed": 1679
+     }
+    }
+   },
+   "model:Iq_only": {
+    "n": 250,
+    "families": [
+     "Iq_only"
+    ],
+    "proven_max_bits": 1289,
+    "M0_bits": 1287,
+    "observed_max_bits": 1287,
+    "observed_max_bits_excl_input": 1286,
+    "width": 2112,
+    "spare_proven": 823,
+    "spare_observed": 825,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1287,
+      "observed": 1287
+     },
+     "coordinates, step and conversion": {
+      "proven": 644,
+      "observed": 643
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 645,
+      "observed": 644
+     },
+     "update temporaries a = mu u": {
+      "proven": 645,
+      "observed": 644
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1288,
+      "observed": 1286
+     },
+     "j-part sums before x p": {
+      "proven": 962,
+      "observed": 482
+     },
+     "norms N4 and partial sums": {
+      "proven": 1288,
+      "observed": 1284
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 8
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 73
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 644,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1289,
+      "observed": 807
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1289,
+      "observed": 808
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1288,
+      "observed": 807
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1289,
+      "observed": 808
+     }
+    }
+   },
+   "model:keygen_D": {
+    "n": 250,
+    "families": [
+     "keygen_D"
+    ],
+    "proven_max_bits": 1539,
+    "M0_bits": 1538,
+    "observed_max_bits": 1537,
+    "observed_max_bits_excl_input": 1536,
+    "width": 2112,
+    "spare_proven": 573,
+    "spare_observed": 575,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1538,
+      "observed": 1537
+     },
+     "coordinates, step and conversion": {
+      "proven": 769,
+      "observed": 769
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 770,
+      "observed": 769
+     },
+     "update temporaries a = mu u": {
+      "proven": 770,
+      "observed": 769
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1538,
+      "observed": 1536
+     },
+     "j-part sums before x p": {
+      "proven": 1212,
+      "observed": 609
+     },
+     "norms N4 and partial sums": {
+      "proven": 1538,
+      "observed": 1534
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 9
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 73
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 769,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1539,
+      "observed": 933
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1539,
+      "observed": 933
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1538,
+      "observed": 935
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1539,
+      "observed": 936
+     }
+    }
+   },
+   "O0:keygen_D": {
+    "n": 125,
+    "families": [
+     "keygen_D_O0"
+    ],
+    "proven_max_bits": 1541,
+    "M0_bits": 1540,
+    "observed_max_bits": 1539,
+    "observed_max_bits_excl_input": 1538,
+    "width": 2112,
+    "spare_proven": 571,
+    "spare_observed": 573,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1540,
+      "observed": 1539
+     },
+     "coordinates, step and conversion": {
+      "proven": 770,
+      "observed": 770
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 771,
+      "observed": 770
+     },
+     "update temporaries a = mu u": {
+      "proven": 771,
+      "observed": 770
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1540,
+      "observed": 1538
+     },
+     "j-part sums before x p": {
+      "proven": 1214,
+      "observed": 609
+     },
+     "norms N4 and partial sums": {
+      "proven": 1540,
+      "observed": 1536
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 9
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 73
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 770,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1541,
+      "observed": 934
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1541,
+      "observed": 934
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1540,
+      "observed": 936
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1541,
+      "observed": 937
+     }
+    }
+   },
+   "model:keygen_prereduce_Isec": {
+    "n": 250,
+    "families": [
+     "keygen_prereduce_Isec"
+    ],
+    "proven_max_bits": 393,
+    "M0_bits": 392,
+    "observed_max_bits": 391,
+    "observed_max_bits_excl_input": 390,
+    "width": 2112,
+    "spare_proven": 1719,
+    "spare_observed": 1721,
+    "lemma_violations": 0,
+    "oracle_checked": 250,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 392,
+      "observed": 391
+     },
+     "coordinates, step and conversion": {
+      "proven": 196,
+      "observed": 195
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 197,
+      "observed": 196
+     },
+     "update temporaries a = mu u": {
+      "proven": 197,
+      "observed": 196
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 392,
+      "observed": 390
+     },
+     "j-part sums before x p": {
+      "proven": 66,
+      "observed": 35
+     },
+     "norms N4 and partial sums": {
+      "proven": 392,
+      "observed": 388
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 7
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 72
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 196,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 393,
+      "observed": 359
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 393,
+      "observed": 359
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 392,
+      "observed": 361
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 393,
+      "observed": 362
+     }
+    }
+   },
+   "model:sign_prereduced_guarded": {
+    "n": 768,
+    "families": [
+     "prered_guarded_sampled",
+     "prered_guarded_crafted_edge_pass"
+    ],
+    "proven_max_bits": 1647,
+    "M0_bits": 1645,
+    "observed_max_bits": 1645,
+    "observed_max_bits_excl_input": 1644,
+    "width": 2112,
+    "spare_proven": 465,
+    "spare_observed": 467,
+    "lemma_violations": 0,
+    "oracle_checked": 768,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1645,
+      "observed": 1645
+     },
+     "coordinates, step and conversion": {
+      "proven": 823,
+      "observed": 823
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 823,
+      "observed": 823
+     },
+     "update temporaries a = mu u": {
+      "proven": 824,
+      "observed": 823
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1645,
+      "observed": 1644
+     },
+     "j-part sums before x p": {
+      "proven": 1320,
+      "observed": 1318
+     },
+     "norms N4 and partial sums": {
+      "proven": 1645,
+      "observed": 1642
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 10
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 74
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 823,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1647,
+      "observed": 1003
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1646,
+      "observed": 1003
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1645,
+      "observed": 1007
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1646,
+      "observed": 1008
+     }
+    }
+   },
+   "model:sign_prereduced_unguarded_generic": {
+    "n": 657,
+    "families": [
+     "prered_unguarded_sampled",
+     "prered_unguarded_crafted_skew_max",
+     "prered_unguarded_crafted_edge_fail",
+     "prered_unguarded_crafted_edge_pass"
+    ],
+    "proven_max_bits": 1678,
+    "M0_bits": 1677,
+    "observed_max_bits": 1676,
+    "observed_max_bits_excl_input": 1675,
+    "width": 2112,
+    "spare_proven": 434,
+    "spare_observed": 436,
+    "lemma_violations": 0,
+    "oracle_checked": 657,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1677,
+      "observed": 1676
+     },
+     "coordinates, step and conversion": {
+      "proven": 839,
+      "observed": 838
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 839,
+      "observed": 839
+     },
+     "update temporaries a = mu u": {
+      "proven": 839,
+      "observed": 839
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1677,
+      "observed": 1675
+     },
+     "j-part sums before x p": {
+      "proven": 1351,
+      "observed": 1320
+     },
+     "norms N4 and partial sums": {
+      "proven": 1677,
+      "observed": 1673
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 10
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 74
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 839,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1678,
+      "observed": 1002
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1678,
+      "observed": 1002
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1677,
+      "observed": 1007
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1678,
+      "observed": 1008
+     }
+    }
+   }
+  },
+  "max_B_fit": {
+   "O0:sign_generic": 410,
+   "O0:sign_any_shape": 247
+  },
+  "B": 195
+ },
+ "p376": {
+  "guard_stats": {
+   "sampled": [
+    193,
+    57
+   ],
+   "crafted_skew_max": [
+    0,
+    75
+   ],
+   "crafted_edge_fail": [
+    0,
+    75
+   ],
+   "crafted_edge_pass": [
+    67,
+    8
+   ]
+  },
+  "guard_rate": {
+   "n": 2500,
+   "rejected": {
+    "2": 584,
+    "4": 138,
+    "16": 11,
+    "256": 0,
+    "65536": 0
+   },
+   "max_nrd_v_over_sqrtp_N": 38.82419647411908
+  },
+  "seconds": 48.9,
+  "variants": {
+   "model:sign_generic": {
+    "n": 2409,
+    "families": [
+     "model_nvar",
+     "model_nbound",
+     "model_maxnorm",
+     "adv_rolletschek",
+     "adv_corners",
+     "adv_max_entries",
+     "adv_pingpong",
+     "adv_tail_stress",
+     "adv_saturation",
+     "adv_saturation_skewj"
+    ],
+    "proven_max_bits": 1945,
+    "M0_bits": 1943,
+    "observed_max_bits": 1943,
+    "observed_max_bits_excl_input": 1943,
+    "width": 2432,
+    "spare_proven": 487,
+    "spare_observed": 489,
+    "lemma_violations": 0,
+    "oracle_checked": 659,
+    "oracle_fail": 0,
+    "saturated_quotients": 225671,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 20,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1943,
+      "observed": 1943
+     },
+     "coordinates, step and conversion": {
+      "proven": 972,
+      "observed": 971
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 973,
+      "observed": 972
+     },
+     "update temporaries a = mu u": {
+      "proven": 973,
+      "observed": 972
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1944,
+      "observed": 1942
+     },
+     "j-part sums before x p": {
+      "proven": 1561,
+      "observed": 1179
+     },
+     "norms N4 and partial sums": {
+      "proven": 1944,
+      "observed": 1943
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 63
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 126
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 972,
+      "observed": 971
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1945,
+      "observed": 1164
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1945,
+      "observed": 1164
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1944,
+      "observed": 1942
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1945,
+      "observed": 1943
+     }
+    }
+   },
+   "O0:sign_generic": {
+    "n": 903,
+    "families": [
+     "O0_nbound",
+     "O0_maxnorm",
+     "adv_rolletschek_O0scaled",
+     "adv_max_entries_O0"
+    ],
+    "proven_max_bits": 1947,
+    "M0_bits": 1945,
+    "observed_max_bits": 1945,
+    "observed_max_bits_excl_input": 1945,
+    "width": 2432,
+    "spare_proven": 485,
+    "spare_observed": 487,
+    "lemma_violations": 0,
+    "oracle_checked": 341,
+    "oracle_fail": 0,
+    "saturated_quotients": 890,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1945,
+      "observed": 1945
+     },
+     "coordinates, step and conversion": {
+      "proven": 973,
+      "observed": 972
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 974,
+      "observed": 973
+     },
+     "update temporaries a = mu u": {
+      "proven": 974,
+      "observed": 973
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1946,
+      "observed": 1944
+     },
+     "j-part sums before x p": {
+      "proven": 1563,
+      "observed": 1183
+     },
+     "norms N4 and partial sums": {
+      "proven": 1946,
+      "observed": 1944
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 61
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 126
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 973,
+      "observed": 591
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1947,
+      "observed": 1165
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1947,
+      "observed": 1165
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1946,
+      "observed": 1944
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1947,
+      "observed": 1945
+     }
+    }
+   },
+   "model:Iq_only": {
+    "n": 250,
+    "families": [
+     "Iq_only"
+    ],
+    "proven_max_bits": 1497,
+    "M0_bits": 1495,
+    "observed_max_bits": 1495,
+    "observed_max_bits_excl_input": 1494,
+    "width": 2432,
+    "spare_proven": 935,
+    "spare_observed": 937,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1495,
+      "observed": 1495
+     },
+     "coordinates, step and conversion": {
+      "proven": 748,
+      "observed": 747
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 749,
+      "observed": 747
+     },
+     "update temporaries a = mu u": {
+      "proven": 749,
+      "observed": 748
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1496,
+      "observed": 1494
+     },
+     "j-part sums before x p": {
+      "proven": 1113,
+      "observed": 557
+     },
+     "norms N4 and partial sums": {
+      "proven": 1496,
+      "observed": 1492
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 6
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 71
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 748,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1497,
+      "observed": 939
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1497,
+      "observed": 939
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1496,
+      "observed": 939
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1497,
+      "observed": 940
+     }
+    }
+   },
+   "model:keygen_D": {
+    "n": 250,
+    "families": [
+     "keygen_D"
+    ],
+    "proven_max_bits": 1539,
+    "M0_bits": 1538,
+    "observed_max_bits": 1537,
+    "observed_max_bits_excl_input": 1536,
+    "width": 2432,
+    "spare_proven": 893,
+    "spare_observed": 895,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1538,
+      "observed": 1537
+     },
+     "coordinates, step and conversion": {
+      "proven": 769,
+      "observed": 769
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 770,
+      "observed": 769
+     },
+     "update temporaries a = mu u": {
+      "proven": 770,
+      "observed": 769
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1538,
+      "observed": 1536
+     },
+     "j-part sums before x p": {
+      "proven": 1155,
+      "observed": 581
+     },
+     "norms N4 and partial sums": {
+      "proven": 1538,
+      "observed": 1535
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 9
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 74
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 769,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1539,
+      "observed": 961
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1539,
+      "observed": 961
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1538,
+      "observed": 964
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1539,
+      "observed": 965
+     }
+    }
+   },
+   "O0:keygen_D": {
+    "n": 125,
+    "families": [
+     "keygen_D_O0"
+    ],
+    "proven_max_bits": 1541,
+    "M0_bits": 1540,
+    "observed_max_bits": 1539,
+    "observed_max_bits_excl_input": 1538,
+    "width": 2432,
+    "spare_proven": 891,
+    "spare_observed": 893,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1540,
+      "observed": 1539
+     },
+     "coordinates, step and conversion": {
+      "proven": 770,
+      "observed": 770
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 771,
+      "observed": 770
+     },
+     "update temporaries a = mu u": {
+      "proven": 771,
+      "observed": 770
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1540,
+      "observed": 1538
+     },
+     "j-part sums before x p": {
+      "proven": 1157,
+      "observed": 581
+     },
+     "norms N4 and partial sums": {
+      "proven": 1540,
+      "observed": 1536
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 10
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 74
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 770,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1541,
+      "observed": 962
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1541,
+      "observed": 962
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1540,
+      "observed": 963
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1541,
+      "observed": 964
+     }
+    }
+   },
+   "model:keygen_prereduce_Isec": {
+    "n": 250,
+    "families": [
+     "keygen_prereduce_Isec"
+    ],
+    "proven_max_bits": 451,
+    "M0_bits": 450,
+    "observed_max_bits": 449,
+    "observed_max_bits_excl_input": 448,
+    "width": 2432,
+    "spare_proven": 1981,
+    "spare_observed": 1983,
+    "lemma_violations": 0,
+    "oracle_checked": 250,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 450,
+      "observed": 449
+     },
+     "coordinates, step and conversion": {
+      "proven": 225,
+      "observed": 224
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 226,
+      "observed": 225
+     },
+     "update temporaries a = mu u": {
+      "proven": 226,
+      "observed": 225
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 450,
+      "observed": 448
+     },
+     "j-part sums before x p": {
+      "proven": 67,
+      "observed": 35
+     },
+     "norms N4 and partial sums": {
+      "proven": 450,
+      "observed": 446
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 6
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 71
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 225,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 451,
+      "observed": 417
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 451,
+      "observed": 417
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 450,
+      "observed": 418
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 451,
+      "observed": 419
+     }
+    }
+   },
+   "model:sign_prereduced_guarded": {
+    "n": 780,
+    "families": [
+     "prered_guarded_sampled",
+     "prered_guarded_crafted_edge_pass"
+    ],
+    "proven_max_bits": 1912,
+    "M0_bits": 1911,
+    "observed_max_bits": 1910,
+    "observed_max_bits_excl_input": 1909,
+    "width": 2432,
+    "spare_proven": 520,
+    "spare_observed": 522,
+    "lemma_violations": 0,
+    "oracle_checked": 780,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1911,
+      "observed": 1910
+     },
+     "coordinates, step and conversion": {
+      "proven": 956,
+      "observed": 955
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 956,
+      "observed": 955
+     },
+     "update temporaries a = mu u": {
+      "proven": 956,
+      "observed": 955
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1911,
+      "observed": 1909
+     },
+     "j-part sums before x p": {
+      "proven": 1528,
+      "observed": 1527
+     },
+     "norms N4 and partial sums": {
+      "proven": 1911,
+      "observed": 1907
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 10
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 75
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 956,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1912,
+      "observed": 1164
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1912,
+      "observed": 1164
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1911,
+      "observed": 1167
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1912,
+      "observed": 1168
+     }
+    }
+   },
+   "model:sign_prereduced_unguarded_generic": {
+    "n": 645,
+    "families": [
+     "prered_unguarded_sampled",
+     "prered_unguarded_crafted_skew_max",
+     "prered_unguarded_crafted_edge_fail",
+     "prered_unguarded_crafted_edge_pass"
+    ],
+    "proven_max_bits": 1944,
+    "M0_bits": 1943,
+    "observed_max_bits": 1942,
+    "observed_max_bits_excl_input": 1941,
+    "width": 2432,
+    "spare_proven": 488,
+    "spare_observed": 490,
+    "lemma_violations": 0,
+    "oracle_checked": 645,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1943,
+      "observed": 1942
+     },
+     "coordinates, step and conversion": {
+      "proven": 972,
+      "observed": 971
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 972,
+      "observed": 972
+     },
+     "update temporaries a = mu u": {
+      "proven": 972,
+      "observed": 972
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1943,
+      "observed": 1941
+     },
+     "j-part sums before x p": {
+      "proven": 1560,
+      "observed": 1528
+     },
+     "norms N4 and partial sums": {
+      "proven": 1943,
+      "observed": 1939
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 10
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 75
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 972,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1944,
+      "observed": 1164
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1944,
+      "observed": 1164
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1943,
+      "observed": 1166
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1944,
+      "observed": 1167
+     }
+    }
+   }
+  },
+  "max_B_fit": {
+   "O0:sign_generic": 466,
+   "O0:sign_any_shape": 275
+  },
+  "B": 224
+ },
+ "p500": {
+  "guard_stats": {
+   "sampled": [
+    194,
+    56
+   ],
+   "crafted_skew_max": [
+    0,
+    75
+   ],
+   "crafted_edge_fail": [
+    0,
+    75
+   ],
+   "crafted_edge_pass": [
+    70,
+    5
+   ]
+  },
+  "guard_rate": {
+   "n": 2500,
+   "rejected": {
+    "2": 544,
+    "4": 128,
+    "16": 9,
+    "256": 0,
+    "65536": 0
+   },
+   "max_nrd_v_over_sqrtp_N": 174.26425935269577
+  },
+  "seconds": 85.2,
+  "variants": {
+   "model:sign_generic": {
+    "n": 2409,
+    "families": [
+     "model_nvar",
+     "model_nbound",
+     "model_maxnorm",
+     "adv_rolletschek",
+     "adv_corners",
+     "adv_max_entries",
+     "adv_pingpong",
+     "adv_tail_stress",
+     "adv_saturation",
+     "adv_saturation_skewj"
+    ],
+    "proven_max_bits": 2563,
+    "M0_bits": 2561,
+    "observed_max_bits": 2561,
+    "observed_max_bits_excl_input": 2561,
+    "width": 3136,
+    "spare_proven": 573,
+    "spare_observed": 575,
+    "lemma_violations": 0,
+    "oracle_checked": 659,
+    "oracle_fail": 0,
+    "saturated_quotients": 297017,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 20,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 2561,
+      "observed": 2561
+     },
+     "coordinates, step and conversion": {
+      "proven": 1281,
+      "observed": 1280
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 1282,
+      "observed": 1281
+     },
+     "update temporaries a = mu u": {
+      "proven": 1282,
+      "observed": 1281
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 2562,
+      "observed": 2560
+     },
+     "j-part sums before x p": {
+      "proven": 2057,
+      "observed": 1552
+     },
+     "norms N4 and partial sums": {
+      "proven": 2562,
+      "observed": 2561
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 63
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 126
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 1281,
+      "observed": 1280
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 2563,
+      "observed": 1534
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 2563,
+      "observed": 1534
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 2562,
+      "observed": 2560
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 2563,
+      "observed": 2561
+     }
+    }
+   },
+   "O0:sign_generic": {
+    "n": 903,
+    "families": [
+     "O0_nbound",
+     "O0_maxnorm",
+     "adv_rolletschek_O0scaled",
+     "adv_max_entries_O0"
+    ],
+    "proven_max_bits": 2565,
+    "M0_bits": 2563,
+    "observed_max_bits": 2563,
+    "observed_max_bits_excl_input": 2563,
+    "width": 3136,
+    "spare_proven": 571,
+    "spare_observed": 573,
+    "lemma_violations": 0,
+    "oracle_checked": 341,
+    "oracle_fail": 0,
+    "saturated_quotients": 1172,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 2563,
+      "observed": 2563
+     },
+     "coordinates, step and conversion": {
+      "proven": 1282,
+      "observed": 1281
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 1283,
+      "observed": 1282
+     },
+     "update temporaries a = mu u": {
+      "proven": 1283,
+      "observed": 1282
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 2564,
+      "observed": 2562
+     },
+     "j-part sums before x p": {
+      "proven": 2059,
+      "observed": 1555
+     },
+     "norms N4 and partial sums": {
+      "proven": 2564,
+      "observed": 2562
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 61
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 126
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 1282,
+      "observed": 778
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 2565,
+      "observed": 1535
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 2565,
+      "observed": 1535
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 2564,
+      "observed": 2562
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 2565,
+      "observed": 2563
+     }
+    }
+   },
+   "model:Iq_only": {
+    "n": 250,
+    "families": [
+     "Iq_only"
+    ],
+    "proven_max_bits": 1993,
+    "M0_bits": 1991,
+    "observed_max_bits": 1991,
+    "observed_max_bits_excl_input": 1990,
+    "width": 3136,
+    "spare_proven": 1143,
+    "spare_observed": 1145,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 1991,
+      "observed": 1991
+     },
+     "coordinates, step and conversion": {
+      "proven": 996,
+      "observed": 995
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 997,
+      "observed": 996
+     },
+     "update temporaries a = mu u": {
+      "proven": 997,
+      "observed": 996
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 1992,
+      "observed": 1990
+     },
+     "j-part sums before x p": {
+      "proven": 1487,
+      "observed": 744
+     },
+     "norms N4 and partial sums": {
+      "proven": 1992,
+      "observed": 1988
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 6
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 70
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 996,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 1993,
+      "observed": 1248
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 1993,
+      "observed": 1249
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 1992,
+      "observed": 1250
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 1993,
+      "observed": 1251
+     }
+    }
+   },
+   "model:keygen_D": {
+    "n": 250,
+    "families": [
+     "keygen_D"
+    ],
+    "proven_max_bits": 2051,
+    "M0_bits": 2050,
+    "observed_max_bits": 2049,
+    "observed_max_bits_excl_input": 2048,
+    "width": 3136,
+    "spare_proven": 1085,
+    "spare_observed": 1087,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 2050,
+      "observed": 2049
+     },
+     "coordinates, step and conversion": {
+      "proven": 1025,
+      "observed": 1025
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 1026,
+      "observed": 1025
+     },
+     "update temporaries a = mu u": {
+      "proven": 1026,
+      "observed": 1025
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 2050,
+      "observed": 2048
+     },
+     "j-part sums before x p": {
+      "proven": 1545,
+      "observed": 775
+     },
+     "norms N4 and partial sums": {
+      "proven": 2050,
+      "observed": 2046
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 9
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 74
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 1025,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 2051,
+      "observed": 1278
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 2051,
+      "observed": 1278
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 2050,
+      "observed": 1282
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 2051,
+      "observed": 1283
+     }
+    }
+   },
+   "O0:keygen_D": {
+    "n": 125,
+    "families": [
+     "keygen_D_O0"
+    ],
+    "proven_max_bits": 2053,
+    "M0_bits": 2052,
+    "observed_max_bits": 2051,
+    "observed_max_bits_excl_input": 2050,
+    "width": 3136,
+    "spare_proven": 1083,
+    "spare_observed": 1085,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 2052,
+      "observed": 2051
+     },
+     "coordinates, step and conversion": {
+      "proven": 1026,
+      "observed": 1026
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 1027,
+      "observed": 1026
+     },
+     "update temporaries a = mu u": {
+      "proven": 1027,
+      "observed": 1026
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 2052,
+      "observed": 2050
+     },
+     "j-part sums before x p": {
+      "proven": 1547,
+      "observed": 776
+     },
+     "norms N4 and partial sums": {
+      "proven": 2052,
+      "observed": 2048
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 9
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 74
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 1026,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 2053,
+      "observed": 1279
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 2053,
+      "observed": 1279
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 2052,
+      "observed": 1282
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 2053,
+      "observed": 1283
+     }
+    }
+   },
+   "model:keygen_prereduce_Isec": {
+    "n": 250,
+    "families": [
+     "keygen_prereduce_Isec"
+    ],
+    "proven_max_bits": 573,
+    "M0_bits": 572,
+    "observed_max_bits": 571,
+    "observed_max_bits_excl_input": 570,
+    "width": 3136,
+    "spare_proven": 2563,
+    "spare_observed": 2565,
+    "lemma_violations": 0,
+    "oracle_checked": 250,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 572,
+      "observed": 571
+     },
+     "coordinates, step and conversion": {
+      "proven": 286,
+      "observed": 285
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 287,
+      "observed": 286
+     },
+     "update temporaries a = mu u": {
+      "proven": 287,
+      "observed": 286
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 572,
+      "observed": 570
+     },
+     "j-part sums before x p": {
+      "proven": 67,
+      "observed": 35
+     },
+     "norms N4 and partial sums": {
+      "proven": 572,
+      "observed": 568
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 8
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 72
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 286,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 573,
+      "observed": 539
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 573,
+      "observed": 539
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 572,
+      "observed": 540
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 573,
+      "observed": 541
+     }
+    }
+   },
+   "model:sign_prereduced_guarded": {
+    "n": 792,
+    "families": [
+     "prered_guarded_sampled",
+     "prered_guarded_crafted_edge_pass"
+    ],
+    "proven_max_bits": 2530,
+    "M0_bits": 2529,
+    "observed_max_bits": 2529,
+    "observed_max_bits_excl_input": 2528,
+    "width": 3136,
+    "spare_proven": 606,
+    "spare_observed": 607,
+    "lemma_violations": 0,
+    "oracle_checked": 792,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 2529,
+      "observed": 2529
+     },
+     "coordinates, step and conversion": {
+      "proven": 1265,
+      "observed": 1264
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 1265,
+      "observed": 1264
+     },
+     "update temporaries a = mu u": {
+      "proven": 1265,
+      "observed": 1265
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 2529,
+      "observed": 2528
+     },
+     "j-part sums before x p": {
+      "proven": 2024,
+      "observed": 2023
+     },
+     "norms N4 and partial sums": {
+      "proven": 2529,
+      "observed": 2525
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 13
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 77
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 1265,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 2530,
+      "observed": 1534
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 2530,
+      "observed": 1534
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 2529,
+      "observed": 1540
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 2530,
+      "observed": 1541
+     }
+    }
+   },
+   "model:sign_prereduced_unguarded_generic": {
+    "n": 633,
+    "families": [
+     "prered_unguarded_sampled",
+     "prered_unguarded_crafted_skew_max",
+     "prered_unguarded_crafted_edge_fail",
+     "prered_unguarded_crafted_edge_pass"
+    ],
+    "proven_max_bits": 2562,
+    "M0_bits": 2561,
+    "observed_max_bits": 2560,
+    "observed_max_bits_excl_input": 2559,
+    "width": 3136,
+    "spare_proven": 574,
+    "spare_observed": 576,
+    "lemma_violations": 0,
+    "oracle_checked": 633,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 2561,
+      "observed": 2560
+     },
+     "coordinates, step and conversion": {
+      "proven": 1281,
+      "observed": 1280
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 1281,
+      "observed": 1281
+     },
+     "update temporaries a = mu u": {
+      "proven": 1281,
+      "observed": 1281
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 2561,
+      "observed": 2559
+     },
+     "j-part sums before x p": {
+      "proven": 2056,
+      "observed": 2023
+     },
+     "norms N4 and partial sums": {
+      "proven": 2561,
+      "observed": 2557
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 9
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 74
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 1281,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 2562,
+      "observed": 1534
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 2562,
+      "observed": 1534
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 2561,
+      "observed": 1538
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 2562,
+      "observed": 1539
+     }
+    }
+   }
+  },
+  "max_B_fit": {
+   "O0:sign_generic": 570,
+   "O0:sign_any_shape": 318
+  },
+  "B": 285
+ },
+ "p664": {
+  "guard_stats": {
+   "sampled": [
+    199,
+    51
+   ],
+   "crafted_skew_max": [
+    0,
+    75
+   ],
+   "crafted_edge_fail": [
+    0,
+    75
+   ],
+   "crafted_edge_pass": [
+    69,
+    6
+   ]
+  },
+  "guard_rate": {
+   "n": 2500,
+   "rejected": {
+    "2": 578,
+    "4": 139,
+    "16": 11,
+    "256": 0,
+    "65536": 0
+   },
+   "max_nrd_v_over_sqrtp_N": 81.84979185083455
+  },
+  "seconds": 125.8,
+  "variants": {
+   "model:sign_generic": {
+    "n": 2409,
+    "families": [
+     "model_nvar",
+     "model_nbound",
+     "model_maxnorm",
+     "adv_rolletschek",
+     "adv_corners",
+     "adv_max_entries",
+     "adv_pingpong",
+     "adv_tail_stress",
+     "adv_saturation",
+     "adv_saturation_skewj"
+    ],
+    "proven_max_bits": 3383,
+    "M0_bits": 3381,
+    "observed_max_bits": 3381,
+    "observed_max_bits_excl_input": 3381,
+    "width": 4160,
+    "spare_proven": 777,
+    "spare_observed": 779,
+    "lemma_violations": 0,
+    "oracle_checked": 659,
+    "oracle_fail": 0,
+    "saturated_quotients": 391133,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 20,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 3381,
+      "observed": 3381
+     },
+     "coordinates, step and conversion": {
+      "proven": 1691,
+      "observed": 1690
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 1692,
+      "observed": 1691
+     },
+     "update temporaries a = mu u": {
+      "proven": 1692,
+      "observed": 1691
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 3382,
+      "observed": 3380
+     },
+     "j-part sums before x p": {
+      "proven": 2713,
+      "observed": 2045
+     },
+     "norms N4 and partial sums": {
+      "proven": 3382,
+      "observed": 3381
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 63
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 126
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 1691,
+      "observed": 1690
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 3383,
+      "observed": 2026
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 3383,
+      "observed": 2026
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 3382,
+      "observed": 3380
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 3383,
+      "observed": 3381
+     }
+    }
+   },
+   "O0:sign_generic": {
+    "n": 903,
+    "families": [
+     "O0_nbound",
+     "O0_maxnorm",
+     "adv_rolletschek_O0scaled",
+     "adv_max_entries_O0"
+    ],
+    "proven_max_bits": 3385,
+    "M0_bits": 3383,
+    "observed_max_bits": 3383,
+    "observed_max_bits_excl_input": 3383,
+    "width": 4160,
+    "spare_proven": 775,
+    "spare_observed": 777,
+    "lemma_violations": 0,
+    "oracle_checked": 341,
+    "oracle_fail": 0,
+    "saturated_quotients": 1544,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 3383,
+      "observed": 3383
+     },
+     "coordinates, step and conversion": {
+      "proven": 1692,
+      "observed": 1691
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 1693,
+      "observed": 1692
+     },
+     "update temporaries a = mu u": {
+      "proven": 1693,
+      "observed": 1692
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 3384,
+      "observed": 3382
+     },
+     "j-part sums before x p": {
+      "proven": 2715,
+      "observed": 2049
+     },
+     "norms N4 and partial sums": {
+      "proven": 3384,
+      "observed": 3382
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 61
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 126
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 1692,
+      "observed": 1024
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 3385,
+      "observed": 2027
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 3385,
+      "observed": 2027
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 3384,
+      "observed": 3382
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 3385,
+      "observed": 3383
+     }
+    }
+   },
+   "model:Iq_only": {
+    "n": 250,
+    "families": [
+     "Iq_only"
+    ],
+    "proven_max_bits": 2649,
+    "M0_bits": 2647,
+    "observed_max_bits": 2647,
+    "observed_max_bits_excl_input": 2646,
+    "width": 4160,
+    "spare_proven": 1511,
+    "spare_observed": 1513,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 2647,
+      "observed": 2647
+     },
+     "coordinates, step and conversion": {
+      "proven": 1324,
+      "observed": 1323
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 1325,
+      "observed": 1324
+     },
+     "update temporaries a = mu u": {
+      "proven": 1325,
+      "observed": 1324
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 2648,
+      "observed": 2646
+     },
+     "j-part sums before x p": {
+      "proven": 1979,
+      "observed": 990
+     },
+     "norms N4 and partial sums": {
+      "proven": 2648,
+      "observed": 2644
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 7
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 72
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 1324,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 2649,
+      "observed": 1658
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 2649,
+      "observed": 1659
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 2648,
+      "observed": 1659
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 2649,
+      "observed": 1660
+     }
+    }
+   },
+   "model:keygen_D": {
+    "n": 250,
+    "families": [
+     "keygen_D"
+    ],
+    "proven_max_bits": 3075,
+    "M0_bits": 3074,
+    "observed_max_bits": 3073,
+    "observed_max_bits_excl_input": 3072,
+    "width": 4160,
+    "spare_proven": 1085,
+    "spare_observed": 1087,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 3074,
+      "observed": 3073
+     },
+     "coordinates, step and conversion": {
+      "proven": 1537,
+      "observed": 1537
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 1538,
+      "observed": 1537
+     },
+     "update temporaries a = mu u": {
+      "proven": 1538,
+      "observed": 1537
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 3074,
+      "observed": 3072
+     },
+     "j-part sums before x p": {
+      "proven": 2405,
+      "observed": 1206
+     },
+     "norms N4 and partial sums": {
+      "proven": 3074,
+      "observed": 3071
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 8
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 73
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 1537,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 3075,
+      "observed": 1872
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 3075,
+      "observed": 1872
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 3074,
+      "observed": 1875
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 3075,
+      "observed": 1876
+     }
+    }
+   },
+   "O0:keygen_D": {
+    "n": 125,
+    "families": [
+     "keygen_D_O0"
+    ],
+    "proven_max_bits": 3077,
+    "M0_bits": 3076,
+    "observed_max_bits": 3075,
+    "observed_max_bits_excl_input": 3074,
+    "width": 4160,
+    "spare_proven": 1083,
+    "spare_observed": 1085,
+    "lemma_violations": 0,
+    "oracle_checked": 125,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 3076,
+      "observed": 3075
+     },
+     "coordinates, step and conversion": {
+      "proven": 1538,
+      "observed": 1538
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 1539,
+      "observed": 1538
+     },
+     "update temporaries a = mu u": {
+      "proven": 1539,
+      "observed": 1538
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 3076,
+      "observed": 3074
+     },
+     "j-part sums before x p": {
+      "proven": 2407,
+      "observed": 1207
+     },
+     "norms N4 and partial sums": {
+      "proven": 3076,
+      "observed": 3073
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 9
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 74
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 1538,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 3077,
+      "observed": 1873
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 3077,
+      "observed": 1873
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 3076,
+      "observed": 1875
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 3077,
+      "observed": 1876
+     }
+    }
+   },
+   "model:keygen_prereduce_Isec": {
+    "n": 250,
+    "families": [
+     "keygen_prereduce_Isec"
+    ],
+    "proven_max_bits": 737,
+    "M0_bits": 736,
+    "observed_max_bits": 735,
+    "observed_max_bits_excl_input": 734,
+    "width": 4160,
+    "spare_proven": 3423,
+    "spare_observed": 3425,
+    "lemma_violations": 0,
+    "oracle_checked": 250,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 736,
+      "observed": 735
+     },
+     "coordinates, step and conversion": {
+      "proven": 368,
+      "observed": 367
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 369,
+      "observed": 368
+     },
+     "update temporaries a = mu u": {
+      "proven": 369,
+      "observed": 368
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 736,
+      "observed": 734
+     },
+     "j-part sums before x p": {
+      "proven": 67,
+      "observed": 36
+     },
+     "norms N4 and partial sums": {
+      "proven": 736,
+      "observed": 732
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 8
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 72
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 368,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 737,
+      "observed": 703
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 737,
+      "observed": 703
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 736,
+      "observed": 705
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 737,
+      "observed": 706
+     }
+    }
+   },
+   "model:sign_prereduced_guarded": {
+    "n": 804,
+    "families": [
+     "prered_guarded_sampled",
+     "prered_guarded_crafted_edge_pass"
+    ],
+    "proven_max_bits": 3350,
+    "M0_bits": 3349,
+    "observed_max_bits": 3349,
+    "observed_max_bits_excl_input": 3347,
+    "width": 4160,
+    "spare_proven": 810,
+    "spare_observed": 811,
+    "lemma_violations": 0,
+    "oracle_checked": 804,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 3349,
+      "observed": 3349
+     },
+     "coordinates, step and conversion": {
+      "proven": 1675,
+      "observed": 1674
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 1675,
+      "observed": 1674
+     },
+     "update temporaries a = mu u": {
+      "proven": 1675,
+      "observed": 1674
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 3349,
+      "observed": 3347
+     },
+     "j-part sums before x p": {
+      "proven": 2680,
+      "observed": 2679
+     },
+     "norms N4 and partial sums": {
+      "proven": 3349,
+      "observed": 3345
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 11
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 75
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 1675,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 3350,
+      "observed": 2026
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 3350,
+      "observed": 2026
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 3349,
+      "observed": 2029
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 3350,
+      "observed": 2030
+     }
+    }
+   },
+   "model:sign_prereduced_unguarded_generic": {
+    "n": 621,
+    "families": [
+     "prered_unguarded_sampled",
+     "prered_unguarded_crafted_skew_max",
+     "prered_unguarded_crafted_edge_fail",
+     "prered_unguarded_crafted_edge_pass"
+    ],
+    "proven_max_bits": 3382,
+    "M0_bits": 3381,
+    "observed_max_bits": 3380,
+    "observed_max_bits_excl_input": 3379,
+    "width": 4160,
+    "spare_proven": 778,
+    "spare_observed": 780,
+    "lemma_violations": 0,
+    "oracle_checked": 621,
+    "oracle_fail": 0,
+    "saturated_quotients": 0,
+    "max_log2_Mmax_over_M0": 0.0,
+    "fsr_checked": 0,
+    "fsr_mismatch": 0,
+    "classes": {
+     "starting norms N4 (in)": {
+      "proven": 3381,
+      "observed": 3380
+     },
+     "coordinates, step and conversion": {
+      "proven": 1691,
+      "observed": 1690
+     },
+     "quotient x coordinate (m u)": {
+      "proven": 1691,
+      "observed": 1691
+     },
+     "update temporaries a = mu u": {
+      "proven": 1691,
+      "observed": 1691
+     },
+     "Hermitian products / partial sums / h": {
+      "proven": 3381,
+      "observed": 3379
+     },
+     "j-part sums before x p": {
+      "proven": 2712,
+      "observed": 2681
+     },
+     "norms N4 and partial sums": {
+      "proven": 3381,
+      "observed": 3377
+     },
+     "64-bit quotient |m|": {
+      "proven": 63,
+      "observed": 11
+     },
+     "64-bit quotient internals (hs, num)": {
+      "proven": 126,
+      "observed": 76
+     },
+     "cleanup exact quotient |m|": {
+      "proven": 1691,
+      "observed": 0
+     },
+     "cleanup rounding numerator 2h + nu": {
+      "proven": 3382,
+      "observed": 2026
+     },
+     "cleanup rounding denominator 2 nu": {
+      "proven": 3382,
+      "observed": 2026
+     },
+     "4-D Gram entries (N4 scale)": {
+      "proven": 3381,
+      "observed": 2028
+     },
+     "4-D Gram entries (reference 2x scale)": {
+      "proven": 3382,
+      "observed": 2029
+     }
+    }
+   }
+  },
+  "max_B_fit": {
+   "O0:sign_generic": 754,
+   "O0:sign_any_shape": 420
+  },
+  "B": 367
+ }
+}
