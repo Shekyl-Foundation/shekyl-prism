@@ -66,6 +66,8 @@ So Ψ_t ≤ ρ·Ψ_{t−1} whenever step t+1 also swaps. The cells next to the o
 - *No big quotients in the tail:* r ≥ λ > 2⁻¹¹ ≥ 2⁻¹²⁰, so |q| < 2⁶⁰ there.
 - *Head:* step 1's n₁ is not covered by the chain. But |q₁|² ≤ C₀/A₀, so n₁ = k forces A₀²/Δ < R_C/16^(58k+2) =: R_k.
 
+To enumerate k, set Q = h/A at entry. Since C/A = |Q|² + Δ/A², the arithmetic–geometric mean inequality gives C²/Δ ≥ 4|Q|². Lemma B2 therefore requires 4^(58k+3) < R_C for k ≥ 1. Enumerate every such k, including those with R_k < 1. These enter the tail directly and still pay the k first-step slots. The earlier cutoff 16^(58k+2) < R_C discarded them. Widening the enumeration reproduces all 35 published exact and exp64 pairs. Run `python3 -m unittest test_head_ratios` here for the immediate-tail case and the strict threshold. The CSV column `n1_max` bounds the enumeration and can exceed the number attainable by an admitted basis.
+
 Together:
 
   **T_exp64 = max(K(R₀), max_{k≥1} K(min(R₀, R_k)) + k) + τ + 2.**

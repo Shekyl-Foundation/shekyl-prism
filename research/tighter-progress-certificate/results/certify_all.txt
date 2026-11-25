@@ -6,48 +6,48 @@
   OK: 8758 cells (88 wild), rho 300973/1000000, lam_max 2^-12, Gmax = 7998092957 / 2^32 = 1.862201, tightest ratio 0.999997770
   OK: 8758 cells (96 wild), rho 304449/1000000, lam_max 2^-11, Gmax = 7998092957 / 2^32 = 1.862201, tightest ratio 0.999997204
 == 2. check_potential.py (exact rationals, independent)
-  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-20: max rhi*g(succ)/g = 0.268499973 <= rho 537/2000: True (8s)
-  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-16: max rhi*g(succ)/g = 0.271312501 <= rho 271313/1000000: True (7s)
-  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-14: max rhi*g(succ)/g = 0.300769927 <= rho 300770/1000000: True (8s)
-  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-13: max rhi*g(succ)/g = 0.300837394 <= rho 300838/1000000: True (8s)
-  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-12: max rhi*g(succ)/g = 0.300972329 <= rho 300973/1000000: True (7s)
-  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-11: max rhi*g(succ)/g = 0.304448149 <= rho 304449/1000000: True (7s)
+  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-20: max rhi*g(succ)/g = 0.268499973 <= rho 537/2000: True (9s)
+  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-16: max rhi*g(succ)/g = 0.271312501 <= rho 271313/1000000: True (10s)
+  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-14: max rhi*g(succ)/g = 0.300769927 <= rho 300770/1000000: True (10s)
+  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-13: max rhi*g(succ)/g = 0.300837394 <= rho 300838/1000000: True (9s)
+  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-12: max rhi*g(succ)/g = 0.300972329 <= rho 300973/1000000: True (11s)
+  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-11: max rhi*g(succ)/g = 0.304448149 <= rho 304449/1000000: True (8s)
 == 3. tail (certify_tail_exact, unchanged)
-  from lam >= 2^-11: 5 swaps impossible: True (2013007 boxes, 115s); tau = 4
+  from lam >= 2^-11: 5 swaps impossible: True (2013007 boxes, 98s); tau = 4
 == 4. lemmas and counts
   rho_1 537/2000 = 0.2685, G = 1.862201, top band 2^-11, band caps [None, 3, 2, 1, 1, 1]
-  p248 sign-generic      exact  280 (was  301)  exp64  280 (was  312, normalized-E 306)  n1_max 4
-  p248 challenge         exact  197 (was  212)  exp64  197 (was  220, normalized-E 216)  n1_max 3
-  p248 keygen-Isec       exact   21 (was   22)  exp64   21 (was   24, normalized-E 24)  n1_max 1
-  p248 keygen-D          exact  208 (was  223)  exp64  208 (was  231, normalized-E 227)  n1_max 3
-  p248 prered-guard2     exact  263 (was  283)  exp64  263 (was  293, normalized-E )  n1_max 4
-  p248 prered-guard256   exact  267 (was  287)  exp64  267 (was  297, normalized-E 292)  n1_max 4
-  p248 prered-unguarded  exact  329 (was  354)  exp64  329 (was  365, normalized-E )  n1_max 5
-  p324 sign-generic      exact  360 (was  387)  exp64  360 (was  401, normalized-E 394)  n1_max 5
-  p324 challenge         exact  257 (was  276)  exp64  257 (was  287, normalized-E 281)  n1_max 4
-  p324 keygen-Isec       exact   21 (was   22)  exp64   22 (was   25, normalized-E 24)  n1_max 1
-  p324 keygen-D          exact  323 (was  347)  exp64  323 (was  360, normalized-E 353)  n1_max 5
-  p324 prered-guard2     exact  344 (was  369)  exp64  344 (was  383, normalized-E )  n1_max 5
-  p324 prered-guard256   exact  347 (was  373)  exp64  347 (was  387, normalized-E 379)  n1_max 5
-  p324 prered-unguarded  exact  429 (was  462)  exp64  429 (was  477, normalized-E )  n1_max 6
-  p376 sign-generic      exact  415 (was  447)  exp64  415 (was  463, normalized-E 455)  n1_max 6
-  p376 challenge         exact  297 (was  319)  exp64  297 (was  331, normalized-E 325)  n1_max 4
-  p376 keygen-Isec       exact   21 (was   23)  exp64   22 (was   26, normalized-E 26)  n1_max 1
-  p376 keygen-D          exact  308 (was  331)  exp64  308 (was  344, normalized-E 337)  n1_max 4
-  p376 prered-guard2     exact  398 (was  429)  exp64  398 (was  445, normalized-E )  n1_max 6
-  p376 prered-guard256   exact  402 (was  432)  exp64  402 (was  448, normalized-E 440)  n1_max 6
-  p376 prered-unguarded  exact  499 (was  537)  exp64  499 (was  555, normalized-E )  n1_max 8
-  p500 sign-generic      exact  546 (was  587)  exp64  546 (was  609, normalized-E 598)  n1_max 8
-  p500 challenge         exact  396 (was  425)  exp64  396 (was  442, normalized-E 433)  n1_max 6
-  p500 keygen-Isec       exact   21 (was   22)  exp64   22 (was   26, normalized-E 26)  n1_max 2
-  p500 keygen-D          exact  411 (was  442)  exp64  411 (was  459, normalized-E 450)  n1_max 6
-  p500 prered-guard2     exact  529 (was  569)  exp64  529 (was  590, normalized-E )  n1_max 8
-  p500 prered-guard256   exact  533 (was  573)  exp64  533 (was  594, normalized-E 583)  n1_max 8
-  p500 prered-unguarded  exact  662 (was  713)  exp64  662 (was  736, normalized-E )  n1_max 10
-  p664 sign-generic      exact  719 (was  774)  exp64  719 (was  803, normalized-E 788)  n1_max 11
-  p664 challenge         exact  525 (was  565)  exp64  525 (was  587, normalized-E 576)  n1_max 8
-  p664 keygen-Isec       exact   21 (was   23)  exp64   23 (was   29, normalized-E 28)  n1_max 2
-  p664 keygen-D          exact  638 (was  686)  exp64  638 (was  712, normalized-E 699)  n1_max 10
-  p664 prered-guard2     exact  702 (was  755)  exp64  702 (was  783, normalized-E )  n1_max 11
-  p664 prered-guard256   exact  706 (was  759)  exp64  706 (was  787, normalized-E 773)  n1_max 11
-  p664 prered-unguarded  exact  878 (was  945)  exp64  878 (was  976, normalized-E )  n1_max 14
+  p248 sign-generic      exact  280 (was  301)  exp64  280 (was  312, normalized-E 306)  n1_max 9
+  p248 challenge         exact  197 (was  212)  exp64  197 (was  220, normalized-E 216)  n1_max 6
+  p248 keygen-Isec       exact   21 (was   22)  exp64   21 (was   24, normalized-E 24)  n1_max 2
+  p248 keygen-D          exact  208 (was  223)  exp64  208 (was  231, normalized-E 227)  n1_max 6
+  p248 prered-guard2     exact  263 (was  283)  exp64  263 (was  293, normalized-E )  n1_max 8
+  p248 prered-guard256   exact  267 (was  287)  exp64  267 (was  297, normalized-E 292)  n1_max 8
+  p248 prered-unguarded  exact  329 (was  354)  exp64  329 (was  365, normalized-E )  n1_max 10
+  p324 sign-generic      exact  360 (was  387)  exp64  360 (was  401, normalized-E 394)  n1_max 11
+  p324 challenge         exact  257 (was  276)  exp64  257 (was  287, normalized-E 281)  n1_max 8
+  p324 keygen-Isec       exact   21 (was   22)  exp64   22 (was   25, normalized-E 24)  n1_max 2
+  p324 keygen-D          exact  323 (was  347)  exp64  323 (was  360, normalized-E 353)  n1_max 10
+  p324 prered-guard2     exact  344 (was  369)  exp64  344 (was  383, normalized-E )  n1_max 11
+  p324 prered-guard256   exact  347 (was  373)  exp64  347 (was  387, normalized-E 379)  n1_max 11
+  p324 prered-unguarded  exact  429 (was  462)  exp64  429 (was  477, normalized-E )  n1_max 13
+  p376 sign-generic      exact  415 (was  447)  exp64  415 (was  463, normalized-E 455)  n1_max 13
+  p376 challenge         exact  297 (was  319)  exp64  297 (was  331, normalized-E 325)  n1_max 9
+  p376 keygen-Isec       exact   21 (was   23)  exp64   22 (was   26, normalized-E 26)  n1_max 3
+  p376 keygen-D          exact  308 (was  331)  exp64  308 (was  344, normalized-E 337)  n1_max 9
+  p376 prered-guard2     exact  398 (was  429)  exp64  398 (was  445, normalized-E )  n1_max 12
+  p376 prered-guard256   exact  402 (was  432)  exp64  402 (was  448, normalized-E 440)  n1_max 12
+  p376 prered-unguarded  exact  499 (was  537)  exp64  499 (was  555, normalized-E )  n1_max 16
+  p500 sign-generic      exact  546 (was  587)  exp64  546 (was  609, normalized-E 598)  n1_max 17
+  p500 challenge         exact  396 (was  425)  exp64  396 (was  442, normalized-E 433)  n1_max 12
+  p500 keygen-Isec       exact   21 (was   22)  exp64   22 (was   26, normalized-E 26)  n1_max 4
+  p500 keygen-D          exact  411 (was  442)  exp64  411 (was  459, normalized-E 450)  n1_max 13
+  p500 prered-guard2     exact  529 (was  569)  exp64  529 (was  590, normalized-E )  n1_max 17
+  p500 prered-guard256   exact  533 (was  573)  exp64  533 (was  594, normalized-E 583)  n1_max 17
+  p500 prered-unguarded  exact  662 (was  713)  exp64  662 (was  736, normalized-E )  n1_max 21
+  p664 sign-generic      exact  719 (was  774)  exp64  719 (was  803, normalized-E 788)  n1_max 23
+  p664 challenge         exact  525 (was  565)  exp64  525 (was  587, normalized-E 576)  n1_max 17
+  p664 keygen-Isec       exact   21 (was   23)  exp64   23 (was   29, normalized-E 28)  n1_max 5
+  p664 keygen-D          exact  638 (was  686)  exp64  638 (was  712, normalized-E 699)  n1_max 20
+  p664 prered-guard2     exact  702 (was  755)  exp64  702 (was  783, normalized-E )  n1_max 22
+  p664 prered-guard256   exact  706 (was  759)  exp64  706 (was  787, normalized-E 773)  n1_max 22
+  p664 prered-unguarded  exact  878 (was  945)  exp64  878 (was  976, normalized-E )  n1_max 28

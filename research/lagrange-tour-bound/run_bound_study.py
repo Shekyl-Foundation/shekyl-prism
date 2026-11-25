@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025-2026, The Shekyl Foundation
+#
+# All rights reserved.
+# BSD-3-Clause
+
 """
 Numerical validation, adversarial testing, bounded-precision analysis, and
 Lehmer/half-GCD batching study for fixed-schedule Z[i]-Lagrange reduction.

@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025-2026, The Shekyl Foundation
+#
+# All rights reserved.
+# BSD-3-Clause
+
 import csv
 import json
 import os

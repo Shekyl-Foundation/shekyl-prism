@@ -119,6 +119,16 @@ def classes_o0(P):
     return out
 
 
+def head_ratios(R0, RC):
+    """Upper bound on A0²/Delta for each first-step count allowed by RC."""
+    # C/A = |Q|² + Delta/A² gives C²/Delta >= 4|Q|² by AM-GM.
+    # B2 gives |Q|² > 4^(58k+2). This cutoff also covers an empty main phase.
+    k = 1
+    while 4 ** (58 * k + 3) < RC:
+        yield k, min(R0, RC / F(16) ** (58 * k + 2))
+        k += 1
+
+
 def counts(bands, G, tau):
     rho, lam = bands[0][1], bands[-1][0]
     assert all(bands[b][1] >= rho for b in range(len(bands)))
@@ -129,12 +139,12 @@ def counts(bands, G, tau):
         for name, R0, RC in classes_o0(P):
             k0 = K(R0, bands, G)
             Tex = k0 + tau + 2
-            best = k0; kk = 1
-            while F(16) ** (58 * kk + 2) < RC:          # n1 = kk is possible at all
-                Rk = min(R0, RC / F(16) ** (58 * kk + 2))
-                best = max(best, K(Rk, bands, G) + kk)
-                kk += 1
-            rows.append(dict(set=P['name'], cls=name, T_exact=Tex, T_exp64=best + tau + 2, n1_max=kk - 1))
+            best = k0
+            upper = 0
+            for k, Rk in head_ratios(R0, RC):
+                best = max(best, K(Rk, bands, G) + k)
+                upper = k
+            rows.append(dict(set=P['name'], cls=name, T_exact=Tex, T_exp64=best + tau + 2, n1_max=upper))
     return rows
 
 
