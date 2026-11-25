@@ -34,6 +34,7 @@ are not Shekyl parameter sets.
 
 | [`ct-feasibility-gate/`](ct-feasibility-gate/) | How should `docs/SIGNER_SPEC.md` enforce constant-time feasibility before finalizing stages 2c and 3 while keeping G4 as the final hardening gate? | Design-review synthesis (`dev` at `26ce141`) mapped against `SIGNER_SPEC.md` (G1–G6, Q1–Q5, 2.1.3), `LEDGER.md` (O4–O34), and `research/INDEX.md` findings; drafted Section 0 and proposed ruling G7 in `docs/SIGNER_SPEC.md` plus `research/ct-feasibility-gate/NOTES.md`. | Drafted Section 0 (0.1–0.8) and proposed G7: requires secret-dependence classification, affordable CT strategy + cost estimates across P248–P664, certified bounds (`T_prov` + cleanup), Q5/Q4 proofs without overflow-driven retries, PR-time declassification review + sticky sensitivity, compiled-artifact checks (`x86_64` + `aarch64`, Rust `1.97.1`), non-sensitive transcript provenance, and three-way equivalence checks; leaves G2 `unsafe` barrier policy (`experiment/ct-barrier-policy`) and Stage 3/5 format choices open for Rick. Branch kept alive for PR review. | `experiment/ct-feasibility-gate` @ [`e91ca93`](https://github.com/Shekyl-Foundation/shekyl-prism/commit/e91ca9335a12a653e988a8a970a2627a9838a609) |
 | [`prime-certificates/`](prime-certificates/) | Can independently checkable primality certificates replace perpetual probable-prime retesting of the constants generator's fixed primes (ledger O19)? | PARI 2.17.4 Atkin–Morain ECPP for all 14 unique large primes (five field moduli, four unique secret norms, five item-19 cofactors); independent Python verifier (no `primecertisvalid` for the verdict); Lucas N+1 proofs for the field primes, where `p+1 = f·2^e` is completely factored; next-prime gap compositeness proofs for items 19 and 33; trial division of the 101 `small_primes` and 102 complementary 3-mod-4 primes. | Yes. All 14 ECPP certificates verify independently and with PARI; all five field primes have a second Lucas N+1 proof; all nine next-prime gaps are proved composite. Generation took 6.73 s; verification takes about 5 s with the standard library only. A proposed nightly step (in addition to SymPy) lives in `proposed-ci/` and is not applied to `dev`. O19 can be closed once the certificates are adopted on `dev`. | `experiment/prime-certificates` @ [`58582f8`](https://github.com/Shekyl-Foundation/shekyl-prism/commit/58582f82d2a0e586856ab1752b74ae385b52303c) |
+| [`q5-width-proof/`](q5-width-proof/) | SIGNER_SPEC Q5: what is the largest intermediate of the reduction actually proposed (certified fixed-schedule Z[i]-Lagrange: 64-bit quotients, one exact cleanup, conversion back, and the keygen pre-reduced variant), and does it fit the prism-int widths? | Proof that no step grows a norm by more than 2^-59.41 relative, clamps included, so every intermediate is at most 3·M0·(1+ε)^S; exact integer evaluation at all five sets (`bounds.py`); symbolic and randomised lemma checks; 22,412 instrumented runs a set (sampled ideals in the model order and O0 numerators, secrets at 2^B, Rolletschek chains, corner, ping-pong, tail and clamp-forcing bases, key generation, pre-reduced signing with sampled and crafted keys). | Q5 closed given Q4. Largest intermediate 2(B+2e−5)+5 bits = 1,303 / 1,681 / 1,947 / 2,565 / 3,385, against widths 1,664 / 2,112 / 2,432 / 3,136 / 4,160 (361 to 775 bits spare; P500 571). Every variant fits, any HNF shape included (66 to 111 spare). Observed maxima within 2 bits of the proof, no run over its bound. Without Q4 it overflows by 363 to 1,203 bits. LIMBS unchanged. Also found: a valid prime-norm ideal on which the 64-bit quotient clamp leaves the basis unreduced after T_prov plus cleanup (widths unaffected; honest inputs about 2^-110), and the keygen guard nrd(v_s) ≤ 2√p·N rejects about 22% of sampled keys (c = 256 rejected none). | `experiment/q5-width-proof` @ [`1013aad`](https://github.com/Shekyl-Foundation/shekyl-prism/commit/1013aada55276817a8fc21471c383bc492e4a259) |
 
 ## In progress
 
@@ -182,6 +183,19 @@ rest on, and from the fixed-schedule experiment that followed:
     protocol. A proposed nightly step is recorded under
     `research/prime-certificates/proposed-ci/` and is not applied to
     `dev`.
+
+14. **Q5 is closed for the fixed-schedule Z[i]-Lagrange, given Q4.**
+    A 64-bit step, clamps included, grows no norm by more than
+    2^-59.41 relative. So every intermediate (coordinates, quotients,
+    Hermitian products, norms, the cleanup's rounding, and the 4-D Gram
+    after conversion) is bounded by its starting value. The largest
+    intermediate is 2(B+2e−5)+5 bits, which leaves 361 to 775 bits
+    spare under prism-int's LIMBS (571 at P500). The bound needs Q4:
+    without it, it overflows by 363 to 1,203 bits. The T_prov
+    certificate does not cover the 64-bit quotient: a crafted valid
+    ideal stalls on the clamp. A sticky report or a wider quotient is
+    needed before 2c relies on it. The keygen balance guard as written
+    rejects about 22% of keys, and width does not need it.
 
 The quantized-precision runs (Q256, PREC_256) were sometimes flat where
 they worked, which hints that bounded-precision reduction is size-blind
