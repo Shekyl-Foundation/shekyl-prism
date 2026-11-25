@@ -1,0 +1,9 @@
+# raw sweep logs (about 1 GB); regenerate with collect.py (seeded, deterministic)
+data/
+collect.log
+__pycache__/
+results/*.csv
+c_o29/runs/*.tmp
+collect_q.log
+summarize.log
+c_o29/run_c.log
