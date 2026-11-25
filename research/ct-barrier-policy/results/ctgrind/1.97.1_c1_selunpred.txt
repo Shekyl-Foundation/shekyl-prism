@@ -1,0 +1,16 @@
+p248: runs=2 memcheck_error_contexts=38 static_glibc_allocator_false_positives=8 outside_glibc=30 in_ct_code=30 branch=30 simd_shift_count=0 other=0
+  branch | at 0x1C7741: mask (ct.rs:121)
+  branch | at 0x1C7A2F: mask (ct.rs:121)
+  branch | at 0x1C7881: mask (ct.rs:121)
+p324: runs=2 memcheck_error_contexts=37 static_glibc_allocator_false_positives=8 outside_glibc=29 in_ct_code=29 branch=29 simd_shift_count=0 other=0
+  branch | at 0x1E1A06: mask (ct.rs:121)
+  branch | at 0x1E1DDB: mask (ct.rs:121)
+  branch | at 0x1E1EFA: mask (ct.rs:121)
+p376: runs=2 memcheck_error_contexts=33 static_glibc_allocator_false_positives=7 outside_glibc=26 in_ct_code=26 branch=26 simd_shift_count=0 other=0
+  branch | at 0x17F063: mask (ct.rs:121)
+  branch | at 0x17F30D: mask (ct.rs:121)
+  branch | at 0x17F456: mask (ct.rs:121)
+p500: runs=2 memcheck_error_contexts=166 static_glibc_allocator_false_positives=150 outside_glibc=16 in_ct_code=16 branch=2 simd_shift_count=14 other=0
+  branch | at 0x174352: rust_lagrange_ct::ct::exact_round::<42> (range.rs:0)
+  branch | at 0x174352: rust_lagrange_ct::ct::exact_round::<42> (range.rs:0)
+p664: runs=1 memcheck_error_contexts=165 static_glibc_allocator_false_positives=153 outside_glibc=12 in_ct_code=12 branch=0 simd_shift_count=12 other=0

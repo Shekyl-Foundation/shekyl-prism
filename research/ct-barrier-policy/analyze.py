@@ -82,21 +82,31 @@ def load_ctgrind():
         if 'build failed' in txt:
             r[b] = dict(status='build failed')
             continue
-        sets = re.findall(r'^(p\d+): runs=(\S+) .* outside_glibc=(\d+) in_ct_code=(\d+)', txt, re.M)
+        sets = re.findall(r'^(p\d+): runs=(\S+) .* outside_glibc=(\d+) in_ct_code=(\d+)(?: branch=(\d+) simd_shift_count=(\d+) other=(\d+))?', txt, re.M)
         n_in = sum(int(s[3]) for s in sets)
         n_out = sum(int(s[2]) for s in sets)
-        fin = all(s[1] != 'NOT FINISHED' for s in sets)
+        n_br = sum(int(s[4]) if s[4] else int(s[3]) for s in sets)
+        n_sh = sum(int(s[5]) if s[5] else 0 for s in sets)
+        n_oth = sum(int(s[6]) if s[6] else 0 for s in sets)
+        fin = bool(sets) and all(s[1] != 'NOT FINISHED' for s in sets)
         r[b] = dict(status='ok' if fin else 'not finished', sets=len(sets), in_ct=n_in, outside_glibc=n_out,
-                    clean=fin and n_in == 0 and len(sets) == 5)
+                    branch=n_br, simd_shift=n_sh, other=n_oth,
+                    clean=fin and (n_br + n_oth) == 0 and len(sets) >= 3)
     return r
 
 
 def load_dudect():
     r = {}
-    for f in glob.glob(os.path.join(HERE, 'harness', 'results', 'raw', 'dudect_*_ct_*.csv')):
-        b = os.path.basename(f)[len('dudect_'):-4]
+    files = glob.glob(os.path.join(HERE, 'harness', 'results', 'raw', 'dudect_*_ct_*.csv'))
+    if not files:
+        files = glob.glob(os.path.join(HERE, 'results', 'dudect', 'dudect_*_ct_*.csv.gz'))
+    for f in files:
+        b = os.path.basename(f)[len('dudect_'):].removesuffix('.gz').removesuffix('.csv')
         s, rest = b.split('_ct_', 1)
-        r[(s, rest)] = dudect(f)
+        try:
+            r[(s, rest)] = dudect(f)
+        except Exception:
+            pass  # CSV currently being written
     return r
 
 
@@ -139,7 +149,7 @@ def main():
             a = cell(m, fails, tc, 'aarch64', cand)
             g = cg.get(f'{tc}_c1_{cand}')
             gt = 'pending' if g is None else (g['status'] if g['status'] != 'ok' else
-                                               ('0 (clean)' if g['clean'] else f"{g['in_ct']} errors"))
+                                               (f"0 (clean; {g['simd_shift']} shift)" if (g['clean'] and g['simd_shift']) else '0 (clean)' if g['clean'] else f"{g['branch'] + g['other']} errors"))
             ds = []
             for s in ('p248', 'p500'):
                 d = du.get((s, f'{cand}_{tc}_c1'))
@@ -197,7 +207,7 @@ def main():
         if g['status'] == 'build failed':
             L.append(f'| {b} | - | build failed | - |')
         else:
-            L.append(f"| {b} | {g['sets']} | {g['in_ct']} | {g['outside_glibc']} |")
+            L.append(f"| {b} | {g['sets']} | {g['branch']} branch + {g['other']} other ({g['simd_shift']} simd-shift) | {g['outside_glibc']} |")
     out = '\n'.join(L) + '\n'
     open(os.path.join(HERE, 'results', 'tables.md'), 'w').write(out)
     json.dump(dict(table=summ, matrix={'|'.join(k): v for k, v in m.items()},

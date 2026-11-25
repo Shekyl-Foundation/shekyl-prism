@@ -1,31 +1,630 @@
 {
  "build_failures": [
   "1.85.1|aarch64|c1|ctutils",
+  "1.85.1|aarch64|c1|selunpred",
+  "1.85.1|aarch64|c2|ctutils",
+  "1.85.1|aarch64|c2|selunpred",
+  "1.85.1|aarch64|c3|ctutils",
+  "1.85.1|aarch64|c3|selunpred",
+  "1.85.1|aarch64|c4|ctutils",
+  "1.85.1|aarch64|c4|selunpred",
   "1.85.1|x86_64|c1|ctutils",
+  "1.85.1|x86_64|c1|selunpred",
   "1.85.1|x86_64|c2|ctutils",
+  "1.85.1|x86_64|c2|selunpred",
   "1.85.1|x86_64|c3|ctutils",
-  "1.85.1|x86_64|c4|ctutils"
+  "1.85.1|x86_64|c3|selunpred",
+  "1.85.1|x86_64|c4|ctutils",
+  "1.85.1|x86_64|c4|selunpred"
  ],
- "ctgrind": {},
- "dudect": {},
+ "ctgrind": {
+  "1.85.1_c1_asm": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 0,
+   "other": 0,
+   "outside_glibc": 0,
+   "sets": 3,
+   "simd_shift": 0,
+   "status": "ok"
+  },
+  "1.85.1_c1_bbmask": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 6,
+   "other": 0,
+   "outside_glibc": 6,
+   "sets": 3,
+   "simd_shift": 6,
+   "status": "ok"
+  },
+  "1.85.1_c1_bbuse": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 0,
+   "other": 0,
+   "outside_glibc": 0,
+   "sets": 3,
+   "simd_shift": 0,
+   "status": "ok"
+  },
+  "1.85.1_c1_cmov": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 0,
+   "other": 0,
+   "outside_glibc": 0,
+   "sets": 3,
+   "simd_shift": 0,
+   "status": "ok"
+  },
+  "1.85.1_c1_crate": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 0,
+   "other": 0,
+   "outside_glibc": 0,
+   "sets": 3,
+   "simd_shift": 0,
+   "status": "ok"
+  },
+  "1.85.1_c1_ctutils": {
+   "status": "build failed"
+  },
+  "1.85.1_c1_noinline": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 0,
+   "other": 0,
+   "outside_glibc": 0,
+   "sets": 3,
+   "simd_shift": 0,
+   "status": "ok"
+  },
+  "1.85.1_c1_none": {
+   "branch": 55,
+   "clean": false,
+   "in_ct": 55,
+   "other": 0,
+   "outside_glibc": 55,
+   "sets": 3,
+   "simd_shift": 0,
+   "status": "ok"
+  },
+  "1.85.1_c1_selunpred": {
+   "status": "build failed"
+  },
+  "1.85.1_c1_subtle-bb": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 6,
+   "other": 0,
+   "outside_glibc": 6,
+   "sets": 3,
+   "simd_shift": 6,
+   "status": "ok"
+  },
+  "1.85.1_c1_subtle-vol": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 0,
+   "other": 0,
+   "outside_glibc": 0,
+   "sets": 3,
+   "simd_shift": 0,
+   "status": "ok"
+  },
+  "1.85.1_c1_volatile": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 0,
+   "other": 0,
+   "outside_glibc": 0,
+   "sets": 3,
+   "simd_shift": 0,
+   "status": "ok"
+  },
+  "1.85.1_c1_weak": {
+   "branch": 14,
+   "clean": false,
+   "in_ct": 14,
+   "other": 0,
+   "outside_glibc": 14,
+   "sets": 3,
+   "simd_shift": 0,
+   "status": "ok"
+  },
+  "1.97.1_c1_asm": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 25,
+   "other": 0,
+   "outside_glibc": 25,
+   "sets": 5,
+   "simd_shift": 25,
+   "status": "ok"
+  },
+  "1.97.1_c1_asm_control": {
+   "branch": 0,
+   "clean": false,
+   "in_ct": 0,
+   "other": 0,
+   "outside_glibc": 1,
+   "sets": 1,
+   "simd_shift": 0,
+   "status": "ok"
+  },
+  "1.97.1_c1_bbmask": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 24,
+   "other": 0,
+   "outside_glibc": 24,
+   "sets": 5,
+   "simd_shift": 24,
+   "status": "ok"
+  },
+  "1.97.1_c1_bbuse": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 22,
+   "other": 0,
+   "outside_glibc": 22,
+   "sets": 5,
+   "simd_shift": 22,
+   "status": "ok"
+  },
+  "1.97.1_c1_cmov": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 21,
+   "other": 0,
+   "outside_glibc": 21,
+   "sets": 5,
+   "simd_shift": 21,
+   "status": "ok"
+  },
+  "1.97.1_c1_crate": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 25,
+   "other": 0,
+   "outside_glibc": 25,
+   "sets": 5,
+   "simd_shift": 25,
+   "status": "ok"
+  },
+  "1.97.1_c1_ctutils": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 23,
+   "other": 0,
+   "outside_glibc": 23,
+   "sets": 5,
+   "simd_shift": 23,
+   "status": "ok"
+  },
+  "1.97.1_c1_noinline": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 22,
+   "other": 0,
+   "outside_glibc": 22,
+   "sets": 5,
+   "simd_shift": 22,
+   "status": "ok"
+  },
+  "1.97.1_c1_none": {
+   "branch": 81,
+   "clean": false,
+   "in_ct": 107,
+   "other": 0,
+   "outside_glibc": 107,
+   "sets": 5,
+   "simd_shift": 26,
+   "status": "ok"
+  },
+  "1.97.1_c1_selunpred": {
+   "branch": 87,
+   "clean": false,
+   "in_ct": 113,
+   "other": 0,
+   "outside_glibc": 113,
+   "sets": 5,
+   "simd_shift": 26,
+   "status": "ok"
+  },
+  "1.97.1_c1_subtle-bb": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 22,
+   "other": 0,
+   "outside_glibc": 22,
+   "sets": 5,
+   "simd_shift": 22,
+   "status": "ok"
+  },
+  "1.97.1_c1_subtle-vol": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 18,
+   "other": 0,
+   "outside_glibc": 18,
+   "sets": 5,
+   "simd_shift": 18,
+   "status": "ok"
+  },
+  "1.97.1_c1_volatile": {
+   "branch": 0,
+   "clean": true,
+   "in_ct": 28,
+   "other": 0,
+   "outside_glibc": 28,
+   "sets": 5,
+   "simd_shift": 28,
+   "status": "ok"
+  },
+  "1.97.1_c1_weak": {
+   "branch": 20,
+   "clean": false,
+   "in_ct": 48,
+   "other": 0,
+   "outside_glibc": 48,
+   "sets": 5,
+   "simd_shift": 28,
+   "status": "ok"
+  }
+ },
+ "dudect": {
+  "p248|asm_1.97.1_c1": {
+   "cv_fixed": 0.26551645232984383,
+   "med_fixed": 1880418.0,
+   "med_rand": 1880422.0,
+   "n": 40000,
+   "n_fixed": 19907,
+   "n_rand": 20093,
+   "r_bitsN": 0.0014000808074067898,
+   "t_2nd": -0.294266870621793,
+   "t_crop_max": 1.5343506435683294,
+   "t_max_abs": 1.5343506435683294,
+   "t_raw": -0.249817000435658
+  },
+  "p248|bbmask_1.97.1_c1": {
+   "cv_fixed": 0.5677277506311021,
+   "med_fixed": 1824760.0,
+   "med_rand": 1824836.0,
+   "n": 40000,
+   "n_fixed": 19907,
+   "n_rand": 20093,
+   "r_bitsN": 0.00695796550607107,
+   "t_2nd": 0.9797550499068802,
+   "t_crop_max": -1.5878703622170243,
+   "t_max_abs": 1.5878703622170243,
+   "t_raw": 0.7293502088221581
+  },
+  "p248|bbuse_1.97.1_c1": {
+   "cv_fixed": 47.02401468632467,
+   "med_fixed": 1996806.0,
+   "med_rand": 1998572.0,
+   "n": 40000,
+   "n_fixed": 19907,
+   "n_rand": 20093,
+   "r_bitsN": 0.0038204217600856225,
+   "t_2nd": 0.9999860904340757,
+   "t_crop_max": 1.6184199167386188,
+   "t_max_abs": 1.6184199167386188,
+   "t_raw": 0.9926893255712697
+  },
+  "p248|cmov_1.97.1_c1": {
+   "cv_fixed": 0.5276342216849709,
+   "med_fixed": 2066186.0,
+   "med_rand": 2065292.0,
+   "n": 40000,
+   "n_fixed": 19907,
+   "n_rand": 20093,
+   "r_bitsN": -0.014720837334757444,
+   "t_2nd": -1.7051791790640103,
+   "t_crop_max": -1.7480732352394464,
+   "t_max_abs": 1.7994421617644658,
+   "t_raw": -1.7994421617644658
+  },
+  "p248|crate_1.97.1_c1": {
+   "cv_fixed": 0.33661856692450526,
+   "med_fixed": 1880696.0,
+   "med_rand": 1880736.0,
+   "n": 40000,
+   "n_fixed": 19907,
+   "n_rand": 20093,
+   "r_bitsN": 0.006887891325923903,
+   "t_2nd": 0.8117071782714881,
+   "t_crop_max": -2.1774617595271506,
+   "t_max_abs": 2.1774617595271506,
+   "t_raw": 0.9508701521887416
+  },
+  "p248|ctutils_1.97.1_c1": {
+   "cv_fixed": 0.17129227209332418,
+   "med_fixed": 1933558.0,
+   "med_rand": 1933374.0,
+   "n": 40000,
+   "n_fixed": 19907,
+   "n_rand": 20093,
+   "r_bitsN": -0.005557288941641029,
+   "t_2nd": -2.0429776295007254,
+   "t_crop_max": 2.5376703900428867,
+   "t_max_abs": 2.5376703900428867,
+   "t_raw": -2.078311503725909
+  },
+  "p248|noinline_1.97.1_c1": {
+   "cv_fixed": 0.9848419386758285,
+   "med_fixed": 2170342.0,
+   "med_rand": 2170308.0,
+   "n": 40000,
+   "n_fixed": 19907,
+   "n_rand": 20093,
+   "r_bitsN": -0.0013486546753325413,
+   "t_2nd": -0.3823712519616602,
+   "t_crop_max": 2.3124757772391797,
+   "t_max_abs": 2.3124757772391797,
+   "t_raw": 0.5630395482627507
+  },
+  "p248|none_1.97.1_c1": {
+   "cv_fixed": 0.06215539458513505,
+   "med_fixed": 1723208.0,
+   "med_rand": 1725604.0,
+   "n": 40000,
+   "n_fixed": 19907,
+   "n_rand": 20093,
+   "r_bitsN": -0.006601322253332418,
+   "t_2nd": -0.6836846637994142,
+   "t_crop_max": -32.364086981191655,
+   "t_max_abs": 32.364086981191655,
+   "t_raw": -1.6802728392318609
+  },
+  "p248|selunpred_1.97.1_c1": {
+   "cv_fixed": 0.46649958737255737,
+   "med_fixed": 1689784.0,
+   "med_rand": 1689996.0,
+   "n": 40000,
+   "n_fixed": 19907,
+   "n_rand": 20093,
+   "r_bitsN": -0.010771370558274838,
+   "t_2nd": 0.9900538692701282,
+   "t_crop_max": -30.004867698304434,
+   "t_max_abs": 30.004867698304434,
+   "t_raw": 0.8572556367450695
+  },
+  "p248|subtle-bb_1.97.1_c1": {
+   "cv_fixed": 0.6562183068506012,
+   "med_fixed": 1919848.0,
+   "med_rand": 1918636.0,
+   "n": 40000,
+   "n_fixed": 19907,
+   "n_rand": 20093,
+   "r_bitsN": 0.005574762258191429,
+   "t_2nd": 1.5024166172979856,
+   "t_crop_max": 1.8544824816692145,
+   "t_max_abs": 1.8544824816692145,
+   "t_raw": 1.2475005123011886
+  },
+  "p248|subtle-vol_1.97.1_c1": {
+   "cv_fixed": 0.09197010165915785,
+   "med_fixed": 2097646.0,
+   "med_rand": 2099070.0,
+   "n": 40000,
+   "n_fixed": 19907,
+   "n_rand": 20093,
+   "r_bitsN": -0.00678265360019286,
+   "t_2nd": -1.102254230574925,
+   "t_crop_max": 2.0780245035356644,
+   "t_max_abs": 2.0780245035356644,
+   "t_raw": -0.6400634206796004
+  },
+  "p248|volatile_1.97.1_c1": {
+   "cv_fixed": 0.1815305668432677,
+   "med_fixed": 2019576.0,
+   "med_rand": 2018948.0,
+   "n": 40000,
+   "n_fixed": 19907,
+   "n_rand": 20093,
+   "r_bitsN": 0.001434323427002226,
+   "t_2nd": -1.23204078502599,
+   "t_crop_max": 2.4375461779100887,
+   "t_max_abs": 2.4375461779100887,
+   "t_raw": -1.7086333668167213
+  },
+  "p248|weak_1.97.1_c1": {
+   "cv_fixed": 0.40272040609407445,
+   "med_fixed": 1901744.0,
+   "med_rand": 1902048.0,
+   "n": 40000,
+   "n_fixed": 19907,
+   "n_rand": 20093,
+   "r_bitsN": 0.011089310919797323,
+   "t_2nd": -1.0317608172875135,
+   "t_crop_max": 9.105209477983092,
+   "t_max_abs": 9.105209477983092,
+   "t_raw": -1.1220718634005853
+  },
+  "p500|asm_1.97.1_c1": {
+   "cv_fixed": 0.1813933654591048,
+   "med_fixed": 9190364.0,
+   "med_rand": 9181276.0,
+   "n": 20000,
+   "n_fixed": 9995,
+   "n_rand": 10005,
+   "r_bitsN": -0.007155349153047473,
+   "t_2nd": -1.1943085174473624,
+   "t_crop_max": 2.065273739903081,
+   "t_max_abs": 2.065273739903081,
+   "t_raw": -1.0032102893742059
+  },
+  "p500|bbmask_1.97.1_c1": {
+   "cv_fixed": 0.2657732220332873,
+   "med_fixed": 9529850.0,
+   "med_rand": 9522444.0,
+   "n": 20000,
+   "n_fixed": 9995,
+   "n_rand": 10005,
+   "r_bitsN": 0.01031977659543334,
+   "t_2nd": 0.7604576078313926,
+   "t_crop_max": 1.8355294843603716,
+   "t_max_abs": 1.8355294843603716,
+   "t_raw": 0.8255732440259608
+  },
+  "p500|bbuse_1.97.1_c1": {
+   "cv_fixed": 0.6118143431688011,
+   "med_fixed": 11077626.0,
+   "med_rand": 11071320.0,
+   "n": 20000,
+   "n_fixed": 9995,
+   "n_rand": 10005,
+   "r_bitsN": 0.0008559772525123032,
+   "t_2nd": -0.8431954611203588,
+   "t_crop_max": 2.0477593715289886,
+   "t_max_abs": 2.0477593715289886,
+   "t_raw": -0.19558830258917495
+  },
+  "p500|cmov_1.97.1_c1": {
+   "cv_fixed": 0.17978532410589204,
+   "med_fixed": 9645654.0,
+   "med_rand": 9644220.0,
+   "n": 20000,
+   "n_fixed": 9995,
+   "n_rand": 10005,
+   "r_bitsN": 0.004328894120966167,
+   "t_2nd": 0.45412925280599636,
+   "t_crop_max": 2.0280765941455816,
+   "t_max_abs": 2.0280765941455816,
+   "t_raw": 0.5553824943221289
+  },
+  "p500|crate_1.97.1_c1": {
+   "cv_fixed": 0.12264402624467252,
+   "med_fixed": 9000824.0,
+   "med_rand": 9006222.0,
+   "n": 20000,
+   "n_fixed": 9995,
+   "n_rand": 10005,
+   "r_bitsN": 0.003240308413043262,
+   "t_2nd": 1.7966237417627173,
+   "t_crop_max": -1.7910538817919683,
+   "t_max_abs": 1.7966237417627173,
+   "t_raw": 1.5357288837920158
+  },
+  "p500|ctutils_1.97.1_c1": {
+   "cv_fixed": 0.32725954836301185,
+   "med_fixed": 10125990.0,
+   "med_rand": 10118992.0,
+   "n": 20000,
+   "n_fixed": 9995,
+   "n_rand": 10005,
+   "r_bitsN": -0.0070311319899215045,
+   "t_2nd": -1.0011074365438466,
+   "t_crop_max": -1.5684219483796191,
+   "t_max_abs": 1.5684219483796191,
+   "t_raw": -1.0479026718850288
+  },
+  "p500|noinline_1.97.1_c1": {
+   "cv_fixed": 0.4292295567377839,
+   "med_fixed": 10119422.0,
+   "med_rand": 10124784.0,
+   "n": 20000,
+   "n_fixed": 9995,
+   "n_rand": 10005,
+   "r_bitsN": -0.012068703417830205,
+   "t_2nd": -0.7405897076750817,
+   "t_crop_max": -2.117265592108552,
+   "t_max_abs": 2.117265592108552,
+   "t_raw": -0.4533674714020141
+  },
+  "p500|none_1.97.1_c1": {
+   "cv_fixed": 0.17726245922641837,
+   "med_fixed": 9273312.0,
+   "med_rand": 9275278.0,
+   "n": 20000,
+   "n_fixed": 9995,
+   "n_rand": 10005,
+   "r_bitsN": -0.013710143701485504,
+   "t_2nd": -0.07711357247387232,
+   "t_crop_max": -2.100698907780415,
+   "t_max_abs": 2.100698907780415,
+   "t_raw": -0.34881434899535
+  },
+  "p500|selunpred_1.97.1_c1": {
+   "cv_fixed": 0.14518002403293254,
+   "med_fixed": 9050510.0,
+   "med_rand": 9042016.0,
+   "n": 20000,
+   "n_fixed": 9995,
+   "n_rand": 10005,
+   "r_bitsN": -0.0003376095780346824,
+   "t_2nd": 0.9748962765660432,
+   "t_crop_max": 2.7930627887027026,
+   "t_max_abs": 2.7930627887027026,
+   "t_raw": 0.9913407501314984
+  },
+  "p500|subtle-bb_1.97.1_c1": {
+   "cv_fixed": 0.17181402803703066,
+   "med_fixed": 10076254.0,
+   "med_rand": 10097576.0,
+   "n": 20000,
+   "n_fixed": 9995,
+   "n_rand": 10005,
+   "r_bitsN": -0.004215059224344908,
+   "t_2nd": -0.4263356962643291,
+   "t_crop_max": 2.9350961448883663,
+   "t_max_abs": 2.9350961448883663,
+   "t_raw": -1.1307866664031427
+  },
+  "p500|subtle-vol_1.97.1_c1": {
+   "cv_fixed": 0.4115896844813919,
+   "med_fixed": 9982910.0,
+   "med_rand": 9979952.0,
+   "n": 20000,
+   "n_fixed": 9995,
+   "n_rand": 10005,
+   "r_bitsN": 0.015728422750627444,
+   "t_2nd": -1.0001168545748695,
+   "t_crop_max": 1.697523862953579,
+   "t_max_abs": 1.697523862953579,
+   "t_raw": -1.0184012683591084
+  },
+  "p500|volatile_1.97.1_c1": {
+   "cv_fixed": 0.08835052486287284,
+   "med_fixed": 9422902.0,
+   "med_rand": 9425584.0,
+   "n": 20000,
+   "n_fixed": 9995,
+   "n_rand": 10005,
+   "r_bitsN": -0.00594689934006228,
+   "t_2nd": 0.9357629245266422,
+   "t_crop_max": 1.7233453444097298,
+   "t_max_abs": 1.7233453444097298,
+   "t_raw": 1.2558977235275623
+  },
+  "p500|weak_1.97.1_c1": {
+   "cv_fixed": 0.21577278083729393,
+   "med_fixed": 9490008.0,
+   "med_rand": 9496074.0,
+   "n": 20000,
+   "n_fixed": 9995,
+   "n_rand": 10005,
+   "r_bitsN": -0.00483947340444912,
+   "t_2nd": 0.46662860581926885,
+   "t_crop_max": -1.827101120760504,
+   "t_max_abs": 1.827101120760504,
+   "t_raw": 0.0760162759041286
+  }
+ },
  "matrix": {
   "1.85.1|aarch64|c1|asm": {
-   "bad_out": [
-    "p248",
-    "p376",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p376",
-    "p500"
-   ],
+   "bad_out": [],
+   "clean": true,
+   "condbr": 975,
+   "condbr_reg": 146,
+   "csel": 12555,
+   "diff_sets": [],
    "div": 0,
-   "eq": false,
+   "eq": true,
    "mask_fn": false,
    "sets": [
     "p248",
@@ -34,22 +633,14 @@
    ]
   },
   "1.85.1|aarch64|c1|bbmask": {
-   "bad_out": [
-    "p248",
-    "p376",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p376",
-    "p500"
-   ],
+   "bad_out": [],
+   "clean": true,
+   "condbr": 975,
+   "condbr_reg": 146,
+   "csel": 12571,
+   "diff_sets": [],
    "div": 0,
-   "eq": false,
+   "eq": true,
    "mask_fn": false,
    "sets": [
     "p248",
@@ -58,22 +649,14 @@
    ]
   },
   "1.85.1|aarch64|c1|bbuse": {
-   "bad_out": [
-    "p248",
-    "p376",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p376",
-    "p500"
-   ],
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1018,
+   "condbr_reg": 148,
+   "csel": 12563,
+   "diff_sets": [],
    "div": 0,
-   "eq": false,
+   "eq": true,
    "mask_fn": false,
    "sets": [
     "p248",
@@ -82,15 +665,59 @@
    ]
   },
   "1.85.1|aarch64|c1|cmov": {
-   "bad_out": [
+   "bad_out": [],
+   "clean": true,
+   "condbr": 975,
+   "condbr_reg": 146,
+   "csel": 12693,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
     "p248",
     "p376",
     "p500"
-   ],
+   ]
+  },
+  "1.85.1|aarch64|c1|crate": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 975,
+   "condbr_reg": 146,
+   "csel": 12555,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p376",
+    "p500"
+   ]
+  },
+  "1.85.1|aarch64|c1|noinline": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 975,
+   "condbr_reg": 146,
+   "csel": 12555,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": true,
+   "sets": [
+    "p248",
+    "p376",
+    "p500"
+   ]
+  },
+  "1.85.1|aarch64|c1|none": {
+   "bad_out": [],
    "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
+   "condbr": 810,
+   "condbr_reg": 245,
+   "csel": 12645,
    "diff_sets": [
     "p248",
     "p376",
@@ -105,16 +732,60 @@
     "p500"
    ]
   },
-  "1.85.1|aarch64|c1|crate": {
-   "bad_out": [
+  "1.85.1|aarch64|c1|subtle-bb": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 975,
+   "condbr_reg": 146,
+   "csel": 12571,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
     "p248",
     "p376",
     "p500"
-   ],
+   ]
+  },
+  "1.85.1|aarch64|c1|subtle-vol": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 975,
+   "condbr_reg": 146,
+   "csel": 12555,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p376",
+    "p500"
+   ]
+  },
+  "1.85.1|aarch64|c1|volatile": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 855,
+   "condbr_reg": 145,
+   "csel": 12581,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p376",
+    "p500"
+   ]
+  },
+  "1.85.1|aarch64|c1|weak": {
+   "bad_out": [],
    "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
+   "condbr": 996,
+   "condbr_reg": 167,
+   "csel": 12642,
    "diff_sets": [
     "p248",
     "p376",
@@ -130,605 +801,184 @@
    ]
   },
   "1.85.1|x86_64|c1|asm": {
-   "bad_out": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1046,
+   "condbr_reg": 114,
+   "csel": 8960,
+   "diff_sets": [],
    "div": 0,
-   "eq": false,
+   "eq": true,
    "mask_fn": false,
    "sets": [
     "p248",
-    "p324",
     "p376",
-    "p500",
-    "p664"
+    "p500"
    ]
   },
   "1.85.1|x86_64|c1|bbmask": {
-   "bad_out": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1046,
+   "condbr_reg": 113,
+   "csel": 8990,
+   "diff_sets": [],
    "div": 0,
-   "eq": false,
+   "eq": true,
    "mask_fn": false,
    "sets": [
     "p248",
-    "p324",
     "p376",
-    "p500",
-    "p664"
+    "p500"
    ]
   },
   "1.85.1|x86_64|c1|bbuse": {
-   "bad_out": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1106,
+   "condbr_reg": 113,
+   "csel": 8976,
+   "diff_sets": [],
    "div": 0,
-   "eq": false,
+   "eq": true,
    "mask_fn": false,
    "sets": [
     "p248",
-    "p324",
     "p376",
-    "p500",
-    "p664"
+    "p500"
    ]
   },
   "1.85.1|x86_64|c1|cmov": {
-   "bad_out": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1046,
+   "condbr_reg": 114,
+   "csel": 9158,
+   "diff_sets": [],
    "div": 0,
-   "eq": false,
+   "eq": true,
    "mask_fn": false,
    "sets": [
     "p248",
-    "p324",
     "p376",
-    "p500",
-    "p664"
+    "p500"
    ]
   },
   "1.85.1|x86_64|c1|crate": {
-   "bad_out": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1046,
+   "condbr_reg": 114,
+   "csel": 8960,
+   "diff_sets": [],
    "div": 0,
-   "eq": false,
+   "eq": true,
    "mask_fn": false,
    "sets": [
     "p248",
-    "p324",
     "p376",
-    "p500",
-    "p664"
+    "p500"
    ]
   },
   "1.85.1|x86_64|c1|noinline": {
-   "bad_out": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1046,
+   "condbr_reg": 114,
+   "csel": 9012,
+   "diff_sets": [],
    "div": 0,
-   "eq": false,
+   "eq": true,
    "mask_fn": true,
    "sets": [
     "p248",
-    "p324",
     "p376",
-    "p500",
-    "p664"
+    "p500"
    ]
   },
   "1.85.1|x86_64|c1|none": {
-   "bad_out": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
+   "bad_out": [],
    "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
+   "condbr": 953,
+   "condbr_reg": 132,
+   "csel": 9056,
    "diff_sets": [
     "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
+    "p376"
    ],
    "div": 0,
    "eq": false,
    "mask_fn": false,
    "sets": [
     "p248",
-    "p324",
     "p376",
-    "p500",
-    "p664"
+    "p500"
    ]
   },
   "1.85.1|x86_64|c1|subtle-bb": {
-   "bad_out": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1046,
+   "condbr_reg": 114,
+   "csel": 9052,
+   "diff_sets": [],
    "div": 0,
-   "eq": false,
+   "eq": true,
    "mask_fn": false,
    "sets": [
     "p248",
-    "p324",
     "p376",
-    "p500",
-    "p664"
+    "p500"
    ]
   },
   "1.85.1|x86_64|c1|subtle-vol": {
-   "bad_out": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1046,
+   "condbr_reg": 114,
+   "csel": 9022,
+   "diff_sets": [],
    "div": 0,
-   "eq": false,
+   "eq": true,
    "mask_fn": false,
    "sets": [
     "p248",
-    "p324",
     "p376",
-    "p500",
-    "p664"
+    "p500"
    ]
   },
   "1.85.1|x86_64|c1|volatile": {
-   "bad_out": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
+   "bad_out": [],
+   "clean": true,
+   "condbr": 909,
+   "condbr_reg": 113,
+   "csel": 8976,
+   "diff_sets": [],
    "div": 0,
-   "eq": false,
+   "eq": true,
    "mask_fn": false,
    "sets": [
     "p248",
-    "p324",
     "p376",
-    "p500",
-    "p664"
+    "p500"
    ]
   },
   "1.85.1|x86_64|c1|weak": {
-   "bad_out": [
+   "bad_out": [],
+   "clean": false,
+   "condbr": 1062,
+   "condbr_reg": 118,
+   "csel": 9087,
+   "diff_sets": [
     "p248",
-    "p324",
+    "p376"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
     "p376",
-    "p500",
-    "p664"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ],
-   "div": 0,
-   "eq": false,
-   "mask_fn": false,
-   "sets": [
-    "p248",
-    "p324",
-    "p376",
-    "p500",
-    "p664"
-   ]
-  },
-  "1.85.1|x86_64|c2|asm": {
-   "bad_out": [
-    "p248",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p500"
-   ],
-   "div": 0,
-   "eq": false,
-   "mask_fn": false,
-   "sets": [
-    "p248",
-    "p500"
-   ]
-  },
-  "1.85.1|x86_64|c2|bbmask": {
-   "bad_out": [
-    "p248",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p500"
-   ],
-   "div": 0,
-   "eq": false,
-   "mask_fn": false,
-   "sets": [
-    "p248",
-    "p500"
-   ]
-  },
-  "1.85.1|x86_64|c2|bbuse": {
-   "bad_out": [
-    "p248",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p500"
-   ],
-   "div": 0,
-   "eq": false,
-   "mask_fn": false,
-   "sets": [
-    "p248",
-    "p500"
-   ]
-  },
-  "1.85.1|x86_64|c2|cmov": {
-   "bad_out": [
-    "p248",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p500"
-   ],
-   "div": 0,
-   "eq": false,
-   "mask_fn": false,
-   "sets": [
-    "p248",
-    "p500"
-   ]
-  },
-  "1.85.1|x86_64|c2|crate": {
-   "bad_out": [
-    "p248",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p500"
-   ],
-   "div": 0,
-   "eq": false,
-   "mask_fn": false,
-   "sets": [
-    "p248",
-    "p500"
-   ]
-  },
-  "1.85.1|x86_64|c2|noinline": {
-   "bad_out": [
-    "p248",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p500"
-   ],
-   "div": 0,
-   "eq": false,
-   "mask_fn": true,
-   "sets": [
-    "p248",
-    "p500"
-   ]
-  },
-  "1.85.1|x86_64|c2|none": {
-   "bad_out": [
-    "p248",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p500"
-   ],
-   "div": 0,
-   "eq": false,
-   "mask_fn": false,
-   "sets": [
-    "p248",
-    "p500"
-   ]
-  },
-  "1.85.1|x86_64|c2|subtle-bb": {
-   "bad_out": [
-    "p248",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p500"
-   ],
-   "div": 0,
-   "eq": false,
-   "mask_fn": false,
-   "sets": [
-    "p248",
-    "p500"
-   ]
-  },
-  "1.85.1|x86_64|c2|subtle-vol": {
-   "bad_out": [
-    "p248",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p500"
-   ],
-   "div": 0,
-   "eq": false,
-   "mask_fn": false,
-   "sets": [
-    "p248",
-    "p500"
-   ]
-  },
-  "1.85.1|x86_64|c2|volatile": {
-   "bad_out": [
-    "p248",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p500"
-   ],
-   "div": 0,
-   "eq": false,
-   "mask_fn": false,
-   "sets": [
-    "p248",
-    "p500"
-   ]
-  },
-  "1.85.1|x86_64|c2|weak": {
-   "bad_out": [
-    "p248",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p500"
-   ],
-   "div": 0,
-   "eq": false,
-   "mask_fn": false,
-   "sets": [
-    "p248",
-    "p500"
-   ]
-  },
-  "1.85.1|x86_64|c3|asm": {
-   "bad_out": [
-    "p248",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p500"
-   ],
-   "div": 0,
-   "eq": false,
-   "mask_fn": false,
-   "sets": [
-    "p248",
-    "p500"
-   ]
-  },
-  "1.85.1|x86_64|c3|none": {
-   "bad_out": [
-    "p248",
-    "p500"
-   ],
-   "clean": false,
-   "condbr": 0,
-   "condbr_reg": 0,
-   "csel": 0,
-   "diff_sets": [
-    "p248",
-    "p500"
-   ],
-   "div": 0,
-   "eq": false,
-   "mask_fn": false,
-   "sets": [
-    "p248",
     "p500"
    ]
   },
@@ -828,6 +1078,390 @@
    "condbr": 934,
    "condbr_reg": 9,
    "csel": 12868,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|aarch64|c1|noinline": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 934,
+   "condbr_reg": 9,
+   "csel": 12760,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": true,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|aarch64|c1|none": {
+   "bad_out": [],
+   "clean": false,
+   "condbr": 840,
+   "condbr_reg": 79,
+   "csel": 12830,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|aarch64|c1|selunpred": {
+   "bad_out": [],
+   "clean": false,
+   "condbr": 841,
+   "condbr_reg": 80,
+   "csel": 12843,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|aarch64|c1|subtle-bb": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 934,
+   "condbr_reg": 9,
+   "csel": 12718,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|aarch64|c1|subtle-vol": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 934,
+   "condbr_reg": 9,
+   "csel": 12760,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|aarch64|c1|volatile": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 934,
+   "condbr_reg": 10,
+   "csel": 12710,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|aarch64|c1|weak": {
+   "bad_out": [],
+   "clean": false,
+   "condbr": 954,
+   "condbr_reg": 29,
+   "csel": 12755,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|aarch64|c2|asm": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1185,
+   "condbr_reg": 35,
+   "csel": 3181,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c2|bbmask": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1185,
+   "condbr_reg": 35,
+   "csel": 3181,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c2|bbuse": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1205,
+   "condbr_reg": 35,
+   "csel": 3181,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c2|cmov": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1185,
+   "condbr_reg": 35,
+   "csel": 3311,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c2|crate": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1185,
+   "condbr_reg": 35,
+   "csel": 3181,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c2|ctutils": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1185,
+   "condbr_reg": 35,
+   "csel": 3311,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c2|noinline": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1185,
+   "condbr_reg": 34,
+   "csel": 3181,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": true,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c2|none": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1181,
+   "condbr_reg": 35,
+   "csel": 3339,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c2|selunpred": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1200,
+   "condbr_reg": 35,
+   "csel": 3713,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c2|subtle-bb": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1185,
+   "condbr_reg": 35,
+   "csel": 3181,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c2|subtle-vol": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1185,
+   "condbr_reg": 34,
+   "csel": 3181,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c2|volatile": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1185,
+   "condbr_reg": 35,
+   "csel": 3181,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c2|weak": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1180,
+   "condbr_reg": 35,
+   "csel": 3655,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c3|asm": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1078,
+   "condbr_reg": 9,
+   "csel": 11932,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c3|bbmask": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1078,
+   "condbr_reg": 9,
+   "csel": 11878,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|x86_64|c1|asm": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1032,
+   "condbr_reg": 42,
+   "csel": 9120,
    "diff_sets": [],
    "div": 0,
    "eq": true,
@@ -970,6 +1604,28 @@
     "p664"
    ]
   },
+  "1.97.1|x86_64|c1|selunpred": {
+   "bad_out": [],
+   "clean": false,
+   "condbr": 951,
+   "condbr_reg": 63,
+   "csel": 9179,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
   "1.97.1|x86_64|c1|subtle-bb": {
    "bad_out": [],
    "clean": true,
@@ -1049,159 +1705,159 @@
  },
  "table": {
   "asm|1.85.1": {
-   "aarch64": "0/1 clean (branch: c1)",
+   "aarch64": "1/1 clean",
    "dudect": "not run",
-   "taint": "pending",
-   "x86": "0/3 clean (branch: c1,c2,c3)"
+   "taint": "0 (clean)",
+   "x86": "1/1 clean"
   },
   "asm|1.97.1": {
-   "aarch64": "1/1 clean",
-   "dudect": "-",
-   "taint": "pending",
-   "x86": "pending"
+   "aarch64": "3/3 clean",
+   "dudect": "1.53 / 2.07",
+   "taint": "0 (clean; 25 shift)",
+   "x86": "1/1 clean"
   },
   "bbmask|1.85.1": {
-   "aarch64": "0/1 clean (branch: c1)",
+   "aarch64": "1/1 clean",
    "dudect": "not run",
-   "taint": "pending",
-   "x86": "0/2 clean (branch: c1,c2)"
+   "taint": "0 (clean; 6 shift)",
+   "x86": "1/1 clean"
   },
   "bbmask|1.97.1": {
-   "aarch64": "1/1 clean",
-   "dudect": "-",
-   "taint": "pending",
+   "aarch64": "3/3 clean",
+   "dudect": "1.59 / 1.84",
+   "taint": "0 (clean; 24 shift)",
    "x86": "1/1 clean"
   },
   "bbuse|1.85.1": {
-   "aarch64": "0/1 clean (branch: c1)",
+   "aarch64": "1/1 clean",
    "dudect": "not run",
-   "taint": "pending",
-   "x86": "0/2 clean (branch: c1,c2)"
+   "taint": "0 (clean)",
+   "x86": "1/1 clean"
   },
   "bbuse|1.97.1": {
-   "aarch64": "1/1 clean",
-   "dudect": "-",
-   "taint": "pending",
+   "aarch64": "2/2 clean",
+   "dudect": "1.62 / 2.05",
+   "taint": "0 (clean; 22 shift)",
    "x86": "1/1 clean"
   },
   "cmov|1.85.1": {
-   "aarch64": "0/1 clean (branch: c1)",
+   "aarch64": "1/1 clean",
    "dudect": "not run",
-   "taint": "pending",
-   "x86": "0/2 clean (branch: c1,c2)"
+   "taint": "0 (clean)",
+   "x86": "1/1 clean"
   },
   "cmov|1.97.1": {
-   "aarch64": "1/1 clean",
-   "dudect": "-",
-   "taint": "pending",
+   "aarch64": "2/2 clean",
+   "dudect": "1.80 / 2.03",
+   "taint": "0 (clean; 21 shift)",
    "x86": "1/1 clean"
   },
   "crate|1.85.1": {
-   "aarch64": "0/1 clean (branch: c1)",
+   "aarch64": "1/1 clean",
    "dudect": "not run",
-   "taint": "pending",
-   "x86": "0/2 clean (branch: c1,c2)"
+   "taint": "0 (clean)",
+   "x86": "1/1 clean"
   },
   "crate|1.97.1": {
-   "aarch64": "1/1 clean",
-   "dudect": "-",
-   "taint": "pending",
+   "aarch64": "2/2 clean",
+   "dudect": "2.18 / 1.80",
+   "taint": "0 (clean; 25 shift)",
    "x86": "1/1 clean"
   },
   "ctutils|1.85.1": {
-   "aarch64": "0/0 clean",
+   "aarch64": "n/a (does not build)",
    "dudect": "not run",
-   "taint": "pending",
+   "taint": "build failed",
    "x86": "n/a (does not build)"
   },
   "ctutils|1.97.1": {
-   "aarch64": "1/1 clean",
-   "dudect": "-",
-   "taint": "pending",
+   "aarch64": "2/2 clean",
+   "dudect": "2.54 / 1.57",
+   "taint": "0 (clean; 23 shift)",
    "x86": "1/1 clean"
   },
   "noinline|1.85.1": {
-   "aarch64": "pending",
+   "aarch64": "1/1 clean",
    "dudect": "not run",
-   "taint": "pending",
-   "x86": "0/2 clean (branch: c1,c2)"
+   "taint": "0 (clean)",
+   "x86": "1/1 clean"
   },
   "noinline|1.97.1": {
-   "aarch64": "pending",
-   "dudect": "-",
-   "taint": "pending",
+   "aarch64": "2/2 clean",
+   "dudect": "2.31 / 2.12",
+   "taint": "0 (clean; 22 shift)",
    "x86": "1/1 clean"
   },
   "none|1.85.1": {
-   "aarch64": "pending",
+   "aarch64": "0/1 clean (branch: c1)",
    "dudect": "not run",
-   "taint": "pending",
-   "x86": "0/3 clean (branch: c1,c2,c3)"
+   "taint": "55 errors",
+   "x86": "0/1 clean (branch: c1)"
   },
   "none|1.97.1": {
-   "aarch64": "pending",
-   "dudect": "-",
-   "taint": "pending",
+   "aarch64": "1/2 clean (branch: c1)",
+   "dudect": "32.36 / 2.10",
+   "taint": "81 errors",
    "x86": "0/1 clean (branch: c1)"
   },
   "selunpred|1.85.1": {
-   "aarch64": "pending",
+   "aarch64": "n/a (does not build)",
    "dudect": "not run",
-   "taint": "pending",
-   "x86": "pending"
+   "taint": "build failed",
+   "x86": "n/a (does not build)"
   },
   "selunpred|1.97.1": {
-   "aarch64": "pending",
-   "dudect": "-",
-   "taint": "pending",
-   "x86": "pending"
+   "aarch64": "1/2 clean (branch: c1)",
+   "dudect": "30.00 / 2.79",
+   "taint": "87 errors",
+   "x86": "0/1 clean (branch: c1)"
   },
   "subtle-bb|1.85.1": {
-   "aarch64": "pending",
+   "aarch64": "1/1 clean",
    "dudect": "not run",
-   "taint": "pending",
-   "x86": "0/2 clean (branch: c1,c2)"
+   "taint": "0 (clean; 6 shift)",
+   "x86": "1/1 clean"
   },
   "subtle-bb|1.97.1": {
-   "aarch64": "pending",
-   "dudect": "-",
-   "taint": "pending",
+   "aarch64": "2/2 clean",
+   "dudect": "1.85 / 2.94",
+   "taint": "0 (clean; 22 shift)",
    "x86": "1/1 clean"
   },
   "subtle-vol|1.85.1": {
-   "aarch64": "pending",
+   "aarch64": "1/1 clean",
    "dudect": "not run",
-   "taint": "pending",
-   "x86": "0/2 clean (branch: c1,c2)"
+   "taint": "0 (clean)",
+   "x86": "1/1 clean"
   },
   "subtle-vol|1.97.1": {
-   "aarch64": "pending",
-   "dudect": "-",
-   "taint": "pending",
+   "aarch64": "2/2 clean",
+   "dudect": "2.08 / 1.70",
+   "taint": "0 (clean; 18 shift)",
    "x86": "1/1 clean"
   },
   "volatile|1.85.1": {
-   "aarch64": "pending",
+   "aarch64": "1/1 clean",
    "dudect": "not run",
-   "taint": "pending",
-   "x86": "0/2 clean (branch: c1,c2)"
+   "taint": "0 (clean)",
+   "x86": "1/1 clean"
   },
   "volatile|1.97.1": {
-   "aarch64": "pending",
-   "dudect": "-",
-   "taint": "pending",
+   "aarch64": "2/2 clean",
+   "dudect": "2.44 / 1.72",
+   "taint": "0 (clean; 28 shift)",
    "x86": "1/1 clean"
   },
   "weak|1.85.1": {
-   "aarch64": "pending",
+   "aarch64": "0/1 clean (branch: c1)",
    "dudect": "not run",
-   "taint": "pending",
-   "x86": "0/2 clean (branch: c1,c2)"
+   "taint": "14 errors",
+   "x86": "0/1 clean (branch: c1)"
   },
   "weak|1.97.1": {
-   "aarch64": "pending",
-   "dudect": "-",
-   "taint": "pending",
+   "aarch64": "1/2 clean (branch: c1)",
+   "dudect": "9.11 / 1.83",
+   "taint": "20 errors",
    "x86": "0/1 clean (branch: c1)"
   }
  }

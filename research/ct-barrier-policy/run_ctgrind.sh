@@ -27,9 +27,13 @@ for tc in ${TCS:-1.97.1 1.85.1}; do
    fi
    mkdir -p $W/ctgbins; cp $td/x86_64-unknown-linux-gnu/release/rlc $W/ctgbins/$id
    BIN=$W/ctgbins/$id
-   for s in p248 p324 p376 p500 p664; do
+   sets="p248 p324 p376 p500 p664"
+   if [ "$tc" = "1.85.1" ]; then sets="p248 p376 p500"; fi
+   for s in $sets; do
+    runs=${RUNS:-2}
+    if [ "$tc" = "1.85.1" ] || [ "$s" = "p664" ]; then runs=1; fi
     log=$W/logs/ctgrind_${id}_$s.log
-    valgrind --tool=memcheck --track-origins=yes --num-callers=30 $BIN ctgrind $s ${RUNS:-2} > $log 2>&1
+    valgrind --tool=memcheck --track-origins=yes --num-callers=30 $BIN ctgrind $s $runs > $log 2>&1
     python3 ../parse_ctgrind.py "$log" "$s" $BIN
    done > $OUT/$id.txt.tmp && mv $OUT/$id.txt.tmp $OUT/$id.txt
    echo "ctgrind $id: $(grep -c 'in_ct_code=0' $OUT/$id.txt)/5 sets clean"

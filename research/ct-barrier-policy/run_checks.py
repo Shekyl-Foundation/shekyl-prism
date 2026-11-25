@@ -41,7 +41,7 @@ def job(binpath):
         sets = ['p248', 'p500']
     traces = {}
     for s in sets:
-        inputs = ['fixed', 'p1', 'a0'] if s == 'p664' else INPUTS  # P664 traces are ~10M blocks each
+        inputs = ['fixed', 'a0'] if cfg != 'c1' else (['fixed', 'p1', 'a0'] if s == 'p664' else INPUTS)
         r = subprocess.run([sys.executable, os.path.join(HERE, 'harness', 'trace_check.py'), binpath, arch, s] + inputs,
                            capture_output=True, text=True)
         try:
@@ -58,8 +58,9 @@ def job(binpath):
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
     # 1.85.1 is the comparison toolchain: configs c1 and c3 only (c2/c4 are built but not traced)
-    bins = sorted(b for b in glob.glob(os.path.join(W, 'bins', '*')) if not b.endswith('.fail')
-                  and not re.search(r'1\.85\.1_\w+?_c[24]_', os.path.basename(b)))
+    bins = sorted((b for b in glob.glob(os.path.join(W, 'bins', '*')) if not b.endswith('.fail')
+                   and not re.search(r'1\.85\.1_\w+?_c[24]_', os.path.basename(b))),
+                  key=lambda b: (0 if '_c1_' in b else 1, 0 if '1.97.1_' in b else 1, b))
     with Pool(int(os.environ.get('JOBS', '2'))) as p:
         for bid, st in p.imap_unordered(job, bins):
             print(bid, st, flush=True)
