@@ -1,0 +1,197 @@
+== p248
+  chain_allbig             exact 3/3 red, 0 flag, need<= 3 of 301; clamp64 0/3 red, 3 flag, need<= 0 of 302; clamp128 1/3 red, 2 flag, need<= 2 of 302; corr64 0/3 red, 3 flag, need<= 0 of 301; exp64 3/3 red, 3 flag, need<= 6 of 312
+  chain_roll25_big         exact 1/1 red, 0 flag, need<= 21 of 301; clamp64 0/1 red, 1 flag, need<= 0 of 302; clamp128 0/1 red, 1 flag, need<= 0 of 302; corr64 0/1 red, 1 flag, need<= 0 of 301; exp64 1/1 red, 1 flag, need<= 25 of 312
+  chain_roll50_big         exact 1/1 red, 0 flag, need<= 106 of 301; clamp64 0/1 red, 1 flag, need<= 0 of 302; clamp128 0/1 red, 1 flag, need<= 0 of 302; corr64 0/1 red, 1 flag, need<= 0 of 301; exp64 1/1 red, 1 flag, need<= 108 of 312
+  chain_roll75_big         exact 1/1 red, 0 flag, need<= 192 of 301; clamp64 0/1 red, 1 flag, need<= 0 of 302; clamp128 1/1 red, 0 flag, need<= 192 of 302; corr64 0/1 red, 1 flag, need<= 0 of 301; exp64 1/1 red, 1 flag, need<= 193 of 312
+  chain_roll_62            exact 1/1 red, 0 flag, need<= 14 of 301; clamp64 1/1 red, 1 flag, need<= 24 of 302; clamp128 1/1 red, 0 flag, need<= 14 of 302; corr64 1/1 red, 1 flag, need<= 24 of 301; exp64 1/1 red, 1 flag, need<= 18 of 312
+  challenge                exact 16/16 red, 0 flag, need<= 126 of 211; clamp64 16/16 red, 0 flag, need<= 126 of 212; clamp128 16/16 red, 0 flag, need<= 126 of 212; corr64 16/16 red, 0 flag, need<= 126 of 211; exp64 16/16 red, 0 flag, need<= 126 of 215
+  crafted_k1               exact 3/3 red, 0 flag, need<= 1 of 301; clamp64 3/3 red, 3 flag, need<= 0 of 302; clamp128 3/3 red, 3 flag, need<= 0 of 302; corr64 0/3 red, 3 flag, need<= 0 of 301; exp64 3/3 red, 3 flag, need<= 6 of 306
+  crafted_k1_O0            exact 3/3 red, 0 flag, need<= 2 of 301; clamp64 3/3 red, 3 flag, need<= 0 of 302; clamp128 3/3 red, 3 flag, need<= 0 of 302; corr64 0/3 red, 3 flag, need<= 0 of 301; exp64 3/3 red, 3 flag, need<= 7 of 306
+  crafted_q5               exact 3/3 red, 0 flag, need<= 9 of 301; clamp64 0/3 red, 3 flag, need<= 0 of 302; clamp128 0/3 red, 3 flag, need<= 0 of 302; corr64 0/3 red, 3 flag, need<= 0 of 301; exp64 3/3 red, 3 flag, need<= 13 of 306
+  honest_sign              exact 80/80 red, 0 flag, need<= 179 of 301; clamp64 80/80 red, 0 flag, need<= 179 of 302; clamp128 80/80 red, 0 flag, need<= 179 of 302; corr64 80/80 red, 0 flag, need<= 179 of 301; exp64 80/80 red, 0 flag, need<= 179 of 306
+  honest_sign_O0           exact 40/40 red, 0 flag, need<= 179 of 301; clamp64 40/40 red, 0 flag, need<= 179 of 302; clamp128 40/40 red, 0 flag, need<= 179 of 302; corr64 40/40 red, 0 flag, need<= 179 of 301; exp64 40/40 red, 0 flag, need<= 179 of 306
+  keygen_D                 exact 12/12 red, 0 flag, need<= 128 of 223; clamp64 12/12 red, 0 flag, need<= 128 of 224; clamp128 12/12 red, 0 flag, need<= 128 of 224; corr64 12/12 red, 0 flag, need<= 128 of 223; exp64 12/12 red, 0 flag, need<= 128 of 227
+  keygen_Isec              exact 16/16 red, 0 flag, need<= 13 of 22; clamp64 16/16 red, 0 flag, need<= 13 of 23; clamp128 16/16 red, 0 flag, need<= 13 of 23; corr64 16/16 red, 0 flag, need<= 13 of 22; exp64 16/16 red, 0 flag, need<= 13 of 23
+  pingpong                 exact 1/1 red, 0 flag, need<= 1 of 301; clamp64 1/1 red, 0 flag, need<= 1 of 302; clamp128 1/1 red, 0 flag, need<= 1 of 302; corr64 1/1 red, 0 flag, need<= 1 of 301; exp64 1/1 red, 0 flag, need<= 1 of 312
+  prered_crafted_edge_pass exact 1/1 red, 0 flag, need<= 152 of 283; clamp64 1/1 red, 0 flag, need<= 152 of 284; clamp128 1/1 red, 0 flag, need<= 152 of 284; corr64 1/1 red, 0 flag, need<= 152 of 283; exp64 1/1 red, 0 flag, need<= 152 of 288
+  prered_crafted_skew_max  exact 1/1 red, 0 flag, need<= 163 of 354; clamp64 1/1 red, 0 flag, need<= 163 of 355; clamp128 1/1 red, 0 flag, need<= 163 of 355; corr64 1/1 red, 0 flag, need<= 163 of 354; exp64 1/1 red, 0 flag, need<= 163 of 360
+  prered_sampled           exact 16/16 red, 0 flag, need<= 166 of 354; clamp64 16/16 red, 0 flag, need<= 166 of 355; clamp128 16/16 red, 0 flag, need<= 166 of 355; corr64 16/16 red, 0 flag, need<= 166 of 354; exp64 16/16 red, 0 flag, need<= 166 of 360
+  rolletschek_conj_alt     exact 1/1 red, 0 flag, need<= 275 of 301; clamp64 1/1 red, 0 flag, need<= 275 of 302; clamp128 1/1 red, 0 flag, need<= 275 of 302; corr64 1/1 red, 0 flag, need<= 275 of 301; exp64 1/1 red, 0 flag, need<= 275 of 312
+  rolletschek_i_rot        exact 1/1 red, 0 flag, need<= 275 of 301; clamp64 1/1 red, 0 flag, need<= 275 of 302; clamp128 1/1 red, 0 flag, need<= 275 of 302; corr64 1/1 red, 0 flag, need<= 275 of 301; exp64 1/1 red, 0 flag, need<= 275 of 312
+  tail_stress              exact 1/1 red, 0 flag, need<= 3 of 301; clamp64 1/1 red, 0 flag, need<= 3 of 302; clamp128 1/1 red, 0 flag, need<= 3 of 302; corr64 1/1 red, 0 flag, need<= 3 of 301; exp64 1/1 red, 0 flag, need<= 3 of 312
+  exact: families with an unreduced output: none
+  clamp64: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'chain_roll75_big', 'crafted_q5']
+  clamp128: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'crafted_q5']
+  corr64: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'chain_roll75_big', 'crafted_k1', 'crafted_k1_O0', 'crafted_q5']
+  exp64: families with an unreduced output: none
+== p324
+  chain_allbig             exact 3/3 red, 0 flag, need<= 4 of 387; clamp64 0/3 red, 3 flag, need<= 0 of 388; clamp128 0/3 red, 3 flag, need<= 0 of 388; corr64 0/3 red, 3 flag, need<= 0 of 387; exp64 3/3 red, 3 flag, need<= 7 of 401
+  chain_roll25_big         exact 1/1 red, 0 flag, need<= 26 of 387; clamp64 0/1 red, 1 flag, need<= 0 of 388; clamp128 0/1 red, 1 flag, need<= 0 of 388; corr64 0/1 red, 1 flag, need<= 0 of 387; exp64 1/1 red, 1 flag, need<= 31 of 401
+  chain_roll50_big         exact 1/1 red, 0 flag, need<= 136 of 387; clamp64 0/1 red, 1 flag, need<= 0 of 388; clamp128 0/1 red, 1 flag, need<= 0 of 388; corr64 0/1 red, 1 flag, need<= 0 of 387; exp64 1/1 red, 1 flag, need<= 139 of 401
+  chain_roll75_big         exact 1/1 red, 0 flag, need<= 246 of 387; clamp64 0/1 red, 1 flag, need<= 0 of 388; clamp128 1/1 red, 0 flag, need<= 246 of 388; corr64 0/1 red, 1 flag, need<= 0 of 387; exp64 1/1 red, 1 flag, need<= 247 of 401
+  chain_roll_62            exact 1/1 red, 0 flag, need<= 15 of 387; clamp64 1/1 red, 1 flag, need<= 27 of 388; clamp128 1/1 red, 0 flag, need<= 15 of 388; corr64 1/1 red, 1 flag, need<= 27 of 387; exp64 1/1 red, 1 flag, need<= 20 of 401
+  challenge                exact 16/16 red, 0 flag, need<= 157 of 276; clamp64 16/16 red, 0 flag, need<= 157 of 277; clamp128 16/16 red, 0 flag, need<= 157 of 277; corr64 16/16 red, 0 flag, need<= 157 of 276; exp64 16/16 red, 0 flag, need<= 157 of 281
+  crafted_k1               exact 3/3 red, 0 flag, need<= 1 of 387; clamp64 3/3 red, 3 flag, need<= 0 of 388; clamp128 3/3 red, 3 flag, need<= 0 of 388; corr64 0/3 red, 3 flag, need<= 0 of 387; exp64 3/3 red, 3 flag, need<= 8 of 394
+  crafted_k1_O0            exact 3/3 red, 0 flag, need<= 2 of 387; clamp64 3/3 red, 3 flag, need<= 0 of 388; clamp128 3/3 red, 3 flag, need<= 0 of 388; corr64 0/3 red, 3 flag, need<= 0 of 387; exp64 3/3 red, 3 flag, need<= 9 of 394
+  crafted_q5               exact 3/3 red, 0 flag, need<= 9 of 387; clamp64 0/3 red, 3 flag, need<= 0 of 388; clamp128 0/3 red, 3 flag, need<= 0 of 388; corr64 0/3 red, 3 flag, need<= 0 of 387; exp64 3/3 red, 3 flag, need<= 14 of 394
+  honest_sign              exact 80/80 red, 0 flag, need<= 227 of 387; clamp64 80/80 red, 0 flag, need<= 227 of 388; clamp128 80/80 red, 0 flag, need<= 227 of 388; corr64 80/80 red, 0 flag, need<= 227 of 387; exp64 80/80 red, 0 flag, need<= 227 of 394
+  honest_sign_O0           exact 40/40 red, 0 flag, need<= 228 of 387; clamp64 40/40 red, 0 flag, need<= 228 of 388; clamp128 40/40 red, 0 flag, need<= 228 of 388; corr64 40/40 red, 0 flag, need<= 228 of 387; exp64 40/40 red, 0 flag, need<= 228 of 394
+  keygen_D                 exact 12/12 red, 0 flag, need<= 209 of 347; clamp64 12/12 red, 0 flag, need<= 209 of 348; clamp128 12/12 red, 0 flag, need<= 209 of 348; corr64 12/12 red, 0 flag, need<= 209 of 347; exp64 12/12 red, 0 flag, need<= 209 of 353
+  keygen_Isec              exact 16/16 red, 0 flag, need<= 14 of 22; clamp64 16/16 red, 0 flag, need<= 14 of 23; clamp128 16/16 red, 0 flag, need<= 14 of 23; corr64 16/16 red, 0 flag, need<= 14 of 22; exp64 16/16 red, 0 flag, need<= 14 of 23
+  pingpong                 exact 1/1 red, 0 flag, need<= 1 of 387; clamp64 1/1 red, 0 flag, need<= 1 of 388; clamp128 1/1 red, 0 flag, need<= 1 of 388; corr64 1/1 red, 0 flag, need<= 1 of 387; exp64 1/1 red, 0 flag, need<= 1 of 401
+  prered_crafted_edge_pass exact 1/1 red, 0 flag, need<= 207 of 369; clamp64 1/1 red, 0 flag, need<= 207 of 370; clamp128 1/1 red, 0 flag, need<= 207 of 370; corr64 1/1 red, 0 flag, need<= 207 of 369; exp64 1/1 red, 0 flag, need<= 207 of 375
+  prered_crafted_skew_max  exact 1/1 red, 0 flag, need<= 213 of 461; clamp64 1/1 red, 0 flag, need<= 213 of 462; clamp128 1/1 red, 0 flag, need<= 213 of 462; corr64 1/1 red, 0 flag, need<= 213 of 461; exp64 1/1 red, 0 flag, need<= 213 of 469
+  prered_sampled           exact 16/16 red, 0 flag, need<= 216 of 369; clamp64 16/16 red, 0 flag, need<= 216 of 370; clamp128 16/16 red, 0 flag, need<= 216 of 370; corr64 16/16 red, 0 flag, need<= 216 of 369; exp64 16/16 red, 0 flag, need<= 216 of 375
+  rolletschek_conj_alt     exact 1/1 red, 0 flag, need<= 355 of 387; clamp64 1/1 red, 0 flag, need<= 355 of 388; clamp128 1/1 red, 0 flag, need<= 355 of 388; corr64 1/1 red, 0 flag, need<= 355 of 387; exp64 1/1 red, 0 flag, need<= 355 of 401
+  rolletschek_i_rot        exact 1/1 red, 0 flag, need<= 355 of 387; clamp64 1/1 red, 0 flag, need<= 355 of 388; clamp128 1/1 red, 0 flag, need<= 355 of 388; corr64 1/1 red, 0 flag, need<= 355 of 387; exp64 1/1 red, 0 flag, need<= 355 of 401
+  tail_stress              exact 1/1 red, 0 flag, need<= 3 of 387; clamp64 1/1 red, 0 flag, need<= 3 of 388; clamp128 1/1 red, 0 flag, need<= 3 of 388; corr64 1/1 red, 0 flag, need<= 3 of 387; exp64 1/1 red, 0 flag, need<= 3 of 401
+  exact: families with an unreduced output: none
+  clamp64: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'chain_roll75_big', 'crafted_q5']
+  clamp128: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'crafted_q5']
+  corr64: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'chain_roll75_big', 'crafted_k1', 'crafted_k1_O0', 'crafted_q5']
+  exp64: families with an unreduced output: none
+== p376
+  chain_allbig             exact 3/3 red, 0 flag, need<= 4 of 446; clamp64 0/3 red, 3 flag, need<= 0 of 447; clamp128 2/3 red, 2 flag, need<= 32 of 447; corr64 0/3 red, 3 flag, need<= 0 of 446; exp64 3/3 red, 3 flag, need<= 8 of 462
+  chain_roll25_big         exact 1/1 red, 0 flag, need<= 28 of 446; clamp64 0/1 red, 1 flag, need<= 0 of 447; clamp128 0/1 red, 1 flag, need<= 0 of 447; corr64 0/1 red, 1 flag, need<= 0 of 446; exp64 1/1 red, 1 flag, need<= 34 of 462
+  chain_roll50_big         exact 1/1 red, 0 flag, need<= 156 of 446; clamp64 0/1 red, 1 flag, need<= 0 of 447; clamp128 0/1 red, 1 flag, need<= 0 of 447; corr64 0/1 red, 1 flag, need<= 0 of 446; exp64 1/1 red, 1 flag, need<= 160 of 462
+  chain_roll75_big         exact 1/1 red, 0 flag, need<= 284 of 446; clamp64 0/1 red, 1 flag, need<= 0 of 447; clamp128 1/1 red, 0 flag, need<= 284 of 447; corr64 0/1 red, 1 flag, need<= 0 of 446; exp64 1/1 red, 1 flag, need<= 285 of 462
+  chain_roll_62            exact 1/1 red, 0 flag, need<= 18 of 446; clamp64 1/1 red, 1 flag, need<= 32 of 447; clamp128 1/1 red, 0 flag, need<= 18 of 447; corr64 1/1 red, 1 flag, need<= 32 of 446; exp64 1/1 red, 1 flag, need<= 24 of 462
+  challenge                exact 16/16 red, 0 flag, need<= 186 of 319; clamp64 16/16 red, 0 flag, need<= 186 of 320; clamp128 16/16 red, 0 flag, need<= 186 of 320; corr64 16/16 red, 0 flag, need<= 186 of 319; exp64 16/16 red, 0 flag, need<= 186 of 325
+  crafted_k1               exact 3/3 red, 0 flag, need<= 1 of 446; clamp64 3/3 red, 3 flag, need<= 0 of 447; clamp128 3/3 red, 3 flag, need<= 0 of 447; corr64 0/3 red, 3 flag, need<= 0 of 446; exp64 3/3 red, 3 flag, need<= 9 of 454
+  crafted_k1_O0            exact 3/3 red, 0 flag, need<= 2 of 446; clamp64 3/3 red, 3 flag, need<= 0 of 447; clamp128 3/3 red, 3 flag, need<= 0 of 447; corr64 0/3 red, 3 flag, need<= 0 of 446; exp64 3/3 red, 3 flag, need<= 10 of 454
+  crafted_q5               exact 3/3 red, 0 flag, need<= 8 of 446; clamp64 0/3 red, 3 flag, need<= 0 of 447; clamp128 0/3 red, 3 flag, need<= 0 of 447; corr64 0/3 red, 3 flag, need<= 0 of 446; exp64 3/3 red, 3 flag, need<= 14 of 454
+  honest_sign              exact 80/80 red, 0 flag, need<= 264 of 446; clamp64 80/80 red, 0 flag, need<= 264 of 447; clamp128 80/80 red, 0 flag, need<= 264 of 447; corr64 80/80 red, 0 flag, need<= 264 of 446; exp64 80/80 red, 0 flag, need<= 264 of 454
+  honest_sign_O0           exact 40/40 red, 0 flag, need<= 264 of 446; clamp64 40/40 red, 0 flag, need<= 264 of 447; clamp128 40/40 red, 0 flag, need<= 264 of 447; corr64 40/40 red, 0 flag, need<= 264 of 446; exp64 40/40 red, 0 flag, need<= 264 of 454
+  keygen_D                 exact 12/12 red, 0 flag, need<= 197 of 331; clamp64 12/12 red, 0 flag, need<= 197 of 332; clamp128 12/12 red, 0 flag, need<= 197 of 332; corr64 12/12 red, 0 flag, need<= 197 of 331; exp64 12/12 red, 0 flag, need<= 197 of 337
+  keygen_Isec              exact 16/16 red, 0 flag, need<= 13 of 22; clamp64 16/16 red, 0 flag, need<= 13 of 23; clamp128 16/16 red, 0 flag, need<= 13 of 23; corr64 16/16 red, 0 flag, need<= 13 of 22; exp64 16/16 red, 0 flag, need<= 13 of 23
+  pingpong                 exact 1/1 red, 0 flag, need<= 1 of 446; clamp64 1/1 red, 0 flag, need<= 1 of 447; clamp128 1/1 red, 0 flag, need<= 1 of 447; corr64 1/1 red, 0 flag, need<= 1 of 446; exp64 1/1 red, 0 flag, need<= 1 of 462
+  prered_crafted_edge_pass exact 1/1 red, 0 flag, need<= 235 of 428; clamp64 1/1 red, 0 flag, need<= 235 of 429; clamp128 1/1 red, 0 flag, need<= 235 of 429; corr64 1/1 red, 0 flag, need<= 235 of 428; exp64 1/1 red, 0 flag, need<= 235 of 436
+  prered_crafted_skew_max  exact 1/1 red, 0 flag, need<= 246 of 536; clamp64 1/1 red, 0 flag, need<= 246 of 537; clamp128 1/1 red, 0 flag, need<= 246 of 537; corr64 1/1 red, 0 flag, need<= 246 of 536; exp64 1/1 red, 0 flag, need<= 246 of 545
+  prered_sampled           exact 16/16 red, 0 flag, need<= 254 of 536; clamp64 16/16 red, 0 flag, need<= 254 of 537; clamp128 16/16 red, 0 flag, need<= 254 of 537; corr64 16/16 red, 0 flag, need<= 254 of 536; exp64 16/16 red, 0 flag, need<= 254 of 545
+  rolletschek_conj_alt     exact 1/1 red, 0 flag, need<= 410 of 446; clamp64 1/1 red, 0 flag, need<= 410 of 447; clamp128 1/1 red, 0 flag, need<= 410 of 447; corr64 1/1 red, 0 flag, need<= 410 of 446; exp64 1/1 red, 0 flag, need<= 410 of 462
+  rolletschek_i_rot        exact 1/1 red, 0 flag, need<= 410 of 446; clamp64 1/1 red, 0 flag, need<= 410 of 447; clamp128 1/1 red, 0 flag, need<= 410 of 447; corr64 1/1 red, 0 flag, need<= 410 of 446; exp64 1/1 red, 0 flag, need<= 410 of 462
+  tail_stress              exact 1/1 red, 0 flag, need<= 3 of 446; clamp64 1/1 red, 0 flag, need<= 3 of 447; clamp128 1/1 red, 0 flag, need<= 3 of 447; corr64 1/1 red, 0 flag, need<= 3 of 446; exp64 1/1 red, 0 flag, need<= 3 of 462
+  exact: families with an unreduced output: none
+  clamp64: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'chain_roll75_big', 'crafted_q5']
+  clamp128: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'crafted_q5']
+  corr64: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'chain_roll75_big', 'crafted_k1', 'crafted_k1_O0', 'crafted_q5']
+  exp64: families with an unreduced output: none
+== p500
+  chain_allbig             exact 3/3 red, 0 flag, need<= 4 of 587; clamp64 0/3 red, 3 flag, need<= 0 of 588; clamp128 0/3 red, 3 flag, need<= 0 of 588; corr64 0/3 red, 3 flag, need<= 0 of 587; exp64 3/3 red, 3 flag, need<= 10 of 609
+  chain_roll25_big         exact 1/1 red, 0 flag, need<= 37 of 587; clamp64 0/1 red, 1 flag, need<= 0 of 588; clamp128 0/1 red, 1 flag, need<= 0 of 588; corr64 0/1 red, 1 flag, need<= 0 of 587; exp64 1/1 red, 1 flag, need<= 44 of 609
+  chain_roll50_big         exact 1/1 red, 0 flag, need<= 206 of 587; clamp64 0/1 red, 1 flag, need<= 0 of 588; clamp128 0/1 red, 1 flag, need<= 0 of 588; corr64 0/1 red, 1 flag, need<= 0 of 587; exp64 1/1 red, 1 flag, need<= 211 of 609
+  chain_roll75_big         exact 1/1 red, 0 flag, need<= 374 of 587; clamp64 0/1 red, 1 flag, need<= 0 of 588; clamp128 0/1 red, 1 flag, need<= 0 of 588; corr64 0/1 red, 1 flag, need<= 0 of 587; exp64 1/1 red, 1 flag, need<= 376 of 609
+  chain_roll_62            exact 1/1 red, 0 flag, need<= 26 of 587; clamp64 1/1 red, 1 flag, need<= 44 of 588; clamp128 1/1 red, 0 flag, need<= 26 of 588; corr64 1/1 red, 1 flag, need<= 44 of 587; exp64 1/1 red, 1 flag, need<= 34 of 609
+  challenge                exact 16/16 red, 0 flag, need<= 252 of 425; clamp64 16/16 red, 0 flag, need<= 252 of 426; clamp128 16/16 red, 0 flag, need<= 252 of 426; corr64 16/16 red, 0 flag, need<= 252 of 425; exp64 16/16 red, 0 flag, need<= 252 of 433
+  crafted_k1               exact 3/3 red, 0 flag, need<= 1 of 587; clamp64 3/3 red, 3 flag, need<= 0 of 588; clamp128 3/3 red, 3 flag, need<= 0 of 588; corr64 0/3 red, 3 flag, need<= 0 of 587; exp64 3/3 red, 3 flag, need<= 11 of 598
+  crafted_k1_O0            exact 3/3 red, 0 flag, need<= 2 of 587; clamp64 3/3 red, 3 flag, need<= 0 of 588; clamp128 3/3 red, 3 flag, need<= 0 of 588; corr64 0/3 red, 3 flag, need<= 0 of 587; exp64 3/3 red, 3 flag, need<= 12 of 598
+  crafted_q5               exact 3/3 red, 0 flag, need<= 8 of 587; clamp64 0/3 red, 3 flag, need<= 0 of 588; clamp128 0/3 red, 3 flag, need<= 0 of 588; corr64 0/3 red, 3 flag, need<= 0 of 587; exp64 3/3 red, 3 flag, need<= 16 of 598
+  honest_sign              exact 80/80 red, 0 flag, need<= 345 of 587; clamp64 80/80 red, 0 flag, need<= 345 of 588; clamp128 80/80 red, 0 flag, need<= 345 of 588; corr64 80/80 red, 0 flag, need<= 345 of 587; exp64 80/80 red, 0 flag, need<= 345 of 598
+  honest_sign_O0           exact 40/40 red, 0 flag, need<= 344 of 587; clamp64 40/40 red, 0 flag, need<= 344 of 588; clamp128 40/40 red, 0 flag, need<= 344 of 588; corr64 40/40 red, 0 flag, need<= 344 of 587; exp64 40/40 red, 0 flag, need<= 344 of 598
+  keygen_D                 exact 12/12 red, 0 flag, need<= 252 of 441; clamp64 12/12 red, 0 flag, need<= 252 of 442; clamp128 12/12 red, 0 flag, need<= 252 of 442; corr64 12/12 red, 0 flag, need<= 252 of 441; exp64 12/12 red, 0 flag, need<= 252 of 449
+  keygen_Isec              exact 16/16 red, 0 flag, need<= 13 of 22; clamp64 16/16 red, 0 flag, need<= 13 of 23; clamp128 16/16 red, 0 flag, need<= 13 of 23; corr64 16/16 red, 0 flag, need<= 13 of 22; exp64 16/16 red, 0 flag, need<= 13 of 24
+  pingpong                 exact 1/1 red, 0 flag, need<= 1 of 587; clamp64 1/1 red, 0 flag, need<= 1 of 588; clamp128 1/1 red, 0 flag, need<= 1 of 588; corr64 1/1 red, 0 flag, need<= 1 of 587; exp64 1/1 red, 0 flag, need<= 1 of 609
+  prered_crafted_edge_pass exact 1/1 red, 0 flag, need<= 306 of 569; clamp64 1/1 red, 0 flag, need<= 306 of 570; clamp128 1/1 red, 0 flag, need<= 306 of 570; corr64 1/1 red, 0 flag, need<= 306 of 569; exp64 1/1 red, 0 flag, need<= 306 of 579
+  prered_crafted_skew_max  exact 1/1 red, 0 flag, need<= 338 of 712; clamp64 1/1 red, 0 flag, need<= 338 of 713; clamp128 1/1 red, 0 flag, need<= 338 of 713; corr64 1/1 red, 0 flag, need<= 338 of 712; exp64 1/1 red, 0 flag, need<= 338 of 724
+  prered_sampled           exact 16/16 red, 0 flag, need<= 330 of 569; clamp64 16/16 red, 0 flag, need<= 330 of 570; clamp128 16/16 red, 0 flag, need<= 330 of 570; corr64 16/16 red, 0 flag, need<= 330 of 569; exp64 16/16 red, 0 flag, need<= 330 of 579
+  rolletschek_conj_alt     exact 1/1 red, 0 flag, need<= 541 of 587; clamp64 1/1 red, 0 flag, need<= 541 of 588; clamp128 1/1 red, 0 flag, need<= 541 of 588; corr64 1/1 red, 0 flag, need<= 541 of 587; exp64 1/1 red, 0 flag, need<= 541 of 609
+  rolletschek_i_rot        exact 1/1 red, 0 flag, need<= 541 of 587; clamp64 1/1 red, 0 flag, need<= 541 of 588; clamp128 1/1 red, 0 flag, need<= 541 of 588; corr64 1/1 red, 0 flag, need<= 541 of 587; exp64 1/1 red, 0 flag, need<= 541 of 609
+  tail_stress              exact 1/1 red, 0 flag, need<= 3 of 587; clamp64 1/1 red, 0 flag, need<= 3 of 588; clamp128 1/1 red, 0 flag, need<= 3 of 588; corr64 1/1 red, 0 flag, need<= 3 of 587; exp64 1/1 red, 0 flag, need<= 3 of 609
+  exact: families with an unreduced output: none
+  clamp64: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'chain_roll75_big', 'crafted_q5']
+  clamp128: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'chain_roll75_big', 'crafted_q5']
+  corr64: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'chain_roll75_big', 'crafted_k1', 'crafted_k1_O0', 'crafted_q5']
+  exp64: families with an unreduced output: none
+== p664
+  chain_allbig             exact 3/3 red, 0 flag, need<= 6 of 773; clamp64 0/3 red, 3 flag, need<= 0 of 774; clamp128 0/3 red, 3 flag, need<= 0 of 774; corr64 0/3 red, 3 flag, need<= 0 of 773; exp64 3/3 red, 3 flag, need<= 15 of 802
+  chain_roll25_big         exact 1/1 red, 0 flag, need<= 48 of 773; clamp64 0/1 red, 1 flag, need<= 0 of 774; clamp128 0/1 red, 1 flag, need<= 0 of 774; corr64 0/1 red, 1 flag, need<= 0 of 773; exp64 1/1 red, 1 flag, need<= 58 of 802
+  chain_roll50_big         exact 1/1 red, 0 flag, need<= 271 of 773; clamp64 0/1 red, 1 flag, need<= 0 of 774; clamp128 0/1 red, 1 flag, need<= 0 of 774; corr64 0/1 red, 1 flag, need<= 0 of 773; exp64 1/1 red, 1 flag, need<= 277 of 802
+  chain_roll75_big         exact 1/1 red, 0 flag, need<= 493 of 773; clamp64 0/1 red, 1 flag, need<= 0 of 774; clamp128 0/1 red, 1 flag, need<= 0 of 774; corr64 0/1 red, 1 flag, need<= 0 of 773; exp64 1/1 red, 1 flag, need<= 496 of 802
+  chain_roll_62            exact 1/1 red, 0 flag, need<= 33 of 773; clamp64 1/1 red, 1 flag, need<= 56 of 774; clamp128 1/1 red, 0 flag, need<= 33 of 774; corr64 1/1 red, 1 flag, need<= 56 of 773; exp64 1/1 red, 1 flag, need<= 43 of 802
+  challenge                exact 16/16 red, 0 flag, need<= 330 of 565; clamp64 16/16 red, 0 flag, need<= 330 of 566; clamp128 16/16 red, 0 flag, need<= 330 of 566; corr64 16/16 red, 0 flag, need<= 330 of 565; exp64 16/16 red, 0 flag, need<= 330 of 576
+  crafted_k1               exact 3/3 red, 0 flag, need<= 1 of 773; clamp64 3/3 red, 3 flag, need<= 0 of 774; clamp128 3/3 red, 3 flag, need<= 0 of 774; corr64 0/3 red, 3 flag, need<= 0 of 773; exp64 3/3 red, 3 flag, need<= 15 of 787
+  crafted_k1_O0            exact 3/3 red, 0 flag, need<= 2 of 773; clamp64 3/3 red, 3 flag, need<= 0 of 774; clamp128 3/3 red, 3 flag, need<= 0 of 774; corr64 0/3 red, 3 flag, need<= 0 of 773; exp64 3/3 red, 3 flag, need<= 16 of 787
+  crafted_q5               exact 3/3 red, 0 flag, need<= 9 of 773; clamp64 0/3 red, 3 flag, need<= 0 of 774; clamp128 0/3 red, 3 flag, need<= 0 of 774; corr64 0/3 red, 3 flag, need<= 0 of 773; exp64 3/3 red, 3 flag, need<= 20 of 787
+  honest_sign              exact 80/80 red, 0 flag, need<= 456 of 773; clamp64 80/80 red, 0 flag, need<= 456 of 774; clamp128 80/80 red, 0 flag, need<= 456 of 774; corr64 80/80 red, 0 flag, need<= 456 of 773; exp64 80/80 red, 0 flag, need<= 456 of 787
+  honest_sign_O0           exact 40/40 red, 0 flag, need<= 453 of 773; clamp64 40/40 red, 0 flag, need<= 453 of 774; clamp128 40/40 red, 0 flag, need<= 453 of 774; corr64 40/40 red, 0 flag, need<= 453 of 773; exp64 40/40 red, 0 flag, need<= 453 of 787
+  keygen_D                 exact 12/12 red, 0 flag, need<= 401 of 686; clamp64 12/12 red, 0 flag, need<= 401 of 687; clamp128 12/12 red, 0 flag, need<= 401 of 687; corr64 12/12 red, 0 flag, need<= 401 of 686; exp64 12/12 red, 0 flag, need<= 401 of 699
+  keygen_Isec              exact 16/16 red, 0 flag, need<= 14 of 22; clamp64 16/16 red, 0 flag, need<= 14 of 23; clamp128 16/16 red, 0 flag, need<= 14 of 23; corr64 16/16 red, 0 flag, need<= 14 of 22; exp64 16/16 red, 0 flag, need<= 14 of 25
+  pingpong                 exact 1/1 red, 0 flag, need<= 1 of 773; clamp64 1/1 red, 0 flag, need<= 1 of 774; clamp128 1/1 red, 0 flag, need<= 1 of 774; corr64 1/1 red, 0 flag, need<= 1 of 773; exp64 1/1 red, 0 flag, need<= 1 of 802
+  prered_crafted_edge_pass exact 1/1 red, 0 flag, need<= 415 of 755; clamp64 1/1 red, 0 flag, need<= 415 of 756; clamp128 1/1 red, 0 flag, need<= 415 of 756; corr64 1/1 red, 0 flag, need<= 415 of 755; exp64 1/1 red, 0 flag, need<= 415 of 769
+  prered_crafted_skew_max  exact 1/1 red, 0 flag, need<= 447 of 945; clamp64 1/1 red, 0 flag, need<= 447 of 946; clamp128 1/1 red, 0 flag, need<= 447 of 946; corr64 1/1 red, 0 flag, need<= 447 of 945; exp64 1/1 red, 0 flag, need<= 447 of 962
+  prered_sampled           exact 16/16 red, 0 flag, need<= 438 of 755; clamp64 16/16 red, 0 flag, need<= 438 of 756; clamp128 16/16 red, 0 flag, need<= 438 of 756; corr64 16/16 red, 0 flag, need<= 438 of 755; exp64 16/16 red, 0 flag, need<= 438 of 769
+  rolletschek_conj_alt     exact 1/1 red, 0 flag, need<= 713 of 773; clamp64 1/1 red, 0 flag, need<= 713 of 774; clamp128 1/1 red, 0 flag, need<= 713 of 774; corr64 1/1 red, 0 flag, need<= 713 of 773; exp64 1/1 red, 0 flag, need<= 713 of 802
+  rolletschek_i_rot        exact 1/1 red, 0 flag, need<= 713 of 773; clamp64 1/1 red, 0 flag, need<= 713 of 774; clamp128 1/1 red, 0 flag, need<= 713 of 774; corr64 1/1 red, 0 flag, need<= 713 of 773; exp64 1/1 red, 0 flag, need<= 713 of 802
+  tail_stress              exact 1/1 red, 0 flag, need<= 3 of 773; clamp64 1/1 red, 0 flag, need<= 3 of 774; clamp128 1/1 red, 0 flag, need<= 3 of 774; corr64 1/1 red, 0 flag, need<= 3 of 773; exp64 1/1 red, 0 flag, need<= 3 of 802
+  exact: families with an unreduced output: none
+  clamp64: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'chain_roll75_big', 'crafted_q5']
+  clamp128: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'chain_roll75_big', 'crafted_q5']
+  corr64: families with an unreduced output: ['chain_allbig', 'chain_roll25_big', 'chain_roll50_big', 'chain_roll75_big', 'crafted_k1', 'crafted_k1_O0', 'crafted_q5']
+  exp64: families with an unreduced output: none
+== largest steps needed vs schedule, per rule and class (all families)
+  p248 exact  challenge         needed  126 of  211 (challenge)
+  p248 exact  keygen-D          needed  128 of  223 (keygen_D)
+  p248 exact  keygen-Isec       needed   13 of   22 (keygen_Isec)
+  p248 exact  prered-guard2     needed  164 of  283 (prered_sampled)
+  p248 exact  prered-unguarded  needed  166 of  354 (prered_sampled)
+  p248 exact  sign-generic      needed  275 of  301 (rolletschek_conj_alt)
+  p248 exp64  challenge         needed  126 of  215 (challenge)
+  p248 exp64  keygen-D          needed  128 of  227 (keygen_D)
+  p248 exp64  keygen-Isec       needed   13 of   23 (keygen_Isec)
+  p248 exp64  prered-guard2     needed  164 of  288 (prered_sampled)
+  p248 exp64  prered-unguarded  needed  166 of  360 (prered_sampled)
+  p248 exp64  sign-generic      needed  275 of  312 (rolletschek_conj_alt)
+  p324 exact  challenge         needed  157 of  276 (challenge)
+  p324 exact  keygen-D          needed  209 of  347 (keygen_D)
+  p324 exact  keygen-Isec       needed   14 of   22 (keygen_Isec)
+  p324 exact  prered-guard2     needed  214 of  369 (prered_sampled)
+  p324 exact  prered-unguarded  needed  216 of  461 (prered_sampled)
+  p324 exact  sign-generic      needed  355 of  387 (rolletschek_conj_alt)
+  p324 exp64  challenge         needed  157 of  281 (challenge)
+  p324 exp64  keygen-D          needed  209 of  353 (keygen_D)
+  p324 exp64  keygen-Isec       needed   14 of   23 (keygen_Isec)
+  p324 exp64  prered-guard2     needed  214 of  375 (prered_sampled)
+  p324 exp64  prered-unguarded  needed  216 of  469 (prered_sampled)
+  p324 exp64  sign-generic      needed  355 of  401 (rolletschek_conj_alt)
+  p376 exact  challenge         needed  186 of  319 (challenge)
+  p376 exact  keygen-D          needed  197 of  331 (keygen_D)
+  p376 exact  keygen-Isec       needed   13 of   22 (keygen_Isec)
+  p376 exact  prered-guard2     needed  254 of  428 (prered_sampled)
+  p376 exact  prered-unguarded  needed  246 of  536 (prered_crafted_skew_max)
+  p376 exact  sign-generic      needed  410 of  446 (rolletschek_conj_alt)
+  p376 exp64  challenge         needed  186 of  325 (challenge)
+  p376 exp64  keygen-D          needed  197 of  337 (keygen_D)
+  p376 exp64  keygen-Isec       needed   13 of   23 (keygen_Isec)
+  p376 exp64  prered-guard2     needed  254 of  436 (prered_sampled)
+  p376 exp64  prered-unguarded  needed  246 of  545 (prered_crafted_skew_max)
+  p376 exp64  sign-generic      needed  410 of  462 (rolletschek_conj_alt)
+  p500 exact  challenge         needed  252 of  425 (challenge)
+  p500 exact  keygen-D          needed  252 of  441 (keygen_D)
+  p500 exact  keygen-Isec       needed   13 of   22 (keygen_Isec)
+  p500 exact  prered-guard2     needed  330 of  569 (prered_sampled)
+  p500 exact  prered-unguarded  needed  338 of  712 (prered_crafted_skew_max)
+  p500 exact  sign-generic      needed  541 of  587 (rolletschek_conj_alt)
+  p500 exp64  challenge         needed  252 of  433 (challenge)
+  p500 exp64  keygen-D          needed  252 of  449 (keygen_D)
+  p500 exp64  keygen-Isec       needed   13 of   24 (keygen_Isec)
+  p500 exp64  prered-guard2     needed  330 of  579 (prered_sampled)
+  p500 exp64  prered-unguarded  needed  338 of  724 (prered_crafted_skew_max)
+  p500 exp64  sign-generic      needed  541 of  609 (rolletschek_conj_alt)
+  p664 exact  challenge         needed  330 of  565 (challenge)
+  p664 exact  keygen-D          needed  401 of  686 (keygen_D)
+  p664 exact  keygen-Isec       needed   14 of   22 (keygen_Isec)
+  p664 exact  prered-guard2     needed  438 of  755 (prered_sampled)
+  p664 exact  prered-unguarded  needed  447 of  945 (prered_crafted_skew_max)
+  p664 exact  sign-generic      needed  713 of  773 (rolletschek_conj_alt)
+  p664 exp64  challenge         needed  330 of  576 (challenge)
+  p664 exp64  keygen-D          needed  401 of  699 (keygen_D)
+  p664 exp64  keygen-Isec       needed   14 of   25 (keygen_Isec)
+  p664 exp64  prered-guard2     needed  438 of  769 (prered_sampled)
+  p664 exp64  prered-unguarded  needed  447 of  962 (prered_crafted_skew_max)
+  p664 exp64  sign-generic      needed  713 of  802 (rolletschek_conj_alt)
+== honest quotient tail (exact run, all logical steps of 400 signing ideals a set)
+  p248: P(|q| >= X) ~ 3.556/X^2 (X = 8..64; 2^1: 8.13e-01, 2^2: 2.11e-01, 2^4: 1.37e-02, 2^6: 9.46e-04, 2^8: 3.00e-05, 2^10: 0.00e+00); 166 logical steps a run -> P(some |q| >= 2^60) ~ 2^-110.8 a reduction
+  p324: P(|q| >= X) ~ 3.524/X^2 (X = 8..64; 2^1: 8.14e-01, 2^2: 2.09e-01, 2^4: 1.37e-02, 2^6: 8.73e-04, 2^8: 8.15e-05, 2^10: 2.33e-05); 215 logical steps a run -> P(some |q| >= 2^60) ~ 2^-110.4 a reduction
+  p376: P(|q| >= X) ~ 3.379/X^2 (X = 8..64; 2^1: 8.13e-01, 2^2: 2.10e-01, 2^4: 1.36e-02, 2^6: 7.86e-04, 2^8: 5.04e-05, 2^10: 0.00e+00); 248 logical steps a run -> P(some |q| >= 2^60) ~ 2^-110.3 a reduction
+  p500: P(|q| >= X) ~ 3.420/X^2 (X = 8..64; 2^1: 8.15e-01, 2^2: 2.11e-01, 2^4: 1.31e-02, 2^6: 8.26e-04, 2^8: 3.06e-05, 2^10: 7.64e-06); 327 logical steps a run -> P(some |q| >= 2^60) ~ 2^-109.9 a reduction
+  p664: P(|q| >= X) ~ 3.394/X^2 (X = 8..64; 2^1: 8.18e-01, 2^2: 2.10e-01, 2^4: 1.35e-02, 2^6: 8.13e-04, 2^8: 8.13e-05, 2^10: 1.74e-05); 430 logical steps a run -> P(some |q| >= 2^60) ~ 2^-109.5 a reduction

@@ -1,0 +1,30 @@
+reduce::<N=28> (p324) @ 0xeaa0 size 133441 bytes: cmov=14, insn=27921, jcc=156, mul=1408, setcc=2473, var_shift_cl=70
+   jcc flag sources: cmp imm=136, cmp reg/mem=9, test reg/mem=8, other=3
+   calls: memcpy@GLIBC_2.14 n=$0xe0 x17, memcpy@GLIBC_2.14 n=$0xd8 x2, cqp_xcheck::ct::exact_round n=None x2, memset@GLIBC_2.2.5 n=$0x150 x1, *%rbx n=$0x1c0 x1, *%rbx n=$0xe0 x1, core::panicking::panic_bounds_check n=None x1
+reduce::<N=32> (p376) @ 0x2f3f0 size 105168 bytes: cmov=14, insn=21760, jcc=224, mul=672, setcc=1677, var_shift_cl=32
+   jcc flag sources: cmp imm=188, cmp reg/mem=17, test reg/mem=8, test imm=8, other=3
+   calls: memcpy@GLIBC_2.14 n=$0x100 x43, *%r12 n=$0x100 x4, *%rbx n=$0xf8 x2, memcpy@GLIBC_2.14 n=$0xf8 x2, cqp_xcheck::ct::exact_round n=None x2, memset@GLIBC_2.2.5 n=$0x180 x1, *%r14 n=$0x200 x1, *%r14 n=$0x100 x1, core::panicking::panic_bounds_check n=None x1
+reduce::<N=22> (p248) @ 0x48ec0 size 106246 bytes: cmov=14, insn=22575, jcc=137, mul=976, setcc=1906, var_shift_cl=80
+   jcc flag sources: cmp imm=115, cmp reg/mem=9, test reg/mem=8, other=4, xor reg/mem=1
+   calls: memcpy@GLIBC_2.14 n=$0xb0 x10, cqp_xcheck::ct::exact_round n=None x2, memset@GLIBC_2.2.5 n=$0x108 x1, *%rbx n=$0x160 x1, *%rbx n=$0xb0 x1, core::panicking::panic_bounds_check n=None x1
+reduce::<N=54> (p664) @ 0x62dd0 size 91221 bytes: cmov=14, insn=15627, jcc=348, mul=312, setcc=332, var_shift_cl=26
+   jcc flag sources: cmp imm=314, cmp reg/mem=17, test reg/mem=8, test imm=8, other=1
+   calls: memset@GLIBC_2.2.5 n=$0x1b0 x59, memcpy@GLIBC_2.14 n=$0x1b0 x30, *%r13 n=$0x1b0 x12, *%r14 n=$0x1b0 x6, memcpy@GLIBC_2.14 n=$0xd8 x6, *%rbp n=$0x1b0 x4, *%r13 n=$0xd8 x3, *%rbp n=$0x1a8 x2, *%r15 n=$0x1b0 x2, cqp_xcheck::ct::exact_round n=None x2, *%rbp n=$0x288 x1, *%r12 n=$0x1b0 x1, memcpy@GLIBC_2.14 n=$0x1a8 x1, *%r13 n=$0x1a8 x1, *%r13 n=$0x360 x1, core::panicking::panic_bounds_check n=None x1
+reduce::<N=42> (p500) @ 0x79230 size 144291 bytes: cmov=14, insn=29157, jcc=156, mul=872, setcc=2237, var_shift_cl=28
+   jcc flag sources: cmp imm=122, cmp reg/mem=17, test reg/mem=8, test imm=8, other=1
+   calls: memcpy@GLIBC_2.14 n=$0x150 x43, memset@GLIBC_2.2.5 n=$0x150 x43, *%r12 n=$0x150 x5, *%r15 n=$0xa8 x3, *%rbx n=$0x148 x2, memcpy@GLIBC_2.14 n=$0x148 x2, cqp_xcheck::ct::exact_round n=None x2, *%r12 n=$0x1f8 x1, *%r14 n=$0x2a0 x1, *%r14 n=$0x150 x1, core::panicking::panic_bounds_check n=None x1
+reduce_exp (one instantiation per set; N not inferred) @ 0x9f670 size 88768 bytes: cmov=12, insn=17205, jcc=209, mul=485, setcc=1050, var_shift_cl=144
+   jcc flag sources: cmp imm=192, cmp reg/mem=7, test reg/mem=6, other=4
+   calls: memcpy@GLIBC_2.14 n=$0x100 x21, *%rbp n=$0x100 x9, *%r15 n=$0x100 x4, *%r12 n=$0x100 x3, memset@GLIBC_2.2.5 n=$0x180 x1, *%rbx n=$0x200 x1, *%rbx n=$0x100 x1, core::panicking::panic_bounds_check n=None x1
+reduce_exp (one instantiation per set; N not inferred) @ 0xb5130 size 93068 bytes: cmov=12, insn=15248, jcc=320, mul=263, setcc=217, var_shift_cl=42
+   jcc flag sources: cmp imm=304, cmp reg/mem=7, test reg/mem=6, other=3
+   calls: memcpy@GLIBC_2.14 n=$0x1b0 x34, memset@GLIBC_2.2.5 n=$0x1b0 x26, *%r15 n=$0x1b0 x17, *%r12 n=$0x1b0 x10, *%rbx n=$0x1b0 x6, *%r13 n=$0xd8 x3, *%r13 n=$0x1b0 x2, memcpy@GLIBC_2.14 n=$0xd8 x2, *%rbp n=$0x288 x1, *%rbp n=$0x1b0 x1, *%r14 n=$0x360 x1, *%r14 n=$0x1b0 x1, core::panicking::panic_bounds_check n=None x1
+reduce_exp (one instantiation per set; N not inferred) @ 0xcbcc0 size 88600 bytes: cmov=12, insn=17563, jcc=173, mul=425, setcc=1314, var_shift_cl=144
+   jcc flag sources: cmp imm=156, cmp reg/mem=7, test reg/mem=6, other=4
+   calls: memcpy@GLIBC_2.14 n=$0xe0 x16, memset@GLIBC_2.2.5 n=$0x150 x1, *%rbx n=$0x1c0 x1, *%rbx n=$0xe0 x1, core::panicking::panic_bounds_check n=None x1
+reduce_exp (one instantiation per set; N not inferred) @ 0xe16e0 size 73420 bytes: cmov=12, insn=15076, jcc=146, mul=335, setcc=1102, var_shift_cl=128
+   jcc flag sources: cmp imm=128, cmp reg/mem=7, test reg/mem=6, other=4, xor reg/mem=1
+   calls: memcpy@GLIBC_2.14 n=$0xb0 x9, memset@GLIBC_2.2.5 n=$0x108 x1, *%rbx n=$0x160 x1, *%rbx n=$0xb0 x1, core::panicking::panic_bounds_check n=None x1
+reduce_exp (one instantiation per set; N not inferred) @ 0xf35b0 size 119224 bytes: cmov=12, insn=22805, jcc=157, mul=595, setcc=1391, var_shift_cl=175
+   jcc flag sources: cmp imm=143, cmp reg/mem=7, test reg/mem=6, other=1
+   calls: memcpy@GLIBC_2.14 n=$0x150 x34, memset@GLIBC_2.2.5 n=$0x150 x29, *%rbx n=$0x150 x6, *%r15 n=$0xa8 x3, *%r13 n=$0x150 x3, *%r13 n=$0x1f8 x1, *%r14 n=$0x2a0 x1, *%r14 n=$0x150 x1, core::panicking::panic_bounds_check n=None x1

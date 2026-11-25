@@ -1,0 +1,48 @@
+== Part C: the certificates, rerun (exact rationals, certify.py unchanged)
+  1-step rho1 = 31/100 over lam <= 1/1000: ok=True, 72751 boxes, max ub 0.309999, 0.7s
+  2-step rho2 = 87/1000 over lam <= 1/1000: ok=True, 83751 boxes, max ub 0.087000, 1.8s
+  tail: 5 swaps after the split impossible: ok=True, 309007 boxes, 14.0s
+  rounding: certify.floor_half_up == floor(f + 1/2) == the signer rule floor((2h + A)/(2A)) on 48,006 rationals, ties up; residual eps in [-1/2, 1/2) (certify uses the closed box, a superset)
+  swap: certify keeps a box only if r = lam + |eps|^2 < 1 is possible (strict), and skips |mu|^2 <= 1 by Lemma 1, which needs the strict rule (|mu| = 1 gives A_{t+1} >= A_t, so only a non-strict swap could fire).
+== Part S/E: public step counts per admitted class (integer arithmetic), and exp64 extras
+  p248 sign-generic      T_exact  301 (published 301) E  5 -> T_exp64  306; any basis E 11
+  p248 challenge         T_exact  211 (published 211) E  4 -> T_exp64  215; any basis E  8
+  p248 keygen-Isec       T_exact   22 (published None) E  1 -> T_exp64   23; any basis E  2
+  p248 keygen-D          T_exact  223 (published None) E  4 -> T_exp64  227; any basis E  8
+  p248 prered-guard2     T_exact  283 (published 283) E  5 -> T_exp64  288; any basis E 10
+  p248 prered-guard256   T_exact  287 (published None) E  5 -> T_exp64  292; any basis E 10
+  p248 prered-unguarded  T_exact  354 (published 354) E  6 -> T_exp64  360; any basis E 11
+  p324 sign-generic      T_exact  387 (published 387) E  7 -> T_exp64  394; any basis E 14
+  p324 challenge         T_exact  276 (published 276) E  5 -> T_exp64  281; any basis E 11
+  p324 keygen-Isec       T_exact   22 (published None) E  1 -> T_exp64   23; any basis E  3
+  p324 keygen-D          T_exact  347 (published None) E  6 -> T_exp64  353; any basis E 13
+  p324 prered-guard2     T_exact  369 (published 369) E  6 -> T_exp64  375; any basis E 14
+  p324 prered-guard256   T_exact  373 (published None) E  6 -> T_exp64  379; any basis E 14
+  p324 prered-unguarded  T_exact  461 (published 461) E  8 -> T_exp64  469; any basis E 15
+  p376 sign-generic      T_exact  446 (published 446) E  8 -> T_exp64  454; any basis E 16
+  p376 challenge         T_exact  319 (published 319) E  6 -> T_exp64  325; any basis E 12
+  p376 keygen-Isec       T_exact   22 (published None) E  1 -> T_exp64   23; any basis E  3
+  p376 keygen-D          T_exact  331 (published None) E  6 -> T_exp64  337; any basis E 13
+  p376 prered-guard2     T_exact  428 (published 428) E  8 -> T_exp64  436; any basis E 16
+  p376 prered-guard256   T_exact  432 (published None) E  8 -> T_exp64  440; any basis E 16
+  p376 prered-unguarded  T_exact  536 (published 536) E  9 -> T_exp64  545; any basis E 18
+  p500 sign-generic      T_exact  587 (published 587) E 11 -> T_exp64  598; any basis E 22
+  p500 challenge         T_exact  425 (published 425) E  8 -> T_exp64  433; any basis E 17
+  p500 keygen-Isec       T_exact   22 (published None) E  2 -> T_exp64   24; any basis E  4
+  p500 keygen-D          T_exact  441 (published None) E  8 -> T_exp64  449; any basis E 17
+  p500 prered-guard2     T_exact  569 (published 569) E 10 -> T_exp64  579; any basis E 21
+  p500 prered-guard256   T_exact  573 (published None) E 10 -> T_exp64  583; any basis E 21
+  p500 prered-unguarded  T_exact  712 (published 712) E 12 -> T_exp64  724; any basis E 23
+  p664 sign-generic      T_exact  773 (published 773) E 14 -> T_exp64  787; any basis E 29
+  p664 challenge         T_exact  565 (published 565) E 11 -> T_exp64  576; any basis E 22
+  p664 keygen-Isec       T_exact   22 (published None) E  3 -> T_exp64   25; any basis E  6
+  p664 keygen-D          T_exact  686 (published None) E 13 -> T_exp64  699; any basis E 26
+  p664 prered-guard2     T_exact  755 (published 755) E 14 -> T_exp64  769; any basis E 28
+  p664 prered-guard256   T_exact  759 (published None) E 14 -> T_exp64  773; any basis E 28
+  p664 prered-unguarded  T_exact  945 (published 945) E 17 -> T_exp64  962; any basis E 31
+  every published T_prov is reproduced exactly; the float formula agrees with the integer one at every class
+== Part L: lemmas for the exp rule (window = exact rounding; big = undershoot, no swap, e drops >= t0 - 2)
+  w=8, t0=4: 89618 window cases exact (44100 needed the +-1 fix), 28381 big cases, smallest e drop 3 (>= 2)
+  w=10, t0=6: 162018 window cases exact (77026 needed the +-1 fix), 75819 big cases, smallest e drop 5 (>= 4)
+  w=12, t0=8: 456001 window cases exact (207522 needed the +-1 fix), 260558 big cases, smallest e drop 7 (>= 6)
+  w=64, t0=60: 73398 window cases exact (4556 needed the +-1 fix), 235800 big cases, smallest e drop 59 (>= 58)
