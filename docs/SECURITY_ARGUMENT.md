@@ -108,7 +108,7 @@ evidence.
 
 | Claim | Code at the pin | Disposition |
 | --- | --- | --- |
-| Fields, exponents, byte and salt sizes | `prism-field/src/lib.rs`, `parameter_set!` and `Salt` | Integer audit reproducible with `python3 scripts/security_parameters.py`; not a modulus primality proof |
+| Fields, exponents, byte and salt sizes | `prism-field/src/lib.rs`, `parameter_set!` and `Salt` | Integer audit reproducible with `python3 scripts/security_parameters.py`; modulus proofs checked by `python3 scripts/ci/check_signer_prime_certificates.py` (ledger O19) |
 | Hash domain, framing and projection | `prism-verify/src/challenge.rs`, `ChallengeScalar::derive` and `with_width`; `prism-verify/src/lib.rs`, `checked` | One hash per verification; no search; any salt of the row length is admissible |
 | Reduced-width entry points | `challenge.rs`, `derive_width`, `research_bytes`; `prism-verify/src/research.rs` | Compiled only under `research-reduced-width`; `scripts/ci/check_research_boundary.py` builds a consumer to show their absence by default |
 | Degree arithmetic and BPSW | `prism-verify/src/prime/mod.rs`, `challenge_degree`, `degree_is_prime`, `is_prime` | Adversarial primality remains an assumption |

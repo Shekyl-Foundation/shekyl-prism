@@ -39,7 +39,8 @@ What is not a proof here: "prime" means a Baillie-PSW probable prime, by
 the test `docs/VERIFIER_SPEC.md` specifies (departure D15). A candidate
 below a "next prime" is refused only by a leg that never refuses a prime,
 so "next" is exact if the result is prime. The nightly checks the five
-results with sympy; a proof is ledger O19's.
+results with sympy. scripts/ci/check_signer_prime_certificates.py proves
+the fixed primes and next-prime gaps independently (ledger O19).
 """
 import hashlib
 import math

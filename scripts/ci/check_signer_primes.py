@@ -13,8 +13,8 @@ library. This asks a second implementation the same question: sympy's
 five sets.
 
 The nightly runs it, with sympy 1.14.0. It is not a proof of primality:
-sympy's test at these sizes is a probable-prime test too. A proof is
-ledger O19's.
+sympy's test at these sizes is a probable-prime test too. check_signer_prime_certificates.py verifies
+the pinned proofs and next-prime gaps independently (ledger O19).
 """
 import sys
 from pathlib import Path
