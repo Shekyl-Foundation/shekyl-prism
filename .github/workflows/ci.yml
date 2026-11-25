@@ -153,7 +153,7 @@ jobs:
       # `signer` feature is off by default, its default build graph holds
       # none of the integer crate, `zeroize` or `prism-ct-barrier`, and the graph
       # with the feature holds all three. And the integer crate's package
-      # does not hold its 3.3 MB of vectors. The self-test plants each
+      # does not hold its 4.0 MB of vectors. The self-test plants each
       # breach. Two `cargo tree` and one `cargo package --list`: under a
       # second.
       - name: A default build is the verifier alone, and no package holds the vectors

@@ -380,13 +380,13 @@ impl SecretBit {
 /// let text = a.declassify().unwrap().public_hex();
 /// ```
 ///
-/// And none of the public type's variable-time operations:
+/// A secret bit length stays inside the secret domain:
 ///
 /// ```compile_fail
 /// use prism_int::SecretInt;
 ///
 /// let a = SecretInt::<4>::from_u64(5);
-/// let bits = a.bit_length();
+/// let bits: u32 = a.bit_length();
 /// ```
 ///
 /// ```

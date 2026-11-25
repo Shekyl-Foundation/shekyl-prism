@@ -58,7 +58,8 @@ operand constraints are the standard ones.
    exit, including callees, across boundary cases. Its positive control
    must produce distinct traces.
 3. On x86-64 the command also taints both arguments under Memcheck and
-   requires a conditional-jump diagnostic on the positive control. Extend
+   requires a conditional-jump diagnostic on the positive control. It also
+   taints the coordinates and norm throughout the P500 fixture reductions. Extend
    this coverage to the integrated signer before discharging G7.
 4. dudect fixed-vs-random on native hardware (x86-64 here; aarch64 needs
    real hardware, not qemu).

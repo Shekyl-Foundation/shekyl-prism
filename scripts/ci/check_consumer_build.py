@@ -22,7 +22,7 @@ Two rules, both about what leaves the repository.
      this the second rule would pass on a graph reader that sees nothing.
 
 2. **The integer crate's package holds no vectors.** The committed vector
-   file of `prism-int` is 3.3 MB. `cargo package --list` must not name
+   file of `prism-int` is 4.0 MB. `cargo package --list` must not name
    it, nor the test that cannot be built without it, and must name the
    crate's sources: a list that named nothing would pass the first half.
 

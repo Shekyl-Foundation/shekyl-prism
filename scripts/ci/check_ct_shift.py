@@ -42,12 +42,18 @@ def trace(binary, start, end, mode, x, k, log):
 def main(tmp, listing):
     if ARCH not in ("x86_64", "aarch64"):
         raise ValueError(f"no audited probe for {ARCH}")
-    msgs = run("cargo", "build", "--locked", "--release", "-p", "prism-int", "--message-format=json")
-    [lib] = [Path(f) for line in msgs.splitlines() if (msg := json.loads(line)).get("target", {}).get("name") == "prism_int"
-             for f in msg["filenames"] if f.endswith(".rlib")]
+    msgs = run("cargo", "build", "--locked", "--release", "-p", "prism-int", "-p", "prism-field",
+               "--message-format=json")
+    libs = {}
+    for line in msgs.splitlines():
+        msg = json.loads(line)
+        name = msg.get("target", {}).get("name")
+        if name in ("prism_int", "prism_field"):
+            [libs[name]] = [Path(f) for f in msg["filenames"] if f.endswith(".rlib")]
     archive = tmp / "probe.a"
     run("rustc", "--edition=2021", "--crate-type=staticlib", "-Copt-level=3", "-Cpanic=abort",
-        "-Crelocation-model=static", "--extern", f"prism_int={lib}", "-L", f"dependency={lib.parent}/deps",
+        "-Crelocation-model=static", "--extern", f"prism_int={libs['prism_int']}",
+        "--extern", f"prism_field={libs['prism_field']}", "-L", f"dependency={libs['prism_int'].parent}/deps",
         HERE / "probe.rs", "-o", archive)
     binary = tmp / "check"
     cc = ["cc", "-g", "-O1", "-no-pie", "-Wl,--gc-sections", HERE / "driver.c", archive, "-ldl", "-lpthread", "-lm", "-o", binary]
@@ -74,7 +80,7 @@ def main(tmp, listing):
     visited = set(reference)
     inspected = []
     for section in sections:
-        instructions = re.findall(r"(?m)^\s*([\da-f]+):\s+(\w+)\s*(.*)$", section)
+        instructions = re.findall(r"(?m)^[ \t]*([\da-f]+):[ \t]+(\w+)[ \t]*(.*)$", section)
         if not any(int(pc, 16) in visited for pc, _, _ in instructions):
             continue
         # The public driver contains both the comparator and the consumer.
@@ -98,6 +104,15 @@ def main(tmp, listing):
             raise ValueError("Memcheck missed known secret branch")
         for x, k in CASES:
             run(*vg, "probe", str(x), str(k))
+        fixtures = ROOT / "shekyl-prism/examples/stage2c_p500/vectors.txt"
+        for index, line in enumerate(fixtures.read_text().splitlines()):
+            cls, *fields = line.split()
+            values = [int(s, 16) for s in fields[:9]]
+            encoded = tmp / "basis.bin"
+            encoded.write_bytes(b"".join(abs(v).to_bytes(168, "little") + bytes([v < 0]) for v in values))
+            run(*vg, "reduce", encoded, str(int(cls == "prered-guard256")))
+        print(f"Memcheck accepted all {index+1} P500 constructors and reductions")
+
 
 
 if __name__ == "__main__":

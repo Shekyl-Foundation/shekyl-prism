@@ -31,7 +31,7 @@ every result its operands have: `lines_for` says which, operation by
 operation.
 
 When to write the file again: when an operation or a width is added, and
-not otherwise. It is 3.3 MB, and every new copy is 3.3 MB more in the
+not otherwise. It is 4.0 MB, and every new copy is 4.0 MB more in the
 repository's history. A change of the crate that changes no result needs
 no new file, and `--check`, which CI runs, writes nothing. The file is
 left out of the crate's package (`exclude` in prism-int/Cargo.toml).
