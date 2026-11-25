@@ -1,0 +1,2 @@
+using proved fact: lam >= 2^-4 => fewer than 3 further swaps
+lam in [2^-7, 2^-0]: fewer than 4 further swaps: PROVED  (boxes 78737506, max depth 40)

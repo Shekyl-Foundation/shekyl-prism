@@ -1,0 +1,3 @@
+using proved fact: lam >= 2^-4 => fewer than 3 further swaps
+lam in [2^-8, 2^-0]: fewer than 4 further swaps: NOT PROVED  (boxes 29691101, max depth 40)
+  unresolved box (remaining k=4) lam [0.0039062499999999996, 0.0039138495922088623] ex [-0.5, -0.499755859375] ey [-0.28271484375, -0.2822265625]

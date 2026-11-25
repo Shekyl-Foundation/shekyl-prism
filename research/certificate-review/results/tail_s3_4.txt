@@ -1,0 +1,1 @@
+lam in [2^-4, 2^-0]: fewer than 3 further swaps: PROVED  (boxes 834784, max depth 40)
