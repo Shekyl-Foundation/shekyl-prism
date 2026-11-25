@@ -1,0 +1,12 @@
+[package]
+name = "prism-ct-barrier"
+version = "0.0.0"
+edition = "2021"
+license = "BSD-3-Clause"
+publish = false
+description = "Research: the one audited unsafe exception (a per-arch inline-asm value barrier) proposed for shekyl-prism constant-time code"
+
+# Standalone research crate, outside the repository workspace and CI.
+[workspace]
+
+[dependencies]
