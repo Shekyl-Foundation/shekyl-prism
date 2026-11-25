@@ -40,3 +40,12 @@ The core change is **scheduling without losing G4**:
 ## Branch lifecycle note
 
 Because `docs/SIGNER_SPEC.md` is a specification proposal targeting `dev` if Rick approves, `experiment/ct-feasibility-gate` is merged `--no-ff` into `research` for tracking and **kept alive** (not deleted, and not merged to `dev` or opened as a PR) so Rick can open a PR to `dev` directly if he adopts it.
+
+## Addition (2026-11-25): progress proof for bounded-precision quotients
+
+Rick, after the Q5 width experiment: "The faster quotient needs a progress proof before adoption." Section 0.2 item 3 now says so explicitly, the 0.7 table lists it for stage 2c, and 0.8 has a new decision 6 (the old 6 is now 7).
+
+- **The rule.** Any bounded-precision, truncated, clamped or approximate quotient in a fixed-schedule reduction must carry a certified progress proof: the fixed step count plus the scheduled cleanup reaches a reduced basis for every valid input within the Q4 bound. Otherwise the certified count (`T_prov = 301 / 387 / 446 / 587 / 773`, or `283 / 369 / 428 / 569 / 755` pre-reduced) applies only to the exact-quotient schedule.
+- **Why a width proof is not enough.** Q5 bounds every intermediate whether or not the schedule converges (its Theorem 1 holds for any schedule length). It says nothing about finishing.
+- **The counterexample.** `research/q5-width-proof/crafted_saturation.py` builds, at each of the five sets, a valid prime-norm ideal on which every 64-bit quotient clamps at `2^62`. The run stays inside the width bound, but `T_prov` steps plus the exact cleanup leave the basis unreduced; exact quotients finish in 8–10 steps. Honest inputs hit this at roughly `2^-110`, but nothing reports it, and the failure would be key-dependent.
+- **Follow-up.** `experiment/clamped-quotient-progress` (results in `research/clamped-quotient-progress/`) characterises the stall and looks for a provable bounded-precision quotient or a fallback.
