@@ -9,6 +9,7 @@
 import itertools
 import json
 import math
+from fractions import Fraction
 from pathlib import Path
 import unittest
 
@@ -41,7 +42,7 @@ def size_reduce(p, u, v, a):
 
 
 def reduce_exact(p, u, v):
-    """Public-fixture reference. The production schedule needs a separate proof."""
+    """Variable-time reference for the logical exact steps."""
     if inner(p, v, v) < inner(p, u, u):
         u, v = v, u
     while True:
@@ -52,6 +53,38 @@ def reduce_exact(p, u, v):
         if inner(p, v, v) >= a:
             return u, v
         u, v = v, u
+
+
+def exp64_quotients(h0, h1, a):
+    """Integer model of one exp64 step on public fixtures."""
+    shift = max(0, a.bit_length() - 64)
+    top = a >> shift
+    exponent = max(h0.bit_length(), h1.bit_length()) - a.bit_length()
+    result = []
+    for h in (h0, h1):
+        if exponent <= 60:
+            estimate = (2*(h >> shift) + top) // (2*top)
+            twice_residual = 2*(h - estimate*a)
+            result.append(estimate + (twice_residual >= a) - (twice_residual < -a))
+        else:
+            s = exponent - 60
+            qtop = (abs(h) >> (shift + s)) // top
+            magnitude = max(0, qtop - 1) << s
+            result.append(-magnitude if h < 0 else magnitude)
+    return tuple(result)
+
+
+def reduce_exp64(p, u, v, steps):
+    if inner(p, v, v) < inner(p, u, u):
+        u, v = v, u
+    for _ in range(steps):
+        a = inner(p, u, u)
+        ju = times_i(u)
+        real, imag = exp64_quotients(inner(p, v, u), inner(p, v, ju), a)
+        v = combine((v, u, ju), (1, -real, -imag))
+        if inner(p, v, v) < a:
+            u, v = v, u
+    return u, v
 
 
 def determinant(basis):
@@ -81,11 +114,54 @@ def norm_form(p, basis, ideal_norm):
     return form
 
 
-def field_prime(name):
+def signer_parameters(name):
     path = ROOT / "prism-vectors" / "data" / "signer" / (name + ".txt")
     values = dict(line.split() for line in path.read_text().splitlines()
-                  if line.startswith(("e ", "f ")))
-    return (int(values["f"]) << int(values["e"])) - 1
+                  if line.startswith(("e ", "f ", "secret_norm ")))
+    e = int(values["e"])
+    p = (int(values["f"]) << e) - 1
+    d = int.from_bytes(bytes.fromhex(values["secret_norm"]), "little")
+    return e, p, d
+
+
+def schedule(phi_squared_over_delta, max_norm):
+    # Largest S for which rho(S)^2 Phi_1^2 / Delta >= 1000, starting
+    # with rho(1) = 1. Pairs contract by 87/1000, one step by 31/100.
+    def reaches_main_phase(s):
+        pairs, single = divmod(s - 1, 2)
+        rho = Fraction(87, 1000)**pairs * Fraction(31, 100)**single
+        return rho*rho*phi_squared_over_delta >= 1000
+
+    s = 1
+    while reaches_main_phase(s + 1):
+        s += 1
+    exact = s + 5
+    extra = 0
+    while 4**(58*(extra + 1) + 2) < max_norm:
+        extra += 1
+    return exact, exact + extra
+
+
+def native_schedules(name):
+    e, p, d = signer_parameters(name)
+    n = 1 << ((p.bit_length() + 1)//2 + 32)
+    q = 1 << (2*e - 5)
+
+    # All ratios and maximum norms here are in reduced-norm units.
+    # For a full norm-T O0 basis Delta = p*T^2/4 and Phi_1 <= 2*T^2.
+    def generic(t):
+        return schedule(Fraction(16*t*t, p), 2*t*t + p)
+
+    guard = 256
+    ceil_sqrt_p = 1 + math.isqrt(p)
+    guarded = schedule(16*guard**2*q*q, (q + 1)**2 * guard * ceil_sqrt_p * n)
+    return {
+        "Signing, generic HNF": generic(n*q),
+        "Signing, pre-reduced, guard 256": guarded,
+        "Key generation, norm D": generic(d),
+        "Secret ideal pre-reduction, Q4": generic(n),
+        "Challenge alone": generic(q),
+    }
 
 
 class Stage2cOracle(unittest.TestCase):
@@ -122,24 +198,53 @@ class Stage2cOracle(unittest.TestCase):
             a, b, k, d = combine(basis, c)
             self.assertEqual(value * 4*ideal_norm, a*a + b*b + p*(k*k + d*d))
 
-    def test_restoring_division_rounding(self):
-        # Exhaust all six-bit sign/magnitude dividends and positive divisors.
-        bits = 6
-        for a in range(1, 1 << bits):
-            for h in range(1 - (1 << bits), 1 << bits):
-                quotient = remainder = 0
-                for i in reversed(range(bits)):
-                    trial = 2*remainder + ((abs(h) >> i) & 1)
-                    self.assertLess(trial, 2*a)
-                    take = int(trial >= a)
-                    remainder = trial - take*a
-                    quotient = 2*quotient + take
-                self.assertEqual((quotient, remainder), divmod(abs(h), a))
-                if h < 0:
-                    rounded = -(quotient + (remainder > a - remainder))
-                else:
-                    rounded = quotient + (remainder >= a - remainder)
-                self.assertEqual(rounded, (2*h + a) // (2*a))
+    def test_exp64_large_quotient_progress(self):
+        a = (1 << 130) + 15
+        for offset in (60, 61, 119, 640):
+            for h0, h1 in ((a << offset, -a//3), (1 - a, -(a << offset))):
+                q = exp64_quotients(h0, h1, a)
+                if offset == 60:
+                    self.assertEqual(q, ((2*h0 + a)//(2*a), (2*h1 + a)//(2*a)))
+                    continue
+                r0, r1 = h0 - q[0]*a, h1 - q[1]*a
+                self.assertGreater(max(abs(r0), abs(r1)), a)
+                self.assertLess(r0*r0 + r1*r1, h0*h0 + h1*h1)
+                new_exponent = max(r0.bit_length(), r1.bit_length()) - a.bit_length()
+                self.assertLessEqual(new_exponent, offset - 58)
+
+    def test_native_schedule_table(self):
+        sets = ("p248", "p324", "p376", "p500", "p664")
+        schedules = [native_schedules(name) for name in sets]
+        spec = (ROOT / "docs/SIGNER_SPEC.md").read_text()
+        table = spec.split("| Native input class |", 1)[1].splitlines()
+        rows = []
+        for line in table[2:]:
+            if not line.startswith("|"):
+                break
+            rows.append([cell.strip() for cell in line.strip("|").split("|")])
+        self.assertCountEqual([row[0] for row in rows], schedules[0])
+        self.assertEqual([cell.strip() for cell in table[0].strip("| ").split("|")],
+                         [name.upper() for name in sets])
+        for label, *counts in rows:
+            self.assertEqual(counts, [f"{s[label][0]} / {s[label][1]}" for s in schedules])
+
+    def test_exp64_window_correction(self):
+        # Discarded low bits change the uncorrected rounding on either sign.
+        a = (1 << 80) + 2
+        for offset in (-1, 0, 1):
+            h = (1 << 55)*a + a//2 + offset
+            self.assertEqual(exp64_quotients(h, -h, a),
+                             ((2*h + a)//(2*a), (-2*h + a)//(2*a)))
+
+    def test_native_hermitian_determinant(self):
+        # Model and O0 lifts generate different lattices even for the same T.
+        p, t = 3, 5
+        for u, v, expected in (((t, 0, 0, 0), (4, 4, 1, 0), p*t*t),
+                               ((2*t, 0, 0, 0), (4, 9, 1, 0), 4*p*t*t)):
+            for x, y in ((u, v), reduce_exact(p, u, v)):
+                delta = inner(p, x, x)*inner(p, y, y)
+                delta -= inner(p, x, y)**2 + inner(p, times_i(x), y)**2
+                self.assertEqual(delta, expected)
 
     def test_ties_and_order(self):
         u = (2, 0, 0, 0)
@@ -182,7 +287,7 @@ class Stage2cOracle(unittest.TestCase):
     def test_field_weights_and_full_quotients(self):
         for name in ("p248", "p324", "p376", "p500", "p664"):
             with self.subTest(name=name):
-                p = field_prime(name)
+                _, p, _ = signer_parameters(name)
                 t = 3
                 x, y = next((x, y) for x in range(0, 2*t, 2) for y in range(1, 2*t, 2)
                             if (x*x + y*y + p) % (4*t) == 0)
@@ -205,7 +310,7 @@ class Stage2cOracle(unittest.TestCase):
     def test_p500_saturation_regression(self):
         fixture = json.loads((ROOT / "scripts/fixtures/stage2c_p500.json").read_text())
         t, x, y = (int(fixture[key], 16) for key in ("T", "x", "y"))
-        p = field_prime("p500")
+        _, p, _ = signer_parameters("p500")
         self.assertEqual((x*x + y*y + p) % t, 0)
         # Lift the two residues mod T to their unique even and odd representatives.
         ox = x % t
@@ -219,6 +324,8 @@ class Stage2cOracle(unittest.TestCase):
             with self.subTest(key=key):
                 pair = self.check_reduction(p, (scale, 0, 0, 0), (a, b, 1, 0))
                 self.assertEqual(inner(p, pair[0], pair[0]), int(fixture[key], 16))
+                steps = native_schedules("p500")["Signing, generic HNF"][1]
+                self.assertEqual(reduce_exp64(p, (scale, 0, 0, 0), (a, b, 1, 0), steps), pair)
                 if key == "o0_numerator_minimum":
                     self.check_form(p, pair, t)
 
