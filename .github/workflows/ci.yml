@@ -146,10 +146,12 @@ jobs:
           python3 scripts/ci/check_secret_exits.py --selftest
           python3 scripts/ci/check_secret_exits.py
       - name: Check the Stage 2c basis reduction against its mathematical fixtures
-        run: python3 -B -S scripts/stage2c_oracle.py
+        run: |
+          python3 -B -S scripts/stage2c_oracle.py
+          python3 -B -S scripts/stage2c_p500_fixtures.py
       # A node that only verifies builds no signer code: the front crate's
       # `signer` feature is off by default, its default build graph holds
-      # none of the integer crate, `zeroize` or `subtle`, and the graph
+      # none of the integer crate, `zeroize` or `prism-ct-barrier`, and the graph
       # with the feature holds all three. And the integer crate's package
       # does not hold its 3.3 MB of vectors. The self-test plants each
       # breach. Two `cargo tree` and one `cargo package --list`: under a
@@ -283,6 +285,19 @@ jobs:
         run: cargo test --workspace --locked
       - name: Release
         run: cargo test --workspace --locked --release
+      - name: Check the native P500 reducer against the exact fixtures
+        run: cargo run --release --locked -p shekyl-prism --features signer --example stage2c_p500
+      - name: Install compiled-code inspection tools
+        run: bash scripts/ci/apt_install.sh qemu-user valgrind
+      - name: Inspect release instructions and compare secret-shift traces
+        run: python3 scripts/ci/check_ct_shift.py --assembly stage2c-x86_64.asm
+      - name: Preserve the compiled shift consumer for instruction review
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: stage2c-shift-x86_64
+          path: stage2c-x86_64.asm
+          if-no-files-found: error
+
       # Minutes in a debug build, so it is ignored by default and run here
       # in release by its full name. The log must show it ran: a renamed
       # test would otherwise match nothing and pass.
@@ -332,6 +347,19 @@ jobs:
         run: cargo test --workspace --locked
       - name: Release
         run: cargo test --workspace --locked --release
+      - name: Check the native P500 reducer against the exact fixtures
+        run: cargo run --release --locked -p shekyl-prism --features signer --example stage2c_p500
+      - name: Install compiled-code inspection tools
+        run: bash scripts/ci/apt_install.sh qemu-user
+      - name: Inspect release instructions and compare secret-shift traces
+        run: python3 scripts/ci/check_ct_shift.py --assembly stage2c-aarch64.asm
+      - name: Preserve the compiled shift consumer for instruction review
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: stage2c-shift-aarch64
+          path: stage2c-aarch64.asm
+          if-no-files-found: error
+
       # Minutes in a debug build, so it is ignored by default and run here
       # in release by its full name. The log must show it ran: a renamed
       # test would otherwise match nothing and pass.
