@@ -19,6 +19,8 @@ Read `REPORT.md`. Files:
 | `variants.py` | Quotient rules: `exact`, `clamp64` (prototype), `clamp128`, `corr64` (clamp as sticky overflow), `exp64` (proposed) |
 | `progress_check.py` | Machine checks: certificates rerun, contract audit, integer step counts per input class, exp64 extra sub-steps, exp-rule lemmas at toy and 64-bit precision |
 | `adversarial.py`, `analyze.py` | Every rule on honest, crafted, Rolletschek, big-quotient chain, tail-stress, ping-pong, challenge, keygen and pre-reduced inputs; honest quotient tail |
+| `verify_finding.sage` | Verification of Rick's finding (t37u): symbolic Δ of the O0 basis in Sage (4pT², not 16pT²) and numeric Δ on 100 real O0 bases |
+| `verify_o0_counts.py` | Runs O0 inputs and Rolletschek chains at the O0 bound against the recomputed O0 counts |
 | `gen_vectors.py`, `rust-xcheck/` | The exp64 rule on the `rust-lagrange-ct` prototype's arithmetic (standalone crate, outside the workspace): bit-exact check against the model, and cycles against the prototype |
 
 Reproduce (Python from `/workspace/mamba/envs/sage`):
@@ -26,7 +28,9 @@ Reproduce (Python from `/workspace/mamba/envs/sage`):
 ```bash
 PY=/workspace/mamba/envs/sage/bin/python3
 $PY trace_counterexample.py          # ~2 s
-$PY progress_check.py                # ~1 min (certificates ~16 s)
+PATH=/workspace/mamba/envs/sage/bin:$PATH sage verify_finding.sage   # ~4 s
+$PY progress_check.py                # ~2 min (certificates ~16 s); model and O0 counts
+$PY verify_o0_counts.py              # ~3 s
 for s in p248 p324 p376 p500 p664; do $PY adversarial.py $s --scale 4 & done; wait   # ~2 min
 $PY analyze.py
 $PY gen_vectors.py
