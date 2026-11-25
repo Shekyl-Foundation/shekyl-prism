@@ -5,8 +5,15 @@
   OK: 8758 cells (88 wild), rho 300838/1000000, lam_max 2^-13, Gmax = 7998092957 / 2^32 = 1.862201, tightest ratio 0.999997986
   OK: 8758 cells (88 wild), rho 300973/1000000, lam_max 2^-12, Gmax = 7998092957 / 2^32 = 1.862201, tightest ratio 0.999997770
   OK: 8758 cells (96 wild), rho 304449/1000000, lam_max 2^-11, Gmax = 7998092957 / 2^32 = 1.862201, tightest ratio 0.999997204
+== 2. check_potential.py (exact rationals, independent)
+  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-20: max rhi*g(succ)/g = 0.268499973 <= rho 537/2000: True (8s)
+  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-16: max rhi*g(succ)/g = 0.271312501 <= rho 271313/1000000: True (7s)
+  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-14: max rhi*g(succ)/g = 0.300769927 <= rho 300770/1000000: True (8s)
+  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-13: max rhi*g(succ)/g = 0.300837394 <= rho 300838/1000000: True (8s)
+  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-12: max rhi*g(succ)/g = 0.300972329 <= rho 300973/1000000: True (7s)
+  cert_2685.txt: 8758 leaves tile the square, g >= 1, Gmax 1.862201; LAM 2^-11: max rhi*g(succ)/g = 0.304448149 <= rho 304449/1000000: True (7s)
 == 3. tail (certify_tail_exact, unchanged)
-  from lam >= 2^-11: 5 swaps impossible: True (2013007 boxes, 114s); tau = 4
+  from lam >= 2^-11: 5 swaps impossible: True (2013007 boxes, 115s); tau = 4
 == 4. lemmas and counts
   rho_1 537/2000 = 0.2685, G = 1.862201, top band 2^-11, band caps [None, 3, 2, 1, 1, 1]
   p248 sign-generic      exact  280 (was  301)  exp64  280 (was  312, normalized-E 306)  n1_max 4

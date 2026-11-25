@@ -74,7 +74,7 @@ def main(scale=1):
     rows = []
     for s in SETS:
         name = s[0]; P = params(name); p, e, B = P['p'], P['e'], P['B']
-        rng = random.Random(0x7167 ^ (hash(name) & 0xffff))
+        rng = random.Random(0x7167 ^ int.from_bytes(name.encode(), 'big'))
         qb = 2 * e - 5
 
         def go(fam, cls, u0, v0, T_ideal=None):
@@ -106,6 +106,12 @@ def main(scale=1):
             for mode in ('conj_alt', 'i_rot'):
                 T, g, h, k = G.make_rolletschek(tgt, mode=mode)
                 go(f'rolletschek_{mode}', cls, *G.model_basis(T, g, h))
+        # Rolletschek chains at the pre-reduced classes' bound: R = T^2/p <= 4 q^2 F^2
+        for Fg in (256,):
+            tgt = math.isqrt(4 * (1 << (2 * qb)) * Fg * Fg * p)
+            for mode in ('conj_alt', 'i_rot'):
+                T, g, h, k = G.make_rolletschek(tgt, mode=mode)
+                go(f'rolletschek_{mode}', 'prered-guard256', *G.model_basis(T, g, h))
         # big-quotient chains, tail stress, ping-pong, half ties (generic signing)
         for fam, T, g, h in chains(P, rng):
             go(fam, 'sign-generic', *G.model_basis(T, g, h))
