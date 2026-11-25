@@ -1,0 +1,437 @@
+{
+ "1.85.1|aarch64-unknown-linux-gnu|asm": {},
+ "1.85.1|aarch64-unknown-linux-gnu|bbmask": {
+  "barrel": 2,
+  "table": 1
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|bbuse": {
+  "barrel": 5,
+  "table": 1
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|cmov": {
+  "table": 1
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|crate": {},
+ "1.85.1|aarch64-unknown-linux-gnu|ctutils": "n/b",
+ "1.85.1|aarch64-unknown-linux-gnu|noinline": {},
+ "1.85.1|aarch64-unknown-linux-gnu|none": {
+  "barrel": 7,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|selunpred": "n/b",
+ "1.85.1|aarch64-unknown-linux-gnu|subtle-bb": {
+  "table": 1
+ },
+ "1.85.1|aarch64-unknown-linux-gnu|subtle-vol": {},
+ "1.85.1|aarch64-unknown-linux-gnu|volatile": {},
+ "1.85.1|aarch64-unknown-linux-gnu|weak": {
+  "barrel": 4,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|asm": "n/b",
+ "1.85.1|armv7-unknown-linux-gnueabihf|bbmask": {},
+ "1.85.1|armv7-unknown-linux-gnueabihf|bbuse": {},
+ "1.85.1|armv7-unknown-linux-gnueabihf|cmov": {},
+ "1.85.1|armv7-unknown-linux-gnueabihf|crate": "n/b",
+ "1.85.1|armv7-unknown-linux-gnueabihf|ctutils": "n/b",
+ "1.85.1|armv7-unknown-linux-gnueabihf|noinline": {},
+ "1.85.1|armv7-unknown-linux-gnueabihf|none": {
+  "barrel": 1,
+  "cond_sub": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.85.1|armv7-unknown-linux-gnueabihf|selunpred": "n/b",
+ "1.85.1|armv7-unknown-linux-gnueabihf|subtle-bb": {},
+ "1.85.1|armv7-unknown-linux-gnueabihf|subtle-vol": {},
+ "1.85.1|armv7-unknown-linux-gnueabihf|volatile": {},
+ "1.85.1|armv7-unknown-linux-gnueabihf|weak": {
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|asm": "n/b",
+ "1.85.1|riscv32imc-unknown-none-elf|bbmask": {},
+ "1.85.1|riscv32imc-unknown-none-elf|bbuse": {
+  "barrel": 2
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|cmov": {},
+ "1.85.1|riscv32imc-unknown-none-elf|crate": "n/b",
+ "1.85.1|riscv32imc-unknown-none-elf|ctutils": "n/b",
+ "1.85.1|riscv32imc-unknown-none-elf|noinline": {},
+ "1.85.1|riscv32imc-unknown-none-elf|none": {
+  "barrel": 3,
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.85.1|riscv32imc-unknown-none-elf|selunpred": "n/b",
+ "1.85.1|riscv32imc-unknown-none-elf|subtle-bb": {},
+ "1.85.1|riscv32imc-unknown-none-elf|subtle-vol": {},
+ "1.85.1|riscv32imc-unknown-none-elf|volatile": {},
+ "1.85.1|riscv32imc-unknown-none-elf|weak": {
+  "barrel": 3,
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|asm": {},
+ "1.85.1|riscv64gc-unknown-linux-gnu|bbmask": {},
+ "1.85.1|riscv64gc-unknown-linux-gnu|bbuse": {
+  "barrel": 2
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|cmov": {},
+ "1.85.1|riscv64gc-unknown-linux-gnu|crate": "n/b",
+ "1.85.1|riscv64gc-unknown-linux-gnu|ctutils": "n/b",
+ "1.85.1|riscv64gc-unknown-linux-gnu|noinline": {},
+ "1.85.1|riscv64gc-unknown-linux-gnu|none": {
+  "barrel": 4,
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 16
+ },
+ "1.85.1|riscv64gc-unknown-linux-gnu|selunpred": "n/b",
+ "1.85.1|riscv64gc-unknown-linux-gnu|subtle-bb": {},
+ "1.85.1|riscv64gc-unknown-linux-gnu|subtle-vol": {},
+ "1.85.1|riscv64gc-unknown-linux-gnu|volatile": {},
+ "1.85.1|riscv64gc-unknown-linux-gnu|weak": {
+  "barrel": 1,
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.85.1|thumbv6m-none-eabi|asm": "n/b",
+ "1.85.1|thumbv6m-none-eabi|bbmask": {
+  "cmov_u8": 1
+ },
+ "1.85.1|thumbv6m-none-eabi|bbuse": {
+  "cmov_u8": 1
+ },
+ "1.85.1|thumbv6m-none-eabi|cmov": {},
+ "1.85.1|thumbv6m-none-eabi|crate": "n/b",
+ "1.85.1|thumbv6m-none-eabi|ctutils": "n/b",
+ "1.85.1|thumbv6m-none-eabi|noinline": {},
+ "1.85.1|thumbv6m-none-eabi|none": {
+  "barrel": 2,
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.85.1|thumbv6m-none-eabi|selunpred": "n/b",
+ "1.85.1|thumbv6m-none-eabi|subtle-bb": {},
+ "1.85.1|thumbv6m-none-eabi|subtle-vol": {},
+ "1.85.1|thumbv6m-none-eabi|volatile": {
+  "cmov_u8": 1
+ },
+ "1.85.1|thumbv6m-none-eabi|weak": {
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.85.1|thumbv7em-none-eabihf|asm": "n/b",
+ "1.85.1|thumbv7em-none-eabihf|bbmask": {},
+ "1.85.1|thumbv7em-none-eabihf|bbuse": {},
+ "1.85.1|thumbv7em-none-eabihf|cmov": {},
+ "1.85.1|thumbv7em-none-eabihf|crate": "n/b",
+ "1.85.1|thumbv7em-none-eabihf|ctutils": "n/b",
+ "1.85.1|thumbv7em-none-eabihf|noinline": {},
+ "1.85.1|thumbv7em-none-eabihf|none": {
+  "barrel": 2,
+  "cond_sub": 1,
+  "dalek_sub": 1,
+  "table": 5
+ },
+ "1.85.1|thumbv7em-none-eabihf|selunpred": "n/b",
+ "1.85.1|thumbv7em-none-eabihf|subtle-bb": {},
+ "1.85.1|thumbv7em-none-eabihf|subtle-vol": {},
+ "1.85.1|thumbv7em-none-eabihf|volatile": {},
+ "1.85.1|thumbv7em-none-eabihf|weak": {
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|asm": {},
+ "1.85.1|x86_64-unknown-linux-gnu|bbmask": {},
+ "1.85.1|x86_64-unknown-linux-gnu|bbuse": {
+  "barrel": 3
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|cmov": {},
+ "1.85.1|x86_64-unknown-linux-gnu|crate": {},
+ "1.85.1|x86_64-unknown-linux-gnu|ctutils": "n/b",
+ "1.85.1|x86_64-unknown-linux-gnu|noinline": {},
+ "1.85.1|x86_64-unknown-linux-gnu|none": {
+  "barrel": 6,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 16
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|selunpred": "n/b",
+ "1.85.1|x86_64-unknown-linux-gnu|subtle-bb": {
+  "table": 1
+ },
+ "1.85.1|x86_64-unknown-linux-gnu|subtle-vol": {},
+ "1.85.1|x86_64-unknown-linux-gnu|volatile": {},
+ "1.85.1|x86_64-unknown-linux-gnu|weak": {
+  "barrel": 4,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 16
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|asm": {},
+ "1.97.1|aarch64-unknown-linux-gnu|bbmask": {},
+ "1.97.1|aarch64-unknown-linux-gnu|bbuse": {
+  "barrel": 3
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|cmov": {},
+ "1.97.1|aarch64-unknown-linux-gnu|crate": {},
+ "1.97.1|aarch64-unknown-linux-gnu|ctutils": {
+  "table": 1
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|noinline": {},
+ "1.97.1|aarch64-unknown-linux-gnu|none": {
+  "barrel": 7,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|selunpred": {
+  "barrel": 7,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1
+ },
+ "1.97.1|aarch64-unknown-linux-gnu|subtle-bb": {},
+ "1.97.1|aarch64-unknown-linux-gnu|subtle-vol": {},
+ "1.97.1|aarch64-unknown-linux-gnu|volatile": {},
+ "1.97.1|aarch64-unknown-linux-gnu|weak": {
+  "barrel": 4,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|asm": "n/b",
+ "1.97.1|armv7-unknown-linux-gnueabihf|bbmask": {},
+ "1.97.1|armv7-unknown-linux-gnueabihf|bbuse": {},
+ "1.97.1|armv7-unknown-linux-gnueabihf|cmov": {},
+ "1.97.1|armv7-unknown-linux-gnueabihf|crate": "n/b",
+ "1.97.1|armv7-unknown-linux-gnueabihf|ctutils": {},
+ "1.97.1|armv7-unknown-linux-gnueabihf|noinline": {},
+ "1.97.1|armv7-unknown-linux-gnueabihf|none": {
+  "barrel": 3,
+  "cond_sub": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|selunpred": {
+  "barrel": 3,
+  "cond_sub": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.97.1|armv7-unknown-linux-gnueabihf|subtle-bb": {},
+ "1.97.1|armv7-unknown-linux-gnueabihf|subtle-vol": {},
+ "1.97.1|armv7-unknown-linux-gnueabihf|volatile": {},
+ "1.97.1|armv7-unknown-linux-gnueabihf|weak": {
+  "barrel": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|asm": "n/b",
+ "1.97.1|riscv32imc-unknown-none-elf|bbmask": {},
+ "1.97.1|riscv32imc-unknown-none-elf|bbuse": {
+  "barrel": 3
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|cmov": {},
+ "1.97.1|riscv32imc-unknown-none-elf|crate": "n/b",
+ "1.97.1|riscv32imc-unknown-none-elf|ctutils": {},
+ "1.97.1|riscv32imc-unknown-none-elf|noinline": {},
+ "1.97.1|riscv32imc-unknown-none-elf|none": {
+  "barrel": 3,
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|selunpred": {
+  "barrel": 3,
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.97.1|riscv32imc-unknown-none-elf|subtle-bb": {},
+ "1.97.1|riscv32imc-unknown-none-elf|subtle-vol": {},
+ "1.97.1|riscv32imc-unknown-none-elf|volatile": {},
+ "1.97.1|riscv32imc-unknown-none-elf|weak": {
+  "barrel": 3,
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|asm": {},
+ "1.97.1|riscv64gc-unknown-linux-gnu|bbmask": {},
+ "1.97.1|riscv64gc-unknown-linux-gnu|bbuse": {
+  "barrel": 1
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|cmov": {},
+ "1.97.1|riscv64gc-unknown-linux-gnu|crate": "n/b",
+ "1.97.1|riscv64gc-unknown-linux-gnu|ctutils": {},
+ "1.97.1|riscv64gc-unknown-linux-gnu|noinline": {},
+ "1.97.1|riscv64gc-unknown-linux-gnu|none": {
+  "barrel": 4,
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 16
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|selunpred": {
+  "barrel": 4,
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 16
+ },
+ "1.97.1|riscv64gc-unknown-linux-gnu|subtle-bb": {},
+ "1.97.1|riscv64gc-unknown-linux-gnu|subtle-vol": {},
+ "1.97.1|riscv64gc-unknown-linux-gnu|volatile": {},
+ "1.97.1|riscv64gc-unknown-linux-gnu|weak": {
+  "barrel": 1,
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.97.1|thumbv6m-none-eabi|asm": "n/b",
+ "1.97.1|thumbv6m-none-eabi|bbmask": {
+  "cmov_u8": 1
+ },
+ "1.97.1|thumbv6m-none-eabi|bbuse": {
+  "cmov_u8": 1
+ },
+ "1.97.1|thumbv6m-none-eabi|cmov": {},
+ "1.97.1|thumbv6m-none-eabi|crate": "n/b",
+ "1.97.1|thumbv6m-none-eabi|ctutils": {},
+ "1.97.1|thumbv6m-none-eabi|noinline": {},
+ "1.97.1|thumbv6m-none-eabi|none": {
+  "barrel": 1,
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.97.1|thumbv6m-none-eabi|selunpred": {
+  "barrel": 1,
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.97.1|thumbv6m-none-eabi|subtle-bb": {},
+ "1.97.1|thumbv6m-none-eabi|subtle-vol": {},
+ "1.97.1|thumbv6m-none-eabi|volatile": {
+  "cmov_u8": 1
+ },
+ "1.97.1|thumbv6m-none-eabi|weak": {
+  "cmov_u8": 1,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.97.1|thumbv7em-none-eabihf|asm": "n/b",
+ "1.97.1|thumbv7em-none-eabihf|bbmask": {},
+ "1.97.1|thumbv7em-none-eabihf|bbuse": {},
+ "1.97.1|thumbv7em-none-eabihf|cmov": {},
+ "1.97.1|thumbv7em-none-eabihf|crate": "n/b",
+ "1.97.1|thumbv7em-none-eabihf|ctutils": {},
+ "1.97.1|thumbv7em-none-eabihf|noinline": {},
+ "1.97.1|thumbv7em-none-eabihf|none": {
+  "barrel": 3,
+  "cond_sub": 1,
+  "dalek_sub": 1,
+  "table": 4
+ },
+ "1.97.1|thumbv7em-none-eabihf|selunpred": {
+  "barrel": 3,
+  "cond_sub": 1,
+  "dalek_sub": 1,
+  "table": 4
+ },
+ "1.97.1|thumbv7em-none-eabihf|subtle-bb": {},
+ "1.97.1|thumbv7em-none-eabihf|subtle-vol": {},
+ "1.97.1|thumbv7em-none-eabihf|volatile": {},
+ "1.97.1|thumbv7em-none-eabihf|weak": {
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 1
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|asm": {},
+ "1.97.1|x86_64-unknown-linux-gnu|bbmask": {},
+ "1.97.1|x86_64-unknown-linux-gnu|bbuse": {
+  "barrel": 3
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|cmov": {},
+ "1.97.1|x86_64-unknown-linux-gnu|crate": {},
+ "1.97.1|x86_64-unknown-linux-gnu|ctutils": {
+  "table": 1
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|noinline": {},
+ "1.97.1|x86_64-unknown-linux-gnu|none": {
+  "barrel": 7,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 16
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|selunpred": {
+  "barrel": 7,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 16
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|subtle-bb": {
+  "table": 1
+ },
+ "1.97.1|x86_64-unknown-linux-gnu|subtle-vol": {},
+ "1.97.1|x86_64-unknown-linux-gnu|volatile": {},
+ "1.97.1|x86_64-unknown-linux-gnu|weak": {
+  "barrel": 4,
+  "cond_sub": 1,
+  "cswap": 1,
+  "dalek_sub": 1,
+  "table": 16
+ }
+}

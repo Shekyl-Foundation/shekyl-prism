@@ -1,0 +1,38 @@
+[package]
+name = "ctb-litmus"
+version = "0.0.0"
+edition = "2021"
+license = "BSD-3-Clause"
+publish = false
+description = "Research: small known-hazard kernels compiled per barrier candidate and target, scanned for conditional branches"
+
+[workspace]
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+subtle = { version = "=2.6.1", default-features = false, optional = true }
+cmov = { version = "=0.5.4", optional = true }
+ctutils = { version = "=0.4.8", optional = true }
+prism-ct-barrier = { path = "../prism-ct-barrier", optional = true }
+
+[features]
+b-asm = []
+b-none = []
+b-weak = []
+b-bbmask = []
+b-bbuse = []
+b-noinline = []
+b-volatile = []
+b-subtle-vol = ["dep:subtle"]
+b-subtle-bb = ["dep:subtle", "subtle/core_hint_black_box"]
+b-cmov = ["dep:cmov"]
+b-ctutils = ["dep:ctutils"]
+b-selunpred = []
+b-crate = ["dep:prism-ct-barrier"]
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+panic = "abort"

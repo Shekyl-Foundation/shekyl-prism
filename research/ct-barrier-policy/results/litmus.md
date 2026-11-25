@@ -1,0 +1,17 @@
+Conditional branches in the six litmus kernels in excess of the reference build (`crate` on x86_64/aarch64, `cmov` elsewhere), as 1.97.1 / 1.85.1. 0 = no extra branch; n/b = does not build (ctutils MSRV 1.87, select_unpredictable needs 1.88, in-crate u64 asm and prism-ct-barrier have no 32-bit/riscv form). Raw counts are in litmus.json.
+
+| candidate | x86_64-unknown-linux-gnu | aarch64-unknown-linux-gnu | armv7-unknown-linux-gnueabihf | thumbv7em-none-eabihf | thumbv6m-none-eabi | riscv64gc-unknown-linux-gnu | riscv32imc-unknown-none-elf |
+|---|---|---|---|---|---|---|---|
+| `asm` | 0 / 0 | 0 / 0 | n/b / n/b | n/b / n/b | n/b / n/b | 0 / 0 | n/b / n/b |
+| `crate` | 0 / 0 | 0 / 0 | n/b / n/b | n/b / n/b | n/b / n/b | n/b / n/b | n/b / n/b |
+| `none` | **+26** (dalek_sub,barrel,cswap,table,cond_sub) / **+25** (dalek_sub,barrel,cswap,table,cond_sub) | **+10** (dalek_sub,barrel,cswap,cond_sub) / **+10** (dalek_sub,barrel,cswap,cond_sub) | **+6** (dalek_sub,barrel,table,cond_sub) / **+4** (dalek_sub,barrel,table,cond_sub) | **+9** (dalek_sub,barrel,table,cond_sub) / **+9** (dalek_sub,barrel,table,cond_sub) | **+6** (dalek_sub,barrel,cswap,cmov_u8,table,cond_sub) / **+7** (dalek_sub,barrel,cswap,cmov_u8,table,cond_sub) | **+24** (dalek_sub,barrel,cswap,cmov_u8,table,cond_sub) / **+24** (dalek_sub,barrel,cswap,cmov_u8,table,cond_sub) | **+8** (dalek_sub,barrel,cswap,cmov_u8,table,cond_sub) / **+8** (dalek_sub,barrel,cswap,cmov_u8,table,cond_sub) |
+| `weak` | **+23** (dalek_sub,barrel,cswap,table,cond_sub) / **+23** (dalek_sub,barrel,cswap,table,cond_sub) | **+7** (dalek_sub,barrel,cswap,cond_sub) / **+7** (dalek_sub,barrel,cswap,cond_sub) | **+5** (dalek_sub,barrel,cswap,table,cond_sub) / **+4** (dalek_sub,cswap,table,cond_sub) | **+4** (dalek_sub,cswap,table,cond_sub) / **+4** (dalek_sub,cswap,table,cond_sub) | **+5** (dalek_sub,cswap,cmov_u8,table,cond_sub) / **+5** (dalek_sub,cswap,cmov_u8,table,cond_sub) | **+6** (dalek_sub,barrel,cswap,cmov_u8,table,cond_sub) / **+6** (dalek_sub,barrel,cswap,cmov_u8,table,cond_sub) | **+8** (dalek_sub,barrel,cswap,cmov_u8,table,cond_sub) / **+8** (dalek_sub,barrel,cswap,cmov_u8,table,cond_sub) |
+| `bbmask` | 0 / 0 | 0 / **+3** (barrel,table) | 0 / 0 | 0 / 0 | **+1** (cmov_u8) / **+1** (cmov_u8) | 0 / 0 | 0 / 0 |
+| `bbuse` | **+3** (barrel) / **+3** (barrel) | **+3** (barrel) / **+6** (barrel,table) | 0 / 0 | 0 / 0 | **+1** (cmov_u8) / **+1** (cmov_u8) | **+1** (barrel) / **+2** (barrel) | **+3** (barrel) / **+2** (barrel) |
+| `noinline` | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| `selunpred` | **+26** (dalek_sub,barrel,cswap,table,cond_sub) / n/b | **+10** (dalek_sub,barrel,cswap,cond_sub) / n/b | **+6** (dalek_sub,barrel,table,cond_sub) / n/b | **+9** (dalek_sub,barrel,table,cond_sub) / n/b | **+6** (dalek_sub,barrel,cswap,cmov_u8,table,cond_sub) / n/b | **+24** (dalek_sub,barrel,cswap,cmov_u8,table,cond_sub) / n/b | **+8** (dalek_sub,barrel,cswap,cmov_u8,table,cond_sub) / n/b |
+| `subtle-bb` | **+1** (table) / **+1** (table) | 0 / **+1** (table) | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| `subtle-vol` | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| `volatile` | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | **+1** (cmov_u8) / **+1** (cmov_u8) | 0 / 0 | 0 / 0 |
+| `cmov` | 0 / 0 | 0 / **+1** (table) | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| `ctutils` | **+1** (table) / n/b | **+1** (table) / n/b | 0 / n/b | 0 / n/b | 0 / n/b | 0 / n/b | 0 / n/b |

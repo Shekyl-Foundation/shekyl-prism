@@ -1,0 +1,219 @@
+{
+ "build_failures": [],
+ "ctgrind": {},
+ "dudect": {},
+ "matrix": {
+  "1.97.1|x86_64|c1|bbmask": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1032,
+   "condbr_reg": 41,
+   "csel": 9150,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|x86_64|c1|bbuse": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1100,
+   "condbr_reg": 41,
+   "csel": 9142,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|x86_64|c1|cmov": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1032,
+   "condbr_reg": 42,
+   "csel": 9318,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  }
+ },
+ "table": {
+  "asm|1.85.1": {
+   "aarch64": "pending",
+   "dudect": "not run",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "asm|1.97.1": {
+   "aarch64": "pending",
+   "dudect": "-",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "bbmask|1.85.1": {
+   "aarch64": "pending",
+   "dudect": "not run",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "bbmask|1.97.1": {
+   "aarch64": "pending",
+   "dudect": "-",
+   "taint": "pending",
+   "x86": "1/1 clean"
+  },
+  "bbuse|1.85.1": {
+   "aarch64": "pending",
+   "dudect": "not run",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "bbuse|1.97.1": {
+   "aarch64": "pending",
+   "dudect": "-",
+   "taint": "pending",
+   "x86": "1/1 clean"
+  },
+  "cmov|1.85.1": {
+   "aarch64": "pending",
+   "dudect": "not run",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "cmov|1.97.1": {
+   "aarch64": "pending",
+   "dudect": "-",
+   "taint": "pending",
+   "x86": "1/1 clean"
+  },
+  "crate|1.85.1": {
+   "aarch64": "pending",
+   "dudect": "not run",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "crate|1.97.1": {
+   "aarch64": "pending",
+   "dudect": "-",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "ctutils|1.85.1": {
+   "aarch64": "pending",
+   "dudect": "not run",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "ctutils|1.97.1": {
+   "aarch64": "pending",
+   "dudect": "-",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "noinline|1.85.1": {
+   "aarch64": "pending",
+   "dudect": "not run",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "noinline|1.97.1": {
+   "aarch64": "pending",
+   "dudect": "-",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "none|1.85.1": {
+   "aarch64": "pending",
+   "dudect": "not run",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "none|1.97.1": {
+   "aarch64": "pending",
+   "dudect": "-",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "selunpred|1.85.1": {
+   "aarch64": "pending",
+   "dudect": "not run",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "selunpred|1.97.1": {
+   "aarch64": "pending",
+   "dudect": "-",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "subtle-bb|1.85.1": {
+   "aarch64": "pending",
+   "dudect": "not run",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "subtle-bb|1.97.1": {
+   "aarch64": "pending",
+   "dudect": "-",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "subtle-vol|1.85.1": {
+   "aarch64": "pending",
+   "dudect": "not run",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "subtle-vol|1.97.1": {
+   "aarch64": "pending",
+   "dudect": "-",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "volatile|1.85.1": {
+   "aarch64": "pending",
+   "dudect": "not run",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "volatile|1.97.1": {
+   "aarch64": "pending",
+   "dudect": "-",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "weak|1.85.1": {
+   "aarch64": "pending",
+   "dudect": "not run",
+   "taint": "pending",
+   "x86": "pending"
+  },
+  "weak|1.97.1": {
+   "aarch64": "pending",
+   "dudect": "-",
+   "taint": "pending",
+   "x86": "pending"
+  }
+ }
+}
