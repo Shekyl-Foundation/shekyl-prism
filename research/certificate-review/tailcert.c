@@ -15,7 +15,7 @@
  * swaps occur.  Rigorous interval arithmetic in IEEE double, every result
  * widened outward by one ulp (nextafter), so all enclosures are sound.
  *
- * usage: tailcert LMIN_EXP K [maxdepth-per-level] [use_endgame=1] [use_lemma_c=1]
+ * usage: tailcert LMIN_EXP K [maxdepth-per-level] [use_endgame=1] [use_lemma_c=1] [K:a ...proved facts]
  */
 #include <math.h>
 #include <stdio.h>
@@ -57,6 +57,11 @@ static int USE_ENDGAME = 1;
 
 /* returns 1 if refuted: fewer than k swaps from every state in the box */
 static int USE_LEMMAC = 1;
+/* Previously PROVED facts (run earlier with this program), given as K:a on
+   the command line: from any post-swap state with lam >= 2^-a, fewer than K
+   further swaps.  Used as cutoffs: a box needing >= K swaps with lam.lo >= 2^-a
+   is refuted. */
+static int NFACT = 0; static int FK[16]; static double FL[16];
 static int refute(iv lam, iv ex, iv ey, int k, int depth, int prev_half) {
     nboxes++;
     if (k > TOPK) TOPK = k;
@@ -70,6 +75,8 @@ static int refute(iv lam, iv ex, iv ey, int k, int depth, int prev_half) {
        state had r >= 1/2 and the next step has r > 1/3, the next two steps
        cannot both swap. */
     if (k >= 2 && prev_half && r.lo > 1.0 / 3.0 && USE_LEMMAC) return 1;
+    for (int i = 0; i < NFACT; i++)
+        if (k >= FK[i] && lam.lo >= FL[i]) return 1;
     if (k <= 1) return 0;   /* r is enclosed exactly (independent terms): a swap is possible */
     {
         iv rr = { r.lo, fmin(r.hi, 1.0) };          /* only swapping states */
@@ -130,6 +137,13 @@ int main(int argc, char **argv) {
     if (argc > 3) MAXDEPTH = atoi(argv[3]);
     if (argc > 4) USE_ENDGAME = atoi(argv[4]);
     if (argc > 5) USE_LEMMAC = atoi(argv[5]);
+    for (int i = 6; i < argc && NFACT < 16; i++) {
+        int kk; double aa;
+        if (sscanf(argv[i], "%d:%lf", &kk, &aa) == 2) {
+            FK[NFACT] = kk; FL[NFACT] = up(pow(2.0, -aa)); NFACT++;
+            setvbuf(stdout, NULL, _IOLBF, 0); printf("using proved fact: lam >= 2^-%g => fewer than %d further swaps\n", aa, kk);
+        }
+    }
     iv lam = { dn(pow(2.0, -a)), b == 0 ? 1.0 : up(pow(2.0, -b)) }, ex = { -0.5, 0.5 }, ey = { -0.5, 0.5 };
     int ok = refute(lam, ex, ey, k, 0, 0);
     printf("lam in [2^-%g, 2^-%g]: fewer than %d further swaps: %s  (boxes %lld, max depth %d)\n",
