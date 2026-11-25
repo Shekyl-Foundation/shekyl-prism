@@ -1,8 +1,845 @@
 {
- "build_failures": [],
+ "build_failures": [
+  "1.85.1|aarch64|c1|ctutils",
+  "1.85.1|x86_64|c1|ctutils",
+  "1.85.1|x86_64|c2|ctutils",
+  "1.85.1|x86_64|c3|ctutils",
+  "1.85.1|x86_64|c4|ctutils"
+ ],
  "ctgrind": {},
  "dudect": {},
  "matrix": {
+  "1.85.1|aarch64|c1|asm": {
+   "bad_out": [
+    "p248",
+    "p376",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p376",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p376",
+    "p500"
+   ]
+  },
+  "1.85.1|aarch64|c1|bbmask": {
+   "bad_out": [
+    "p248",
+    "p376",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p376",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p376",
+    "p500"
+   ]
+  },
+  "1.85.1|aarch64|c1|bbuse": {
+   "bad_out": [
+    "p248",
+    "p376",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p376",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p376",
+    "p500"
+   ]
+  },
+  "1.85.1|aarch64|c1|cmov": {
+   "bad_out": [
+    "p248",
+    "p376",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p376",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p376",
+    "p500"
+   ]
+  },
+  "1.85.1|aarch64|c1|crate": {
+   "bad_out": [
+    "p248",
+    "p376",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p376",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p376",
+    "p500"
+   ]
+  },
+  "1.85.1|x86_64|c1|asm": {
+   "bad_out": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.85.1|x86_64|c1|bbmask": {
+   "bad_out": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.85.1|x86_64|c1|bbuse": {
+   "bad_out": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.85.1|x86_64|c1|cmov": {
+   "bad_out": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.85.1|x86_64|c1|crate": {
+   "bad_out": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.85.1|x86_64|c1|noinline": {
+   "bad_out": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": true,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.85.1|x86_64|c1|none": {
+   "bad_out": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.85.1|x86_64|c1|subtle-bb": {
+   "bad_out": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.85.1|x86_64|c1|subtle-vol": {
+   "bad_out": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.85.1|x86_64|c1|volatile": {
+   "bad_out": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.85.1|x86_64|c1|weak": {
+   "bad_out": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.85.1|x86_64|c2|asm": {
+   "bad_out": [
+    "p248",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.85.1|x86_64|c2|bbmask": {
+   "bad_out": [
+    "p248",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.85.1|x86_64|c2|bbuse": {
+   "bad_out": [
+    "p248",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.85.1|x86_64|c2|cmov": {
+   "bad_out": [
+    "p248",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.85.1|x86_64|c2|crate": {
+   "bad_out": [
+    "p248",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.85.1|x86_64|c2|noinline": {
+   "bad_out": [
+    "p248",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": true,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.85.1|x86_64|c2|none": {
+   "bad_out": [
+    "p248",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.85.1|x86_64|c2|subtle-bb": {
+   "bad_out": [
+    "p248",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.85.1|x86_64|c2|subtle-vol": {
+   "bad_out": [
+    "p248",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.85.1|x86_64|c2|volatile": {
+   "bad_out": [
+    "p248",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.85.1|x86_64|c2|weak": {
+   "bad_out": [
+    "p248",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.85.1|x86_64|c3|asm": {
+   "bad_out": [
+    "p248",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.85.1|x86_64|c3|none": {
+   "bad_out": [
+    "p248",
+    "p500"
+   ],
+   "clean": false,
+   "condbr": 0,
+   "condbr_reg": 0,
+   "csel": 0,
+   "diff_sets": [
+    "p248",
+    "p500"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p500"
+   ]
+  },
+  "1.97.1|aarch64|c1|asm": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 934,
+   "condbr_reg": 9,
+   "csel": 12760,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|aarch64|c1|bbmask": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 934,
+   "condbr_reg": 9,
+   "csel": 12718,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|aarch64|c1|bbuse": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 974,
+   "condbr_reg": 10,
+   "csel": 12710,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|aarch64|c1|cmov": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 934,
+   "condbr_reg": 9,
+   "csel": 12898,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|aarch64|c1|crate": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 934,
+   "condbr_reg": 9,
+   "csel": 12760,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|aarch64|c1|ctutils": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 934,
+   "condbr_reg": 9,
+   "csel": 12868,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
   "1.97.1|x86_64|c1|bbmask": {
    "bad_out": [],
    "clean": true,
@@ -56,104 +893,256 @@
     "p500",
     "p664"
    ]
+  },
+  "1.97.1|x86_64|c1|crate": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1032,
+   "condbr_reg": 42,
+   "csel": 9120,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|x86_64|c1|ctutils": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1032,
+   "condbr_reg": 42,
+   "csel": 9382,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|x86_64|c1|noinline": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1032,
+   "condbr_reg": 42,
+   "csel": 9172,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": true,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|x86_64|c1|none": {
+   "bad_out": [],
+   "clean": false,
+   "condbr": 949,
+   "condbr_reg": 58,
+   "csel": 9168,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|x86_64|c1|subtle-bb": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1032,
+   "condbr_reg": 42,
+   "csel": 9212,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|x86_64|c1|subtle-vol": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1032,
+   "condbr_reg": 42,
+   "csel": 9182,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|x86_64|c1|volatile": {
+   "bad_out": [],
+   "clean": true,
+   "condbr": 1032,
+   "condbr_reg": 41,
+   "csel": 9150,
+   "diff_sets": [],
+   "div": 0,
+   "eq": true,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
+  },
+  "1.97.1|x86_64|c1|weak": {
+   "bad_out": [],
+   "clean": false,
+   "condbr": 1048,
+   "condbr_reg": 42,
+   "csel": 9261,
+   "diff_sets": [
+    "p248",
+    "p324",
+    "p376"
+   ],
+   "div": 0,
+   "eq": false,
+   "mask_fn": false,
+   "sets": [
+    "p248",
+    "p324",
+    "p376",
+    "p500",
+    "p664"
+   ]
   }
  },
  "table": {
   "asm|1.85.1": {
-   "aarch64": "pending",
+   "aarch64": "0/1 clean (branch: c1)",
    "dudect": "not run",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "0/3 clean (branch: c1,c2,c3)"
   },
   "asm|1.97.1": {
-   "aarch64": "pending",
+   "aarch64": "1/1 clean",
    "dudect": "-",
    "taint": "pending",
    "x86": "pending"
   },
   "bbmask|1.85.1": {
-   "aarch64": "pending",
+   "aarch64": "0/1 clean (branch: c1)",
    "dudect": "not run",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "0/2 clean (branch: c1,c2)"
   },
   "bbmask|1.97.1": {
-   "aarch64": "pending",
+   "aarch64": "1/1 clean",
    "dudect": "-",
    "taint": "pending",
    "x86": "1/1 clean"
   },
   "bbuse|1.85.1": {
-   "aarch64": "pending",
+   "aarch64": "0/1 clean (branch: c1)",
    "dudect": "not run",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "0/2 clean (branch: c1,c2)"
   },
   "bbuse|1.97.1": {
-   "aarch64": "pending",
+   "aarch64": "1/1 clean",
    "dudect": "-",
    "taint": "pending",
    "x86": "1/1 clean"
   },
   "cmov|1.85.1": {
-   "aarch64": "pending",
+   "aarch64": "0/1 clean (branch: c1)",
    "dudect": "not run",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "0/2 clean (branch: c1,c2)"
   },
   "cmov|1.97.1": {
-   "aarch64": "pending",
+   "aarch64": "1/1 clean",
    "dudect": "-",
    "taint": "pending",
    "x86": "1/1 clean"
   },
   "crate|1.85.1": {
-   "aarch64": "pending",
+   "aarch64": "0/1 clean (branch: c1)",
    "dudect": "not run",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "0/2 clean (branch: c1,c2)"
   },
   "crate|1.97.1": {
-   "aarch64": "pending",
+   "aarch64": "1/1 clean",
    "dudect": "-",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "1/1 clean"
   },
   "ctutils|1.85.1": {
-   "aarch64": "pending",
+   "aarch64": "0/0 clean",
    "dudect": "not run",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "n/a (does not build)"
   },
   "ctutils|1.97.1": {
-   "aarch64": "pending",
+   "aarch64": "1/1 clean",
    "dudect": "-",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "1/1 clean"
   },
   "noinline|1.85.1": {
    "aarch64": "pending",
    "dudect": "not run",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "0/2 clean (branch: c1,c2)"
   },
   "noinline|1.97.1": {
    "aarch64": "pending",
    "dudect": "-",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "1/1 clean"
   },
   "none|1.85.1": {
    "aarch64": "pending",
    "dudect": "not run",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "0/3 clean (branch: c1,c2,c3)"
   },
   "none|1.97.1": {
    "aarch64": "pending",
    "dudect": "-",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "0/1 clean (branch: c1)"
   },
   "selunpred|1.85.1": {
    "aarch64": "pending",
@@ -171,49 +1160,49 @@
    "aarch64": "pending",
    "dudect": "not run",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "0/2 clean (branch: c1,c2)"
   },
   "subtle-bb|1.97.1": {
    "aarch64": "pending",
    "dudect": "-",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "1/1 clean"
   },
   "subtle-vol|1.85.1": {
    "aarch64": "pending",
    "dudect": "not run",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "0/2 clean (branch: c1,c2)"
   },
   "subtle-vol|1.97.1": {
    "aarch64": "pending",
    "dudect": "-",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "1/1 clean"
   },
   "volatile|1.85.1": {
    "aarch64": "pending",
    "dudect": "not run",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "0/2 clean (branch: c1,c2)"
   },
   "volatile|1.97.1": {
    "aarch64": "pending",
    "dudect": "-",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "1/1 clean"
   },
   "weak|1.85.1": {
    "aarch64": "pending",
    "dudect": "not run",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "0/2 clean (branch: c1,c2)"
   },
   "weak|1.97.1": {
    "aarch64": "pending",
    "dudect": "-",
    "taint": "pending",
-   "x86": "pending"
+   "x86": "0/1 clean (branch: c1)"
   }
  }
 }

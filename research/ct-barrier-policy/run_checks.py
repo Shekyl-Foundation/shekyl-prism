@@ -6,7 +6,8 @@
 (asm_scan2.py) and the control-flow trace check under qemu
 (trace_check.py), written to results/matrix/<id>.json. Resumable: an
 existing result is kept. Two binaries at a time (shared box).
-Sets: all five for config c1, P248 and P500 for the others.
+Sets: all five for 1.97.1 config c1; P248, P376, P500 for 1.85.1 c1;
+P248 and P500 for the other configs.
 Inputs: the dudect fixed row, two random pool rows, and three
 adversarial rows (a Rolletschek chain, zero_xy, the ping-pong input);
 at P664 only fixed, p1, a0 (10M traced blocks per run)."""
@@ -32,7 +33,12 @@ def job(binpath):
     tc, arch, cfg, cand = re.fullmatch(r'(.+?)_(x86_64|aarch64)_(c\d)_(.+)', bid).groups()
     scan = json.loads(subprocess.run([sys.executable, os.path.join(HERE, 'harness', 'asm_scan2.py'), binpath, arch],
                                      capture_output=True, text=True, check=True).stdout)
-    sets = ['p248', 'p324', 'p376', 'p500', 'p664'] if cfg == 'c1' else ['p248', 'p500']
+    if cfg == 'c1' and tc == '1.97.1':
+        sets = ['p248', 'p324', 'p376', 'p500', 'p664']
+    elif cfg == 'c1':
+        sets = ['p248', 'p376', 'p500']  # 1.85.1: comparison toolchain, cheaper
+    else:
+        sets = ['p248', 'p500']
     traces = {}
     for s in sets:
         inputs = ['fixed', 'p1', 'a0'] if s == 'p664' else INPUTS  # P664 traces are ~10M blocks each
@@ -51,7 +57,9 @@ def job(binpath):
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    bins = sorted(b for b in glob.glob(os.path.join(W, 'bins', '*')) if not b.endswith('.fail'))
+    # 1.85.1 is the comparison toolchain: configs c1 and c3 only (c2/c4 are built but not traced)
+    bins = sorted(b for b in glob.glob(os.path.join(W, 'bins', '*')) if not b.endswith('.fail')
+                  and not re.search(r'1\.85\.1_\w+?_c[24]_', os.path.basename(b)))
     with Pool(int(os.environ.get('JOBS', '2'))) as p:
         for bid, st in p.imap_unordered(job, bins):
             print(bid, st, flush=True)

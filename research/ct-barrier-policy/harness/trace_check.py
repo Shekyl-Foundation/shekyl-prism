@@ -37,21 +37,34 @@ hd = os.path.dirname(os.path.abspath(__file__))
 out = subprocess.run([QEMU] + QARGS + [BIN, 'one', SET, INPUTS[0]], capture_output=True, text=True, env=env, cwd=hd).stdout
 m = re.search(r'addr reduce (0x[0-9a-f]+) exact_round (0x[0-9a-f]+)', out)
 rt_red, rt_er = int(m.group(1), 16), int(m.group(2), 16)
-syms = {}
+reds, ers = [], []
 for line in subprocess.run([NM, '-S', '-C', BIN], capture_output=True, text=True).stdout.splitlines():
     f = line.split(None, 3)
-    if len(f) == 4:
-        syms[f[3]] = (int(f[0], 16), int(f[1], 16))
-red = syms[f'rust_lagrange_ct::zi::reduce::<{C}, {N}, {PL}>']
-er = syms.get(f'rust_lagrange_ct::ct::exact_round::<{N}>')
-base = rt_red - red[0]
+    if len(f) != 4:
+        continue
+    # v0 mangling (1.97.1) shows the generics; legacy mangling (1.85.1) does
+    # not, so instantiations are matched by runtime address instead.
+    if re.fullmatch(r'rust_lagrange_ct::zi::reduce(::<.*>)?', f[3]):
+        reds.append((int(f[0], 16), int(f[1], 16), f[3]))
+    if re.fullmatch(r'rust_lagrange_ct::ct::exact_round(::<.*>)?', f[3]):
+        ers.append((int(f[0], 16), int(f[1], 16), f[3]))
+want = f'rust_lagrange_ct::zi::reduce::<{C}, {N}, {PL}>'
+named = [r for r in reds if r[2] == want]
+cands = named if named else reds
+red = er = None
+for r in cands:
+    base = rt_red - r[0]
+    if base % 0x1000:
+        continue
+    e = [x for x in ers if x[0] + base == rt_er]
+    if e or named:
+        red, er, BASE = r, (e[0] if e else None), base
+        break
+assert red is not None, 'reduce instantiation not found'
+base = BASE
 ranges = [(base + red[0], base + red[0] + red[1])]
 if er:
-    assert rt_er - er[0] == base
     ranges.append((base + er[0], base + er[0] + er[1]))
-else:
-    # exact_round inlined (or merged) into reduce: covered by reduce's range
-    pass
 dfilter = ','.join(f'{a:#x}..{b - 1:#x}' for a, b in ranges)
 res = {}
 TR = re.compile(r'^Trace \d+: 0x[0-9a-f]+ \[[0-9a-f]+/([0-9a-f]+)/')

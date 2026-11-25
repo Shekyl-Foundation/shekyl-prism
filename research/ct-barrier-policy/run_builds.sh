@@ -14,7 +14,7 @@ for tc in ${TCS:-1.97.1 1.85.1}; do
     c1) O=3; L=fat; CU=1; CPU="";;
     c2) O=2; L=fat; CU=1; CPU="";;
     c3) O=3; L=off; CU=16; CPU="";;
-    c4) O=3; L=fat; CU=1; if [ $arch = x86_64 ]; then CPU="-C target-cpu=native"; else CPU="-C target-cpu=neoverse-v1"; fi;;
+    c4) O=3; L=fat; CU=1; if [ $arch = x86_64 ]; then CPU="-C target-cpu=x86-64-v3"; else CPU="-C target-cpu=neoverse-v1"; fi;;
    esac
    if [ $arch = aarch64 ]; then
      # static, non-PIE: fixed addresses for qemu -dfilter (qemu-aarch64 maps PIE at random bases)

@@ -40,6 +40,10 @@ for line in subprocess.run([NM, '-S', '-C', BIN], capture_output=True, text=True
     f = line.split(None, 3)
     if len(f) != 4:
         continue
+    if f[3] in ('rust_lagrange_ct::zi::reduce', 'rust_lagrange_ct::ct::exact_round'):
+        # legacy mangling (1.85.1): no generics in the name; label by address
+        syms.append((f'inst@{f[0][-6:]}', f[3].split('::')[-1], int(f[0], 16), int(f[1], 16)))
+        continue
     m = re.fullmatch(r'rust_lagrange_ct::zi::reduce::<(\d+), (\d+), (\d+)>', f[3])
     if m:
         syms.append((GEN[tuple(map(int, m.groups()))], 'reduce', int(f[0], 16), int(f[1], 16)))

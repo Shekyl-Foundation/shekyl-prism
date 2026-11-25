@@ -45,7 +45,7 @@ UNSAFE = {
 }
 CFGS = ['c1', 'c2', 'c3', 'c4']
 CFG_DESC = {'c1': 'opt 3, fat LTO, cgu 1', 'c2': 'opt 2, fat LTO, cgu 1', 'c3': 'opt 3, no LTO, cgu 16',
-            'c4': 'opt 3, fat LTO, cgu 1, target-cpu (x86: native = this Xeon, AVX-512; aarch64: neoverse-v1)'}
+            'c4': 'opt 3, fat LTO, cgu 1, target-cpu (x86: x86-64-v3 = AVX2/BMI2/ADX; aarch64: neoverse-v1)'}
 TCS = ['1.97.1', '1.85.1']
 ARCHS = ['x86_64', 'aarch64']
 
