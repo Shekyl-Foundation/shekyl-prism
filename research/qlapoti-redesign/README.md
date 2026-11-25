@@ -1,4 +1,4 @@
-# qlapoti redesign (experiment, in progress)
+# qlapoti redesign (experiment)
 
 Date: 2026-11-24. Research for Shekyl PRISM. Model estimates in Python;
 no constant-time or security claim. Nothing here changes the signature
@@ -39,11 +39,31 @@ Sets: P248, P324, P376, P500, P664 only (P500 is Shekyl's).
 
 ## Files
 
+Results and recommendation: [`REPORT.md`](REPORT.md); every table:
+[`results/TABLES.md`](results/TABLES.md).
+
 - `fne.py`, `fsne.py`: copied unchanged from
-  `research/fixed-schedule-norm-equation/` (the faithful port of
-  `quat_qlapoti`, PRISM_v2 @ 87fad7d, and its fixed-schedule variant).
-- `qlr.py`: the per-lambda sweep logger (one generator, many lambdas,
-  outcome code per lambda; sieve buckets for a two-stage design).
-- `collect.py`: data collection (resumable, seeded). Raw logs go to
-  `data/` (git-ignored, about 1 GB; deterministic from the seeds).
-- `summarize.py`: raw logs to per-generator summaries in `results/`.
+  `research/fixed-schedule-norm-equation/` (the port of `quat_qlapoti`,
+  PRISM_v2 @ 87fad7d, and its fixed-schedule variant).
+- `qlr.py`: per-lambda sweep logger on the reference structure (one
+  generator, many lambdas, an outcome code per lambda, sieve buckets).
+- `collect.py`: reference-structure data (600 S per set, 8 generators x
+  4000 lambdas at e-2, e-1, e; 64 generator searches per S). Resumable,
+  seeded. Raw logs in `data/` (git-ignored, ~1.2 GB, reproducible).
+- `qlapoty_proto.py`, `collect_q.py`: Qlapoty-style prototype (balanced
+  alpha0, odd lambda, mod-4n lattice, z prime = 1 mod 4) on the same S.
+- `summarize.py`: raw logs -> `results/*.csv.gz` (committed).
+- `costmodel.py`: work-unit model of every component (fsne units).
+- `analyze.py`: worst-case sizing and design optimisation ->
+  `results/tables.json`; `tables_md.py` -> `results/TABLES.md`.
+- `c_o29/`: `build.sh` (five builds of the pinned C reference: used power
+  e-2, e-1, e, and e-2 / e without the theta postcondition) and
+  `run_c.py`; per-seed results in `c_o29/runs/` (pk and sm hex of test
+  seeds, no real keys).
+
+Reproduce: `python collect.py && python collect_q.py && python
+summarize.py && python summarize.py --qy && python analyze.py && python
+tables_md.py` (Sage env with gmpy2 / cypari2 / pandas / scipy; 3 cores,
+about 25 minutes). C: `bash c_o29/build.sh && python3 c_o29/run_c.py
+e2,e1,e0,e2np,e0np 1,3,5 100` (needs the QLSTAT patch from
+`research/fixed-schedule-norm-equation/c_crosscheck/`).
