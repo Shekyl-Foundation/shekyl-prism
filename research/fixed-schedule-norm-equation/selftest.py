@@ -1,3 +1,8 @@
+# Copyright (c) 2025-2026, The Shekyl Foundation
+#
+# All rights reserved.
+# BSD-3-Clause
+
 """Quick checks of the port (run: python selftest.py)."""
 import time
 from fne import *

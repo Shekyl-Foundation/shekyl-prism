@@ -1,3 +1,8 @@
+# Copyright (c) 2025-2026, The Shekyl Foundation
+#
+# All rights reserved.
+# BSD-3-Clause
+
 import sys,time
 sys.path.insert(0,'.')
 from fne import *

@@ -1,3 +1,8 @@
+# Copyright (c) 2025-2026, The Shekyl Foundation
+#
+# All rights reserved.
+# BSD-3-Clause
+
 """Empirical cross-check of the recomputed O0-coordinate counts (t37u).
 
 For each set: honest signing ideals and crafted_k1 in O0 numerators, challenge
