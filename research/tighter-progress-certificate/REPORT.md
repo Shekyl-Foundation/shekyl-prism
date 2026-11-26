@@ -43,7 +43,7 @@ Savings at P500 for the five selected classes, new exp64 against PR #45:
 
 Notation follows `lagrange-tour-bound` §3. A_t = N4(u_t) after swap t, λ_t = Δ/A_t², ε_t is the residual of step t+1, and r_t = A_t/A_{t−1} = λ_{t−1} + |ε_{t−1}|². After a swap, q_{t+1} = conj(ε_{t−1})/r_t. Lemma 1 (strict swap): if steps t and t+1 both swap, |μ_{t+1}|² ≥ 2. Once a step does not swap, the run is at the fixed point after it. With n swaps, the exact run needs n + 1 steps, and the last one is the final size reduction.
 
-**(a) Main phase: cell potential.** A function g ≥ 1 on [−½, ½]², constant on 8,758 dyadic cells (quadtree, depth ≤ 28), with Ψ_t = A_t·g(ε_t). The certificate checks, for every cell c and λ ∈ [0, 2⁻²⁰]:
+**(a) Main phase: cell potential.** A function g ≥ 1 on [−½, ½]², constant on 8,758 dyadic cells (quadtree, maximum depth 14), with Ψ_t = A_t·g(ε_t). The certificate checks, for every cell c and λ ∈ [0, 2⁻²⁰]:
 
 - r ≤ r̄(c);
 - every admissible next residual ε′ = q − μ (with |μ|² ≥ 2 and q enclosed exactly) lies in cells whose g is at most g_s;
