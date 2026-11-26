@@ -12,6 +12,25 @@ pub type Scalar<const W: usize> = SecretInt<W>;
 type Word = SecretInt<1>;
 pub type Vector<const W: usize> = [Scalar<W>; 4];
 
+/// exp64, as section 2.3 states it. The divisor keeps the top
+/// [`QUOTIENT_TOP_BITS`]. An exponent at or below [`QUOTIENT_WINDOW`] is one
+/// half-up step; a larger exponent is the undershooting big step.
+const QUOTIENT_TOP_BITS: u64 = 64;
+const QUOTIENT_WINDOW: u64 = 60;
+
+/// Q4: `B = ceil(L/2) + Q4_SLACK_BITS`, and a secret norm is below `2^B`.
+const Q4_SLACK_BITS: u32 = 32;
+
+/// The challenge degree satisfies `q < 2^(2e - CHALLENGE_DEGREE_SHIFT)`.
+const CHALLENGE_DEGREE_SHIFT: u32 = 5;
+
+/// `2^9 = 2 * 256`. On a guarded intersection `A' = 2 nrd(U)/T` is at most
+/// `512 sqrt(p) q`.
+const NORMALIZED_GUARD_BITS: u32 = 9;
+
+/// Slack on `q` in the guarded diagonal bound. The schedule's `C0` uses `q + 1`.
+const GUARDED_DIAGONAL_SLACK: u64 = 3;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Class {
     Guarded,
@@ -92,13 +111,13 @@ impl<const W: usize, const D: usize> Bounds<W, D> {
             .unwrap()
             .sub(&one)
             .unwrap();
-        let q = one.shl(2 * S::E - 5).unwrap();
-        let max_norm = q.shl(p.bit_length().div_ceil(2) + 32).unwrap();
+        let q = one.shl(2 * S::E - CHALLENGE_DEGREE_SHIFT).unwrap();
+        let max_norm = q.shl(p.bit_length().div_ceil(2) + Q4_SLACK_BITS).unwrap();
         let root = p.sqrt_floor().unwrap().add(&one).unwrap();
         let guarded = root
-            .shl(9)
+            .shl(NORMALIZED_GUARD_BITS)
             .unwrap()
-            .mul(&q.add(&Int::from_u64(3)).unwrap())
+            .mul(&q.add(&Int::from_u64(GUARDED_DIAGONAL_SLACK)).unwrap())
             .unwrap();
         let generic = max_norm
             .shl(2)
@@ -116,8 +135,12 @@ impl<const W: usize, const D: usize> Bounds<W, D> {
             // A' = 2 nrd(U)/T <= 512 sqrt(p) q on a guarded intersection.
             guarded_first_squared: Scalar::<W>::from_public(&q)
                 .resize::<D>()
-                .shl(9)
-                .mul(&Scalar::<W>::from_public(&q).resize::<D>().shl(9))
+                .shl(NORMALIZED_GUARD_BITS)
+                .mul(
+                    &Scalar::<W>::from_public(&q)
+                        .resize::<D>()
+                        .shl(NORMALIZED_GUARD_BITS),
+                )
                 .mul(&Scalar::<W>::from_public(&p).resize()),
             generic_diagonal: Scalar::<W>::from_public(&generic),
         }
@@ -344,10 +367,10 @@ fn positive_part(x: &Word) -> Word {
 
 fn quotient<const W: usize>(g: &Gram<W>) -> ([Word; 2], Word) {
     let bits = g.a.bit_length();
-    let k = positive_part(&bits.sub(&Word::from_u64(64)));
+    let k = positive_part(&bits.sub(&Word::from_u64(QUOTIENT_TOP_BITS)));
     let [b0, b1] = g.h.each_ref().map(Scalar::bit_length);
     let largest = Word::select(&b0, &b1, &b0.ct_lt(&b1));
-    let shift = positive_part(&largest.sub(&bits).sub(&Word::from_u64(60)));
+    let shift = positive_part(&largest.sub(&bits).sub(&Word::from_u64(QUOTIENT_WINDOW)));
     let big = Word::zero().ct_lt(&shift);
     let divisor = g.a.shr_secret(&k).resize::<1>();
     let align = k.add(&shift);
@@ -355,9 +378,10 @@ fn quotient<const W: usize>(g: &Gram<W>) -> ([Word; 2], Word) {
         let top = h.abs().shr_secret(&align).resize::<2>().div_word(&divisor);
         let signed = |x: &Word| Word::select(x, &x.neg(), &h.is_negative());
         let estimate = signed(&top);
-        let correction = h.sub(&g.a.mul_word(&estimate)).shl(1).add(&g.a);
-        let lower = correction.is_negative();
-        let upper = correction.ct_lt(&g.a.shl(1)).not();
+        // X = 2h + A - 2mA. Decrement when X < 0, increment when X >= 2A.
+        let x = h.sub(&g.a.mul_word(&estimate)).shl(1).add(&g.a);
+        let lower = x.is_negative();
+        let upper = x.ct_lt(&g.a.shl(1)).not();
         let corrected = estimate
             .sub(&Word::select(&Word::zero(), &Word::one(), &lower))
             .add(&Word::select(&Word::zero(), &Word::one(), &upper));
