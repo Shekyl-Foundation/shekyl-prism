@@ -68,11 +68,11 @@ def run_lattice(rng, cols, m, K, stats, pari_every):
         stats['pari'] += 1
 
 
-def main():
+def main(skip_lattices=False):
     rng = random.Random(11)
     stats = dict(runs=0, pari=0, hash=set(), lattices=0, nonspan=0)
     t0 = time.time()
-    for m in (2, 3, 4):
+    for m in (() if skip_lattices else (2, 3, 4)):
         n = 0
         for cols in all_hnfs(m):
             if not contains_mZ4(cols, m):
@@ -82,8 +82,8 @@ def main():
                 run_lattice(rng, cols, m, K, stats, 97)
         stats['lattices'] += n
         print('m=%d: all %d lattices containing mZ^4, 2 K values each' % (m, n)); sys.stdout.flush()
-    for m, cnt in ((5, 2000), (6, 4000), (8, 3000), (9, 3000), (10, 2000), (12, 3000), (16, 2000), (18, 2000),
-                   (30, 1500), (36, 1500), (64, 1000), (210, 800), (1024, 400), (2 * 3 * 5 * 7 * 11 * 13, 400)):
+    for m, cnt in (() if skip_lattices else ((5, 2000), (6, 4000), (8, 3000), (9, 3000), (10, 2000), (12, 3000), (16, 2000), (18, 2000),
+                   (30, 1500), (36, 1500), (64, 1000), (210, 800), (1024, 400), (2 * 3 * 5 * 7 * 11 * 13, 400))):
         got = 0
         tries = 0
         while got < cnt and tries < 400 * cnt:
@@ -103,7 +103,8 @@ def main():
             k = rng.choice((1, 2, 3, 4, 6))
             G = [[rng.randrange(-(1 << (2 * K)) + 1, 1 << (2 * K)) for _ in range(4)] for _ in range(k)]
             if rng.random() < 0.5:
-                G = [[x * rng.choice((1, 2, 3)) if rng.random() < .5 else 0 for x in r] for r in G]
+                G = [[(x * c if abs(x * c) < (1 << (2 * K)) else x) if rng.random() < .5 else 0
+                      for x, c in ((x, rng.choice((1, 2, 3))) for x in r)] for r in G]
             P, ctx = fixed_modulus_hnf(G, m, K)
             assert P == lib.pari_hnf_cols(G, m) == lib.sage_hnf_cols(G, m)
             stats['nonspan'] += 1
@@ -115,4 +116,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(skip_lattices='--nonspan-only' in sys.argv)
