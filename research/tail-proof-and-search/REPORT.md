@@ -60,3 +60,54 @@ With τ = 4 from 2⁻¹¹ now independent, the review's own band ratios (exact e
   - challenge at P664: 526 → 525.
 - **Optional further cut.** The self-proven table goes one below the claimed one in signing (545 at P500), guard 256 (532), keygen-D (410) and the challenge (395 at P500). That is a decision for Rick; the adopted 546/533 stay safe.
 - **Possible follow-up, not adopted.** Secret-ideal exp64 = 21 at every set would need the producer to guarantee the standard generic HNF, plus a derivation of its head bound under the 2⁻¹¹ split.
+
+## 3. Adversarial search, P500 and P664
+
+`hunt.py` searches integer Hermitian Gram matrices with A₀²/Δ ≤ R₀ and max(A₀, C₀)²/Δ ≤ R_C. That is a superset of every admitted class. The need is measured by running the contract forward under both the exact rule and exp64, and it includes the final size reduction.
+
+Strategies:
+- **Phase 1 (55 %):** chain hill climbing, i.e. backward Gaussian-quotient chains with `../certificate-review/hillclimb.py`'s moves, plus tie starts (residual exactly −½, or ½ − 1/C).
+- **Phase 2 (45 %):** polish on the best eight inputs. Moves pick an intermediate state of the forward run and either snap a quotient component to an exact half or one unit off it (sometimes both components, a double tie), or set λ_j to 2⁻¹¹, 2⁻⁹, ½, 1023/1024 or 2⁻¹⁶, or perturb it. The state is then mapped back to G₀ through the recorded unimodular steps.
+
+New compared with the earlier review: chains are **truncated at the longest prefix meeting both bounds** instead of being rejected. The old search lost almost every long chain in the guarded class (220/267 at P248); the new one reaches 529/533 at P500.
+
+The budget was 1,800 s per cell (10 cells in parallel on 8 cores, seed 11). Raw output is in `results/hunt/*.json`, with witnesses as Gram vectors.
+
+| Set | Class | Evaluations (chain + polish) | Best need, exact / exp64 | Claimed | Adopted | Self-proven now | Margin vs adopted | Margin vs self-proven |
+|---|---|---:|---|---:|---:|---:|---:|---:|
+| P500 | signing, generic | 158k + 208k | 543 / 543 | 546 | 546 | 545 | 3 | **2** |
+| P500 | guard 256 | 215k + 182k | 529 / 529 | 533 | 533 | 532 | 4 | 3 |
+| P500 | keygen, norm D | 231k + 250k | 408 / 408 | 411 | 411 | 410 | 3 | **2** |
+| P500 | secret-ideal pre-reduction | 3.47M + 5.40M | 20 / **21** | 21 / 22 | 21 / 22 | 21 / 22 | 1 / 1 | **1 / 1** |
+| P500 | challenge | 230k + 455k | 393 / 393 | 396 | 396 | 395 | 3 | **2** |
+| P664 | signing, generic | 142k + 126k | 716 / 716 | 719 | 719 | 718 | 3 | **2** |
+| P664 | guard 256 | 137k + 124k | 702 / 702 | 706 | 706 | 705 | 4 | 3 |
+| P664 | keygen, norm D | 149k + 166k | 635 / 635 | 638 | 638 | 637 | 3 | **2** |
+| P664 | secret-ideal pre-reduction | 3.50M + 5.01M | 20 / **22** | 21 / 23 | 22 / 24 | 21 / 23 | 2 / 2 | **1 / 1** |
+| P664 | challenge | 184k + 266k | 522 / 522 | 525 | 526 | 525 | 4 | 3 |
+
+- **No counterexample.** No input exceeds any adopted, claimed or newly self-proven count.
+- **The tightest margin is 1 step, on the secret-ideal pre-reduction.**
+  - exp64 at P500 needs 21 against 22, with one big sub-step.
+  - exp64 at P664 needs 22 against 23, with two big sub-steps.
+  - Exact needs 20 against 21.
+- **Secret-ideal 21-everywhere option.** These Gram-space witnesses already need 22 exp64 slots at P664. Without the standard generic HNF guarantee, 21 everywhere would be **false** at P664. The follow-up must therefore restrict the input, not just re-derive the bound.
+- Every other class comes within 2 to 4 steps.
+- In the polynomial classes the best witnesses came from chain hill climbing. The near-tie and boundary-λ polish moves found no deeper input, and exp64 need equalled exact need (no big sub-steps).
+
+## 4. Recommendations
+
+- **Keep 546 / 533 at P500.** They are supported with 3–4 steps of search slack.
+- 545 / 532, and the other one-lower numbers in §2, are now self-proven as well. Adopting them is a margin decision for Rick.
+- **Secret-ideal pre-reduction may go back to 21 exact and 21/22/22/22/23 exp64.** The challenge at P664 may go back to 525.
+- Do not adopt secret-ideal exp64 = 21 everywhere without the HNF producer guarantee (§3).
+
+## 5. Files
+
+| File | Contents |
+|---|---|
+| `cellmap.c` | cell-mapping tail certificate; `gcc -O2 -frounding-math -o cellmap cellmap.c -lm && VALIDATE=3000000 ./cellmap 11 5 24,28,32,40 11 0` |
+| `tail_lemmas.sage` | Lemma 1 identity, Lemma C, the tie identity behind the old stall |
+| `exact_path.py` | exact-rational trajectories at the degenerate double tie (3 swaps, then r = 1 exactly) |
+| `hunt.py` | P500/P664 search: `python3 hunt.py p500 sign-generic 1800 11` |
+| `results/` | `cellmap_tail5_from_2^-11.txt`, `cellmap_ablation.txt`, `cellmap_below_2^-11.txt`, `tail_lemmas.txt`, `mycounts_full.txt`, `hunt/*.json` |
