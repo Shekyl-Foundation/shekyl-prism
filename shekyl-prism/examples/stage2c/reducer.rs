@@ -31,10 +31,40 @@ pub enum Class {
     Generic,
 }
 
+impl Class {
+    /// Corpus spelling. Fixture files and measurement rows use this token.
+    /// `Debug` is not a wire format.
+    pub const fn token(self) -> &'static str {
+        match self {
+            Self::Guarded => "prered-guard256",
+            Self::Generic => "sign-generic",
+        }
+    }
+
+    /// Inverse of [`Self::token`]. `None` is an unknown token, not a class.
+    pub fn from_token(token: &str) -> Option<Self> {
+        match token {
+            "prered-guard256" => Some(Self::Guarded),
+            "sign-generic" => Some(Self::Generic),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum Schedule {
     Reviewed,
     Pr45Baseline,
+}
+
+impl Schedule {
+    /// Measurement-row spelling of the schedule the reducer actually ran.
+    pub const fn token(self) -> &'static str {
+        match self {
+            Self::Reviewed => "reviewed",
+            Self::Pr45Baseline => "pr45-baseline",
+        }
+    }
 }
 
 #[derive(Clone, Copy)]

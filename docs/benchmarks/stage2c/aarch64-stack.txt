@@ -1,0 +1,60 @@
+aarch64 p248 sign-generic 1 stack_bytes=13120 residual_words=25/30
+aarch64 p248 sign-generic 2 stack_bytes=13120 residual_words=25/30
+aarch64 p248 sign-generic 3 stack_bytes=13120 residual_words=27/34
+aarch64 p248 sign-generic 4 stack_bytes=13120 residual_words=22/32
+aarch64 p248 sign-generic 5 stack_bytes=13120 residual_words=27/34
+aarch64 p248 prered-guard256 1 stack_bytes=14448 residual_words=48/53
+aarch64 p248 prered-guard256 2 stack_bytes=14448 residual_words=48/53
+aarch64 p248 prered-guard256 3 stack_bytes=14448 residual_words=48/53
+aarch64 p248 prered-guard256 4 stack_bytes=14448 residual_words=48/53
+aarch64 p248 prered-guard256 5 stack_bytes=14448 residual_words=48/53
+aarch64 p248 prered-guard256 6 stack_bytes=14448 residual_words=48/53
+aarch64 p248 full reducer: 10309 linked instructions checked
+aarch64 p324 sign-generic 1 stack_bytes=16476 residual_words=33/40
+aarch64 p324 sign-generic 2 stack_bytes=16476 residual_words=33/40
+aarch64 p324 sign-generic 3 stack_bytes=16476 residual_words=34/43
+aarch64 p324 sign-generic 4 stack_bytes=16476 residual_words=29/42
+aarch64 p324 sign-generic 5 stack_bytes=16476 residual_words=34/42
+aarch64 p324 prered-guard256 1 stack_bytes=18376 residual_words=60/67
+aarch64 p324 prered-guard256 2 stack_bytes=18376 residual_words=62/69
+aarch64 p324 prered-guard256 3 stack_bytes=18376 residual_words=62/69
+aarch64 p324 prered-guard256 4 stack_bytes=18376 residual_words=62/69
+aarch64 p324 prered-guard256 5 stack_bytes=18376 residual_words=61/68
+aarch64 p324 prered-guard256 6 stack_bytes=18376 residual_words=61/68
+aarch64 p324 full reducer: 10763 linked instructions checked
+aarch64 p376 sign-generic 1 stack_bytes=18416 residual_words=37/44
+aarch64 p376 sign-generic 2 stack_bytes=18416 residual_words=37/44
+aarch64 p376 sign-generic 3 stack_bytes=18416 residual_words=33/48
+aarch64 p376 sign-generic 4 stack_bytes=18416 residual_words=40/50
+aarch64 p376 sign-generic 5 stack_bytes=18416 residual_words=33/48
+aarch64 p376 prered-guard256 1 stack_bytes=20424 residual_words=70/77
+aarch64 p376 prered-guard256 2 stack_bytes=20424 residual_words=70/77
+aarch64 p376 prered-guard256 3 stack_bytes=20424 residual_words=70/77
+aarch64 p376 prered-guard256 4 stack_bytes=20424 residual_words=70/77
+aarch64 p376 prered-guard256 5 stack_bytes=20424 residual_words=70/77
+aarch64 p376 prered-guard256 6 stack_bytes=20424 residual_words=70/77
+aarch64 p376 full reducer: 10313 linked instructions checked
+aarch64 p500 sign-generic 1 stack_bytes=23448 residual_words=50/60
+aarch64 p500 sign-generic 2 stack_bytes=23448 residual_words=50/60
+aarch64 p500 sign-generic 3 stack_bytes=23448 residual_words=53/66
+aarch64 p500 sign-generic 4 stack_bytes=23448 residual_words=53/66
+aarch64 p500 sign-generic 5 stack_bytes=23448 residual_words=53/66
+aarch64 p500 prered-guard256 1 stack_bytes=26264 residual_words=95/105
+aarch64 p500 prered-guard256 2 stack_bytes=26264 residual_words=96/106
+aarch64 p500 prered-guard256 3 stack_bytes=26264 residual_words=96/106
+aarch64 p500 prered-guard256 4 stack_bytes=26264 residual_words=95/105
+aarch64 p500 prered-guard256 5 stack_bytes=26264 residual_words=96/106
+aarch64 p500 prered-guard256 6 stack_bytes=26264 residual_words=96/106
+aarch64 p500 full reducer: 9961 linked instructions checked
+aarch64 p664 sign-generic 1 stack_bytes=29872 residual_words=63/74
+aarch64 p664 sign-generic 2 stack_bytes=29872 residual_words=63/74
+aarch64 p664 sign-generic 3 stack_bytes=29872 residual_words=59/86
+aarch64 p664 sign-generic 4 stack_bytes=29872 residual_words=59/86
+aarch64 p664 sign-generic 5 stack_bytes=29872 residual_words=59/86
+aarch64 p664 prered-guard256 1 stack_bytes=33456 residual_words=118/129
+aarch64 p664 prered-guard256 2 stack_bytes=33456 residual_words=118/130
+aarch64 p664 prered-guard256 3 stack_bytes=33456 residual_words=118/130
+aarch64 p664 prered-guard256 4 stack_bytes=33456 residual_words=118/130
+aarch64 p664 prered-guard256 5 stack_bytes=33456 residual_words=118/129
+aarch64 p664 prered-guard256 6 stack_bytes=33456 residual_words=118/129
+aarch64 p664 full reducer: 10432 linked instructions checked
