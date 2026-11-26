@@ -4,7 +4,7 @@
 // BSD-3-Clause
 
 //! The layers under the interface: field arithmetic, isogenies, and the
-//! verifier's steps, and the first layer of the signer.
+//! verifier's steps, and the signer's integer and ideal layers.
 //!
 //! This is where the algorithm can be read, measured and extended. The
 //! first three modules are the three layer crates of the verifier, whole:
@@ -17,17 +17,17 @@
 //!   challenge, and the relation, as separate steps, and the two entries
 //!   that run them.
 //!
-//! A fourth is here only when this crate is built with its `signer`
+//! The signer layers are here only when this crate is built with its `signer`
 //! feature, which is off by default. A default build is the verifier and
 //! holds no signer code and none of its dependencies. The signer is being
-//! written from the bottom up and does not sign yet; its one layer so far
-//! is:
+//! written from the bottom up and does not sign yet; its current layers are:
 //!
 //! - `int` (`prism-int`): the fixed-width signed integers of the
 //!   signer's quaternion arithmetic, as a public type and a secret type.
-//!   Nothing in this crate calls it. It makes no constant-time claim; its
-//!   own documentation says what the secret type does and does not
-//!   promise.
+//!   `ideal` calls it. It makes no constant-time claim; its own
+//!   documentation says what the secret type does and does not promise.
+//! - `ideal`: checked integral left-ideal components, the generic
+//!   column-HNF of a norm and a root, and guarded challenge intersections.
 //!
 //! # What using this module means
 //!
@@ -69,3 +69,8 @@ pub use prism_field as field;
 pub use prism_int as int;
 pub use prism_isogeny as isogeny;
 pub use prism_verify as verify;
+
+/// Native quaternion ideal admission and intersection in O0 numerator coordinates.
+#[cfg(feature = "signer")]
+#[path = "ideal/mod.rs"]
+pub mod ideal;

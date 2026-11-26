@@ -4,7 +4,8 @@
 // BSD-3-Clause
 
 use crate::reducer::{self, Basis, Bounds, Class, Reduced, ReductionSet, Scalar, Schedule, Vector};
-use prism_int::{SecretBit, SecretError, SecretInt};
+use prism_int::{Int, SecretBit, SecretError, SecretInt};
+use shekyl_prism::hazmat::ideal;
 use std::hint::black_box;
 use std::time::Instant;
 
@@ -12,13 +13,20 @@ fn check_bit(bit: SecretBit, expected: bool) {
     assert_eq!(bit.declassify(), Ok(expected));
 }
 
-fn scalar<const W: usize>(hex: &str) -> Scalar<W> {
-    let digits = hex.trim_start_matches('-').as_bytes();
-    let bytes: Vec<_> = digits
+fn check_invalid<const W: usize>(value: &Scalar<W>) {
+    assert_eq!(value.declassify().unwrap_err(), SecretError::Overflowed);
+}
+
+fn magnitude(hex: &str) -> Vec<u8> {
+    hex.trim_start_matches('-')
+        .as_bytes()
         .rchunks(2)
         .map(|chunk| u8::from_str_radix(std::str::from_utf8(chunk).unwrap(), 16).unwrap())
-        .collect();
-    let x = SecretInt::from_le_bytes(&bytes);
+        .collect()
+}
+
+fn scalar<const W: usize>(hex: &str) -> Scalar<W> {
+    let x = SecretInt::from_le_bytes(&magnitude(hex));
     if hex.starts_with('-') {
         x.neg()
     } else {
@@ -69,6 +77,128 @@ impl<const W: usize> Fixture<W> {
             check_bit(x.ct_eq(want), true);
         }
     }
+}
+
+fn check_ideal<S: ReductionSet<W, D>, const W: usize, const D: usize>(
+    line: &str,
+    expected: &Fixture<W>,
+    bounds: &Bounds<W, D>,
+) {
+    let mut fields = line.split_whitespace();
+    let mut values = fields.by_ref().take(11).map(scalar);
+    let n: Scalar<W> = values.next().unwrap();
+    let ideal_root = [values.next().unwrap(), values.next().unwrap()];
+    let u: Vector<W> = std::array::from_fn(|_| values.next().unwrap());
+    let v: Vector<W> = std::array::from_fn(|_| values.next().unwrap());
+    let mut challenge = magnitude(fields.next().unwrap());
+    challenge.resize((S::CHALLENGE_BITS as usize).div_ceil(8), 0);
+    let challenge_root = std::array::from_fn(|_| scalar(fields.next().unwrap()));
+    assert!(fields.next().is_none());
+    let z = Scalar::zero;
+    let hnf = ideal::GenericHnf::from_norm_and_root(&n, &ideal_root);
+    let (generated_key, generated) =
+        Basis::secret_candidate::<S, D>(&n, &ideal_root, bounds).expect("admitted candidate");
+    for (got, want) in generated
+        .u
+        .iter()
+        .chain(&generated.v)
+        .zip(u.iter().chain(&v))
+    {
+        check_bit(got.ct_eq(want), true);
+    }
+    let key = ideal::GuardedIdeal::<S, W, D>::admit(n.clone(), hnf.columns(), u.clone(), v.clone())
+        .expect("imported ideal");
+    let intersection = key.intersection(&challenge, &challenge_root).unwrap();
+    let from_generation = generated_key
+        .intersection(&challenge, &challenge_root)
+        .unwrap();
+    for (got, want) in from_generation
+        .u
+        .iter()
+        .chain(&from_generation.v)
+        .chain([&from_generation.norm])
+        .zip(
+            intersection
+                .u
+                .iter()
+                .chain(&intersection.v)
+                .chain([&intersection.norm]),
+        )
+    {
+        check_bit(got.ct_eq(want), true);
+    }
+    for (got, want) in intersection
+        .u
+        .iter()
+        .chain(&intersection.v)
+        .chain([&intersection.norm])
+        .zip(expected.u.iter().chain(&expected.v).chain([&expected.t]))
+    {
+        check_bit(got.ct_eq(want), true);
+    }
+    let result = Basis::from_intersection(
+        &intersection.norm,
+        intersection.u,
+        intersection.v,
+        Class::Guarded,
+        bounds,
+    )
+    .reduce(Schedule::Reviewed);
+    expected.check(&result);
+    assert!(key.intersection(&[], &challenge_root).is_none());
+    let invalid = key.intersection(&challenge, &[z(), z()]).unwrap();
+    for value in invalid.u.iter().chain(&invalid.v).chain([&invalid.norm]) {
+        check_invalid(value);
+    }
+    let admit = |columns: &[Vector<W>; 4], a, b| {
+        ideal::GuardedIdeal::<S, W, D>::admit(n.clone(), columns, a, b)
+    };
+    // Unimodular shear within the same ideal preserves its HNF and index,
+    // but takes the second generator beyond the guard.
+    let past_guard = ideal::geometry::GUARD_BITS + 1;
+    let long = std::array::from_fn(|i| v[i].add(&n.mul(&u[i]).shl(past_guard)));
+    assert!(admit(hnf.columns(), u.clone(), long).is_none());
+    // Shearing the ambient O0 numerator lattice by z1 += 2*z2 keeps its
+    // index, parity and Gaussian span. The new span fails left closure.
+    let step = ideal::geometry::ORDER_DENOMINATOR_BITS;
+    let shear = |w: &Vector<W>| {
+        [
+            w[0].add(&w[2].shl(step)),
+            w[1].add(&w[3].shl(step)),
+            w[2].clone(),
+            w[3].clone(),
+        ]
+    };
+    let mut unstable = hnf.columns().clone();
+    let pivot = hnf.pivot().clone();
+    let bumped = unstable[2][0].add(&Scalar::from_u64(1u64 << step));
+    let bumped = Scalar::select(&bumped.sub(&pivot), &bumped, &bumped.ct_lt(&pivot));
+    unstable[2][0] = bumped.clone();
+    unstable[3][1] = bumped;
+    assert!(admit(&unstable, shear(&u), shear(&v)).is_none());
+    let mut wrong = hnf.columns().clone();
+    wrong[2][0] = wrong[2][0].add(&Scalar::one());
+    assert!(admit(&wrong, u.clone(), v.clone()).is_none());
+    assert!(admit(hnf.columns(), u.clone(), u).is_none());
+    // One past the exclusive Q4 limit. Generation and import share the refusal.
+    let prime = ideal::field_prime::<S, W, D>().expect("field prime");
+    let excessive = Scalar::from_public(
+        &Int::one()
+            .shl(ideal::geometry::secret_norm_bits(prime.bit_length()))
+            .unwrap()
+            .add(&Int::one())
+            .unwrap(),
+    );
+    let excessive_hnf = ideal::GenericHnf::from_norm_and_root(&excessive, &ideal_root);
+    let (pivot_column, root_column) = excessive_hnf.generators();
+    assert!(ideal::GuardedIdeal::<S, W, D>::admit(
+        excessive.clone(),
+        excessive_hnf.columns(),
+        pivot_column,
+        root_column,
+    )
+    .is_none());
+    assert!(Basis::secret_candidate::<S, D>(&excessive, &ideal_root, bounds).is_none());
 }
 
 fn check_ties<S: ReductionSet<W, D>, const W: usize, const D: usize>() {
@@ -216,6 +346,22 @@ pub fn run<S: ReductionSet<W, D>, const W: usize, const D: usize>(corpus: &str, 
     check_ties::<S, W, D>();
     let bounds = Bounds::new::<S>();
     let fixtures: Vec<_> = corpus.lines().map(Fixture::parse).collect();
+    let ideals = S::IDEAL_CORPUS;
+    let guarded: Vec<_> = fixtures
+        .iter()
+        .filter(|f| f.class == Class::Guarded)
+        .collect();
+    assert_eq!(guarded.len(), 6);
+    assert_eq!(ideals.lines().count(), guarded.len());
+    for (line, expected) in ideals.lines().zip(guarded) {
+        check_ideal::<S, _, _>(line, expected, &bounds);
+    }
+    println!(
+        "stage2d {} secret_steps={} guarded_intersections={}",
+        S::NAME,
+        S::SECRET_IDEAL_STEPS,
+        ideals.lines().count()
+    );
     for f in &fixtures {
         for schedule in SCHEDULES {
             f.check(&f.input(&bounds).reduce(schedule));
@@ -235,7 +381,7 @@ pub fn run<S: ReductionSet<W, D>, const W: usize, const D: usize>(corpus: &str, 
             let invalid = Basis::from_intersection(&norm, f.u.clone(), v, class, &bounds)
                 .reduce(Schedule::Reviewed);
             for x in invalid.u.iter().chain(&invalid.v).chain(&invalid.form) {
-                assert_eq!(x.declassify().unwrap_err(), SecretError::Overflowed);
+                check_invalid(x);
             }
         }
     }

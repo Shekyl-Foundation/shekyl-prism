@@ -31,36 +31,62 @@ def run(*args):
     return subprocess.check_output(args, cwd=ROOT, text=True)
 
 
+# The reducer calls ideal geometry through hazmat::ideal. The probe links
+# shekyl-prism instead of compiling geometry.rs a second time.
+WANTED_LIBRARIES = ("prism_int", "prism_field", "shekyl_prism")
+
+
 def release_libraries():
-    """Release rlibs of the two crates the probe links."""
+    """Release rlibs the probe links, including the signer ideal layer."""
     messages = run(
         "cargo", "build", "--locked", "--release",
-        "-p", "prism-int", "-p", "prism-field",
+        "-p", "shekyl-prism", "--features", "signer",
         "--message-format=json",
     )
     libraries = {}
     for line in messages.splitlines():
         message = json.loads(line)
         name = message.get("target", {}).get("name")
-        if name not in ("prism_int", "prism_field"):
+        if name not in WANTED_LIBRARIES:
             continue
-        matches = [Path(filename) for filename in message["filenames"] if filename.endswith(".rlib")]
-        if len(matches) != 1:
-            raise RuntimeError(f"expected one {name} rlib, found {matches}")
-        libraries[name] = matches[0]
-    if set(libraries) != {"prism_int", "prism_field"}:
-        raise RuntimeError(f"release libraries missing: {sorted(libraries)}")
+        matches = [
+            Path(filename)
+            for filename in message.get("filenames", [])
+            if filename.endswith(".rlib")
+        ]
+        # An rmeta-only artifact is not the rlib. A later message may carry it.
+        if len(matches) == 1:
+            libraries[name] = matches[0]
+    missing = [name for name in WANTED_LIBRARIES if name not in libraries]
+    if missing:
+        raise RuntimeError(f"release libraries missing: {missing}")
     return libraries
+
+
+def dependency_dirs(libraries):
+    """Directories that hold these rlibs and the crates they depend on.
+
+    Cargo writes a directly built package under ``target/<profile>`` and its
+    dependencies under ``deps``. Search both when the directory exists.
+    """
+    found = []
+    for library in libraries.values():
+        for candidate in (library.parent, library.parent / "deps"):
+            if candidate.is_dir() and candidate not in found:
+                found.append(candidate)
+    return found
 
 
 def build_command(libraries, name, binary):
     """The rustc line for one parameter set. Callers may append target features."""
+    search = [arg for path in dependency_dirs(libraries) for arg in ("-L", f"dependency={path}")]
     return [
         "rustc", "--edition=2021", "-Copt-level=3", "-Cpanic=abort",
         "-Crelocation-model=static", "--cfg", f'stage2c_set="{name}"',
         "--extern", f"prism_int={libraries['prism_int']}",
         "--extern", f"prism_field={libraries['prism_field']}",
-        "-L", f"dependency={libraries['prism_int'].parent}/deps",
+        "--extern", f"shekyl_prism={libraries['shekyl_prism']}",
+        *search,
         PROBE_SOURCE, "-o", binary,
     ]
 

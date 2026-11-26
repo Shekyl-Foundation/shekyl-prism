@@ -181,10 +181,11 @@
 //!
 //! Off by default, and a default build is the verifier alone: it compiles
 //! no signer code and none of the signer's dependencies. With it,
-//! [`hazmat`] also re-exports the layers of the signer that exist. Today
-//! that is one, the fixed-width integers, as `hazmat::int`, which nothing
-//! here calls. Signing and key generation will be behind this feature
-//! when they are written.
+//! [`hazmat`] also exposes the layers of the signer that exist. Today
+//! those are the fixed-width integers, `hazmat::int`, and ideal
+//! admission, `hazmat::ideal`. The typed interface does not call them
+//! yet. Signing and key generation will be behind this feature when they
+//! are written.
 //!
 //! # What is missing
 //!

@@ -6,8 +6,13 @@
 //! With the `signer` feature, the signer's layers are reachable through
 //! `hazmat`. Cargo builds this file only when the feature is asked for
 //! (`required-features` in the manifest), and CI's step that asks for it
-//! requires the log to show this test ran.
+//! requires the log to show each of these tests ran.
 
+use shekyl_prism::hazmat::ideal::geometry::{
+    degree_bits, secret_norm_bits, DEGREE_EXPONENT, DEGREE_SHIFT, ORDER_DENOMINATOR_BITS,
+    Q4_SLACK_BITS,
+};
+use shekyl_prism::hazmat::ideal::GenericHnf;
 use shekyl_prism::hazmat::int::{Int, SecretBit, SecretInt};
 
 /// The integer crate is the one behind `hazmat::int`: its two types are
@@ -19,4 +24,19 @@ fn the_integers_are_under_hazmat() {
     assert!(sum == Int::from_u64(42));
     let wrapped = SecretInt::<4>::from_public(&sum);
     let _: SecretBit = wrapped.ct_eq(&wrapped);
+}
+
+/// Ideal admission is the other signer layer behind `hazmat`. The generic
+/// column-HNF is the norm-and-root constructor. No secret exit is called.
+#[test]
+fn the_ideal_layer_is_under_hazmat() {
+    assert_eq!(degree_bits(8), DEGREE_EXPONENT * 8 - DEGREE_SHIFT);
+    assert_eq!(secret_norm_bits(10), 10u32.div_ceil(2) + Q4_SLACK_BITS);
+    let norm = SecretInt::<4>::from_u64(5);
+    let root = [SecretInt::from_u64(2), SecretInt::from_u64(1)];
+    let hnf = GenericHnf::from_norm_and_root(&norm, &root);
+    let (pivot, root_column) = hnf.generators();
+    let _: SecretBit = pivot[0].ct_eq(&norm.shl(ORDER_DENOMINATOR_BITS));
+    let _: SecretBit = root_column[2].ct_eq(&SecretInt::one());
+    let _: SecretBit = hnf.pivot().ct_eq(&pivot[0]);
 }
