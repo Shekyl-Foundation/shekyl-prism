@@ -48,7 +48,12 @@ fn read_scalar(bytes: &[u8]) -> Scalar {
     Scalar::select(&n, &n.neg(), &negative)
 }
 
-fn reducer_probe(encoded: &[u8], class: reducer::Class) {
+#[inline(never)]
+fn reducer_probe(
+    encoded: &[u8],
+    class: reducer::Class,
+    bounds: &reducer::Bounds<LIMBS, { 2 * LIMBS }>,
+) {
     let mut values = encoded.chunks_exact(LIMBS * 8 + 1).map(read_scalar);
     let norm = values.next().unwrap();
     let basis = reducer::Basis::from_intersection(
@@ -56,7 +61,7 @@ fn reducer_probe(encoded: &[u8], class: reducer::Class) {
         std::array::from_fn(|_| values.next().unwrap()),
         std::array::from_fn(|_| values.next().unwrap()),
         class,
-        &reducer::Bounds::new::<Selected>(),
+        bounds,
     );
     let output = basis.reduce(reducer::Schedule::Reviewed);
     black_box((output.u, output.v, output.form));
@@ -70,6 +75,24 @@ fn leaky_control(count: u64) {
         black_box(2_u64);
         black_box(3_u64);
     }
+}
+
+// Fault in stack pages before an external debugger measures public fixtures.
+#[inline(never)]
+fn prime_stack() {
+    black_box(&mut [0u8; 256 * 1024]);
+}
+
+#[inline(never)]
+fn stack_start() {
+    black_box(1_u64);
+}
+
+#[inline(never)]
+fn residue_control(bytes: &[u8]) {
+    let mut copy = [0u8; 64];
+    copy.copy_from_slice(&bytes[..64]);
+    black_box(&mut copy);
 }
 
 #[inline(never)]
@@ -111,7 +134,7 @@ fn main() {
             }
             probe_end();
         }
-        "reduce" => {
+        "reduce" | "stack" | "residue-control" => {
             let class = match args[2].as_str() {
                 "prered-guard256" => reducer::Class::Guarded,
                 "sign-generic" => reducer::Class::Generic,
@@ -119,8 +142,20 @@ fn main() {
             };
             let mut encoded = std::fs::read(&args[1]).unwrap();
             assert_eq!(encoded.len(), 9 * (LIMBS * 8 + 1));
+            let bounds = reducer::Bounds::new::<Selected>();
             prepare(&mut encoded, resume);
-            reducer_probe(&encoded, class);
+            if args[0] == "reduce" {
+                reducer_probe(&encoded, class, &bounds);
+            } else {
+                prime_stack();
+                stack_start();
+                if args[0] == "residue-control" {
+                    residue_control(&encoded);
+                } else {
+                    reducer_probe(&encoded, class, &bounds);
+                }
+                probe_end();
+            }
         }
         _ => panic!("unknown probe"),
     }

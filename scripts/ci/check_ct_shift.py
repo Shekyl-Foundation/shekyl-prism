@@ -86,9 +86,7 @@ def memcheck(binary, mode, args, expected_bytes, tmp):
         raise ValueError(f"Memcheck failed on {mode}: {errors}")
 
 
-def main(tmp, listing):
-    if ARCH not in ("x86_64", "aarch64"):
-        raise ValueError(f"no audited probe for {ARCH}")
+def release_libraries():
     msgs = run("cargo", "build", "--locked", "--release", "-p", "prism-int", "-p", "prism-field",
                "--message-format=json")
     libs = {}
@@ -97,6 +95,20 @@ def main(tmp, listing):
         name = msg.get("target", {}).get("name")
         if name in ("prism_int", "prism_field"):
             [libs[name]] = [Path(f) for f in msg["filenames"] if f.endswith(".rlib")]
+    return libs
+
+
+def build_command(libs, name, binary):
+    return ["rustc", "--edition=2021", "-Copt-level=3", "-Cpanic=abort",
+             "-Crelocation-model=static", "--cfg", f'stage2c_set="{name}"',
+             "--extern", f"prism_int={libs['prism_int']}", "--extern", f"prism_field={libs['prism_field']}",
+             "-L", f"dependency={libs['prism_int'].parent}/deps", HERE / "probe.rs", "-o", binary]
+
+
+def main(tmp, listing):
+    if ARCH not in ("x86_64", "aarch64"):
+        raise ValueError(f"no audited probe for {ARCH}")
+    libs = release_libraries()
     listings = []
     for name, width in SET_WIDTHS.items():
         listings.append(check_set(tmp, libs, name, width))
@@ -107,10 +119,7 @@ def main(tmp, listing):
 def check_set(tmp, libs, name, width):
     cases = shift_cases(width)
     binary = tmp / "probe"
-    rustc = ["rustc", "--edition=2021", "-Copt-level=3", "-Cpanic=abort",
-             "-Crelocation-model=static", "--cfg", f'stage2c_set="{name}"',
-             "--extern", f"prism_int={libs['prism_int']}", "--extern", f"prism_field={libs['prism_field']}",
-             "-L", f"dependency={libs['prism_int'].parent}/deps", HERE / "probe.rs", "-o", binary]
+    rustc = build_command(libs, name, binary)
     # Static executable addresses for QEMU. Memcheck uses its normal dynamic
     # runtime interposition; both builds compile the very same Rust consumer.
     run(*rustc, "-Ctarget-feature=+crt-static")

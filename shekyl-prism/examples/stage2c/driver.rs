@@ -187,9 +187,77 @@ fn check_ties<S: ReductionSet<W, D>, const W: usize, const D: usize>() {
 
 const SCHEDULES: [Schedule; 2] = [Schedule::Reviewed, Schedule::Pr45Baseline];
 
+#[derive(Clone, Copy)]
+pub enum Mode {
+    Check,
+    Bench,
+    Timing { pairs: usize, seed: u64 },
+}
+
+pub fn mode() -> Mode {
+    let args: Vec<_> = std::env::args().skip(1).collect();
+    match args.as_slice() {
+        [] => Mode::Check,
+        [mode] if mode == "bench" => Mode::Bench,
+        [mode, pairs, seed] if mode == "timing" => {
+            let pairs = pairs.parse::<usize>().expect("pair count");
+            let seed = seed.parse::<u64>().expect("public sampling seed");
+            assert!(pairs >= 2 && seed != 0);
+            Mode::Timing { pairs, seed }
+        }
+        _ => panic!("expected no arguments, bench, or timing PAIRS NONZERO_SEED"),
+    }
+}
+
+// A public, reproducible schedule. No randomness is used by the reducer.
+fn next(state: &mut u64) -> u64 {
+    *state ^= *state << 13;
+    *state ^= *state >> 7;
+    *state ^= *state << 17;
+    *state
+}
+
+fn timing<const W: usize, const D: usize>(
+    name: &str,
+    cases: &[&Fixture<W>],
+    bounds: &Bounds<W, D>,
+    pairs: usize,
+    mut seed: u64,
+) {
+    // Compare different secrets with the same public class, width and schedule.
+    // Parse outside the interval. Include admission, reduction and all drops.
+    let measure = |case: &Fixture<W>| {
+        let input = black_box((case.t.clone(), case.u.clone(), case.v.clone()));
+        let start = Instant::now();
+        let (norm, u, v) = input;
+        drop(black_box(
+            Basis::from_intersection(&norm, u, v, case.class, bounds).reduce(Schedule::Reviewed),
+        ));
+        drop(norm);
+        start.elapsed().as_nanos()
+    };
+    for case in cases {
+        black_box(measure(case));
+    }
+    for pair in 0..pairs {
+        let other = 1 + next(&mut seed) as usize % (cases.len() - 1);
+        let fixed_first = next(&mut seed) & 1 == 0;
+        let (fixed, varied) = if fixed_first {
+            (measure(cases[0]), measure(cases[other]))
+        } else {
+            let varied = measure(cases[other]);
+            (measure(cases[0]), varied)
+        };
+        println!(
+            "timing,{name},{:?},{pair},{other},{fixed_first},{fixed},{varied}",
+            cases[0].class
+        );
+    }
+}
+
 pub fn run<S: ReductionSet<W, D> + ideal::IdealSet<W, D>, const W: usize, const D: usize>(
     corpus: &str,
-    bench: bool,
+    mode: Mode,
 ) {
     check_ties::<S, W, D>();
     let bounds = Bounds::new::<S>();
@@ -243,7 +311,13 @@ pub fn run<S: ReductionSet<W, D> + ideal::IdealSet<W, D>, const W: usize, const 
         bounds.steps(Class::Generic).count(Schedule::Reviewed),
         fixtures.len()
     );
-    if bench {
+    if let Mode::Timing { pairs, seed } = mode {
+        for class in [Class::Guarded, Class::Generic] {
+            let cases: Vec<_> = fixtures.iter().filter(|f| f.class == class).collect();
+            timing(S::NAME, &cases, &bounds, pairs, seed);
+        }
+    }
+    if matches!(mode, Mode::Bench) {
         // Paired smoke measurement on committed inputs. Alternate the order
         // so a warm cache does not always favor the shorter schedule.
         for class in [Class::Guarded, Class::Generic] {

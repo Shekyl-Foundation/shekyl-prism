@@ -1,0 +1,60 @@
+x86_64 p248 sign-generic 1 stack_bytes=13072 residual_words=25/30
+x86_64 p248 sign-generic 2 stack_bytes=13072 residual_words=25/30
+x86_64 p248 sign-generic 3 stack_bytes=13072 residual_words=27/34
+x86_64 p248 sign-generic 4 stack_bytes=13072 residual_words=22/32
+x86_64 p248 sign-generic 5 stack_bytes=13072 residual_words=27/34
+x86_64 p248 prered-guard256 1 stack_bytes=14624 residual_words=48/53
+x86_64 p248 prered-guard256 2 stack_bytes=14624 residual_words=48/53
+x86_64 p248 prered-guard256 3 stack_bytes=14624 residual_words=48/53
+x86_64 p248 prered-guard256 4 stack_bytes=14624 residual_words=48/53
+x86_64 p248 prered-guard256 5 stack_bytes=14624 residual_words=48/53
+x86_64 p248 prered-guard256 6 stack_bytes=14624 residual_words=48/53
+x86_64 p248 full reducer: 11658 linked instructions checked
+x86_64 p324 sign-generic 1 stack_bytes=16280 residual_words=33/40
+x86_64 p324 sign-generic 2 stack_bytes=16280 residual_words=33/40
+x86_64 p324 sign-generic 3 stack_bytes=16280 residual_words=34/43
+x86_64 p324 sign-generic 4 stack_bytes=16280 residual_words=29/42
+x86_64 p324 sign-generic 5 stack_bytes=16280 residual_words=34/42
+x86_64 p324 prered-guard256 1 stack_bytes=18200 residual_words=60/67
+x86_64 p324 prered-guard256 2 stack_bytes=18200 residual_words=62/69
+x86_64 p324 prered-guard256 3 stack_bytes=18200 residual_words=62/69
+x86_64 p324 prered-guard256 4 stack_bytes=18200 residual_words=62/69
+x86_64 p324 prered-guard256 5 stack_bytes=18200 residual_words=61/68
+x86_64 p324 prered-guard256 6 stack_bytes=18200 residual_words=61/68
+x86_64 p324 full reducer: 11554 linked instructions checked
+x86_64 p376 sign-generic 1 stack_bytes=18184 residual_words=37/44
+x86_64 p376 sign-generic 2 stack_bytes=18184 residual_words=37/44
+x86_64 p376 sign-generic 3 stack_bytes=18184 residual_words=33/48
+x86_64 p376 sign-generic 4 stack_bytes=18184 residual_words=40/50
+x86_64 p376 sign-generic 5 stack_bytes=18184 residual_words=33/48
+x86_64 p376 prered-guard256 1 stack_bytes=20360 residual_words=70/77
+x86_64 p376 prered-guard256 2 stack_bytes=20360 residual_words=70/77
+x86_64 p376 prered-guard256 3 stack_bytes=20360 residual_words=70/77
+x86_64 p376 prered-guard256 4 stack_bytes=20360 residual_words=70/77
+x86_64 p376 prered-guard256 5 stack_bytes=20360 residual_words=70/77
+x86_64 p376 prered-guard256 6 stack_bytes=20360 residual_words=70/77
+x86_64 p376 full reducer: 11401 linked instructions checked
+x86_64 p500 sign-generic 1 stack_bytes=23424 residual_words=50/60
+x86_64 p500 sign-generic 2 stack_bytes=23424 residual_words=50/60
+x86_64 p500 sign-generic 3 stack_bytes=23424 residual_words=53/66
+x86_64 p500 sign-generic 4 stack_bytes=23424 residual_words=53/66
+x86_64 p500 sign-generic 5 stack_bytes=23424 residual_words=53/66
+x86_64 p500 prered-guard256 1 stack_bytes=26256 residual_words=95/105
+x86_64 p500 prered-guard256 2 stack_bytes=26256 residual_words=96/106
+x86_64 p500 prered-guard256 3 stack_bytes=26256 residual_words=96/106
+x86_64 p500 prered-guard256 4 stack_bytes=26256 residual_words=95/105
+x86_64 p500 prered-guard256 5 stack_bytes=26256 residual_words=96/106
+x86_64 p500 prered-guard256 6 stack_bytes=26256 residual_words=96/106
+x86_64 p500 full reducer: 10778 linked instructions checked
+x86_64 p664 sign-generic 1 stack_bytes=29808 residual_words=63/74
+x86_64 p664 sign-generic 2 stack_bytes=29808 residual_words=63/74
+x86_64 p664 sign-generic 3 stack_bytes=29808 residual_words=59/86
+x86_64 p664 sign-generic 4 stack_bytes=29808 residual_words=59/86
+x86_64 p664 sign-generic 5 stack_bytes=29808 residual_words=59/86
+x86_64 p664 prered-guard256 1 stack_bytes=33408 residual_words=118/129
+x86_64 p664 prered-guard256 2 stack_bytes=33408 residual_words=118/130
+x86_64 p664 prered-guard256 3 stack_bytes=33408 residual_words=118/130
+x86_64 p664 prered-guard256 4 stack_bytes=33408 residual_words=118/130
+x86_64 p664 prered-guard256 5 stack_bytes=33408 residual_words=118/129
+x86_64 p664 prered-guard256 6 stack_bytes=33408 residual_words=118/129
+x86_64 p664 full reducer: 10817 linked instructions checked
