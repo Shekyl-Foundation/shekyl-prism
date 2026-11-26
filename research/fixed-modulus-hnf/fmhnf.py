@@ -153,7 +153,7 @@ def red(ctx, y, m, R, K, tight=True):
     else:
         wq, wprod = 2 * K - 1, 4 * K - 1
     a = ctx.abs(y, 2 * K)
-    prod = ctx.mul(a, R, 2 * K, 2 * K - 1)
+    prod = ctx.mul(a, R, 2 * K, 2 * K)
     ctx.maxbits['red_prod_%s' % ('t' if tight else 'u')] = max(
         ctx.maxbits.get('red_prod_%s' % ('t' if tight else 'u'), 0), prod.bit_length())
     assert prod.bit_length() <= wprod
@@ -196,8 +196,11 @@ def eliminate(ctx, S, c, m, R, K, F):
     newS = []
     for Yrow in S:
         X, Y = acc, Yrow
+        act = 0
         for _ in range(F):
+            act += 1 if (X[c] != 0 and Y[c] != 0) else 0     # model statistic, not in the trace
             X, Y = pair_step(ctx, X, Y, c, m, R, K)
+        ctx.max_active = max(getattr(ctx, 'max_active', 0), act)
         z = ctx.is_zero(X[c], K)               # normalise: pivot row first
         X, Y = ([ctx.sel(z, Y[j], X[j], K) for j in range(c + 1)],
                 [ctx.sel(z, X[j], Y[j], K) for j in range(c + 1)])

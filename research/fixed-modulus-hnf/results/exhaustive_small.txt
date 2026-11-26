@@ -1,0 +1,5 @@
+m=2: all 67 lattices containing mZ^4, 2 K values each
+m=3: all 212 lattices containing mZ^4, 2 K values each
+m=4: all 1983 lattices containing mZ^4, 2 K values each
+m=5: 2000 random lattices containing mZ^4 (of 5066 tried)
+m=6: 4000 random lattices containing mZ^4 (of 16729 tried)

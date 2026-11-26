@@ -1,0 +1,39 @@
+{
+ "set": "P324",
+ "K": 196,
+ "runs": 349,
+ "maxact": 192,
+ "widths": {
+  "add": 392,
+  "cmp": 391,
+  "sub": 392,
+  "sel": 392,
+  "shl_public": 392,
+  "abs": 392,
+  "mul": 783,
+  "red_prod_u": 783,
+  "shr_public": 783,
+  "signbit": 392,
+  "bitlen": 196,
+  "neg": 392,
+  "red_prod_t": 588,
+  "shl_secret": 392
+ },
+ "shapes": {
+  "small N|wide=False": 11,
+  "generic (2N,2N,1,1)|wide=False": 12,
+  "other d=(30,30,3,3)|wide=False": 1,
+  "other d=(70,70,5,5)|wide=False": 1,
+  "other d=(6,6,3,3)|wide=False": 3,
+  "other d=(big,big,1009,1009)|wide=False": 1,
+  "other d=(22,22,11,11)|wide=False": 1,
+  "other d=(big,big,big,big)|wide=True": 1,
+  "other d=(2468,2,1234,1)|wide=False": 1,
+  "other d=(1508,4,754,2)|wide=False": 1,
+  "other d=(2896,8,1448,4)|wide=False": 1,
+  "other d=(5568,192,2784,96)|wide=False": 1,
+  "other d=(big,2,big,1)|wide=False": 3,
+  "other d=(big,24,big,12)|wide=False": 1,
+  "generic (2N,2N,1,1)|wide=True": 1
+ }
+}

@@ -1,0 +1,15 @@
+abs         12*K*k - 2*k + 4
+mul         24*K*k - 4*k + 12
+shr_public  12*K*k - 2*k + 4
+sub         64*K*k + 8*K - 20*k + 17
+add         8*K + 2
+cmp         40*K*k + 8*K - 8*k + 9
+bit         36*K*k + 8*K - 6*k + 13
+signbit     20*K*k - 6*k + 4
+sel         104*K*k + 8*K - 24*k + 9
+bitlen      16*K*k - 8*k
+shl_secret  20*K*k - 10*k
+neg         20*K*k - 10*k
+shl_public  16*K + 2
+TOTAL       368*K*k + 56*K - 100*k + 76
+Barrett reductions 12*K*k - 2*k + 4  pair steps 8*K*k - 4*k

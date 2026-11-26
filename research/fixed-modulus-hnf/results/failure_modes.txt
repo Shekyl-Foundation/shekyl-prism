@@ -1,0 +1,10 @@
+A. textbook modular HNF
+   ideal 1*O0 (N=1): true pivots [2, 2, 1, 1] | textbook R=2N -> [1, 2, 1, 1] | textbook R=4N^2 -> [2, 2, 1, 1] | fixed-modulus 2N -> [2, 2, 1, 1]
+   ideal 3*O0 (N=9): true pivots [6, 6, 3, 3] | textbook R=2N -> [1, 2, 3, 3] | textbook R=4N^2 -> [6, 6, 3, 3] | fixed-modulus 2N -> [6, 6, 3, 3]
+   ideal 5*O0 (N=25): true pivots [10, 10, 5, 5] | textbook R=2N -> [1, 2, 5, 5] | textbook R=4N^2 -> [10, 10, 5, 5] | fixed-modulus 2N -> [10, 10, 5, 5]
+   generic N=7: true [14, 14, 1, 1] | textbook R=2N -> [1, 14, 1, 1] | R=4N^2 -> [14, 14, 1, 1] | fixed-modulus -> [14, 14, 1, 1]
+B. generators whose span does not contain 2N Z^4 (not an ideal lattice)
+   span G: pivots [1, 1, 1, 100] (index 100 = 4N^2).  fixed-modulus output: pivots [1, 1, 1, 10] (index 10)
+   = HNF(span G + 2N Z^4); pivot product 10 != 4N^2 = 100 -> self-check fails, input rejected
+C. m >= 2^K
+   model range check fired: ('mul', 9, 5)

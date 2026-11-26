@@ -1,0 +1,8 @@
+K=   3 k=4 trials= 40  ops=     4260  limbmul=       284  trace=1c99beb51b97  formula==measured, trace identical
+K=   5 k=4 trials= 40  ops=     7316  limbmul=       476  trace=b63b47a6c16c  formula==measured, trace identical
+K=   8 k=4 trials= 40  ops=    11900  limbmul=       764  trace=e6fa8d3a9051  formula==measured, trace identical
+K=  17 k=4 trials= 40  ops=    25652  limbmul=      1628  trace=c23b680d4a40  formula==measured, trace identical
+K=  33 k=8 trials= 20  ops=    98276  limbmul=     15816  trace=bcbdcc9ad3b9  formula==measured, trace identical
+K=  64 k=4 trials= 16  ops=    97468  limbmul=     15360  trace=6652afbe8903  formula==measured, trace identical
+K= 159 k=4 trials=  8  ops=   242628  limbmul=    259484  trace=d0a7d0b82752  formula==measured, trace identical
+K= 159 k=8 trials=  4  ops=   476276  limbmul=    518796  trace=b28e61944fef  formula==measured, trace identical
