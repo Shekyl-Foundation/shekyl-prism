@@ -1,0 +1,7 @@
+P500: p has 505 bits, B=285, K=286; 40 ideals generated in 0.7s
+  349 runs, all equal to Sage and PARI (true lattice, with and without 2N rows) and to the ideal HNF
+  trace hash identical per k: {4: 'b8c1cd34c6fb', 5: 'e430308c39e0', 7: 'bfd7e7fd04eb', 8: 'c51c6fc07084'}
+  max active elimination steps observed 284 (schedule 571)
+  largest N bits 505 (B=285)
+  shapes: {('small N', False): 11, ('generic (2N,2N,1,1)', False): 12, ('other d=(30,30,3,3)', False): 1, ('other d=(70,70,5,5)', False): 1, ('other d=(6,6,3,3)', False): 2, ('other d=(big,big,1009,1009)', False): 1, ('other d=(22,22,11,11)', False): 1, ('other d=(big,big,big,big)', True): 1, ('other d=(820,10,410,5)', False): 1, ('other d=(40,20,20,10)', False): 1, ('other d=(4640,32,2320,16)', False): 1, ('other d=(20288,64,10144,32)', False): 1, ('other d=(big,6,big,3)', False): 1, ('other d=(big,2,big,1)', False): 2, ('other d=(big,12,big,6)', False): 1, ('other d=(10,2,5,1)', False): 1, ('generic (2N,2N,1,1)', True): 1}
+  observed max bit-lengths: {'abs': 572, 'add': 572, 'bitlen': 286, 'cmp': 571, 'mul': 1143, 'neg': 572, 'red_prod_t': 858, 'red_prod_u': 1143, 'sel': 572, 'shl_public': 572, 'shl_secret': 572, 'shr_public': 1143, 'signbit': 572, 'sub': 572}
