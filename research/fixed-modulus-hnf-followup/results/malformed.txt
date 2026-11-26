@@ -1,0 +1,13 @@
+D1. Delta([u,Ju,v,Jv]) == |det_Zi(u,v)|^2
+  2000 random pairs: equal (independent of p)
+D2. the Cramer test at det = 0 and at the right det (toy p = 3, N = 7, U = (14,0,0,0), V = (0,9,1,0))
+  valid pair   : |d|^2 = 196 = 4N^2; contains (5,0,0,1) [in I]: True; contains (1,0,0,0) [not in I]: False
+  dependent v=3u... pair (V, 3V): d = [0, 0]; contains (1,0,0,0): True  <- vacuous pass
+  zero v: d = [0, 0]; contains (1,0,0,0): True  <- vacuous pass
+D3. full-rank, parity-valid pair with J + 2N Z^4 = I but Delta != 4N^2: V' = V + 2N e_2 (in 2N Z^4 <= I)
+  toy p=3 N=7  N bits   3: output == stored HNF: True | prod d == 4N^2: True | Delta/4N^2 = 225 | O0 parity ok: True | Delta == prod d: False
+  P248         N bits 158: output == stored HNF: True | prod d == 4N^2: True | Delta/4N^2 = 137045539527167508816329033179357729635674348564008489277216670228416429067770303085647149118809 | O0 parity ok: True | Delta == prod d: False
+  P324         N bits 195: output == stored HNF: True | prod d == 4N^2: True | Delta/4N^2 = 5195071315702669169208913116791093983183193242780925543156611364518490038664748620225064899511161390425954849905100129 | O0 parity ok: True | Delta == prod d: False
+  P376         N bits 224: output == stored HNF: True | prod d == 4N^2: True | Delta/4N^2 = 1891555375726467649096079797657892537358842125999817754120169350732011318045600075467224118939473668108358227768794514462582251739740225 | O0 parity ok: True | Delta == prod d: False
+  P500         N bits 285: output == stored HNF: True | prod d == 4N^2: True | Delta/4N^2 = 14710937058678201266414351293494602754559190948513517546379643628063052771174179103827541584472997317101224103419060556029900547786321386975249532855771088405782471217894321 | O0 parity ok: True | Delta == prod d: False
+  P664         N bits 367: output == stored HNF: True | prod d == 4N^2: True | Delta/4N^2 = 95306405036349089427291059823497992106347628367095352516539274897562758850187281344405649754361487759638763947447916803052031636972908715007759720566589007487984156410730240386490270247088327025719375641496897862645607841 | O0 parity ok: True | Delta == prod d: False

@@ -1,0 +1,56 @@
+A. toy examples, p = 3
+ ideal N=7, root (x,y)=(0,9), HNF columns (col c = entries 0..c): [[14], [0, 14], [0, 9, 1], [5, 0, 0, 1]]   index 196 = 4N^2
+ (i) the m e_i columns are redundant in the HNF itself: col0 = (14,0,0,0) = m e_0, col1 = (0,14,0,0) = m e_1.
+  full columns (rank 4)                                rank 4  Delta=196  pivots [14, 14, 1, 1]  prod d = 196
+        output == the ideal HNF: True
+  drop col0 and col1 -> rank 2                         rank 2  Delta=n/a (k=2)  pivots [14, 14, 1, 1]  prod d = 196
+        output == the ideal HNF: True
+  only the root column (0,9,1,0) -> rank 1             rank 1  Delta=n/a (k=1)  pivots [14, 14, 1, 14]  prod d = 2744
+        output == the ideal HNF: False
+        (output index 2744 is a multiple of the ideal index 196)
+  drop col0 only -> rank 3                             rank 3  Delta=n/a (k=3)  pivots [14, 14, 1, 1]  prod d = 196
+        output == the ideal HNF: True
+  no generators at all                                 rank 0  Delta=n/a (k=1)  pivots [14, 14, 14, 14]  prod d = 38416
+        output == the ideal HNF: False
+        (output index 38416 is a multiple of the ideal index 196)
+  u, Ju, v, Jv with v = 0 (dependent Gaussian pair)    rank 2  Delta=0  pivots [14, 14, 14, 14]  prod d = 38416
+        output == the ideal HNF: False
+        (output index 38416 is a multiple of the ideal index 196)
+  u, Ju, v, Jv with v = 3u (dependent)                 rank 2  Delta=0  pivots [14, 14, 1, 1]  prod d = 196
+        output == the ideal HNF: True
+ (a rank-deficient set that does not reach the ideal gives a different, larger-index lattice: prod d != 4N^2.)
+ => every rank-deficient generating set that reaches the ideal after adding 2N e_i is accepted by a
+    comparison with the stored HNF or by "prod d == 4N^2".  Only the exact Delta(G) = 0 test sees them.
+ (ii) Prop 2: d_c = m  =>  columns minus col_c have rank 3 and the same output.  pivots [14, 14, 1, 1], m = 14
+ (iii) full-rank, index 4N^2, inside O0num, NOT left-O0-closed: N = 3, m = 6
+     L has HNF pivots [2, 2, 1, 9] (index 36 = 4N^2 = 36), all generators pass the O0 parity test
+  add 6 e_i                                            rank 4  Delta=36  pivots [2, 2, 1, 3]  prod d = 12
+     output index 12 != 36: a strictly larger lattice (index ratio 3). Contains 6 Z^4? False
+ (iv) full rank, index 4N^2, contains 2N Z^4, but not O0-stable and not in O0num (parity fails): N = 7
+  non-ideal HNF with pivots (14,14,1,1)                rank 4  Delta=196  pivots [14, 14, 1, 1]  prod d = 196
+     HNF is computed correctly (= the input), prod d = 196 = 4N^2 passes, but G is not an ideal lattice: only the
+     parity / closure tests see it.  The HNF algorithm is correct for any lattice containing m Z^4; ideal-ness is separate.
+B. subsets of the HNF columns (k = 1..4 of the columns) at the five sets: which reproduce the ideal?
+  P248 prime N~2^B generic    pivots==m at c=[0, 1]; subsets reproducing the HNF: 4 of 15, of which rank-deficient: 3 (e.g. [(2, 3), (0, 2, 3)])
+  P248 scalar 3*O0 (N=9)      pivots==m at c=[]; subsets reproducing the HNF: 1 of 15, of which rank-deficient: 0 (e.g. [])
+  P248 O0 (N=1)               pivots==m at c=[0, 1]; subsets reproducing the HNF: 4 of 15, of which rank-deficient: 3 (e.g. [(2, 3), (0, 2, 3)])
+  P248 even N=2 (1+i)         pivots==m at c=[0]; subsets reproducing the HNF: 2 of 15, of which rank-deficient: 1 (e.g. [(1, 2, 3)])
+  P324 prime N~2^B generic    pivots==m at c=[0, 1]; subsets reproducing the HNF: 4 of 15, of which rank-deficient: 3 (e.g. [(2, 3), (0, 2, 3)])
+  P324 scalar 3*O0 (N=9)      pivots==m at c=[]; subsets reproducing the HNF: 1 of 15, of which rank-deficient: 0 (e.g. [])
+  P324 O0 (N=1)               pivots==m at c=[0, 1]; subsets reproducing the HNF: 4 of 15, of which rank-deficient: 3 (e.g. [(2, 3), (0, 2, 3)])
+  P324 even N=2 (1+i)         pivots==m at c=[0]; subsets reproducing the HNF: 2 of 15, of which rank-deficient: 1 (e.g. [(1, 2, 3)])
+  P376 prime N~2^B generic    pivots==m at c=[0, 1]; subsets reproducing the HNF: 4 of 15, of which rank-deficient: 3 (e.g. [(2, 3), (0, 2, 3)])
+  P376 scalar 3*O0 (N=9)      pivots==m at c=[]; subsets reproducing the HNF: 1 of 15, of which rank-deficient: 0 (e.g. [])
+  P376 O0 (N=1)               pivots==m at c=[0, 1]; subsets reproducing the HNF: 4 of 15, of which rank-deficient: 3 (e.g. [(2, 3), (0, 2, 3)])
+  P376 even N=2 (1+i)         pivots==m at c=[0]; subsets reproducing the HNF: 2 of 15, of which rank-deficient: 1 (e.g. [(1, 2, 3)])
+  P500 prime N~2^B generic    pivots==m at c=[0, 1]; subsets reproducing the HNF: 4 of 15, of which rank-deficient: 3 (e.g. [(2, 3), (0, 2, 3)])
+  P500 scalar 3*O0 (N=9)      pivots==m at c=[]; subsets reproducing the HNF: 1 of 15, of which rank-deficient: 0 (e.g. [])
+  P500 O0 (N=1)               pivots==m at c=[0, 1]; subsets reproducing the HNF: 4 of 15, of which rank-deficient: 3 (e.g. [(2, 3), (0, 2, 3)])
+  P500 even N=2 (1+i)         pivots==m at c=[0]; subsets reproducing the HNF: 2 of 15, of which rank-deficient: 1 (e.g. [(1, 2, 3)])
+  P664 prime N~2^B generic    pivots==m at c=[0, 1]; subsets reproducing the HNF: 4 of 15, of which rank-deficient: 3 (e.g. [(2, 3), (0, 2, 3)])
+  P664 scalar 3*O0 (N=9)      pivots==m at c=[]; subsets reproducing the HNF: 1 of 15, of which rank-deficient: 0 (e.g. [])
+  P664 O0 (N=1)               pivots==m at c=[0, 1]; subsets reproducing the HNF: 4 of 15, of which rank-deficient: 3 (e.g. [(2, 3), (0, 2, 3)])
+  P664 even N=2 (1+i)         pivots==m at c=[0]; subsets reproducing the HNF: 2 of 15, of which rank-deficient: 1 (e.g. [(1, 2, 3)])
+C. criterion  Delta(G) != 0 and Delta(G) == prod d_c   <=>   rank 4 and m Z^4 <= span G
+  5142 cases, criterion == exact truth in every case; {'accept': 312, 'reject-deficient': 2588, 'reject-enlarged': 2242}
+  random column subsets of valid lattices: 107 of 983 are rank-deficient yet reproduce the full HNF exactly
