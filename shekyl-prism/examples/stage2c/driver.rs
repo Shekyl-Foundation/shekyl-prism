@@ -37,11 +37,8 @@ struct Fixture<const W: usize> {
 impl<const W: usize> Fixture<W> {
     fn parse(line: &str) -> Self {
         let mut fields = line.split_whitespace();
-        let class = match fields.next().unwrap() {
-            "prered-guard256" => Class::Guarded,
-            "sign-generic" => Class::Generic,
-            other => panic!("unknown class {other}"),
-        };
+        let token = fields.next().unwrap();
+        let class = Class::from_token(token).unwrap_or_else(|| panic!("unknown class {token}"));
         let mut values = fields.map(scalar);
         let t = values.next().unwrap();
         let u = std::array::from_fn(|_| values.next().unwrap());
@@ -103,11 +100,24 @@ fn check_ties<S: ReductionSet<W, D>, const W: usize, const D: usize>() {
 
 const SCHEDULES: [Schedule; 2] = [Schedule::Reviewed, Schedule::Pr45Baseline];
 
+/// Smoke-bench samples per schedule. Odd, so each schedule leads the pair
+/// once more than it follows across the whole run. This is not the leakage
+/// measurement; that one is [`contrasts`].
+const SMOKE_SAMPLES: usize = 41;
+
+/// Repeats per fixture contrast. Two is the smallest sample whose standard
+/// deviation is defined. The published run passes a larger count.
+const MIN_CONTRAST_REPEATS: usize = 2;
+
+/// First row of the class in corpus order. The same index as
+/// `REFERENCE_INDEX` in `scripts/stage2c_fixtures.py`.
+const REFERENCE_INDEX: usize = 0;
+
 #[derive(Clone, Copy)]
 pub enum Mode {
     Check,
     Bench,
-    Timing { pairs: usize, seed: u64 },
+    Timing { repeats: usize },
 }
 
 pub fn mode() -> Mode {
@@ -115,59 +125,90 @@ pub fn mode() -> Mode {
     match args.as_slice() {
         [] => Mode::Check,
         [mode] if mode == "bench" => Mode::Bench,
-        [mode, pairs, seed] if mode == "timing" => {
-            let pairs = pairs.parse::<usize>().expect("pair count");
-            let seed = seed.parse::<u64>().expect("public sampling seed");
-            assert!(pairs >= 2 && seed != 0);
-            Mode::Timing { pairs, seed }
+        [mode, repeats] if mode == "timing" => {
+            let repeats = repeats.parse::<usize>().expect("repeat count");
+            assert!(
+                repeats >= MIN_CONTRAST_REPEATS,
+                "a contrast needs at least {MIN_CONTRAST_REPEATS} repeats"
+            );
+            Mode::Timing { repeats }
         }
-        _ => panic!("expected no arguments, bench, or timing PAIRS NONZERO_SEED"),
+        _ => panic!("expected no arguments, bench, or timing REPEATS"),
     }
 }
 
-// A public, reproducible schedule. No randomness is used by the reducer.
-fn next(state: &mut u64) -> u64 {
-    *state ^= *state << 13;
-    *state ^= *state >> 7;
-    *state ^= *state << 17;
-    *state
+/// Even repeats run the reference first. The summarizer rejects a row that
+/// breaks this, so the file cannot claim an order the binary did not run.
+fn reference_runs_first(repeat: usize) -> bool {
+    repeat.is_multiple_of(2)
 }
 
-fn timing<const W: usize, const D: usize>(
+/// Nanoseconds to admit `case`, reduce it on `schedule`, and drop the inputs
+/// and the result. Cloning into the black-boxed tuple happens before the
+/// clock starts.
+fn time_reduction<const W: usize, const D: usize>(
+    case: &Fixture<W>,
+    bounds: &Bounds<W, D>,
+    schedule: Schedule,
+) -> u128 {
+    let input = black_box((case.t.clone(), case.u.clone(), case.v.clone()));
+    let started = Instant::now();
+    let (norm, u, v) = input;
+    drop(black_box(
+        Basis::from_intersection(&norm, u, v, case.class, bounds).reduce(schedule),
+    ));
+    drop(norm);
+    started.elapsed().as_nanos()
+}
+
+fn of_class<const W: usize>(fixtures: &[Fixture<W>], class: Class) -> Vec<&Fixture<W>> {
+    fixtures
+        .iter()
+        .filter(|fixture| fixture.class == class)
+        .collect()
+}
+
+/// One paired difference per other fixture, repeated `repeats` times.
+///
+/// The pair is always the reference row against one later row of the same
+/// class, schedule, and width. Repeating a four-fixture mixture and calling
+/// the draw count an independent sample is a different experiment; this is
+/// not that experiment.
+fn contrasts<const W: usize, const D: usize>(
     name: &str,
     cases: &[&Fixture<W>],
     bounds: &Bounds<W, D>,
-    pairs: usize,
-    mut seed: u64,
+    repeats: usize,
 ) {
-    // Compare different secrets with the same public class, width and schedule.
-    // Parse outside the interval. Include admission, reduction and all drops.
-    let measure = |case: &Fixture<W>| {
-        let input = black_box((case.t.clone(), case.u.clone(), case.v.clone()));
-        let start = Instant::now();
-        let (norm, u, v) = input;
-        drop(black_box(
-            Basis::from_intersection(&norm, u, v, case.class, bounds).reduce(Schedule::Reviewed),
-        ));
-        drop(norm);
-        start.elapsed().as_nanos()
-    };
+    assert!(
+        cases.len() > REFERENCE_INDEX + 1,
+        "a contrast needs the reference and another fixture"
+    );
+    let reference = cases[REFERENCE_INDEX];
     for case in cases {
-        black_box(measure(case));
+        black_box(time_reduction(case, bounds, Schedule::Reviewed));
     }
-    for pair in 0..pairs {
-        let other = 1 + next(&mut seed) as usize % (cases.len() - 1);
-        let fixed_first = next(&mut seed) & 1 == 0;
-        let (fixed, varied) = if fixed_first {
-            (measure(cases[0]), measure(cases[other]))
-        } else {
-            let varied = measure(cases[other]);
-            (measure(cases[0]), varied)
-        };
-        println!(
-            "timing,{name},{:?},{pair},{other},{fixed_first},{fixed},{varied}",
-            cases[0].class
-        );
+    for (index, other) in cases.iter().enumerate().skip(REFERENCE_INDEX + 1) {
+        for repeat in 0..repeats {
+            let reference_first = reference_runs_first(repeat);
+            let (first, second) = if reference_first {
+                (reference, *other)
+            } else {
+                (*other, reference)
+            };
+            let first_ns = time_reduction(first, bounds, Schedule::Reviewed);
+            let second_ns = time_reduction(second, bounds, Schedule::Reviewed);
+            let (reference_ns, other_ns) = if reference_first {
+                (first_ns, second_ns)
+            } else {
+                (second_ns, first_ns)
+            };
+            println!(
+                "timing,{name},{},{},{index},{repeat},{reference_first},{reference_ns},{other_ns}",
+                reference.class.token(),
+                Schedule::Reviewed.token(),
+            );
+        }
     }
 }
 
@@ -207,35 +248,40 @@ pub fn run<S: ReductionSet<W, D>, const W: usize, const D: usize>(corpus: &str, 
         bounds.steps(Class::Generic).count(Schedule::Reviewed),
         fixtures.len()
     );
-    if let Mode::Timing { pairs, seed } = mode {
-        for class in [Class::Guarded, Class::Generic] {
-            let cases: Vec<_> = fixtures.iter().filter(|f| f.class == class).collect();
-            timing(S::NAME, &cases, &bounds, pairs, seed);
-        }
-    }
-    if matches!(mode, Mode::Bench) {
-        // Paired smoke measurement on committed inputs. Alternate the order
-        // so a warm cache does not always favor the shorter schedule.
-        for class in [Class::Guarded, Class::Generic] {
-            let cases: Vec<_> = fixtures.iter().filter(|f| f.class == class).collect();
-            let mut times = [Vec::new(), Vec::new()];
-            for i in 0..41 {
-                let f = cases[i % cases.len()];
-                for j in [i % 2, 1 - i % 2] {
-                    let schedule = SCHEDULES[j];
-                    let start = Instant::now();
-                    drop(black_box(f.input(&bounds).reduce(schedule)));
-                    times[j].push(start.elapsed());
-                }
+    match mode {
+        Mode::Check => {}
+        Mode::Timing { repeats } => {
+            for class in [Class::Guarded, Class::Generic] {
+                contrasts(S::NAME, &of_class(&fixtures, class), &bounds, repeats);
             }
-            for (schedule, mut samples) in SCHEDULES.into_iter().zip(times) {
-                let steps = bounds.steps(class).count(schedule);
-                samples.sort();
-                println!(
-                    "{} {class:?} {schedule:?}, {steps} steps, median {:?} including setup and drop ({} samples)",
-                    S::NAME, samples[samples.len() / 2],
-                    samples.len()
-                );
+        }
+        Mode::Bench => {
+            // Paired smoke measurement on committed inputs. Alternate which
+            // schedule runs first so a warm cache does not always favor the
+            // shorter one. The interval is the same `time_reduction` as `contrasts`.
+            for class in [Class::Guarded, Class::Generic] {
+                let cases = of_class(&fixtures, class);
+                let mut times = [Vec::new(), Vec::new()];
+                for i in 0..SMOKE_SAMPLES {
+                    let fixture = cases[i % cases.len()];
+                    for j in [i % 2, 1 - i % 2] {
+                        times[j].push(time_reduction(fixture, &bounds, SCHEDULES[j]));
+                    }
+                }
+                for (schedule, mut samples) in SCHEDULES.into_iter().zip(times) {
+                    let steps = bounds.steps(class).count(schedule);
+                    samples.sort();
+                    let median = std::time::Duration::from_nanos(
+                        u64::try_from(samples[samples.len() / 2]).expect("sample fits in u64"),
+                    );
+                    println!(
+                        "{} {} {}, {steps} steps, median {median:?} including setup and drop ({} samples)",
+                        S::NAME,
+                        class.token(),
+                        schedule.token(),
+                        samples.len()
+                    );
+                }
             }
         }
     }

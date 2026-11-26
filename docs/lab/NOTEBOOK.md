@@ -1096,3 +1096,25 @@ The reviewer read the crate and asked for two fixes. Rick ruled on the three dec
 **Not run.** The comparison with the reference's `ibz_*` functions was not run again on a build VM: no result of the crate changed, and CI's `c-vectors` job runs it. aarch64 is CI's. `cargo fmt --check` and `cargo clippy` were run on the development machine.
 
 Who. Rick ruled D1 to D3. The reviewer found the two faults and wrote the recommendations. The coding agent (Claude Code, `claude-fable-5-2`) made the changes and ran them; the session's advisor model reviewed the plan first, and its points on the swallowed error in `sqrt_exact`, the unnamed temporaries of the comparison, and the broken documentation link in a default build are in what was built.
+
+## 2026-11-26 — Stage 2c measurement: one home for each fact, and a paired contrast
+
+Question: the Stage 2c harness had three copies of the basis encoding, a timer whose t treated repeated draws as independent pairs, and a division gate that profiled one row of each class. Can the measurement give each shared fact one owner, and can the published x86-64 numbers be the output of that design?
+
+Expected: the fixtures module owns the corpus, the encoding, and the nontrivial-word rule. The release probe owns the instrument sizes and the measurement commands. One predicate owns integer hardware division. Timing contrasts each later fixture with the first row of its class, and the t of a contrast uses that contrast's repeats. The stack scan requires every planted canary word and profiles every reduction. The retired sampler's ARM file is removed rather than republished under the new statistic. No constant-time claim.
+
+Done: this commit, on `feat/stage2c-validation`. On the development machine (x86_64, Intel Core i9-11950H, Rust 1.97.1), timing pinned to one core:
+
+`taskset -c 0 cargo run --release --locked -p shekyl-prism --features signer --example stage2c -- timing 512`
+
+`python3 -B scripts/ci/stage2c_timing.py` on that stdout, with `--repeats 512`
+
+`python3 -B scripts/ci/stage2c_stack.py`
+
+`cargo fmt --check`, `cargo clippy -p shekyl-prism --features signer --all-targets --locked -- -D warnings`, and `python3 -B scripts/stage2c_fixtures.py`.
+
+Result: Ran. The stack log is `docs/benchmarks/stage2c/x86_64-stack.txt`. Write depth, sign-generic then prered-guard256, is 12496 and 14048, 15560 and 17480, 17352 and 19528, 22368 and 25200, 28464 and 32064 bytes at p248, p324, p376, p500, and p664. Every fixture of a class wrote to the same depth, and every fixture left residual words. The canary gate passed at each width: the run stops unless all eight planted limbs are found. Callgrind over every fixture of both classes reports 11641, 11576, 11461, 10838, and 10872 instructions and 31, 31, 31, 39, and 40 functions, and the integer-divide predicate matched nothing it visited. The timing file is `docs/benchmarks/stage2c/x86_64.csv.gz`, 23040 timing rows, 512 repeats. The strongest paired t is −2.89, at p324 sign-generic, other index 2. The summarizer's lines are in the benchmark README. `aarch64-stack.txt` remains the log from `5091c40`. The ARM timing file of the retired sampler is deleted. Derived: the paired t is the mean of one contrast's differences, times the square root of the repeat count, divided by their sample standard deviation. Open: constant time (G7), spill erasure, and an AArch64 run of this probe.
+
+Conclusion: the x86-64 record is the output of this protocol, for this build. It is a wall-clock statistic and a retention observation. It is not a constant-time result.
+
+Who: Rick directed the correction. Grok (xAI, Grok Build) proposed the structure in the review of PR #49, implemented it, and ran the x86-64 measurements. The pull-request review is the check still ahead.

@@ -7,8 +7,6 @@
 """Inspect the linked release shift consumer on the native CI architecture."""
 import argparse
 import hashlib
-import json
-import platform
 import select
 import re
 import subprocess
@@ -16,21 +14,17 @@ import sys
 import tempfile
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent / "ct_shift"
-ROOT = HERE.parents[2]
-ARCH = platform.machine()
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-from stage2c_fixtures import SET_WIDTHS, VECTORS
+from stage2c_fixtures import SET_WIDTHS, corpus, encode_basis
+from stage2c_isa import hardware_divide, instructions, self_test as isa_self_test
+from stage2c_probe import ARCH, build_command, release_libraries, run
 
 
 def shift_cases(width):
     bits = width * 64
     return [(0, 0), (1, 1), (2**63, 63), (2**64-1, 64), (7, 65),
             (0x7351f87ca912de34, 255), (1, bits-1), (0, bits), (17, 2**64-1)]
-
-
-def run(*args):
-    return subprocess.check_output(args, cwd=ROOT, text=True)
 
 
 def trace(binary, start, end, mode, x, k, log):
@@ -86,25 +80,6 @@ def memcheck(binary, mode, args, expected_bytes, tmp):
         raise ValueError(f"Memcheck failed on {mode}: {errors}")
 
 
-def release_libraries():
-    msgs = run("cargo", "build", "--locked", "--release", "-p", "prism-int", "-p", "prism-field",
-               "--message-format=json")
-    libs = {}
-    for line in msgs.splitlines():
-        msg = json.loads(line)
-        name = msg.get("target", {}).get("name")
-        if name in ("prism_int", "prism_field"):
-            [libs[name]] = [Path(f) for f in msg["filenames"] if f.endswith(".rlib")]
-    return libs
-
-
-def build_command(libs, name, binary):
-    return ["rustc", "--edition=2021", "-Copt-level=3", "-Cpanic=abort",
-             "-Crelocation-model=static", "--cfg", f'stage2c_set="{name}"',
-             "--extern", f"prism_int={libs['prism_int']}", "--extern", f"prism_field={libs['prism_field']}",
-             "-L", f"dependency={libs['prism_int'].parent}/deps", HERE / "probe.rs", "-o", binary]
-
-
 def main(tmp, listing):
     if ARCH not in ("x86_64", "aarch64"):
         raise ValueError(f"no audited probe for {ARCH}")
@@ -147,13 +122,13 @@ def check_set(tmp, libs, name, width):
     visited = set(reference)
     inspected = []
     for section in sections:
-        instructions = re.findall(r"(?m)^[ \t]*([\da-f]+):[ \t]+(\w+)[ \t]*(.*)$", section)
-        if not any(int(pc, 16) in visited for pc, _, _ in instructions):
+        parsed = list(instructions(section))
+        if not any(address in visited for address, _, _ in parsed):
             continue
         inspected.append(section)
-        for pc, op, operands in instructions:
-            if re.fullmatch(r"(?:i?div[bwlq]?|[us]div)", op):
-                raise ValueError(f"{name} hardware division at {pc}: {op} {operands}")
+        for address, op, operands in parsed:
+            if hardware_divide(op):
+                raise ValueError(f"{name} hardware division at {address:#x}: {op} {operands}")
     if not inspected:
         raise ValueError("assembly scan inspected no functions")
     print(f"{ARCH} {name}: {len(reference)} equal blocks, {len(cases)} cases, {len(inspected)} functions inspected")
@@ -163,17 +138,12 @@ def check_set(tmp, libs, name, width):
         memcheck(binary, "control", ["0", "1"], 16, tmp)
         for x, k in cases:
             memcheck(binary, "probe", [f"{x:016x}", f"{k:016x}"], 16, tmp)
-        fixtures = VECTORS / f"{name}.txt"
-        inputs = fixtures.read_text().splitlines()
-        if not inputs:
-            raise ValueError(f"empty {name} reducer corpus")
-        for line in inputs:
-            cls, *fields = line.split()
-            values = [int(s, 16) for s in fields[:9]]
+        rows = corpus(name)
+        for cls, values in rows:
             encoded = tmp / "basis.bin"
-            encoded.write_bytes(b"".join(abs(v).to_bytes(width * 8, "little") + bytes([v < 0]) for v in values))
+            encoded.write_bytes(encode_basis(values[:9], width))
             memcheck(binary, "reduce", [encoded, cls], encoded.stat().st_size, tmp)
-        print(f"Memcheck accepted all {len(inputs)} {name} constructors and reductions")
+        print(f"Memcheck accepted all {len(rows)} {name} constructors and reductions")
     return f"\n# {ARCH} {name}\n" + "\n".join(inspected)
 
 
@@ -181,5 +151,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--assembly", type=Path, help="write disassembly of the visited functions")
     args = parser.parse_args()
+    isa_self_test()
     with tempfile.TemporaryDirectory() as temp:
         main(Path(temp), args.assembly)
