@@ -1,0 +1,6 @@
+cellmap LMIN=2^-11 KMAX=5 depths 24,28,32,40; Lemma 1 on, Lemma C off, Endgame on
+G_5^0: nodes 540589, good leaves 449109, bad leaves 162936, bad volume 1.04e-07, queries 1414529
+   region lam in [2^-11, 2^-0]: fewer than 5 further swaps NOT PROVED
+cellmap LMIN=2^-11 KMAX=5 depths 24,28,32,40; Lemma 1 off, Lemma C on, Endgame on
+G_5^0: nodes 281, good leaves 2590, bad leaves 12, bad volume 5.46e-12, queries 21623
+   region lam in [2^-11, 2^-0]: fewer than 5 further swaps NOT PROVED

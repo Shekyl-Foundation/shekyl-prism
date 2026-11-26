@@ -1,0 +1,6 @@
+OK   Lemma 1 identity r' = (1 - 2(mx ex - my ey) + |m|^2 r)/r
+OK   Lemma C: 1 + (L+a^2+b^2) - 2(a+b) = L + (1-a)^2 + (1-b)^2 - 1
+OK   Lemma C: lam_t + sum (u_j/r_t)^2 = 1/r_t  (so step t+2 swapping needs r_t > 1)
+OK   tie identity: r_2 = 2(r_1 + e)/r_1 on eps_x = -1/2, m_1 = (-1,1)
+OK   tie identity: q_2,y = -eps_1,y / r_2 = 1/2 exactly
+ALL OK
