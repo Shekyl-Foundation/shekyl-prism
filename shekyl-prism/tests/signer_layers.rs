@@ -6,7 +6,7 @@
 //! With the `signer` feature, the signer's layers are reachable through
 //! `hazmat`. Cargo builds this file only when the feature is asked for
 //! (`required-features` in the manifest), and CI's step that asks for it
-//! requires the log to show this test ran.
+//! requires the log to show each of these tests ran.
 
 use shekyl_prism::hazmat::ideal::geometry::{
     degree_bits, secret_norm_bits, DEGREE_EXPONENT, DEGREE_SHIFT, ORDER_DENOMINATOR_BITS,
