@@ -148,6 +148,10 @@ python3 report_tables.py
 
 Binary hashes (sha256): dev+patch `27c1a0b6a0b8822d123bdc381d32074c1439e66b615015d2325cae08672bff69`, a5a6f60 `85f5a79ebe5666778836186e4c6bdbd6da87d757ef8ad574843a92b0fccd79ec`. Raw split CSVs (about 28 MB each) are on the Pi and the box, not committed; archives: runs A to C `3f113ba31aa211c018d12f6e16e65c7e3acff9427f295bfdec64f401b57da120`, run D `f39f498716ca60c6723ad0b0776d228c5a059032df75bda7a5bd95aa83ad706f`. The raw G7-mode CSVs (all 55 processes) are in `results/data/orig_mode_raw.tar.xz`.
 
+## Later: node stopped
+
+A follow-up on 2026-11-26 stopped `shekyld@testnet` for the same contrasts on this board. Host contention fell, the pair-difference sd did not, and fixture 1 stayed in the earlier t range. See [quiet/REPORT.md](quiet/REPORT.md).
+
 ## Files
 
 `harness.patch`, `analyze.py`, `procs.py`, `pooled.py`, `report_tables.py`, `pi/` (setup, snapshot, monitor, suite runners, stack scan), `results/summary/` (all summary JSON), `results/state/`, `results/monitor_summary.txt`, `results/stack_aarch64.txt`, `results/data/`.

@@ -1,0 +1,35 @@
+# Node stop/start record (redacted). No peer lists or onion addresses.
+
+Times are America/New_York (UTC-5).
+
+## Before stop (2026-11-26 14:08:31)
+- shekyld@testnet.service: active (running) since 2026-09-16, Main PID 1244, user shekyl (uid 983)
+- Command: /usr/local/bin/shekyld --service --network testnet --data-dir /var/lib/shekyl/testnet --log-file /var/log/shekyl/testnet/shekyld.log
+- tor: PID 1385, child of 1244, ~1.5% CPU (managed ephemeral Tor)
+- skl-agent processes left running: capture_a12b.py (PID 31063), guard_sample_a12.py (PID 35696), shekyl-wallet-rpc (PID 34088, tmux sendwallet)
+- Listeners: 127.0.0.1:12030 (view RPC), 0.0.0.0:12021 (P2P), 127.0.0.1:29701 (wallet-rpc)
+- Load 1.29 0.92 0.72, 2 users, temp 49.2 C, governor ondemand, volt alarm 0
+
+## Stop
+- 14:08:32  sudo -n /usr/bin/systemctl stop shekyld@testnet   rc=0
+- is-active: inactive on the first check
+- shekyld and tor processes gone; 12030 and 12021 no longer listening
+- capture_a12b.py, guard_sample_a12.py, shekyl-wallet-rpc still running (PIDs unchanged)
+
+## Quiet timing window
+- 14:08:33–14:46:56  node inactive; suites on core 3 (see progress logs)
+- Remaining load: the three skl-agent processes above (about 0.8% + 2.9% + 0.9% CPU)
+
+## Start
+- 14:46:57  sudo -n /usr/bin/systemctl start shekyld@testnet   rc=0
+- is-active: active on the first check
+- New Main PID 261362 (shekyld, user shekyl), tor child PID 261416
+- systemd: Started shekyld@testnet.service
+- Log (14:46:58): view listener on 127.0.0.1:12030; clearnet bound to 0.0.0.0:12021
+- Log (14:47:06): "This node is holding its own transactions. It is syncing over clearnet."
+- Log (14:47:14): "Tor is carrying this node's traffic."
+- Log (14:47:16): outbound connections below floor (Clearnet 6/12, Tor 1/12)
+- Log (14:50:18): "outbound connections recovered the relay provisioning floor connector=Tor achieved=12 floor=12"
+- CPU of shekyld: 118% just after start, 49% at +1 min, 36% at +3 min, 29% at +4.5 min
+- 14:51:28: is-active still active; 12030, 12021, 29701 listening; all five processes above still alive (scripts and wallet PIDs unchanged since before the stop)
+- Numeric chain height: not present in the journal at this log level. The view RPC is up at 127.0.0.1:12030, but the method names are not the usual Monero-style ones and were not in the approved journal. Progress is the "syncing over clearnet" line plus Tor outbound recovering from 1 to 12 in three minutes.
