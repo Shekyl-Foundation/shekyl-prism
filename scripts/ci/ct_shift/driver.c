@@ -11,8 +11,9 @@
 #endif
 
 extern void prism_shift_probe(uint64_t input, uint64_t count);
+extern size_t prism_scalar_bytes(void);
 struct encoded {
-    unsigned char magnitude[168];
+    unsigned char magnitude[STAGE2C_LIMBS * 8];
     unsigned char negative;
 };
 struct input {
@@ -33,7 +34,7 @@ __attribute__((noinline)) void leaky_control(uint64_t bit) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 4) return 2;
+    if (argc != 4 || prism_scalar_bytes() != STAGE2C_LIMBS * 8) return 2;
     if (argv[1][0] == 'r') {
         struct input basis;
         FILE *f = fopen(argv[2], "rb");

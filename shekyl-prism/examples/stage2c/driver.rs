@@ -3,12 +3,8 @@
 // All rights reserved.
 // BSD-3-Clause
 
-//! Native Stage 2c prototype on public oracle fixtures. No signing or key import API.
-#![forbid(unsafe_code)]
-
-mod reducer;
+use crate::reducer::{self, Basis, Bounds, Class, Reduced, ReductionSet, Scalar, Schedule, Vector};
 use prism_int::{SecretBit, SecretError, SecretInt};
-use reducer::{Basis, Bounds, Class, Reduced, Scalar, Schedule, Vector};
 use std::hint::black_box;
 use std::time::Instant;
 
@@ -16,7 +12,7 @@ fn check_bit(bit: SecretBit, expected: bool) {
     assert_eq!(bit.declassify(), Ok(expected));
 }
 
-fn scalar(hex: &str) -> Scalar {
+fn scalar<const W: usize>(hex: &str) -> Scalar<W> {
     let digits = hex.trim_start_matches('-').as_bytes();
     let bytes: Vec<_> = digits
         .rchunks(2)
@@ -30,15 +26,15 @@ fn scalar(hex: &str) -> Scalar {
     }
 }
 
-struct Fixture {
+struct Fixture<const W: usize> {
     class: Class,
-    t: Scalar,
-    u: Vector,
-    v: Vector,
-    expected: Vec<Scalar>,
+    t: Scalar<W>,
+    u: Vector<W>,
+    v: Vector<W>,
+    expected: Vec<Scalar<W>>,
 }
 
-impl Fixture {
+impl<const W: usize> Fixture<W> {
     fn parse(line: &str) -> Self {
         let mut fields = line.split_whitespace();
         let class = match fields.next().unwrap() {
@@ -61,11 +57,11 @@ impl Fixture {
         }
     }
 
-    fn input(&self, bounds: &Bounds) -> Basis {
+    fn input<const D: usize>(&self, bounds: &Bounds<W, D>) -> Basis<W> {
         Basis::from_intersection(&self.t, self.u.clone(), self.v.clone(), self.class, bounds)
     }
 
-    fn check(&self, result: &Reduced) {
+    fn check(&self, result: &Reduced<W>) {
         for (x, want) in result
             .u
             .iter()
@@ -78,9 +74,9 @@ impl Fixture {
     }
 }
 
-fn check_ties() {
+fn check_ties<S: ReductionSet<W, D>, const W: usize, const D: usize>() {
     for steps in [1, 2, 3] {
-        let result = reducer::tie_fixture(steps);
+        let result = reducer::tie_fixture::<S, W, D>(steps);
         let first = [4, -1, 1, 0];
         let (second, form) = if steps == 1 {
             ([10, 0, 0, 0], [1, 5, 4, 1])
@@ -107,14 +103,10 @@ fn check_ties() {
 
 const SCHEDULES: [Schedule; 2] = [Schedule::Reviewed, Schedule::Pr45Baseline];
 
-fn main() {
-    check_ties();
-    let bench = std::env::args().nth(1).as_deref() == Some("bench");
-    let bounds = Bounds::p500();
-    let fixtures: Vec<_> = include_str!("vectors.txt")
-        .lines()
-        .map(Fixture::parse)
-        .collect();
+pub fn run<S: ReductionSet<W, D>, const W: usize, const D: usize>(corpus: &str, bench: bool) {
+    check_ties::<S, W, D>();
+    let bounds = Bounds::new::<S>();
+    let fixtures: Vec<_> = corpus.lines().map(Fixture::parse).collect();
     for f in &fixtures {
         for schedule in SCHEDULES {
             f.check(&f.input(&bounds).reduce(schedule));
@@ -138,7 +130,15 @@ fn main() {
             }
         }
     }
-    println!("{} P500 bases matched at both schedules. Both classes refused all five invalid inputs on every output.", fixtures.len());
+    // CI compares the schedules exercised above to the independent count oracle.
+    println!(
+        "stage2c {} limbs={} guarded={} generic={} bases={}",
+        S::NAME,
+        S::LIMBS,
+        bounds.steps(Class::Guarded).count(Schedule::Reviewed),
+        bounds.steps(Class::Generic).count(Schedule::Reviewed),
+        fixtures.len()
+    );
     if bench {
         // Paired smoke measurement on committed inputs. Alternate the order
         // so a warm cache does not always favor the shorter schedule.
@@ -155,11 +155,11 @@ fn main() {
                 }
             }
             for (schedule, mut samples) in SCHEDULES.into_iter().zip(times) {
-                let steps = class.steps(schedule);
+                let steps = bounds.steps(class).count(schedule);
                 samples.sort();
                 println!(
-                    "{class:?}, {steps} steps, median {:?} including setup and drop ({} samples)",
-                    samples[samples.len() / 2],
+                    "{} {class:?} {schedule:?}, {steps} steps, median {:?} including setup and drop ({} samples)",
+                    S::NAME, samples[samples.len() / 2],
                     samples.len()
                 );
             }

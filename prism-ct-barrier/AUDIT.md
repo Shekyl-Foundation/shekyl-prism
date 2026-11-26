@@ -53,13 +53,13 @@ operand constraints are the standard ones.
 
 1. Run `python3 scripts/ci/check_ct_shift.py --assembly shift.asm` on both
    supported Linux architectures. Inspect the release listing of the
-   consuming functions, including the fixed 128-by-64 division.
+   consuming functions at all five reducer widths, including the fixed 128-by-64 division.
 2. The same command compares QEMU guest block sequences between entry and
    exit, including callees, across boundary cases. Its positive control
    must produce distinct traces.
 3. On x86-64 the command also taints both arguments under Memcheck and
    requires a conditional-jump diagnostic on the positive control. It also
-   taints the coordinates and norm throughout the P500 fixture reductions. Extend
+   taints the coordinates and norm throughout the fixture reductions at all five parameter sets. Extend
    this coverage to the integrated signer before discharging G7.
 4. dudect fixed-vs-random on native hardware (x86-64 here; aarch64 needs
    real hardware, not qemu).
