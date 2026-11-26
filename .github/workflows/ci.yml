@@ -145,6 +145,11 @@ jobs:
           python3 scripts/ci/check_int_surface.py
           python3 scripts/ci/check_secret_exits.py --selftest
           python3 scripts/ci/check_secret_exits.py
+      - name: Validate the committed Stage 2c timing contrasts
+        run: |
+          for arch in x86_64 aarch64; do
+            python3 -B -S scripts/ci/stage2c_timing.py "docs/benchmarks/stage2c/$arch.csv.gz" --repeats 512
+          done
       - name: Check the Stage 2c basis reduction against its mathematical fixtures
         run: |
           python3 -B -S scripts/stage2c_oracle.py
@@ -294,6 +299,17 @@ jobs:
         run: bash scripts/ci/apt_install.sh qemu-user valgrind
       - name: Inspect release instructions and compare secret-shift traces
         run: python3 scripts/ci/check_ct_shift.py --assembly stage2c-x86_64.asm
+      - name: Measure reducer stack and inspect the full release path
+        run: |
+          set -euo pipefail
+          bash scripts/ci/apt_install.sh gdb valgrind
+          mkdir -p reducer-inspection
+          python3 -B scripts/ci/stage2c_stack.py reducer-inspection | tee reducer-inspection/stack.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: reducer-inspection-x86_64
+          path: reducer-inspection/
+          if-no-files-found: error
       - name: Preserve the compiled shift consumer for instruction review
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -359,6 +375,17 @@ jobs:
         run: bash scripts/ci/apt_install.sh qemu-user
       - name: Inspect release instructions and compare secret-shift traces
         run: python3 scripts/ci/check_ct_shift.py --assembly stage2c-aarch64.asm
+      - name: Measure reducer stack and inspect the full release path
+        run: |
+          set -euo pipefail
+          bash scripts/ci/apt_install.sh gdb valgrind
+          mkdir -p reducer-inspection
+          python3 -B scripts/ci/stage2c_stack.py reducer-inspection | tee reducer-inspection/stack.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: reducer-inspection-aarch64
+          path: reducer-inspection/
+          if-no-files-found: error
       - name: Preserve the compiled shift consumer for instruction review
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

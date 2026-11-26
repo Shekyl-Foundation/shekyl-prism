@@ -1,0 +1,65 @@
+x86_64 p248 sign-generic 1 stack_bytes=12496 residual_words=25/30
+x86_64 p248 sign-generic 2 stack_bytes=12496 residual_words=25/30
+x86_64 p248 sign-generic 3 stack_bytes=12496 residual_words=27/34
+x86_64 p248 sign-generic 4 stack_bytes=12496 residual_words=22/32
+x86_64 p248 sign-generic 5 stack_bytes=12496 residual_words=27/34
+x86_64 p248 prered-guard256 1 stack_bytes=14048 residual_words=47/53
+x86_64 p248 prered-guard256 2 stack_bytes=14048 residual_words=47/53
+x86_64 p248 prered-guard256 3 stack_bytes=14048 residual_words=47/53
+x86_64 p248 prered-guard256 4 stack_bytes=14048 residual_words=47/53
+x86_64 p248 prered-guard256 5 stack_bytes=14048 residual_words=47/53
+x86_64 p248 prered-guard256 6 stack_bytes=14048 residual_words=47/53
+x86_64 p248 instructions 11641 functions 31
+x86_64 p248 opcodes adc=181 add=286 and=333 bsr=11 bt=2 call=299 cmove=32 cmovne=1 cmp=78 cmpb=2 cmpq=2 data16=2 dec=2 imul=12 inc=10 ja=8 jae=14 jb=9 jbe=8 je=33 jmp=33 jne=16 lea=368 mov=3137 movabs=1 movaps=544 movb=384 movdqa=17 movdqu=56 movl=11 movmskps=2 movq=3043 movsbq=1 movups=353 movw=7 movzbl=268 movzwl=7 mul=1 mulq=111 neg=43 nopl=3 not=59 or=375 pand=13 pandn=4 pcmpeqd=9 pop=117 por=62 pshufd=18 push=117 pxor=2 ret=31 sar=65 sbb=83 setae=2 setb=92 sete=9 setne=9 shl=63 shld=12 shr=43 sub=114 test=22 xchg=1 xor=575 xorps=13
+x86_64 p324 sign-generic 1 stack_bytes=15560 residual_words=33/40
+x86_64 p324 sign-generic 2 stack_bytes=15560 residual_words=33/40
+x86_64 p324 sign-generic 3 stack_bytes=15560 residual_words=34/43
+x86_64 p324 sign-generic 4 stack_bytes=15560 residual_words=29/42
+x86_64 p324 sign-generic 5 stack_bytes=15560 residual_words=34/42
+x86_64 p324 prered-guard256 1 stack_bytes=17480 residual_words=60/67
+x86_64 p324 prered-guard256 2 stack_bytes=17480 residual_words=62/69
+x86_64 p324 prered-guard256 3 stack_bytes=17480 residual_words=62/69
+x86_64 p324 prered-guard256 4 stack_bytes=17480 residual_words=62/69
+x86_64 p324 prered-guard256 5 stack_bytes=17480 residual_words=61/68
+x86_64 p324 prered-guard256 6 stack_bytes=17480 residual_words=61/68
+x86_64 p324 instructions 11576 functions 31
+x86_64 p324 opcodes adc=49 add=150 and=295 bsr=14 bt=2 call=303 cmove=29 cmovne=1 cmp=65 cmpb=2 cs=2 data16=2 dec=3 imul=2 inc=14 ja=8 jae=1 jb=10 jbe=8 je=28 jmp=30 jne=22 lea=367 mov=2701 movabs=1 movaps=735 movb=384 movdqa=40 movdqu=129 movl=14 movmskps=9 movq=3712 movups=472 movw=7 movzbl=250 movzwl=6 mul=1 mulq=45 neg=47 nopl=4 nopw=1 not=34 or=315 packssdw=9 packsswb=1 packuswb=1 pand=34 pandn=18 pcmpeqd=21 pmovmskb=1 pop=110 por=106 pshufd=23 psllw=1 push=110 pxor=10 ret=31 sar=20 sbb=43 setae=2 setb=36 sete=9 setne=6 shl=40 shld=15 shr=12 shufps=1 sub=66 test=28 xchg=2 xor=487 xorps=19
+x86_64 p376 sign-generic 1 stack_bytes=17352 residual_words=37/44
+x86_64 p376 sign-generic 2 stack_bytes=17352 residual_words=37/44
+x86_64 p376 sign-generic 3 stack_bytes=17352 residual_words=33/48
+x86_64 p376 sign-generic 4 stack_bytes=17352 residual_words=40/50
+x86_64 p376 sign-generic 5 stack_bytes=17352 residual_words=33/48
+x86_64 p376 prered-guard256 1 stack_bytes=19528 residual_words=70/77
+x86_64 p376 prered-guard256 2 stack_bytes=19528 residual_words=70/77
+x86_64 p376 prered-guard256 3 stack_bytes=19528 residual_words=70/77
+x86_64 p376 prered-guard256 4 stack_bytes=19528 residual_words=70/77
+x86_64 p376 prered-guard256 5 stack_bytes=19528 residual_words=70/77
+x86_64 p376 prered-guard256 6 stack_bytes=19528 residual_words=70/77
+x86_64 p376 instructions 11461 functions 31
+x86_64 p376 opcodes adc=55 add=152 and=298 bsr=3 bt=2 call=372 cmove=29 cmp=67 cmpb=2 cs=3 data16=3 dec=3 imul=1 inc=13 ja=8 jae=1 jb=10 jbe=8 je=28 jmp=30 jne=25 lea=432 mov=2878 movabs=1 movaps=331 movb=375 movdqa=44 movdqu=160 movl=3 movmskps=11 movq=4139 movups=157 movw=11 movzbl=234 movzwl=6 mul=1 mulq=51 neg=36 nop=1 nopl=3 nopw=2 not=29 or=242 pand=42 pandn=18 pcmpeqd=33 pop=111 por=117 pshufd=9 push=111 pxor=10 ret=31 sar=22 sbb=34 setae=2 setb=40 sete=4 setne=6 shl=42 shld=17 shr=12 sub=74 test=28 xchg=2 xor=412 xorps=24
+x86_64 p500 sign-generic 1 stack_bytes=22368 residual_words=50/60
+x86_64 p500 sign-generic 2 stack_bytes=22368 residual_words=50/60
+x86_64 p500 sign-generic 3 stack_bytes=22368 residual_words=53/66
+x86_64 p500 sign-generic 4 stack_bytes=22368 residual_words=53/66
+x86_64 p500 sign-generic 5 stack_bytes=22368 residual_words=53/66
+x86_64 p500 prered-guard256 1 stack_bytes=25200 residual_words=95/105
+x86_64 p500 prered-guard256 2 stack_bytes=25200 residual_words=96/106
+x86_64 p500 prered-guard256 3 stack_bytes=25200 residual_words=96/106
+x86_64 p500 prered-guard256 4 stack_bytes=25200 residual_words=95/105
+x86_64 p500 prered-guard256 5 stack_bytes=25200 residual_words=96/106
+x86_64 p500 prered-guard256 6 stack_bytes=25200 residual_words=96/106
+x86_64 p500 instructions 10838 functions 39
+x86_64 p500 opcodes adc=70 add=156 and=459 bsr=3 call=473 cmove=29 cmovne=2 cmp=58 cmpb=2 cs=2 data16=3 dec=3 imul=2 inc=12 ja=4 jae=1 jb=12 jbe=5 je=25 jmp=23 jne=23 lea=477 mov=3140 movabs=1 movaps=76 movb=282 movdqa=134 movdqu=180 movl=3 movmskps=5 movq=2763 movsbq=2 movups=53 movw=4 movzbl=235 movzwl=6 mul=1 mulq=26 neg=35 nopl=4 nopw=2 not=83 or=255 packssdw=15 packsswb=2 packuswb=1 pand=72 pandn=42 pcmpeqd=32 pmovmskb=1 pop=139 por=191 pshufd=34 psllw=1 punpckhqdq=1 punpcklbw=1 push=139 pxor=4 ret=39 sar=37 sbb=37 setae=2 setb=50 sete=4 setne=7 shl=32 shld=2 shr=12 sub=73 test=24 xchg=2 xor=698 xorps=10
+x86_64 p664 sign-generic 1 stack_bytes=28464 residual_words=63/74
+x86_64 p664 sign-generic 2 stack_bytes=28464 residual_words=63/74
+x86_64 p664 sign-generic 3 stack_bytes=28464 residual_words=59/86
+x86_64 p664 sign-generic 4 stack_bytes=28464 residual_words=59/86
+x86_64 p664 sign-generic 5 stack_bytes=28464 residual_words=59/86
+x86_64 p664 prered-guard256 1 stack_bytes=32064 residual_words=118/129
+x86_64 p664 prered-guard256 2 stack_bytes=32064 residual_words=118/130
+x86_64 p664 prered-guard256 3 stack_bytes=32064 residual_words=118/130
+x86_64 p664 prered-guard256 4 stack_bytes=32064 residual_words=118/130
+x86_64 p664 prered-guard256 5 stack_bytes=32064 residual_words=118/129
+x86_64 p664 prered-guard256 6 stack_bytes=32064 residual_words=118/129
+x86_64 p664 instructions 10872 functions 40
+x86_64 p664 opcodes adc=62 add=159 and=262 bsr=3 call=476 cmove=29 cmovne=2 cmp=74 cmpb=3 cs=1 data16=8 dec=7 imul=2 inc=15 ja=4 jae=5 jb=11 jbe=9 je=35 jmp=41 jne=24 lea=480 mov=2701 movabs=1 movaps=146 movb=281 movdqa=181 movdqu=294 movl=3 movmskps=4 movq=3293 movsbq=2 movups=65 movw=5 movzbl=233 movzwl=6 mul=1 mulq=32 neg=34 nop=2 nopl=5 nopw=2 not=23 or=245 packssdw=27 packsswb=2 packuswb=1 pand=107 pandn=65 pcmpeqd=40 pmovmskb=2 pop=137 por=284 pshufd=49 psllw=1 push=137 pxor=4 ret=40 sar=18 sbb=24 setae=2 setb=70 sete=4 setne=6 shl=33 shld=2 shr=11 shufps=1 sub=59 test=24 xchg=1 xor=436 xorps=14

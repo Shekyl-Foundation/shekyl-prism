@@ -1,0 +1,65 @@
+aarch64 p248 sign-generic 1 stack_bytes=12544 residual_words=25/30
+aarch64 p248 sign-generic 2 stack_bytes=12544 residual_words=25/30
+aarch64 p248 sign-generic 3 stack_bytes=12544 residual_words=27/34
+aarch64 p248 sign-generic 4 stack_bytes=12544 residual_words=22/32
+aarch64 p248 sign-generic 5 stack_bytes=12544 residual_words=27/34
+aarch64 p248 prered-guard256 1 stack_bytes=13872 residual_words=12/53
+aarch64 p248 prered-guard256 2 stack_bytes=13872 residual_words=12/53
+aarch64 p248 prered-guard256 3 stack_bytes=13872 residual_words=12/53
+aarch64 p248 prered-guard256 4 stack_bytes=13872 residual_words=12/53
+aarch64 p248 prered-guard256 5 stack_bytes=13872 residual_words=12/53
+aarch64 p248 prered-guard256 6 stack_bytes=13872 residual_words=12/53
+aarch64 p248 instructions 10319 functions 53
+aarch64 p248 opcodes adc=71 adcs=31 add=552 adds=148 and=293 asr=55 b=35 b.cc=9 b.cs=14 b.eq=21 b.hi=10 b.ls=5 b.ne=25 bic=192 bics=1 bit=2 bl=245 bsl=2 cbnz=3 cbz=11 ccmp=70 cinc=46 clz=11 cmeq=10 cmlt=1 cmn=1 cmp=148 csel=35 cset=50 csetm=13 csinc=1 dup=2 eor=124 ext=13 extr=12 fmov=14 ldp=566 ldr=966 ldrb=236 ldrh=6 ldur=50 ldurb=35 lsl=41 lsr=42 mov=309 movi=16 movk=3 mul=68 mvn=1 neg=11 ngc=70 orr=500 ret=29 sbfx=32 shl=1 st1=4 stp=597 str=3242 strb=470 strh=8 stur=321 sturb=121 sturh=5 sub=140 subs=70 tbz=4 uminv=1 umulh=68 uzp1=9 xtn=1
+aarch64 p324 sign-generic 1 stack_bytes=15756 residual_words=33/40
+aarch64 p324 sign-generic 2 stack_bytes=15756 residual_words=33/40
+aarch64 p324 sign-generic 3 stack_bytes=15756 residual_words=34/43
+aarch64 p324 sign-generic 4 stack_bytes=15756 residual_words=29/42
+aarch64 p324 sign-generic 5 stack_bytes=15756 residual_words=34/42
+aarch64 p324 prered-guard256 1 stack_bytes=17656 residual_words=14/67
+aarch64 p324 prered-guard256 2 stack_bytes=17656 residual_words=14/69
+aarch64 p324 prered-guard256 3 stack_bytes=17656 residual_words=14/69
+aarch64 p324 prered-guard256 4 stack_bytes=17656 residual_words=14/69
+aarch64 p324 prered-guard256 5 stack_bytes=17656 residual_words=14/68
+aarch64 p324 prered-guard256 6 stack_bytes=17656 residual_words=14/68
+aarch64 p324 instructions 10832 functions 52
+aarch64 p324 opcodes adc=14 adcs=40 add=666 adds=77 and=250 asr=12 b=29 b.cc=10 b.cs=1 b.eq=14 b.hi=9 b.ls=6 b.ne=21 bic=162 bics=1 bif=3 bit=11 bl=248 bsl=4 cbnz=1 cbz=10 ccmp=78 cinc=19 clz=14 cmeq=14 cmlt=1 cmn=1 cmp=116 csel=32 cset=59 csetm=16 csinc=1 dup=3 eor=81 ext=13 extr=15 fmov=14 ldp=587 ldr=1135 ldrb=222 ldrh=7 ldur=44 ldurb=39 lsl=26 lsr=12 mov=245 movi=20 movk=3 mul=45 mvn=1 neg=13 ngc=23 orr=441 ret=29 sbfx=29 shl=1 st1=4 stp=640 str=4074 strb=471 strh=9 stur=323 sturb=118 sturh=3 sub=111 subs=28 tbz=4 uminv=1 umulh=45 uzp1=11 xtn=2
+aarch64 p376 sign-generic 1 stack_bytes=17600 residual_words=37/44
+aarch64 p376 sign-generic 2 stack_bytes=17600 residual_words=37/44
+aarch64 p376 sign-generic 3 stack_bytes=17600 residual_words=33/48
+aarch64 p376 sign-generic 4 stack_bytes=17600 residual_words=40/50
+aarch64 p376 sign-generic 5 stack_bytes=17600 residual_words=33/48
+aarch64 p376 prered-guard256 1 stack_bytes=19608 residual_words=12/77
+aarch64 p376 prered-guard256 2 stack_bytes=19608 residual_words=12/77
+aarch64 p376 prered-guard256 3 stack_bytes=19608 residual_words=12/77
+aarch64 p376 prered-guard256 4 stack_bytes=19608 residual_words=12/77
+aarch64 p376 prered-guard256 5 stack_bytes=19608 residual_words=12/77
+aarch64 p376 prered-guard256 6 stack_bytes=19608 residual_words=12/77
+aarch64 p376 instructions 10406 functions 48
+aarch64 p376 opcodes adc=16 adcs=15 add=685 adds=57 and=285 asr=14 b=26 b.cc=10 b.cs=1 b.eq=13 b.hi=9 b.ls=6 b.ne=22 bic=196 bics=1 bif=1 bit=12 bl=250 bsl=3 cbz=7 cinc=21 clz=32 cmeq=24 cmlt=1 cmn=1 cmp=128 csel=31 cset=29 csetm=34 csinc=1 dup=2 eor=76 ext=12 extr=17 fmov=14 ldp=458 ldr=779 ldrb=207 ldrh=5 ldur=38 ldurb=34 lsl=27 lsr=12 mov=272 movi=26 movk=3 mul=50 mvn=9 neg=13 ngc=25 orr=526 ret=31 sbfx=29 shl=1 stp=662 str=4058 strb=459 strh=13 stur=267 sturb=112 sturh=3 sub=128 subs=29 tbz=4 umaxv=2 umulh=51 uzp1=21
+aarch64 p500 sign-generic 1 stack_bytes=22392 residual_words=50/60
+aarch64 p500 sign-generic 2 stack_bytes=22392 residual_words=50/60
+aarch64 p500 sign-generic 3 stack_bytes=22392 residual_words=53/66
+aarch64 p500 sign-generic 4 stack_bytes=22392 residual_words=53/66
+aarch64 p500 sign-generic 5 stack_bytes=22392 residual_words=53/66
+aarch64 p500 prered-guard256 1 stack_bytes=25208 residual_words=16/105
+aarch64 p500 prered-guard256 2 stack_bytes=25208 residual_words=16/106
+aarch64 p500 prered-guard256 3 stack_bytes=25208 residual_words=16/106
+aarch64 p500 prered-guard256 4 stack_bytes=25208 residual_words=16/105
+aarch64 p500 prered-guard256 5 stack_bytes=25208 residual_words=16/106
+aarch64 p500 prered-guard256 6 stack_bytes=25208 residual_words=16/106
+aarch64 p500 instructions 9948 functions 59
+aarch64 p500 opcodes adc=21 adcs=20 add=813 adds=70 and=389 asr=19 b=20 b.cc=11 b.cs=1 b.eq=11 b.hi=4 b.ls=4 b.ne=22 bic=324 bics=1 bif=2 bit=15 bl=319 bsl=4 cbz=8 cinc=26 clz=3 cmeq=30 cmlt=2 cmn=1 cmp=90 csel=27 cset=34 csetm=5 csinc=1 dup=1 eor=72 ext=9 extr=2 fmov=11 ldp=594 ldr=1093 ldrb=200 ldrh=6 ldur=71 ldurb=30 lsl=9 lsr=9 mov=252 movi=16 movk=3 mul=26 mvn=3 neg=13 ngc=28 orr=591 ret=40 sbfx=37 shl=2 stp=663 str=3065 strb=387 strh=10 stur=140 sturb=98 sturh=1 sub=79 subs=31 tbz=4 uminv=2 umulh=26 uzp1=26 xtn=1
+aarch64 p664 sign-generic 1 stack_bytes=28528 residual_words=63/74
+aarch64 p664 sign-generic 2 stack_bytes=28528 residual_words=63/74
+aarch64 p664 sign-generic 3 stack_bytes=28528 residual_words=59/86
+aarch64 p664 sign-generic 4 stack_bytes=28528 residual_words=59/86
+aarch64 p664 sign-generic 5 stack_bytes=28528 residual_words=59/86
+aarch64 p664 prered-guard256 1 stack_bytes=32112 residual_words=21/129
+aarch64 p664 prered-guard256 2 stack_bytes=32112 residual_words=21/130
+aarch64 p664 prered-guard256 3 stack_bytes=32112 residual_words=21/130
+aarch64 p664 prered-guard256 4 stack_bytes=32112 residual_words=21/130
+aarch64 p664 prered-guard256 5 stack_bytes=32112 residual_words=21/129
+aarch64 p664 prered-guard256 6 stack_bytes=32112 residual_words=21/129
+aarch64 p664 instructions 10407 functions 65
+aarch64 p664 opcodes adc=27 adcs=26 add=924 adds=62 and=262 asr=25 b=37 b.cc=10 b.cs=5 b.eq=19 b.hi=4 b.ls=8 b.ne=23 bic=129 bics=1 bif=2 bit=4 bl=351 bsl=7 cbnz=1 cbz=9 ccmp=1 cinc=31 clz=3 cmeq=38 cmlt=2 cmn=5 cmp=102 csel=29 cset=14 csetm=5 csinc=1 dup=1 eor=79 ext=11 extr=2 fmov=14 ldp=769 ldr=798 ldrb=228 ldrh=5 ldur=51 ldurb=19 lsl=10 lsr=9 mov=312 movi=16 movk=3 mul=32 mvn=3 neg=20 ngc=34 orr=499 ret=39 sbfx=41 shl=2 stp=839 str=3546 strb=427 strh=10 stur=148 sturb=72 sturh=1 sub=84 subs=38 tbz=4 uminv=2 umov=4 umulh=32 uzp1=32 xtn=3 zip1=1
