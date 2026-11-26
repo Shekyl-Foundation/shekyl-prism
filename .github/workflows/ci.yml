@@ -291,6 +291,7 @@ jobs:
           set -euo pipefail
           cargo run --release --locked -p shekyl-prism --features signer --example stage2c -- bench | tee stage2c-native.log
           python3 -B -S scripts/stage2c_fixtures.py --native-log stage2c-native.log
+          python3 -B -S scripts/stage2d_fixtures.py --native-log stage2c-native.log
       - name: Install compiled-code inspection tools
         run: bash scripts/ci/apt_install.sh qemu-user valgrind
       - name: Inspect release instructions and compare secret-shift traces
@@ -367,6 +368,7 @@ jobs:
           set -euo pipefail
           cargo run --release --locked -p shekyl-prism --features signer --example stage2c -- bench | tee stage2c-native.log
           python3 -B -S scripts/stage2c_fixtures.py --native-log stage2c-native.log
+          python3 -B -S scripts/stage2d_fixtures.py --native-log stage2c-native.log
       - name: Install compiled-code inspection tools
         run: bash scripts/ci/apt_install.sh qemu-user
       - name: Inspect release instructions and compare secret-shift traces

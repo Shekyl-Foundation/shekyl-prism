@@ -4,10 +4,12 @@
 # BSD-3-Clause
 """Recover producer inputs for the committed guarded intersections using public integers."""
 import argparse
+from collections import Counter
+from pathlib import Path
 from math import gcd, isqrt
 
 from stage2c_fixtures import SET_WIDTHS, VECTORS
-from stage2c_oracle import combine, half_up_quotient, inner, signer_parameters, times_i
+from stage2c_oracle import combine, half_up_quotient, inner, native_schedules, signer_parameters, times_i
 
 
 def root(w, modulus):
@@ -50,15 +52,24 @@ def inputs(name):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--write", action="store_true")
-    write = parser.parse_args().write
+    parser.add_argument("--native-log", type=Path)
+    args = parser.parse_args()
+    expected = []
+
     for name in SET_WIDTHS:
         rows = list(inputs(name))
         if len(rows) != 6:
             raise ValueError(f"{name} has {len(rows)} guarded inputs")
         text = "\n".join(rows) + "\n"
         path = VECTORS.parent / "ideals" / f"{name}.txt"
-        if write:
+        count = native_schedules(name)["Secret ideal pre-reduction, Q4"][1]
+        expected.append(f"stage2d {name} secret_steps={count} guarded_intersections={len(rows)}")
+        if args.write:
             path.parent.mkdir(exist_ok=True)
             path.write_text(text)
         elif path.read_text() != text:
             raise ValueError(f"{name} ideal inputs differ")
+    if args.native_log:
+        actual = [s for s in args.native_log.read_text().splitlines() if s.startswith("stage2d ")]
+        if Counter(actual) != Counter(expected):
+            raise ValueError(f"native secret-ideal schedule or corpus differs: {actual}")

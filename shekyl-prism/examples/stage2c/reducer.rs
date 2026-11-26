@@ -57,11 +57,13 @@ pub trait ReductionSet<const W: usize, const D: usize>: ParameterSet {
     const LIMBS: usize = W;
     const GUARDED: Steps;
     const GENERIC: Steps;
+    const SECRET_IDEAL_STEPS: usize;
 }
 
 macro_rules! reduction_set {
-    ($set:ty, $width:literal, guarded: $g:literal / $gb:literal, generic: $h:literal / $hb:literal) => {
+    ($set:ty, $width:literal, guarded: $g:literal / $gb:literal, generic: $h:literal / $hb:literal, secret_ideal: $k:literal) => {
         impl ReductionSet<$width, { 2 * $width }> for $set {
+            const SECRET_IDEAL_STEPS: usize = $k;
             const GUARDED: Steps = Steps {
                 reviewed: $g,
                 baseline: $gb,
@@ -74,11 +76,11 @@ macro_rules! reduction_set {
     };
 }
 
-reduction_set!(P248, 11, guarded: 267 / 297, generic: 280 / 312);
-reduction_set!(P324, 14, guarded: 347 / 387, generic: 360 / 401);
-reduction_set!(P376, 16, guarded: 402 / 448, generic: 415 / 463);
-reduction_set!(P500, 21, guarded: 533 / 594, generic: 546 / 609);
-reduction_set!(P664, 27, guarded: 706 / 787, generic: 719 / 803);
+reduction_set!(P248, 11, guarded: 267 / 297, generic: 280 / 312, secret_ideal: 22);
+reduction_set!(P324, 14, guarded: 347 / 387, generic: 360 / 401, secret_ideal: 22);
+reduction_set!(P376, 16, guarded: 402 / 448, generic: 415 / 463, secret_ideal: 23);
+reduction_set!(P500, 21, guarded: 533 / 594, generic: 546 / 609, secret_ideal: 22);
+reduction_set!(P664, 27, guarded: 706 / 787, generic: 719 / 803, secret_ideal: 24);
 
 pub struct Bounds<const W: usize, const D: usize> {
     guarded_steps: Steps,
@@ -289,6 +291,24 @@ impl<const W: usize> Basis<W> {
             *h = r;
         }
         self.order();
+    }
+
+    /// Pre-reduce the generic HNF of a Q4-bounded key-generation candidate.
+    /// Admission of the resulting basis checks the same norm and guard as import.
+    pub fn secret_candidate<S: ReductionSet<W, D>, const D: usize>(
+        norm: &Scalar<W>,
+        x: &Scalar<W>,
+        y: &Scalar<W>,
+        bounds: &Bounds<W, D>,
+    ) -> Reduced<W> {
+        let mut t = norm.clone();
+        // max_norm is exactly the Q4 limit times the public power-of-two degree bound.
+        let limit = bounds.max_norm.shr(degree_bits(S::E));
+        t.mark_if(&norm.ct_lt(&limit).not());
+        let u = [t.shl(1), Scalar::zero(), Scalar::zero(), Scalar::zero()];
+        let v = [x.clone(), y.clone(), Scalar::one(), Scalar::zero()];
+        Self::from_intersection(&t, u, v, Class::Generic, bounds)
+            .reduce_steps(S::SECRET_IDEAL_STEPS)
     }
 
     pub fn reduce(self, schedule: Schedule) -> Reduced<W> {

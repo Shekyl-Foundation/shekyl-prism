@@ -82,7 +82,7 @@ impl<const W: usize> Fixture<W> {
     }
 }
 
-fn check_ideal<S: ideal::IdealSet<W, D>, const W: usize, const D: usize>(
+fn check_ideal<S: ideal::IdealSet<W, D> + ReductionSet<W, D>, const W: usize, const D: usize>(
     line: &str,
     expected: &Fixture<W>,
     bounds: &Bounds<W, D>,
@@ -107,6 +107,16 @@ fn check_ideal<S: ideal::IdealSet<W, D>, const W: usize, const D: usize>(
         [two.sub(&y), x, z(), Scalar::one()],
     ];
     let admit = |h, a, b| ideal::GuardedIdeal::<S, W, D>::admit(n.clone(), h, a, b);
+    let generated = Basis::secret_candidate::<S, D>(&n, &hnf[2][0], &hnf[2][1], bounds);
+    for (got, want) in generated
+        .u
+        .iter()
+        .chain(&generated.v)
+        .zip(u.iter().chain(&v))
+    {
+        check_bit(got.ct_eq(want), true);
+    }
+    assert!(admit(&hnf, generated.u, generated.v).is_some());
     let key = admit(&hnf, u.clone(), v.clone()).expect("valid ideal");
     let intersection = key.intersection(&challenge, &root).unwrap();
     for (got, want) in intersection
@@ -279,6 +289,12 @@ pub fn run<S: ReductionSet<W, D> + ideal::IdealSet<W, D>, const W: usize, const 
     for (line, expected) in ideals.lines().zip(guarded) {
         check_ideal::<S, _, _>(line, expected, &bounds);
     }
+    println!(
+        "stage2d {} secret_steps={} guarded_intersections={}",
+        S::NAME,
+        S::SECRET_IDEAL_STEPS,
+        ideals.lines().count()
+    );
     for f in &fixtures {
         for schedule in SCHEDULES {
             f.check(&f.input(&bounds).reduce(schedule));
