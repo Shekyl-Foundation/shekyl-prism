@@ -87,22 +87,44 @@ def memcheck(binary, mode, args, expected_bytes, tmp):
 
 
 def release_libraries():
-    msgs = run("cargo", "build", "--locked", "--release", "-p", "prism-int", "-p", "prism-field",
-               "--message-format=json")
+    # The reducer calls ideal geometry through `hazmat::ideal`. The probe
+    # links that crate instead of compiling `geometry.rs` a second time.
+    msgs = run("cargo", "build", "--locked", "--release", "-p", "shekyl-prism",
+               "--features", "signer", "--message-format=json")
     libs = {}
+    wanted = {"prism_int", "prism_field", "shekyl_prism"}
     for line in msgs.splitlines():
         msg = json.loads(line)
         name = msg.get("target", {}).get("name")
-        if name in ("prism_int", "prism_field"):
-            [libs[name]] = [Path(f) for f in msg["filenames"] if f.endswith(".rlib")]
+        rlibs = [Path(f) for f in msg.get("filenames", []) if f.endswith(".rlib")]
+        if name in wanted and len(rlibs) == 1:
+            libs[name] = rlibs[0]
+    missing = wanted - libs.keys()
+    if missing:
+        raise ValueError(f"release build did not produce {sorted(missing)}")
     return libs
 
 
+def dependency_dirs(libs):
+    # Cargo puts the rlib in `target/<profile>/deps`. A path one level higher
+    # still has `deps` beside it. Search both when they exist so transitive
+    # crates (the verifier, `zeroize`) resolve next to `shekyl_prism`.
+    found = []
+    for lib in libs.values():
+        for candidate in (lib.parent, lib.parent / "deps"):
+            if candidate.is_dir() and candidate not in found:
+                found.append(candidate)
+    return found
+
+
 def build_command(libs, name, binary):
+    search = [arg for path in dependency_dirs(libs) for arg in ("-L", f"dependency={path}")]
     return ["rustc", "--edition=2021", "-Copt-level=3", "-Cpanic=abort",
              "-Crelocation-model=static", "--cfg", f'stage2c_set="{name}"',
-             "--extern", f"prism_int={libs['prism_int']}", "--extern", f"prism_field={libs['prism_field']}",
-             "-L", f"dependency={libs['prism_int'].parent}/deps", HERE / "probe.rs", "-o", binary]
+             "--extern", f"prism_int={libs['prism_int']}",
+             "--extern", f"prism_field={libs['prism_field']}",
+             "--extern", f"shekyl_prism={libs['shekyl_prism']}",
+             *search, HERE / "probe.rs", "-o", binary]
 
 
 def main(tmp, listing):

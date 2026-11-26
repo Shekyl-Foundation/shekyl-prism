@@ -5,8 +5,9 @@
 
 //! Native Stage 2c reduction. Its caller supplies a spanning intersection from
 //! an admitted key (or a generic HNF). This prototype has no key decoder.
-use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
+use prism_field::{P248, P324, P376, P500, P664};
 use prism_int::{Int, SecretBit, SecretInt};
+use shekyl_prism::hazmat::ideal::{self, geometry, GenericHnf, GuardedIdeal, IdealSet};
 
 pub type Scalar<const W: usize> = SecretInt<W>;
 type Word = SecretInt<1>;
@@ -18,9 +19,8 @@ pub type Vector<const W: usize> = [Scalar<W>; 4];
 const QUOTIENT_TOP_BITS: u64 = 64;
 const QUOTIENT_WINDOW: u64 = 60;
 
-#[path = "../../src/ideal/geometry.rs"]
-mod geometry;
-use geometry::{degree_bits, hermitian, inverse_odd, secret_norm_bits, GUARD_BITS};
+/// The reducer's diagonal stores `A' = 2 · nrd(U) / T` until the form is halved.
+const DOUBLED_DIAGONAL_BITS: u32 = 1;
 
 /// Slack on `q` in the guarded diagonal bound. The schedule's `C0` uses `q + 1`.
 const GUARDED_DIAGONAL_SLACK: u64 = 3;
@@ -52,18 +52,21 @@ impl Steps {
     }
 }
 
-/// Bind each public set to its proven coordinate and constructor widths.
-pub trait ReductionSet<const W: usize, const D: usize>: ParameterSet {
+/// Bind each public set to its [`IdealSet`] widths, schedules, and ideal corpus.
+pub trait ReductionSet<const W: usize, const D: usize>: IdealSet<W, D> {
     const LIMBS: usize = W;
     const GUARDED: Steps;
     const GENERIC: Steps;
     const SECRET_IDEAL_STEPS: usize;
+    /// Recovered norm, root, basis, and challenge for this set's guarded rows.
+    const IDEAL_CORPUS: &'static str;
 }
 
 macro_rules! reduction_set {
-    ($set:ty, $width:literal, guarded: $g:literal / $gb:literal, generic: $h:literal / $hb:literal, secret_ideal: $k:literal) => {
+    ($set:ty, $width:literal, guarded: $g:literal / $gb:literal, generic: $h:literal / $hb:literal, secret_ideal: $k:literal, corpus: $corpus:literal) => {
         impl ReductionSet<$width, { 2 * $width }> for $set {
             const SECRET_IDEAL_STEPS: usize = $k;
+            const IDEAL_CORPUS: &'static str = include_str!($corpus);
             const GUARDED: Steps = Steps {
                 reviewed: $g,
                 baseline: $gb,
@@ -76,11 +79,11 @@ macro_rules! reduction_set {
     };
 }
 
-reduction_set!(P248, 11, guarded: 267 / 297, generic: 280 / 312, secret_ideal: 22);
-reduction_set!(P324, 14, guarded: 347 / 387, generic: 360 / 401, secret_ideal: 22);
-reduction_set!(P376, 16, guarded: 402 / 448, generic: 415 / 463, secret_ideal: 23);
-reduction_set!(P500, 21, guarded: 533 / 594, generic: 546 / 609, secret_ideal: 22);
-reduction_set!(P664, 27, guarded: 706 / 787, generic: 719 / 803, secret_ideal: 24);
+reduction_set!(P248, 11, guarded: 267 / 297, generic: 280 / 312, secret_ideal: 22, corpus: "ideals/p248.txt");
+reduction_set!(P324, 14, guarded: 347 / 387, generic: 360 / 401, secret_ideal: 22, corpus: "ideals/p324.txt");
+reduction_set!(P376, 16, guarded: 402 / 448, generic: 415 / 463, secret_ideal: 23, corpus: "ideals/p376.txt");
+reduction_set!(P500, 21, guarded: 533 / 594, generic: 546 / 609, secret_ideal: 22, corpus: "ideals/p500.txt");
+reduction_set!(P664, 27, guarded: 706 / 787, generic: 719 / 803, secret_ideal: 24, corpus: "ideals/p664.txt");
 
 pub struct Bounds<const W: usize, const D: usize> {
     guarded_steps: Steps,
@@ -102,17 +105,15 @@ impl<const W: usize, const D: usize> Bounds<W, D> {
 
     pub fn new<S: ReductionSet<W, D>>() -> Self {
         let one = Int::<W>::one();
-        let p = Int::from_u64(S::COFACTOR.value())
-            .shl(S::E)
-            .unwrap()
-            .sub(&one)
-            .unwrap();
-        let q = one.shl(degree_bits(S::E)).unwrap();
-        let secret_norm_bits = secret_norm_bits(p.bit_length());
+        let p = ideal::field_prime::<S, W, D>().unwrap();
+        let q = one.shl(geometry::degree_bits(S::E)).unwrap();
+        let secret_norm_bits = geometry::secret_norm_bits(p.bit_length());
         let max_norm = q.shl(secret_norm_bits).unwrap();
         let root = p.sqrt_floor().unwrap().add(&one).unwrap();
+        // A' ≤ 2^{DOUBLED_DIAGONAL_BITS + GUARD_BITS} · √p · (q + slack).
+        let guard_shift = DOUBLED_DIAGONAL_BITS + geometry::GUARD_BITS;
         let guarded = root
-            .shl(1 + GUARD_BITS)
+            .shl(guard_shift)
             .unwrap()
             .mul(&q.add(&Int::from_u64(GUARDED_DIAGONAL_SLACK)).unwrap())
             .unwrap();
@@ -129,15 +130,11 @@ impl<const W: usize, const D: usize> Bounds<W, D> {
             p: Scalar::<W>::from_public(&p).resize(),
             max_norm: Scalar::<W>::from_public(&max_norm),
             guarded_diagonal: Scalar::<W>::from_public(&guarded),
-            // A' = 2 nrd(U)/T <= 512 sqrt(p) q on a guarded intersection.
+            // A' = 2 nrd(U)/T ≤ 2^{DOUBLED_DIAGONAL_BITS + GUARD_BITS} √p · q.
             guarded_first_squared: Scalar::<W>::from_public(&q)
                 .resize::<D>()
-                .shl(1 + GUARD_BITS)
-                .mul(
-                    &Scalar::<W>::from_public(&q)
-                        .resize::<D>()
-                        .shl(1 + GUARD_BITS),
-                )
+                .shl(guard_shift)
+                .mul(&Scalar::<W>::from_public(&q).resize::<D>().shl(guard_shift))
                 .mul(&Scalar::<W>::from_public(&p).resize()),
             generic_diagonal: Scalar::<W>::from_public(&generic),
         }
@@ -150,12 +147,20 @@ fn divide_form_entry<const W: usize, const D: usize>(
     inv: &Scalar<W>,
     diagonal: bool,
 ) -> (Scalar<W>, SecretBit) {
-    let bits = if diagonal { 2 } else { 1 };
+    let bits = if diagonal {
+        geometry::DENOMINATOR_SQUARE_BITS
+    } else {
+        geometry::ORDER_DENOMINATOR_BITS
+    };
     let half = n.shr(bits);
     let mag = half.truncate::<W>().mul_low(inv);
     let quotient = Scalar::select(&mag, &mag.neg(), &half.is_negative());
     let exact = quotient.resize::<D>().mul(&t.resize()).ct_eq(&half);
-    let result = if diagonal { quotient.shl(1) } else { quotient };
+    let result = if diagonal {
+        quotient.shl(DOUBLED_DIAGONAL_BITS)
+    } else {
+        quotient
+    };
     (result, exact.and(&n.low_bits_zero(bits)))
 }
 
@@ -187,31 +192,39 @@ impl<const W: usize> Basis<W> {
             .and(&t.ct_lt(&bounds.max_norm));
         let wide_u = u.each_ref().map(Scalar::resize);
         let wide_v = v.each_ref().map(Scalar::resize);
-        let inv = inverse_odd(t);
+        let inv = geometry::inverse_odd(t);
         let (a, c, h) = match class {
             Class::Guarded => {
                 for x in [&u, &v] {
                     ok = ok
-                        .and(&x[0].sub(&x[3]).low_bits_zero(1))
-                        .and(&x[1].sub(&x[2]).low_bits_zero(1));
+                        .and(
+                            &x[0]
+                                .sub(&x[3])
+                                .low_bits_zero(geometry::ORDER_DENOMINATOR_BITS),
+                        )
+                        .and(
+                            &x[1]
+                                .sub(&x[2])
+                                .low_bits_zero(geometry::ORDER_DENOMINATOR_BITS),
+                        );
                 }
-                let (h0, h1) = hermitian(&wide_v, &wide_u, &bounds.p);
+                let (h0, h1) = geometry::hermitian(&wide_v, &wide_u, &bounds.p);
                 let mut entry = |n: &SecretInt<D>, diag| {
                     let (e, exact) = divide_form_entry(n, t, &inv, diag);
                     ok = ok.and(&exact);
                     e
                 };
                 (
-                    entry(&hermitian(&wide_u, &wide_u, &bounds.p).0, true),
-                    entry(&hermitian(&wide_v, &wide_v, &bounds.p).0, true),
+                    entry(&geometry::hermitian(&wide_u, &wide_u, &bounds.p).0, true),
+                    entry(&geometry::hermitian(&wide_v, &wide_v, &bounds.p).0, true),
                     [entry(&h0, false), entry(&h1, false)],
                 )
             }
             Class::Generic => {
-                let two_t = t.shl(1);
+                let two_t = t.shl(geometry::ORDER_DENOMINATOR_BITS);
                 ok = ok
                     .and(&u[0].ct_eq(&two_t))
-                    .and(&v[0].low_bits_zero(1))
+                    .and(&v[0].low_bits_zero(geometry::ORDER_DENOMINATOR_BITS))
                     .and(&v[1].is_odd());
                 for x in &u[1..] {
                     ok = ok.and(&x.ct_eq(&Scalar::zero()));
@@ -293,22 +306,28 @@ impl<const W: usize> Basis<W> {
         self.order();
     }
 
-    /// Pre-reduce the generic HNF of a Q4-bounded key-generation candidate.
-    /// Admission of the resulting basis checks the same norm and guard as import.
+    /// Pre-reduce the generic HNF of a key-generation candidate and admit it.
+    ///
+    /// The column-HNF is [`GenericHnf::from_norm_and_root`]. The reduced basis
+    /// is returned only together with the [`GuardedIdeal`] that
+    /// [`GuardedIdeal::admit`] produced from that same HNF. Q4, the guard,
+    /// and every other admission predicate are that one verdict.
     pub fn secret_candidate<S: ReductionSet<W, D>, const D: usize>(
         norm: &Scalar<W>,
-        x: &Scalar<W>,
-        y: &Scalar<W>,
+        root: &ideal::Gaussian<W>,
         bounds: &Bounds<W, D>,
-    ) -> Reduced<W> {
-        let mut t = norm.clone();
-        // max_norm is exactly the Q4 limit times the public power-of-two degree bound.
-        let limit = bounds.max_norm.shr(degree_bits(S::E));
-        t.mark_if(&norm.ct_lt(&limit).not());
-        let u = [t.shl(1), Scalar::zero(), Scalar::zero(), Scalar::zero()];
-        let v = [x.clone(), y.clone(), Scalar::one(), Scalar::zero()];
-        Self::from_intersection(&t, u, v, Class::Generic, bounds)
-            .reduce_steps(S::SECRET_IDEAL_STEPS)
+    ) -> Option<(GuardedIdeal<S, W, D>, Reduced<W>)> {
+        let hnf = GenericHnf::from_norm_and_root(norm, root);
+        let (u, v) = hnf.generators();
+        let reduced = Self::from_intersection(norm, u, v, Class::Generic, bounds)
+            .reduce_steps(S::SECRET_IDEAL_STEPS);
+        let admitted = GuardedIdeal::<S, W, D>::admit(
+            norm.clone(),
+            hnf.columns(),
+            reduced.u.clone(),
+            reduced.v.clone(),
+        )?;
+        Some((admitted, reduced))
     }
 
     pub fn reduce(self, schedule: Schedule) -> Reduced<W> {
@@ -321,7 +340,12 @@ impl<const W: usize> Basis<W> {
             self.step();
         }
         let Gram { a, c, h: [h0, h1] } = self.gram;
-        let mut form = [a.shr(1), c.shr(1), h0, h1];
+        let mut form = [
+            a.shr(DOUBLED_DIAGONAL_BITS),
+            c.shr(DOUBLED_DIAGONAL_BITS),
+            h0,
+            h1,
+        ];
         // All consumers inherit admission and arithmetic failures, even if only
         // one coefficient or column will subsequently leave the secret domain.
         let mut valid = self.ok;

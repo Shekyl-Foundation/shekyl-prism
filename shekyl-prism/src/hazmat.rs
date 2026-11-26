@@ -4,7 +4,7 @@
 // BSD-3-Clause
 
 //! The layers under the interface: field arithmetic, isogenies, and the
-//! verifier's steps, and the first layer of the signer.
+//! verifier's steps, and the signer's integer and ideal layers.
 //!
 //! This is where the algorithm can be read, measured and extended. The
 //! first three modules are the three layer crates of the verifier, whole:
@@ -24,9 +24,10 @@
 //!
 //! - `int` (`prism-int`): the fixed-width signed integers of the
 //!   signer's quaternion arithmetic, as a public type and a secret type.
-//!   Nothing in this crate calls it. It makes no constant-time claim; its
-//!   own documentation says what the secret type does and does not
-//!   promise.
+//!   `ideal` calls it. It makes no constant-time claim; its own
+//!   documentation says what the secret type does and does not promise.
+//! - `ideal`: checked integral left-ideal components, the generic
+//!   column-HNF of a norm and a root, and guarded challenge intersections.
 //!
 //! # What using this module means
 //!
@@ -46,8 +47,6 @@
 //! [`crate::Signature::from_bytes`] is
 //! [`verify::prepared::checked_response`], and
 //! [`crate::PublicKey::verify`] is [`verify::prepared::verify_prepared`].
-//!
-//! - `ideal`: checked integral left-ideal components and their guarded challenge intersections.
 //!
 //! **Nothing here is promised stable.** These crates are changed as the
 //! research needs. A name, a signature or a module can move between any
