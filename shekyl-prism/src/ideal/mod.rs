@@ -62,9 +62,9 @@ impl<const W: usize> GenericHnf<W> {
     /// Columns for norm `norm` and Gaussian root `root = (x, y)`.
     ///
     /// The fourth column is `i·(x + yi + j)` with its real coordinate lifted
-    /// by `2N`, which is the canonical residue when `0 ≤ y < 2N`. Parity of
-    /// the root stays a secret predicate of admission and of the generic
-    /// reducer. This function does not declassify it.
+    /// by `2N`. For an admissible root, `y` is odd and `0 < y < 2N`, so
+    /// `2N − y` is the canonical residue. Admission checks the candidate
+    /// columns and the generic reducer checks the root parity.
     pub fn from_norm_and_root(norm: &Scalar<W>, root: &Gaussian<W>) -> Self {
         let pivot = norm.shl(ORDER_DENOMINATOR_BITS);
         let zero = Scalar::zero();
