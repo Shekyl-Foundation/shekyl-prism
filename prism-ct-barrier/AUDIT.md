@@ -57,7 +57,9 @@ operand constraints are the standard ones.
 2. The same command compares QEMU guest block sequences between entry and
    exit, including callees, across boundary cases. Its positive control
    must produce distinct traces.
-3. On x86-64 the command also taints both arguments under Memcheck and
+3. The probe is a Rust executable calling the same Rust reducer as the fixture driver.
+   On x86-64, vgdb marks its input buffer undefined and verifies the shadow bits
+   before the probe consumes it. The command taints both shift arguments and
    requires a conditional-jump diagnostic on the positive control. It also
    taints the coordinates and norm throughout the fixture reductions at all five parameter sets. Extend
    this coverage to the integrated signer before discharging G7.

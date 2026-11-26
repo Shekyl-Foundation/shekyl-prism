@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import platform
+import select
 import re
 import subprocess
 import sys
@@ -48,6 +49,43 @@ def trace(binary, start, end, mode, x, k, log):
     raise ValueError("missing probe entry or exit in QEMU trace")
 
 
+def memcheck(binary, mode, args, expected_bytes, tmp):
+    prefix = f"--vgdb-prefix={tmp}/vgdb"
+    resume = tmp / "resume"
+    cmd = ["valgrind", "--tool=memcheck", "--error-exitcode=93", "--quiet", "--vgdb-poll=1000",
+           prefix, binary, mode, *args, resume]
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE, text=True) as proc:
+        try:
+            if not select.select([proc.stdout], [], [], 30)[0]:
+                raise ValueError("probe did not announce its input buffer")
+            ready = proc.stdout.readline().strip()
+            match = re.fullmatch(r"(0x[0-9a-f]+) (\d+)", ready)
+            if not match or int(match[2]) != expected_bytes:
+                raise ValueError(f"unexpected {mode} input buffer: {ready!r}")
+            addr = match[1]
+            monitor = ["vgdb", prefix, f"--pid={proc.pid}", "--cmd-time-out=10", "--max-invoke-ms=0"]
+            marked = subprocess.run([*monitor, "-c", f"make_memory undefined {addr} {expected_bytes}",
+                                     "-c", f"get_vbits {addr} {expected_bytes}"],
+                                    capture_output=True, text=True, timeout=20)
+            if marked.returncode:
+                raise ValueError(f"vgdb failed on {mode}: {marked.stderr}")
+            if "".join(marked.stdout.split()).lower() != "ff" * expected_bytes:
+                raise ValueError(f"Memcheck did not mark every byte of the {mode} input")
+            resume.touch(exist_ok=False)
+            _, errors = proc.communicate(timeout=90)
+        finally:
+            if proc.poll() is None:
+                proc.kill()
+                proc.communicate()
+            resume.unlink(missing_ok=True)
+    if mode == "control":
+        if proc.returncode != 93 or "Conditional jump" not in errors:
+            raise ValueError(f"Memcheck missed known secret branch: {errors}")
+    elif proc.returncode:
+        raise ValueError(f"Memcheck failed on {mode}: {errors}")
+
+
 def main(tmp, listing):
     if ARCH not in ("x86_64", "aarch64"):
         raise ValueError(f"no audited probe for {ARCH}")
@@ -68,19 +106,21 @@ def main(tmp, listing):
 
 def check_set(tmp, libs, name, width):
     cases = shift_cases(width)
-    archive = tmp / "probe.a"
-    run("rustc", "--edition=2021", "--crate-type=staticlib", "-Copt-level=3", "-Cpanic=abort",
-        "-Crelocation-model=static", "--cfg", f'stage2c_set="{name}"', "--extern", f"prism_int={libs['prism_int']}",
-        "--extern", f"prism_field={libs['prism_field']}", "-L", f"dependency={libs['prism_int'].parent}/deps",
-        HERE / "probe.rs", "-o", archive)
-    binary = tmp / "check"
-    cc = ["cc", "-g", "-O1", "-no-pie", "-Wl,--gc-sections", f"-DSTAGE2C_LIMBS={width}", HERE / "driver.c", archive, "-ldl", "-lpthread", "-lm", "-o", binary]
-    run(*cc, "-static")
-    names = {symbol: int(addr, 16) for addr, symbol in re.findall(r"^([\da-f]+) [Tt] (\w+)$", run("nm", binary), re.M)}
+    binary = tmp / "probe"
+    rustc = ["rustc", "--edition=2021", "-Copt-level=3", "-Cpanic=abort",
+             "-Crelocation-model=static", "--cfg", f'stage2c_set="{name}"',
+             "--extern", f"prism_int={libs['prism_int']}", "--extern", f"prism_field={libs['prism_field']}",
+             "-L", f"dependency={libs['prism_int'].parent}/deps", HERE / "probe.rs", "-o", binary]
+    # Static executable addresses for QEMU. Memcheck uses its normal dynamic
+    # runtime interposition; both builds compile the very same Rust consumer.
+    run(*rustc, "-Ctarget-feature=+crt-static")
+    symbols = run("nm", "--defined-only", "-C", binary)
+    names = {symbol: int(addr, 16) for addr, symbol in
+             re.findall(r"^([a-f0-9]+) [tT] probe::(shift_probe|leaky_control|probe_end)$", symbols, re.M)}
     log = tmp / "qemu.log"
 
     def pcs(mode, x, k):
-        start = names["prism_shift_probe" if mode == "probe" else "leaky_control"]
+        start = names["shift_probe" if mode == "probe" else "leaky_control"]
         result = trace(binary, start, names["probe_end"], mode, x, k, log)
         if not result:
             raise ValueError("empty trace")
@@ -101,9 +141,6 @@ def check_set(tmp, libs, name, width):
         instructions = re.findall(r"(?m)^[ \t]*([\da-f]+):[ \t]+(\w+)[ \t]*(.*)$", section)
         if not any(int(pc, 16) in visited for pc, _, _ in instructions):
             continue
-        # The public driver contains both the comparator and the consumer.
-        if " <main>:" in section.splitlines()[0]:
-            continue
         inspected.append(section)
         for pc, op, operands in instructions:
             if re.fullmatch(r"(?:i?div[bwlq]?|[us]div)", op):
@@ -113,13 +150,10 @@ def check_set(tmp, libs, name, width):
     print(f"{ARCH} {name}: {len(reference)} equal blocks, {len(cases)} cases, {len(inspected)} functions inspected")
     print("trace digest", hashlib.sha256(str(reference).encode()).hexdigest())
     if ARCH == "x86_64":
-        run(*cc, "-DMEMCHECK")
-        vg = ["valgrind", "--tool=memcheck", "--error-exitcode=93", "--quiet", binary]
-        control = subprocess.run([*vg, "control", "7", "1"], capture_output=True, text=True)
-        if control.returncode != 93 or "Conditional jump" not in control.stderr:
-            raise ValueError("Memcheck missed known secret branch")
+        run(*rustc)
+        memcheck(binary, "control", ["0", "1"], 16, tmp)
         for x, k in cases:
-            run(*vg, "probe", str(x), str(k))
+            memcheck(binary, "probe", [f"{x:016x}", f"{k:016x}"], 16, tmp)
         fixtures = VECTORS / f"{name}.txt"
         inputs = fixtures.read_text().splitlines()
         if not inputs:
@@ -129,7 +163,7 @@ def check_set(tmp, libs, name, width):
             values = [int(s, 16) for s in fields[:9]]
             encoded = tmp / "basis.bin"
             encoded.write_bytes(b"".join(abs(v).to_bytes(width * 8, "little") + bytes([v < 0]) for v in values))
-            run(*vg, "reduce", encoded, str(int(cls == "prered-guard256")))
+            memcheck(binary, "reduce", [encoded, cls], encoded.stat().st_size, tmp)
         print(f"Memcheck accepted all {len(inputs)} {name} constructors and reductions")
     return f"\n# {ARCH} {name}\n" + "\n".join(inspected)
 

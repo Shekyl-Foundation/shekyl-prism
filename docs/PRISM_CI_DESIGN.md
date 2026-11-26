@@ -52,7 +52,7 @@ the committed responses of `prism-vectors/data/verify/identity_refusals.tsv`.
 | `codeql` | CodeQL Rust | per core ruling |
 | `ci-pass` | the aggregator: needs every job, and treats `c-vectors` "skipped" as passing only when the path filter said not needed (core's pattern) | anything above |
 
-Both architecture jobs run the native fixture executable on all five parameter sets and record paired wall-clock samples for the adopted and PR #45 baseline schedules. They check the reported limb widths and both signing counts against the independent oracle, compare QEMU traces of each width’s release shift probe and archive the visited functions' assembly. On x86-64, Memcheck checks tainted limbs and counts in the probe and tainted norms and coordinates through the complete reducer. The harness verifies its trace and taint controls. Hardware side-channel timing is a separate G7 measurement.
+Both architecture jobs run the native fixture executable on all five parameter sets and record paired wall-clock samples for the adopted and PR #45 baseline schedules. They check the reported limb widths and both signing counts against the independent oracle, compare QEMU traces of each width’s release shift probe and archive the visited functions' assembly. The probe calls the native reducer directly in Rust. On x86-64, the external Memcheck monitor taints the probe’s limbs and counts, and the norms and coordinates consumed by the complete reducer. The harness verifies its trace and taint controls. Hardware side-channel timing is a separate G7 measurement.
 
 The first checks in `lint` exercise the certificate verifier and run `python3 scripts/ci/check_signer_prime_certificates.py` on the fixed signer constants (O19). Both use the Python standard library.
 
