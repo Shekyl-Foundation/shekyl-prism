@@ -1,0 +1,24 @@
+{
+ "p": 7,
+ "stats": {
+  "PAIRS gcd>1, comaximal: Q3 == intersection": 40,
+  "PAIRS gcd>1, comaximal: index(I_s \u2229 I_q) == (Nq)^2 (norm Nq)": 40,
+  "gcd>1: spec refuses": 78,
+  "gcd>1: spec ok": 32,
+  "gcd>1: spec lattice == I_sec \u2229 I_q": 32,
+  "gcd>1: comaximal": 32,
+  "gcd>1: norm(S) == N q": 32,
+  "gcd>1: Q3 formula == spec": 32,
+  "PAIRS gcd>1, not comaximal: Q3 != intersection": 15,
+  "PAIRS gcd>1, not comaximal: norm of intersection != Nq": 15,
+  "PAIRS gcd=1, comaximal: Q3 == intersection": 10,
+  "PAIRS gcd=1, comaximal: index(I_s \u2229 I_q) == (Nq)^2 (norm Nq)": 10,
+  "gcd=1: spec refuses": 8,
+  "gcd=1: spec ok": 12,
+  "gcd=1: spec lattice == I_sec \u2229 I_q": 12,
+  "gcd=1: comaximal": 12,
+  "gcd=1: norm(S) == N q": 12,
+  "gcd=1: Q3 formula == spec": 12
+ },
+ "examples_Q3_differs": []
+}
