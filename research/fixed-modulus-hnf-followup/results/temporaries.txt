@@ -1,0 +1,46 @@
+set      K | bound bits (limbs)             | observed bits                 
+P248   159  B=158 L=251
+   entries, decode: raw HNF columns (<2N)         bound   159 b =  3 limbs | observed   159 b =  3 limbs
+   entries, decode: guarded pre-reduced pair      bound   147 b =  3 limbs | observed   146 b =  3 limbs
+   entries, worst case (range gate 2^(2K))        bound   318 b =  5 limbs | observed   318 b =  5 limbs
+   Red input, schedule, active step               bound   317 b =  5 limbs | observed   317 b =  5 limbs
+   Red input, schedule, dummy (masked) step       bound   318 b =  5 limbs | observed   318 b =  5 limbs
+   Red input, canonical-form step                 bound   318 b =  5 limbs | observed   318 b =  5 limbs
+   Barrett product, schedule/decode               bound   477 b =  8 limbs | observed   477 b =  8 limbs
+   Barrett product, worst-case entries            bound   635 b = 10 limbs | observed   635 b = 10 limbs
+P324   196  B=195 L=326
+   entries, decode: raw HNF columns (<2N)         bound   196 b =  4 limbs | observed   196 b =  4 limbs
+   entries, decode: guarded pre-reduced pair      bound   184 b =  3 limbs | observed   184 b =  3 limbs
+   entries, worst case (range gate 2^(2K))        bound   392 b =  7 limbs | observed   392 b =  7 limbs
+   Red input, schedule, active step               bound   391 b =  7 limbs | observed   391 b =  7 limbs
+   Red input, schedule, dummy (masked) step       bound   392 b =  7 limbs | observed   392 b =  7 limbs
+   Red input, canonical-form step                 bound   392 b =  7 limbs | observed   391 b =  7 limbs
+   Barrett product, schedule/decode               bound   588 b = 10 limbs | observed   588 b = 10 limbs
+   Barrett product, worst-case entries            bound   783 b = 13 limbs | observed   783 b = 13 limbs
+P376   225  B=224 L=383
+   entries, decode: raw HNF columns (<2N)         bound   225 b =  4 limbs | observed   225 b =  4 limbs
+   entries, decode: guarded pre-reduced pair      bound   213 b =  4 limbs | observed   212 b =  4 limbs
+   entries, worst case (range gate 2^(2K))        bound   450 b =  8 limbs | observed   450 b =  8 limbs
+   Red input, schedule, active step               bound   449 b =  8 limbs | observed   449 b =  8 limbs
+   Red input, schedule, dummy (masked) step       bound   450 b =  8 limbs | observed   450 b =  8 limbs
+   Red input, canonical-form step                 bound   450 b =  8 limbs | observed   449 b =  8 limbs
+   Barrett product, schedule/decode               bound   675 b = 11 limbs | observed   675 b = 11 limbs
+   Barrett product, worst-case entries            bound   899 b = 15 limbs | observed   899 b = 15 limbs
+P500   286  B=285 L=505
+   entries, decode: raw HNF columns (<2N)         bound   286 b =  5 limbs | observed   286 b =  5 limbs
+   entries, decode: guarded pre-reduced pair      bound   274 b =  5 limbs | observed   273 b =  5 limbs
+   entries, worst case (range gate 2^(2K))        bound   572 b =  9 limbs | observed   572 b =  9 limbs
+   Red input, schedule, active step               bound   571 b =  9 limbs | observed   571 b =  9 limbs
+   Red input, schedule, dummy (masked) step       bound   572 b =  9 limbs | observed   572 b =  9 limbs
+   Red input, canonical-form step                 bound   572 b =  9 limbs | observed   571 b =  9 limbs
+   Barrett product, schedule/decode               bound   858 b = 14 limbs | observed   858 b = 14 limbs
+   Barrett product, worst-case entries            bound  1143 b = 18 limbs | observed  1143 b = 18 limbs
+P664   368  B=367 L=669
+   entries, decode: raw HNF columns (<2N)         bound   368 b =  6 limbs | observed   368 b =  6 limbs
+   entries, decode: guarded pre-reduced pair      bound   356 b =  6 limbs | observed   356 b =  6 limbs
+   entries, worst case (range gate 2^(2K))        bound   736 b = 12 limbs | observed   736 b = 12 limbs
+   Red input, schedule, active step               bound   735 b = 12 limbs | observed   735 b = 12 limbs
+   Red input, schedule, dummy (masked) step       bound   736 b = 12 limbs | observed   736 b = 12 limbs
+   Red input, canonical-form step                 bound   736 b = 12 limbs | observed   734 b = 12 limbs
+   Barrett product, schedule/decode               bound  1104 b = 18 limbs | observed  1104 b = 18 limbs
+   Barrett product, worst-case entries            bound  1471 b = 23 limbs | observed  1471 b = 23 limbs
