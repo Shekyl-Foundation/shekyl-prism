@@ -1,0 +1,970 @@
+{
+ "orig aslr prered-guard256 other=1": {
+  "processes": 24,
+  "mean_of_means_ns": 407.6,
+  "between_process_sd_ns": 2838.7,
+  "within_se_ns": 4031.6,
+  "ratio_between_over_within": 0.7,
+  "max_abs_t": 4.52,
+  "n_abs_t_gt_2": 3,
+  "n_abs_t_gt_3": 3,
+  "t_of_process_means": 0.7
+ },
+ "orig aslr prered-guard256 other=2": {
+  "processes": 24,
+  "mean_of_means_ns": -758.7,
+  "between_process_sd_ns": 3461.2,
+  "within_se_ns": 4073.1,
+  "ratio_between_over_within": 0.85,
+  "max_abs_t": 3.03,
+  "n_abs_t_gt_2": 3,
+  "n_abs_t_gt_3": 1,
+  "t_of_process_means": -1.07
+ },
+ "orig aslr prered-guard256 other=3": {
+  "processes": 24,
+  "mean_of_means_ns": -2708.2,
+  "between_process_sd_ns": 12754.1,
+  "within_se_ns": 6783.2,
+  "ratio_between_over_within": 1.88,
+  "max_abs_t": 2.2,
+  "n_abs_t_gt_2": 1,
+  "n_abs_t_gt_3": 0,
+  "t_of_process_means": -1.04
+ },
+ "orig aslr prered-guard256 other=4": {
+  "processes": 24,
+  "mean_of_means_ns": 3482.5,
+  "between_process_sd_ns": 12289.4,
+  "within_se_ns": 4950.8,
+  "ratio_between_over_within": 2.48,
+  "max_abs_t": 2.19,
+  "n_abs_t_gt_2": 1,
+  "n_abs_t_gt_3": 0,
+  "t_of_process_means": 1.39
+ },
+ "orig aslr prered-guard256 other=5": {
+  "processes": 24,
+  "mean_of_means_ns": -317.5,
+  "between_process_sd_ns": 2611.4,
+  "within_se_ns": 3446.8,
+  "ratio_between_over_within": 0.76,
+  "max_abs_t": 3.45,
+  "n_abs_t_gt_2": 1,
+  "n_abs_t_gt_3": 1,
+  "t_of_process_means": -0.6
+ },
+ "orig aslr sign-generic other=1": {
+  "processes": 24,
+  "mean_of_means_ns": -110.3,
+  "between_process_sd_ns": 1681.7,
+  "within_se_ns": 1408.6,
+  "ratio_between_over_within": 1.19,
+  "max_abs_t": 2.76,
+  "n_abs_t_gt_2": 2,
+  "n_abs_t_gt_3": 0,
+  "t_of_process_means": -0.32
+ },
+ "orig aslr sign-generic other=2": {
+  "processes": 24,
+  "mean_of_means_ns": -2023.6,
+  "between_process_sd_ns": 7327.8,
+  "within_se_ns": 4326.4,
+  "ratio_between_over_within": 1.69,
+  "max_abs_t": 4.53,
+  "n_abs_t_gt_2": 3,
+  "n_abs_t_gt_3": 1,
+  "t_of_process_means": -1.35
+ },
+ "orig aslr sign-generic other=3": {
+  "processes": 24,
+  "mean_of_means_ns": 3779.4,
+  "between_process_sd_ns": 18287.0,
+  "within_se_ns": 4310.1,
+  "ratio_between_over_within": 4.24,
+  "max_abs_t": 3.75,
+  "n_abs_t_gt_2": 2,
+  "n_abs_t_gt_3": 1,
+  "t_of_process_means": 1.01
+ },
+ "orig aslr sign-generic other=4": {
+  "processes": 24,
+  "mean_of_means_ns": 3648.6,
+  "between_process_sd_ns": 12443.0,
+  "within_se_ns": 5018.2,
+  "ratio_between_over_within": 2.48,
+  "max_abs_t": 2.14,
+  "n_abs_t_gt_2": 1,
+  "n_abs_t_gt_3": 0,
+  "t_of_process_means": 1.44
+ },
+ "orig noaslr prered-guard256 other=1": {
+  "processes": 24,
+  "mean_of_means_ns": -6646.7,
+  "between_process_sd_ns": 30067.6,
+  "within_se_ns": 6681.0,
+  "ratio_between_over_within": 4.5,
+  "max_abs_t": 2.21,
+  "n_abs_t_gt_2": 1,
+  "n_abs_t_gt_3": 0,
+  "t_of_process_means": -1.08
+ },
+ "orig noaslr prered-guard256 other=2": {
+  "processes": 24,
+  "mean_of_means_ns": 720.9,
+  "between_process_sd_ns": 3223.7,
+  "within_se_ns": 3138.0,
+  "ratio_between_over_within": 1.03,
+  "max_abs_t": 3.06,
+  "n_abs_t_gt_2": 2,
+  "n_abs_t_gt_3": 1,
+  "t_of_process_means": 1.1
+ },
+ "orig noaslr prered-guard256 other=3": {
+  "processes": 24,
+  "mean_of_means_ns": 334.5,
+  "between_process_sd_ns": 1387.9,
+  "within_se_ns": 1403.4,
+  "ratio_between_over_within": 0.99,
+  "max_abs_t": 2.76,
+  "n_abs_t_gt_2": 2,
+  "n_abs_t_gt_3": 0,
+  "t_of_process_means": 1.18
+ },
+ "orig noaslr prered-guard256 other=4": {
+  "processes": 24,
+  "mean_of_means_ns": -156.5,
+  "between_process_sd_ns": 1905.3,
+  "within_se_ns": 1551.5,
+  "ratio_between_over_within": 1.23,
+  "max_abs_t": 2.12,
+  "n_abs_t_gt_2": 1,
+  "n_abs_t_gt_3": 0,
+  "t_of_process_means": -0.4
+ },
+ "orig noaslr prered-guard256 other=5": {
+  "processes": 24,
+  "mean_of_means_ns": 1618.1,
+  "between_process_sd_ns": 7809.0,
+  "within_se_ns": 5044.7,
+  "ratio_between_over_within": 1.55,
+  "max_abs_t": 2.65,
+  "n_abs_t_gt_2": 1,
+  "n_abs_t_gt_3": 0,
+  "t_of_process_means": 1.02
+ },
+ "orig noaslr sign-generic other=1": {
+  "processes": 24,
+  "mean_of_means_ns": -4069.8,
+  "between_process_sd_ns": 18771.1,
+  "within_se_ns": 4380.0,
+  "ratio_between_over_within": 4.29,
+  "max_abs_t": 1.95,
+  "n_abs_t_gt_2": 0,
+  "n_abs_t_gt_3": 0,
+  "t_of_process_means": -1.06
+ },
+ "orig noaslr sign-generic other=2": {
+  "processes": 24,
+  "mean_of_means_ns": -356.4,
+  "between_process_sd_ns": 2256.2,
+  "within_se_ns": 2389.6,
+  "ratio_between_over_within": 0.94,
+  "max_abs_t": 2.47,
+  "n_abs_t_gt_2": 1,
+  "n_abs_t_gt_3": 0,
+  "t_of_process_means": -0.77
+ },
+ "orig noaslr sign-generic other=3": {
+  "processes": 24,
+  "mean_of_means_ns": -5225.7,
+  "between_process_sd_ns": 22441.0,
+  "within_se_ns": 5140.8,
+  "ratio_between_over_within": 4.37,
+  "max_abs_t": 1.8,
+  "n_abs_t_gt_2": 0,
+  "n_abs_t_gt_3": 0,
+  "t_of_process_means": -1.14
+ },
+ "orig noaslr sign-generic other=4": {
+  "processes": 24,
+  "mean_of_means_ns": -595.3,
+  "between_process_sd_ns": 5825.4,
+  "within_se_ns": 7216.5,
+  "ratio_between_over_within": 0.81,
+  "max_abs_t": 1.71,
+  "n_abs_t_gt_2": 0,
+  "n_abs_t_gt_3": 0,
+  "t_of_process_means": -0.5
+ },
+ "split aslr prered-guard256 adm fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -34.6,
+  "sd_of_process_medians_ns": 82.3,
+  "min_ns": -138.5,
+  "max_ns": 111.5
+ },
+ "split aslr prered-guard256 adm fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -13.9,
+  "sd_of_process_medians_ns": 152.6,
+  "min_ns": -370.5,
+  "max_ns": 222.0
+ },
+ "split aslr prered-guard256 adm fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -4.8,
+  "sd_of_process_medians_ns": 134.8,
+  "min_ns": -323.5,
+  "max_ns": 240.0
+ },
+ "split aslr prered-guard256 adm fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -69.5,
+  "sd_of_process_medians_ns": 119.1,
+  "min_ns": -334.0,
+  "max_ns": 55.5
+ },
+ "split aslr prered-guard256 adm fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -37.8,
+  "sd_of_process_medians_ns": 99.3,
+  "min_ns": -194.5,
+  "max_ns": 194.5
+ },
+ "split aslr prered-guard256 adm fixture=6": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 22.4,
+  "sd_of_process_medians_ns": 66.4,
+  "min_ns": -120.5,
+  "max_ns": 149.0
+ },
+ "split aslr prered-guard256 full fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -105.6,
+  "sd_of_process_medians_ns": 1167.0,
+  "min_ns": -2314.5,
+  "max_ns": 1194.5
+ },
+ "split aslr prered-guard256 full fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -8.6,
+  "sd_of_process_medians_ns": 840.4,
+  "min_ns": -990.5,
+  "max_ns": 1388.5
+ },
+ "split aslr prered-guard256 full fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 2.3,
+  "sd_of_process_medians_ns": 1229.4,
+  "min_ns": -2935.5,
+  "max_ns": 1935.0
+ },
+ "split aslr prered-guard256 full fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -259.2,
+  "sd_of_process_medians_ns": 1076.4,
+  "min_ns": -2046.5,
+  "max_ns": 1602.0
+ },
+ "split aslr prered-guard256 full fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -306.3,
+  "sd_of_process_medians_ns": 1086.6,
+  "min_ns": -2777.5,
+  "max_ns": 1241.0
+ },
+ "split aslr prered-guard256 full fixture=6": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -333.9,
+  "sd_of_process_medians_ns": 1184.9,
+  "min_ns": -2778.5,
+  "max_ns": 1380.0
+ },
+ "split aslr prered-guard256 herm fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 23.0,
+  "sd_of_process_medians_ns": 53.0,
+  "min_ns": -55.5,
+  "max_ns": 148.0
+ },
+ "split aslr prered-guard256 herm fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 28.6,
+  "sd_of_process_medians_ns": 61.3,
+  "min_ns": -46.5,
+  "max_ns": 166.0
+ },
+ "split aslr prered-guard256 herm fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 3.9,
+  "sd_of_process_medians_ns": 42.0,
+  "min_ns": -74.0,
+  "max_ns": 74.0
+ },
+ "split aslr prered-guard256 herm fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -0.2,
+  "sd_of_process_medians_ns": 49.9,
+  "min_ns": -75.0,
+  "max_ns": 92.5
+ },
+ "split aslr prered-guard256 herm fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 7.2,
+  "sd_of_process_medians_ns": 41.0,
+  "min_ns": -92.0,
+  "max_ns": 56.0
+ },
+ "split aslr prered-guard256 herm fixture=6": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -3.1,
+  "sd_of_process_medians_ns": 41.6,
+  "min_ns": -56.0,
+  "max_ns": 101.5
+ },
+ "split aslr prered-guard256 inv fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 10.0,
+  "sd_of_process_medians_ns": 14.5,
+  "min_ns": 0.0,
+  "max_ns": 46.5
+ },
+ "split aslr prered-guard256 inv fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 1.4,
+  "sd_of_process_medians_ns": 12.9,
+  "min_ns": -19.0,
+  "max_ns": 27.5
+ },
+ "split aslr prered-guard256 inv fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 4.6,
+  "sd_of_process_medians_ns": 17.8,
+  "min_ns": -18.0,
+  "max_ns": 37.0
+ },
+ "split aslr prered-guard256 inv fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 2.3,
+  "sd_of_process_medians_ns": 14.8,
+  "min_ns": -19.0,
+  "max_ns": 37.0
+ },
+ "split aslr prered-guard256 inv fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 3.2,
+  "sd_of_process_medians_ns": 16.8,
+  "min_ns": -18.0,
+  "max_ns": 37.5
+ },
+ "split aslr prered-guard256 inv fixture=6": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 1.6,
+  "sd_of_process_medians_ns": 16.6,
+  "min_ns": -19.0,
+  "max_ns": 37.0
+ },
+ "split aslr prered-guard256 red fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -216.8,
+  "sd_of_process_medians_ns": 783.0,
+  "min_ns": -1389.0,
+  "max_ns": 1167.0
+ },
+ "split aslr prered-guard256 red fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 188.4,
+  "sd_of_process_medians_ns": 1102.1,
+  "min_ns": -1546.0,
+  "max_ns": 2185.0
+ },
+ "split aslr prered-guard256 red fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -594.9,
+  "sd_of_process_medians_ns": 922.5,
+  "min_ns": -1935.5,
+  "max_ns": 1759.0
+ },
+ "split aslr prered-guard256 red fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -169.1,
+  "sd_of_process_medians_ns": 964.4,
+  "min_ns": -1944.5,
+  "max_ns": 1221.5
+ },
+ "split aslr prered-guard256 red fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -47.0,
+  "sd_of_process_medians_ns": 1066.1,
+  "min_ns": -1241.0,
+  "max_ns": 2537.0
+ },
+ "split aslr prered-guard256 red fixture=6": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 243.2,
+  "sd_of_process_medians_ns": 1322.5,
+  "min_ns": -2305.0,
+  "max_ns": 2481.5
+ },
+ "split aslr sign-generic adm fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 5.2,
+  "sd_of_process_medians_ns": 51.9,
+  "min_ns": -102.0,
+  "max_ns": 83.0
+ },
+ "split aslr sign-generic adm fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -10.2,
+  "sd_of_process_medians_ns": 55.5,
+  "min_ns": -93.0,
+  "max_ns": 101.5
+ },
+ "split aslr sign-generic adm fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -15.0,
+  "sd_of_process_medians_ns": 43.0,
+  "min_ns": -73.0,
+  "max_ns": 64.5
+ },
+ "split aslr sign-generic adm fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 14.7,
+  "sd_of_process_medians_ns": 103.5,
+  "min_ns": -148.0,
+  "max_ns": 203.5
+ },
+ "split aslr sign-generic adm fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -9.2,
+  "sd_of_process_medians_ns": 71.6,
+  "min_ns": -148.0,
+  "max_ns": 111.0
+ },
+ "split aslr sign-generic full fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 78.7,
+  "sd_of_process_medians_ns": 797.3,
+  "min_ns": -620.0,
+  "max_ns": 2101.5
+ },
+ "split aslr sign-generic full fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 25.5,
+  "sd_of_process_medians_ns": 1092.9,
+  "min_ns": -1953.5,
+  "max_ns": 2167.0
+ },
+ "split aslr sign-generic full fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -126.4,
+  "sd_of_process_medians_ns": 538.1,
+  "min_ns": -907.5,
+  "max_ns": 842.5
+ },
+ "split aslr sign-generic full fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 13.9,
+  "sd_of_process_medians_ns": 688.9,
+  "min_ns": -1120.5,
+  "max_ns": 1185.0
+ },
+ "split aslr sign-generic full fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 548.5,
+  "sd_of_process_medians_ns": 1047.4,
+  "min_ns": -861.5,
+  "max_ns": 2333.0
+ },
+ "split aslr sign-generic herm fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 1.5,
+  "sd_of_process_medians_ns": 24.8,
+  "min_ns": -37.0,
+  "max_ns": 46.0
+ },
+ "split aslr sign-generic herm fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 16.9,
+  "sd_of_process_medians_ns": 49.8,
+  "min_ns": -55.0,
+  "max_ns": 148.0
+ },
+ "split aslr sign-generic herm fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 14.0,
+  "sd_of_process_medians_ns": 32.9,
+  "min_ns": -37.0,
+  "max_ns": 83.5
+ },
+ "split aslr sign-generic herm fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -9.3,
+  "sd_of_process_medians_ns": 29.9,
+  "min_ns": -55.5,
+  "max_ns": 37.0
+ },
+ "split aslr sign-generic herm fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -19.3,
+  "sd_of_process_medians_ns": 32.5,
+  "min_ns": -92.0,
+  "max_ns": 9.0
+ },
+ "split aslr sign-generic inv fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -1.7,
+  "sd_of_process_medians_ns": 5.1,
+  "min_ns": -18.0,
+  "max_ns": 0.0
+ },
+ "split aslr sign-generic inv fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 5.2,
+  "sd_of_process_medians_ns": 14.0,
+  "min_ns": -19.0,
+  "max_ns": 37.0
+ },
+ "split aslr sign-generic inv fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 1.4,
+  "sd_of_process_medians_ns": 5.2,
+  "min_ns": -1.0,
+  "max_ns": 18.0
+ },
+ "split aslr sign-generic inv fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 1.0,
+  "sd_of_process_medians_ns": 14.8,
+  "min_ns": -18.0,
+  "max_ns": 19.0
+ },
+ "split aslr sign-generic inv fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 1.4,
+  "sd_of_process_medians_ns": 9.6,
+  "min_ns": -19.0,
+  "max_ns": 19.0
+ },
+ "split aslr sign-generic red fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 227.0,
+  "sd_of_process_medians_ns": 971.1,
+  "min_ns": -1620.0,
+  "max_ns": 1463.0
+ },
+ "split aslr sign-generic red fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -67.8,
+  "sd_of_process_medians_ns": 941.1,
+  "min_ns": -1842.5,
+  "max_ns": 768.5
+ },
+ "split aslr sign-generic red fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 203.1,
+  "sd_of_process_medians_ns": 1051.9,
+  "min_ns": -1555.0,
+  "max_ns": 1648.5
+ },
+ "split aslr sign-generic red fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 44.8,
+  "sd_of_process_medians_ns": 684.5,
+  "min_ns": -852.5,
+  "max_ns": 1268.5
+ },
+ "split aslr sign-generic red fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 96.5,
+  "sd_of_process_medians_ns": 1159.5,
+  "min_ns": -1842.5,
+  "max_ns": 2824.5
+ },
+ "split noaslr prered-guard256 adm fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 11.8,
+  "sd_of_process_medians_ns": 115.3,
+  "min_ns": -194.5,
+  "max_ns": 139.0
+ },
+ "split noaslr prered-guard256 adm fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 41.0,
+  "sd_of_process_medians_ns": 133.4,
+  "min_ns": -157.0,
+  "max_ns": 333.0
+ },
+ "split noaslr prered-guard256 adm fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -28.4,
+  "sd_of_process_medians_ns": 95.7,
+  "min_ns": -166.5,
+  "max_ns": 111.0
+ },
+ "split noaslr prered-guard256 adm fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -11.5,
+  "sd_of_process_medians_ns": 80.0,
+  "min_ns": -120.0,
+  "max_ns": 166.5
+ },
+ "split noaslr prered-guard256 adm fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -12.4,
+  "sd_of_process_medians_ns": 79.3,
+  "min_ns": -147.5,
+  "max_ns": 148.0
+ },
+ "split noaslr prered-guard256 adm fixture=6": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 48.6,
+  "sd_of_process_medians_ns": 100.5,
+  "min_ns": -83.0,
+  "max_ns": 287.5
+ },
+ "split noaslr prered-guard256 full fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 36.3,
+  "sd_of_process_medians_ns": 782.7,
+  "min_ns": -1786.5,
+  "max_ns": 1222.0
+ },
+ "split noaslr prered-guard256 full fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -262.5,
+  "sd_of_process_medians_ns": 1251.9,
+  "min_ns": -3315.0,
+  "max_ns": 1648.0
+ },
+ "split noaslr prered-guard256 full fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -0.8,
+  "sd_of_process_medians_ns": 1344.0,
+  "min_ns": -3491.0,
+  "max_ns": 1351.5
+ },
+ "split noaslr prered-guard256 full fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 281.3,
+  "sd_of_process_medians_ns": 1016.2,
+  "min_ns": -2231.5,
+  "max_ns": 1369.5
+ },
+ "split noaslr prered-guard256 full fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 233.0,
+  "sd_of_process_medians_ns": 1203.8,
+  "min_ns": -1973.0,
+  "max_ns": 2185.0
+ },
+ "split noaslr prered-guard256 full fixture=6": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -102.6,
+  "sd_of_process_medians_ns": 977.5,
+  "min_ns": -1574.0,
+  "max_ns": 1545.5
+ },
+ "split noaslr prered-guard256 herm fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 23.0,
+  "sd_of_process_medians_ns": 53.6,
+  "min_ns": -37.0,
+  "max_ns": 148.0
+ },
+ "split noaslr prered-guard256 herm fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 30.1,
+  "sd_of_process_medians_ns": 37.3,
+  "min_ns": -36.0,
+  "max_ns": 120.0
+ },
+ "split noaslr prered-guard256 herm fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 39.5,
+  "sd_of_process_medians_ns": 57.0,
+  "min_ns": -9.5,
+  "max_ns": 138.5
+ },
+ "split noaslr prered-guard256 herm fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 8.5,
+  "sd_of_process_medians_ns": 35.7,
+  "min_ns": -46.5,
+  "max_ns": 102.5
+ },
+ "split noaslr prered-guard256 herm fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 40.9,
+  "sd_of_process_medians_ns": 59.1,
+  "min_ns": -19.0,
+  "max_ns": 213.5
+ },
+ "split noaslr prered-guard256 herm fixture=6": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 6.1,
+  "sd_of_process_medians_ns": 39.4,
+  "min_ns": -75.0,
+  "max_ns": 56.0
+ },
+ "split noaslr prered-guard256 inv fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 6.9,
+  "sd_of_process_medians_ns": 11.8,
+  "min_ns": -19.0,
+  "max_ns": 19.0
+ },
+ "split noaslr prered-guard256 inv fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -1.5,
+  "sd_of_process_medians_ns": 15.1,
+  "min_ns": -19.0,
+  "max_ns": 19.0
+ },
+ "split noaslr prered-guard256 inv fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -2.3,
+  "sd_of_process_medians_ns": 13.6,
+  "min_ns": -19.0,
+  "max_ns": 19.0
+ },
+ "split noaslr prered-guard256 inv fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -1.5,
+  "sd_of_process_medians_ns": 12.4,
+  "min_ns": -19.0,
+  "max_ns": 19.0
+ },
+ "split noaslr prered-guard256 inv fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -6.0,
+  "sd_of_process_medians_ns": 15.0,
+  "min_ns": -37.0,
+  "max_ns": 19.0
+ },
+ "split noaslr prered-guard256 inv fixture=6": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 2.1,
+  "sd_of_process_medians_ns": 14.7,
+  "min_ns": -19.0,
+  "max_ns": 18.0
+ },
+ "split noaslr prered-guard256 red fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 165.1,
+  "sd_of_process_medians_ns": 584.1,
+  "min_ns": -852.0,
+  "max_ns": 1009.0
+ },
+ "split noaslr prered-guard256 red fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 593.3,
+  "sd_of_process_medians_ns": 1105.6,
+  "min_ns": -619.5,
+  "max_ns": 3342.5
+ },
+ "split noaslr prered-guard256 red fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 365.8,
+  "sd_of_process_medians_ns": 1030.6,
+  "min_ns": -1731.5,
+  "max_ns": 1925.5
+ },
+ "split noaslr prered-guard256 red fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 148.8,
+  "sd_of_process_medians_ns": 406.2,
+  "min_ns": -602.0,
+  "max_ns": 879.0
+ },
+ "split noaslr prered-guard256 red fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -105.7,
+  "sd_of_process_medians_ns": 564.0,
+  "min_ns": -1064.5,
+  "max_ns": 1148.0
+ },
+ "split noaslr prered-guard256 red fixture=6": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -190.6,
+  "sd_of_process_medians_ns": 939.8,
+  "min_ns": -1509.5,
+  "max_ns": 1574.0
+ },
+ "split noaslr sign-generic adm fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 19.2,
+  "sd_of_process_medians_ns": 85.2,
+  "min_ns": -73.5,
+  "max_ns": 222.0
+ },
+ "split noaslr sign-generic adm fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 74.1,
+  "sd_of_process_medians_ns": 134.3,
+  "min_ns": -65.5,
+  "max_ns": 407.5
+ },
+ "split noaslr sign-generic adm fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 3.2,
+  "sd_of_process_medians_ns": 63.0,
+  "min_ns": -102.0,
+  "max_ns": 120.0
+ },
+ "split noaslr sign-generic adm fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 26.1,
+  "sd_of_process_medians_ns": 55.9,
+  "min_ns": -36.5,
+  "max_ns": 166.0
+ },
+ "split noaslr sign-generic adm fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -4.6,
+  "sd_of_process_medians_ns": 63.6,
+  "min_ns": -111.0,
+  "max_ns": 148.0
+ },
+ "split noaslr sign-generic full fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 208.5,
+  "sd_of_process_medians_ns": 934.3,
+  "min_ns": -1694.0,
+  "max_ns": 2120.5
+ },
+ "split noaslr sign-generic full fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 171.9,
+  "sd_of_process_medians_ns": 606.1,
+  "min_ns": -805.5,
+  "max_ns": 1296.0
+ },
+ "split noaslr sign-generic full fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 77.2,
+  "sd_of_process_medians_ns": 823.9,
+  "min_ns": -2185.5,
+  "max_ns": 1185.5
+ },
+ "split noaslr sign-generic full fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -346.2,
+  "sd_of_process_medians_ns": 769.0,
+  "min_ns": -1787.0,
+  "max_ns": 760.0
+ },
+ "split noaslr sign-generic full fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 37.0,
+  "sd_of_process_medians_ns": 774.2,
+  "min_ns": -1120.0,
+  "max_ns": 1695.0
+ },
+ "split noaslr sign-generic herm fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 18.6,
+  "sd_of_process_medians_ns": 24.8,
+  "min_ns": -36.5,
+  "max_ns": 74.0
+ },
+ "split noaslr sign-generic herm fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 19.4,
+  "sd_of_process_medians_ns": 36.7,
+  "min_ns": -55.5,
+  "max_ns": 74.0
+ },
+ "split noaslr sign-generic herm fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 19.5,
+  "sd_of_process_medians_ns": 31.2,
+  "min_ns": -36.0,
+  "max_ns": 83.5
+ },
+ "split noaslr sign-generic herm fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -4.8,
+  "sd_of_process_medians_ns": 19.7,
+  "min_ns": -38.0,
+  "max_ns": 18.5
+ },
+ "split noaslr sign-generic herm fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -4.7,
+  "sd_of_process_medians_ns": 31.8,
+  "min_ns": -55.0,
+  "max_ns": 55.0
+ },
+ "split noaslr sign-generic inv fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -1.5,
+  "sd_of_process_medians_ns": 9.5,
+  "min_ns": -19.0,
+  "max_ns": 18.0
+ },
+ "split noaslr sign-generic inv fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 2.3,
+  "sd_of_process_medians_ns": 9.7,
+  "min_ns": -18.0,
+  "max_ns": 19.0
+ },
+ "split noaslr sign-generic inv fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 0.1,
+  "sd_of_process_medians_ns": 11.2,
+  "min_ns": -18.5,
+  "max_ns": 19.0
+ },
+ "split noaslr sign-generic inv fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -0.0,
+  "sd_of_process_medians_ns": 11.9,
+  "min_ns": -28.0,
+  "max_ns": 19.0
+ },
+ "split noaslr sign-generic inv fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": -1.4,
+  "sd_of_process_medians_ns": 12.2,
+  "min_ns": -18.0,
+  "max_ns": 19.0
+ },
+ "split noaslr sign-generic red fixture=1": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 276.4,
+  "sd_of_process_medians_ns": 697.7,
+  "min_ns": -611.5,
+  "max_ns": 1944.5
+ },
+ "split noaslr sign-generic red fixture=2": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 376.5,
+  "sd_of_process_medians_ns": 838.2,
+  "min_ns": -972.0,
+  "max_ns": 1536.5
+ },
+ "split noaslr sign-generic red fixture=3": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 628.9,
+  "sd_of_process_medians_ns": 1033.2,
+  "min_ns": -796.0,
+  "max_ns": 2870.5
+ },
+ "split noaslr sign-generic red fixture=4": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 66.5,
+  "sd_of_process_medians_ns": 585.0,
+  "min_ns": -722.5,
+  "max_ns": 1490.5
+ },
+ "split noaslr sign-generic red fixture=5": {
+  "processes": 12,
+  "mean_of_process_medians_ns": 314.0,
+  "sd_of_process_medians_ns": 845.6,
+  "min_ns": -647.5,
+  "max_ns": 2435.0
+ }
+}

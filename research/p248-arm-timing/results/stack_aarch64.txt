@@ -1,0 +1,60 @@
+aarch64 p248 canary_gate 8/8
+aarch64 p248 sign-generic 1 stack_bytes=12584 residual_words=25/30
+aarch64 p248 sign-generic 2 stack_bytes=12584 residual_words=25/30
+aarch64 p248 sign-generic 3 stack_bytes=12584 residual_words=27/34
+aarch64 p248 sign-generic 4 stack_bytes=12584 residual_words=22/32
+aarch64 p248 sign-generic 5 stack_bytes=12584 residual_words=27/34
+aarch64 p248 prered-guard256 1 stack_bytes=13856 residual_words=12/53
+aarch64 p248 prered-guard256 2 stack_bytes=13856 residual_words=12/53
+aarch64 p248 prered-guard256 3 stack_bytes=13856 residual_words=12/53
+aarch64 p248 prered-guard256 4 stack_bytes=13856 residual_words=12/53
+aarch64 p248 prered-guard256 5 stack_bytes=13856 residual_words=12/53
+aarch64 p248 prered-guard256 6 stack_bytes=13856 residual_words=12/53
+aarch64 p324 canary_gate 8/8
+aarch64 p324 sign-generic 1 stack_bytes=15740 residual_words=33/40
+aarch64 p324 sign-generic 2 stack_bytes=15740 residual_words=33/40
+aarch64 p324 sign-generic 3 stack_bytes=15740 residual_words=34/43
+aarch64 p324 sign-generic 4 stack_bytes=15740 residual_words=29/42
+aarch64 p324 sign-generic 5 stack_bytes=15740 residual_words=34/42
+aarch64 p324 prered-guard256 1 stack_bytes=17640 residual_words=14/67
+aarch64 p324 prered-guard256 2 stack_bytes=17640 residual_words=14/69
+aarch64 p324 prered-guard256 3 stack_bytes=17640 residual_words=14/69
+aarch64 p324 prered-guard256 4 stack_bytes=17640 residual_words=14/69
+aarch64 p324 prered-guard256 5 stack_bytes=17640 residual_words=14/68
+aarch64 p324 prered-guard256 6 stack_bytes=17640 residual_words=14/68
+aarch64 p376 canary_gate 8/8
+aarch64 p376 sign-generic 1 stack_bytes=17600 residual_words=37/44
+aarch64 p376 sign-generic 2 stack_bytes=17600 residual_words=37/44
+aarch64 p376 sign-generic 3 stack_bytes=17600 residual_words=33/48
+aarch64 p376 sign-generic 4 stack_bytes=17600 residual_words=40/50
+aarch64 p376 sign-generic 5 stack_bytes=17600 residual_words=33/48
+aarch64 p376 prered-guard256 1 stack_bytes=19608 residual_words=12/77
+aarch64 p376 prered-guard256 2 stack_bytes=19608 residual_words=12/77
+aarch64 p376 prered-guard256 3 stack_bytes=19608 residual_words=12/77
+aarch64 p376 prered-guard256 4 stack_bytes=19608 residual_words=12/77
+aarch64 p376 prered-guard256 5 stack_bytes=19608 residual_words=12/77
+aarch64 p376 prered-guard256 6 stack_bytes=19608 residual_words=12/77
+aarch64 p500 canary_gate 8/8
+aarch64 p500 sign-generic 1 stack_bytes=22328 residual_words=50/60
+aarch64 p500 sign-generic 2 stack_bytes=22328 residual_words=50/60
+aarch64 p500 sign-generic 3 stack_bytes=22328 residual_words=53/66
+aarch64 p500 sign-generic 4 stack_bytes=22328 residual_words=53/66
+aarch64 p500 sign-generic 5 stack_bytes=22328 residual_words=53/66
+aarch64 p500 prered-guard256 1 stack_bytes=25144 residual_words=16/105
+aarch64 p500 prered-guard256 2 stack_bytes=25144 residual_words=16/106
+aarch64 p500 prered-guard256 3 stack_bytes=25144 residual_words=16/106
+aarch64 p500 prered-guard256 4 stack_bytes=25144 residual_words=16/105
+aarch64 p500 prered-guard256 5 stack_bytes=25144 residual_words=16/106
+aarch64 p500 prered-guard256 6 stack_bytes=25144 residual_words=16/106
+aarch64 p664 canary_gate 8/8
+aarch64 p664 sign-generic 1 stack_bytes=28432 residual_words=63/74
+aarch64 p664 sign-generic 2 stack_bytes=28432 residual_words=63/74
+aarch64 p664 sign-generic 3 stack_bytes=28432 residual_words=59/86
+aarch64 p664 sign-generic 4 stack_bytes=28432 residual_words=59/86
+aarch64 p664 sign-generic 5 stack_bytes=28432 residual_words=59/86
+aarch64 p664 prered-guard256 1 stack_bytes=32016 residual_words=21/129
+aarch64 p664 prered-guard256 2 stack_bytes=32016 residual_words=21/130
+aarch64 p664 prered-guard256 3 stack_bytes=32016 residual_words=21/130
+aarch64 p664 prered-guard256 4 stack_bytes=32016 residual_words=21/130
+aarch64 p664 prered-guard256 5 stack_bytes=32016 residual_words=21/129
+aarch64 p664 prered-guard256 6 stack_bytes=32016 residual_words=21/129
