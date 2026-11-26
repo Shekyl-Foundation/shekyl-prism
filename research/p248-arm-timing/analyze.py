@@ -32,16 +32,25 @@ def blocked(d, nb=20):
     means = [sum(d[i * k:(i + 1) * k]) / k for i in range(nb)]
     return tstat(means)[2]
 
+def sign_test(d):
+    """Two-sided exact sign test on the nonzero paired differences."""
+    from scipy import stats
+    pos = sum(x > 0 for x in d)
+    neg = sum(x < 0 for x in d)
+    return pos / max(pos + neg, 1), float(stats.binomtest(pos, pos + neg, 0.5).pvalue) if pos + neg else float("nan")
+
 def summarize(d):
     n = len(d)
+    frac_pos, sign_p = sign_test(d)
     m, sd, t = tstat(d)
     w = winsor(d)
     h1, h2 = d[: n // 2], d[n // 2:]
     return {
         "n": n, "mean_ns": round(m, 1), "sd_ns": round(sd, 1), "t": round(t, 2),
         "d_z": round(m / sd, 4) if sd else None,
-        "median_diff_ns": st.median(d),
+        "median_diff_ns": st.median(d), "frac_pos": round(frac_pos, 4), "sign_p": round(sign_p, 4),
         "t_winsor1": round(tstat(w)[2], 2), "mean_winsor1_ns": round(tstat(w)[0], 1),
+        "t_winsor5": round(tstat(winsor(d, 0.05))[2], 2), "mean_winsor5_ns": round(tstat(winsor(d, 0.05))[0], 1),
         "t_blocked20": round(blocked(d), 2),
         "t_half1": round(tstat(h1)[2], 2), "t_half2": round(tstat(h2)[2], 2),
     }
@@ -59,12 +68,12 @@ def read_orig(files):
 def read_split(files):
     cells = collections.defaultdict(dict)  # (set, cls, phase, fixture) -> round -> ns
     pos = collections.defaultdict(dict)
-    for f in files:
+    for fi, f in enumerate(files):
         for line in open(f):
             if not line.startswith("split,"):
                 continue
             _, s, cls, fx, ph, rnd, p, ns = line.strip().split(",")
-            cells[(s, cls, ph, int(fx))][int(rnd)] = int(ns)
+            cells[(s, cls, ph, int(fx))][int(rnd) + 1_000_000 * fi] = int(ns)  # files are separate runs
     return cells
 
 def rm_anova(table):
