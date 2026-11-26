@@ -1126,3 +1126,17 @@ The review left the ARM timing record open after the sampler changed. The expect
 Ran the Rust 1.97.1 locked release example at `a5a6f60`, cross-built for `aarch64-unknown-linux-gnu`, with `taskset -c 3 ./stage2c timing 512` on a Raspberry Pi 4. The separate stack record comes from the ARM CI job for the same revision. The [measurement report](../benchmarks/stage2c/README.md) gives the results, raw files and reproduction commands. Production spill erasure and G7 remain open.
 
 Rick requested validation. OpenAI Codex ran the hardware measurement, checked both stack logs and compared the recorded timings with the contrast design.
+
+## 2026-11-26 — Stage 2b/2d order action, intersection and shortest-equivalent handoff
+
+The question was whether the signing intersection spans the general coprime-ideal sum in Q3 when the key and challenge are chosen independently from the public corpus. The expectation was equality of the carried norm and of the full integer lattices. Equal indices alone would permit different lattices.
+
+Ran the Rust oracle at `6f693a0` with `cargo test --locked -p shekyl-prism --features signer --lib --test signer_layers` in the debug and release profiles. Each of the six keys was paired with all six challenges in each of the five sets. The oracle computes an ordinary column HNF with unbounded integers on both sides. The norm and lattice agreed on the 180 pairs. The controls cover a changed basis of the same lattice, a different lattice of equal index, and a proper sublattice.
+
+A separate question for the research lane is whether the reduced form already gives the shortest-equivalent ideal needed by Stage 3. Use the `stage2c/vectors` corpus at the same revision. In each row let `U,V` be the returned raw columns, `β=U/2`, `T` the carried norm, and `F` the returned form. Write each column as two Gaussian entries. For `I·conj(β)/T`, direct quaternion multiplication gives first raw column `(2F00,0,0,0)`. The first two entries of the second raw column are `F20,F21`. Its last two are the real and imaginary parts of `det(U,V)/(2T)`.
+
+Ran exact integer products on all 55 rows and checked the second column under all four rotations of V by Gaussian units (220 checks). The determinant quotient was a Gaussian unit throughout. The original rows gave only +1 or −1. Of the 55 output norms, 22 were even. The rotations are changes of basis of the same fixtures.
+
+Open for independent proof: establish integrality of that quotient on every admitted input, including imported bases, derive the orientation through swaps, and compare with the full right-product lattice in both norm parities. Its magnitude alone does not establish integrality. The general Q1 fixed-schedule HNF and its intermediate widths remain open.
+
+Rick directed the Stage 2b/2d work. OpenAI Codex implemented the native order action and lattice comparison, and ran the public-fixture checks.
