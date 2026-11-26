@@ -1154,3 +1154,9 @@ For β = U/2, right multiplication by conj(β)/T takes the two raw columns to (2
 Checked the unit and both parity congruences with exact integer arithmetic on the 55 committed reducer rows, rotating the second vector by each of the four Gaussian units (220 checks). At `0b98bd3` the native signing-intersection replay also passed all 280 independent fixture rows across the five sets in debug and release on x86-64. Those runs exercise the signing intersection and reducer. The equivalent-ideal derivation above is ready for independent review. A native implementation still needs intermediate-width bounds.
 
 Rick directed the Stage 2b/2d work. OpenAI Codex derived the orientation and parity identities and ran the fixture checks.
+
+## 2026-11-26 — Even diagonals of the shortest-equivalent form
+
+The independent shortcut review confirms the unit and order parity for imported bases. There is also a short direct check for the output norm. For X = (z,w), left multiplication by H = (i+j)/2 gives 2HX = (iz−p·conj(w), iw+conj(z)). Thus det(X,2HX) = |z|²+p|w|² = N4(X). For X equal to either basis vector, HX lies in the original Gaussian span, so det(X,HX)/D is a Gaussian integer, where D = 2Tε as proved above. Multiplication by ε now gives N4(X)/(4T), which is a real Gaussian integer. Both normalized Gram diagonals are even. This derivation uses only the admitted basis and the half-order action already checked at import.
+
+OpenAI Codex checked this determinant identity and exact divisibility with integer arithmetic on both columns for all 55 reducer fixtures and all four rotations of V. The 220 orientations passed. Of the 55 original first columns, 22 give an even output norm. The Stage 2d contract therefore keeps both norm parities and states the positive half-tie endpoint explicitly. The independent research proof and exact-division policy are linked in section 2.3 of the signer specification.
