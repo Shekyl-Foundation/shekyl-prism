@@ -1118,3 +1118,11 @@ Result: Ran. The stack log is `docs/benchmarks/stage2c/x86_64-stack.txt`. Write 
 Conclusion: the x86-64 record is the output of this protocol, for this build. It is a wall-clock statistic and a retention observation. It is not a constant-time result.
 
 Who: Rick directed the correction. Grok (xAI, Grok Build) proposed the structure in the review of PR #49, implemented it, and ran the x86-64 measurements. The pull-request review is the check still ahead.
+
+## 2026-11-26 — Stage 2c paired timing on physical AArch64
+
+The review left the ARM timing record open after the sampler changed. The expected corpus was 45 contrasts of 512 repeats across the five sets. No timing threshold was set for this run.
+
+Ran the Rust 1.97.1 locked release example at `a5a6f60`, cross-built for `aarch64-unknown-linux-gnu`, with `taskset -c 3 ./stage2c timing 512` on a Raspberry Pi 4. The separate stack record comes from the ARM CI job for the same revision. The [measurement report](../benchmarks/stage2c/README.md) gives the results, raw files and reproduction commands. Production spill erasure and G7 remain open.
+
+Rick requested validation. OpenAI Codex ran the hardware measurement, checked both stack logs and compared the recorded timings with the contrast design.

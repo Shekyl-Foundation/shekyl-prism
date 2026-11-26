@@ -2,7 +2,7 @@
 
 **No constant-time claim.** Production spill erasure remains open. G7 remains open. Every figure below is from public fixtures on the measured build.
 
-The x86-64 run used Rust 1.97.1 and Cargo's locked release build on an Intel Core i9-11950H. Timing used one core, selected with `taskset -c 0`. The stack scan used the same toolchain and the release probe.
+The x86-64 run used Rust 1.97.1 and Cargo's locked release build on an Intel Core i9-11950H. Timing used one core, selected with `taskset -c 0`. The stack scan used the same toolchain and the release probe. The physical AArch64 timing run used a Raspberry Pi 4 (Cortex-A72), pinned to core 3. The example was cross-built at `a5a6f60` with the same Rust release, `--locked` and `--target aarch64-unknown-linux-gnu`.
 
 ## What the record is
 
@@ -24,15 +24,15 @@ Every fixture of a class wrote to the same depth. Every fixture left residual in
 
 Callgrind runs once per class over that class's whole file and collects only while `reducer_probe` is active. The check rejects integer hardware division in the visited instructions. The function count is the number of names Callgrind recorded. The opcode census is in the log. External runtime code is outside this check. Untouched allocations, overwritten secrets, and transformed values are outside the word detector. The post-return scan includes copies made by callees.
 
-`aarch64-stack.txt` is the log from commit `5091c40`, produced by the previous probe. That probe profiled one row of each class, and its instrument sizes were compiled into the runner. It is kept as that historical log. CI on `ubuntu-24.04-arm` runs the current script and uploads that artifact on its own. The previous ARM timing file recorded the retired sampler and has been removed.
+`aarch64-stack.txt` is the corresponding `ubuntu-24.04-arm` log for the reviewed probe at `a5a6f60`. All 55 ARM fixtures left residual input words. The deepest stack write on ARM was 32,112 bytes on the P664 guarded fixtures. The linked-code scan found no integer division in the visited instructions on either architecture. [ARM CI run and disassembly artifact](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/45768045588)
 
 ## Timing contrasts
 
 The reference is the first row of the class in corpus order. Each later row is one contrast, repeated 512 times, on the reviewed schedule. Even repeats run the reference first. The clock starts after the inputs have been cloned into a black box. The interval is admission, reduction, and drop, through one function, `time_reduction`. The bench smoke uses the same function. The statistic for a contrast is Student's t for the mean of its paired differences, other minus reference: the mean times the square root of the repeat count, divided by the sample standard deviation. Here the repeat count is 512, and the sample is that contrast alone.
 
-`x86_64.csv.gz` is the example's stdout: five `stage2c` oracle lines and 23,040 timing rows. The summarizer reads the timing rows.
+`x86_64.csv.gz` and `aarch64.csv.gz` each contain the release example’s stdout with five `stage2c` oracle lines and 23,040 timing rows. The summarizer reads the timing rows.
 
-The largest magnitude in this run is 2.89, at p324 `sign-generic` against other index 2. Four contrasts have a magnitude above 2. The figure is a wall-clock statistic on one shared machine. Timer resolution, shared-system noise, and the finite public corpus bound what it can say. This run makes no constant-time claim.
+The largest magnitude on x86-64 is 2.89, at p324 `sign-generic` against other index 2. Four contrasts have a magnitude above 2. The figure is a wall-clock statistic on one shared machine. Timer resolution, shared-system noise, and the finite public corpus bound what it can say. This run makes no constant-time claim.
 
 ```text
 p248 prered-guard256 reviewed other=1: 512 repeats, mean difference 342 ns, paired t=0.14
@@ -90,6 +90,23 @@ p500 prered-guard256 reviewed max |t|=1.29 (t=1.29) at other=2
 p500 sign-generic reviewed max |t|=2.13 (t=2.13) at other=3
 p664 prered-guard256 reviewed max |t|=1.67 (t=1.67) at other=4
 p664 sign-generic reviewed max |t|=1.94 (t=-1.94) at other=3
+```
+
+## Physical AArch64 timing
+
+At P248 the largest guarded contrast was −5,130 ns for fixture 1 against its class reference (paired t = −6.77). Guarded fixtures 3 and 4 also differed from the reference (t = +5.11 and −4.87). The source of the timing differences remains open under G7. This run covers one build and one board.
+
+```text
+p248 prered-guard256 reviewed max |t|=6.77 (t=-6.77) at other=1
+p248 sign-generic reviewed max |t|=4.15 (t=4.15) at other=1
+p324 prered-guard256 reviewed max |t|=1.18 (t=-1.18) at other=5
+p324 sign-generic reviewed max |t|=1.35 (t=1.35) at other=2
+p376 prered-guard256 reviewed max |t|=2.84 (t=2.84) at other=1
+p376 sign-generic reviewed max |t|=3.54 (t=-3.54) at other=4
+p500 prered-guard256 reviewed max |t|=2.04 (t=-2.04) at other=5
+p500 sign-generic reviewed max |t|=0.87 (t=0.87) at other=2
+p664 prered-guard256 reviewed max |t|=0.50 (t=0.50) at other=1
+p664 sign-generic reviewed max |t|=1.64 (t=1.64) at other=3
 ```
 
 ## Reproduction

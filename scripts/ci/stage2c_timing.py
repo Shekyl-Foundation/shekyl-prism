@@ -63,7 +63,8 @@ def load(path, repeats):
                 raise ValueError(f"other index {other_index} is outside {cls}")
             if repeat_index != len(groups[name, cls, schedule, other_index]):
                 raise ValueError("repeats are not contiguous from zero")
-            if (order == "true") != reference_runs_first(repeat_index):
+            expected_order = "true" if reference_runs_first(repeat_index) else "false"
+            if order != expected_order:
                 raise ValueError("row order does not follow the even-repeat rule")
             if min(reference_ns, other_ns) <= 0:
                 raise ValueError("non-positive sample")
@@ -110,7 +111,7 @@ def report(groups):
 
 
 def self_test():
-    """A two-repeat corpus passes, and a reversed order is refused."""
+    """A two-repeat corpus passes. Reversed and malformed orders are refused."""
     import tempfile
     rows = []
     # Differences 1 and 3. The sample standard deviation is sqrt(2), so t is 2.
@@ -131,14 +132,17 @@ def self_test():
         statistic = paired_t(next(iter(groups.values())))
         if abs(statistic - 2.0) > 1e-9:
             raise AssertionError(f"paired t was {statistic}")
-        rows[0][6] = "false"
-        with path.open("w", newline="") as stream:
-            csv.writer(stream).writerows(rows)
-        try:
-            load(path, 2)
-        except ValueError:
-            return
-        raise AssertionError("a reversed order was accepted")
+        for repeat, bad_order in ((0, "false"), (1, "unknown")):
+            original = rows[repeat][6]
+            rows[repeat][6] = bad_order
+            with path.open("w", newline="") as stream:
+                csv.writer(stream).writerows(rows)
+            try:
+                load(path, 2)
+            except ValueError:
+                rows[repeat][6] = original
+            else:
+                raise AssertionError(f"accepted order {bad_order!r} at repeat {repeat}")
 
 
 def main():
