@@ -149,6 +149,7 @@ jobs:
         run: |
           python3 -B -S scripts/stage2c_oracle.py
           python3 -B -S scripts/stage2c_fixtures.py
+          python3 -B -S scripts/stage2d_fixtures.py
       # A node that only verifies builds no signer code: the front crate's
       # `signer` feature is off by default, its default build graph holds
       # none of the integer crate, `zeroize` or `prism-ct-barrier`, and the graph

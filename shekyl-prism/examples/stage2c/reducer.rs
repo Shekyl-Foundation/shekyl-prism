@@ -18,15 +18,9 @@ pub type Vector<const W: usize> = [Scalar<W>; 4];
 const QUOTIENT_TOP_BITS: u64 = 64;
 const QUOTIENT_WINDOW: u64 = 60;
 
-/// Q4: `B = ceil(L/2) + Q4_SLACK_BITS`, and a secret norm is below `2^B`.
-const Q4_SLACK_BITS: u32 = 32;
-
-/// The challenge degree satisfies `q < 2^(2e - CHALLENGE_DEGREE_SHIFT)`.
-const CHALLENGE_DEGREE_SHIFT: u32 = 5;
-
-/// `2^9 = 2 * 256`. On a guarded intersection `A' = 2 nrd(U)/T` is at most
-/// `512 sqrt(p) q`.
-const NORMALIZED_GUARD_BITS: u32 = 9;
+#[path = "../../src/ideal/geometry.rs"]
+mod geometry;
+use geometry::{degree_bits, hermitian, inverse_odd, secret_norm_bits, GUARD_BITS};
 
 /// Slack on `q` in the guarded diagonal bound. The schedule's `C0` uses `q + 1`.
 const GUARDED_DIAGONAL_SLACK: u64 = 3;
@@ -111,11 +105,12 @@ impl<const W: usize, const D: usize> Bounds<W, D> {
             .unwrap()
             .sub(&one)
             .unwrap();
-        let q = one.shl(2 * S::E - CHALLENGE_DEGREE_SHIFT).unwrap();
-        let max_norm = q.shl(p.bit_length().div_ceil(2) + Q4_SLACK_BITS).unwrap();
+        let q = one.shl(degree_bits(S::E)).unwrap();
+        let secret_norm_bits = secret_norm_bits(p.bit_length());
+        let max_norm = q.shl(secret_norm_bits).unwrap();
         let root = p.sqrt_floor().unwrap().add(&one).unwrap();
         let guarded = root
-            .shl(NORMALIZED_GUARD_BITS)
+            .shl(1 + GUARD_BITS)
             .unwrap()
             .mul(&q.add(&Int::from_u64(GUARDED_DIAGONAL_SLACK)).unwrap())
             .unwrap();
@@ -135,45 +130,16 @@ impl<const W: usize, const D: usize> Bounds<W, D> {
             // A' = 2 nrd(U)/T <= 512 sqrt(p) q on a guarded intersection.
             guarded_first_squared: Scalar::<W>::from_public(&q)
                 .resize::<D>()
-                .shl(NORMALIZED_GUARD_BITS)
+                .shl(1 + GUARD_BITS)
                 .mul(
                     &Scalar::<W>::from_public(&q)
                         .resize::<D>()
-                        .shl(NORMALIZED_GUARD_BITS),
+                        .shl(1 + GUARD_BITS),
                 )
                 .mul(&Scalar::<W>::from_public(&p).resize()),
             generic_diagonal: Scalar::<W>::from_public(&generic),
         }
     }
-}
-
-fn hermitian<const D: usize>(
-    left: &[SecretInt<D>; 4],
-    right: &[SecretInt<D>; 4],
-    p: &SecretInt<D>,
-) -> (SecretInt<D>, SecretInt<D>) {
-    let pair = |i: usize| {
-        let a = &left[i];
-        let b = &left[i + 1];
-        let c = &right[i];
-        let d = &right[i + 1];
-        (a.mul(c).add(&b.mul(d)), b.mul(c).sub(&a.mul(d)))
-    };
-    let (r, i) = pair(0);
-    let (s, j) = pair(2);
-    (r.add(&s.mul(p)), i.add(&j.mul(p)))
-}
-
-fn inverse_odd<const W: usize>(t: &Scalar<W>) -> Scalar<W> {
-    // Newton in Z/(2^(64W)). The low word starts correct modulo 2.
-    let max = Scalar::from_public(&Int::<W>::from_le_limbs(&[u64::MAX; W], false).unwrap());
-    let mut x = Scalar::one();
-    for _ in 0..(W * 64).next_power_of_two().trailing_zeros() {
-        let diff = Scalar::from_u64(2).sub(&t.mul_low(&x));
-        let complement = max.sub(&diff.abs()).add(&Scalar::one());
-        x = x.mul_low(&Scalar::select(&diff, &complement, &diff.is_negative()));
-    }
-    x
 }
 
 fn divide_form_entry<const W: usize, const D: usize>(

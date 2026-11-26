@@ -11,7 +11,7 @@ publish.workspace = true
 # and nothing of the signer: a node that only verifies compiles no signer
 # code and none of the signer's dependencies. With `signer`, the layers of
 # the signer that exist are re-exported under `hazmat` (today the
-# integers, `hazmat::int`), and signing will appear behind it when it is
+# integers and ideal arithmetic, `hazmat::int` and `hazmat::ideal`), and signing will appear behind it when it is
 # written. `scripts/ci/check_consumer_build.py` holds the feature table to
 # exactly this, and the default build graph to holding no signer crate.
 #
@@ -23,8 +23,7 @@ default = []
 signer = ["dep:prism-int"]
 
 [dependencies]
-# Built with `signer` alone, for `hazmat::int`: no code of this crate
-# calls it.
+# Built with `signer` alone for the integer and ideal layers.
 prism-int = { workspace = true, optional = true }
 prism-field = { workspace = true }
 prism-isogeny = { workspace = true }

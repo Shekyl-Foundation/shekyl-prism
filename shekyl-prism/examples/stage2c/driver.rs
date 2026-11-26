@@ -5,6 +5,7 @@
 
 use crate::reducer::{self, Basis, Bounds, Class, Reduced, ReductionSet, Scalar, Schedule, Vector};
 use prism_int::{SecretBit, SecretError, SecretInt};
+use shekyl_prism::hazmat::ideal;
 use std::hint::black_box;
 use std::time::Instant;
 
@@ -12,13 +13,20 @@ fn check_bit(bit: SecretBit, expected: bool) {
     assert_eq!(bit.declassify(), Ok(expected));
 }
 
-fn scalar<const W: usize>(hex: &str) -> Scalar<W> {
-    let digits = hex.trim_start_matches('-').as_bytes();
-    let bytes: Vec<_> = digits
+fn check_invalid<const W: usize>(value: &Scalar<W>) {
+    assert_eq!(value.declassify().unwrap_err(), SecretError::Overflowed);
+}
+
+fn magnitude(hex: &str) -> Vec<u8> {
+    hex.trim_start_matches('-')
+        .as_bytes()
         .rchunks(2)
         .map(|chunk| u8::from_str_radix(std::str::from_utf8(chunk).unwrap(), 16).unwrap())
-        .collect();
-    let x = SecretInt::from_le_bytes(&bytes);
+        .collect()
+}
+
+fn scalar<const W: usize>(hex: &str) -> Scalar<W> {
+    let x = SecretInt::from_le_bytes(&magnitude(hex));
     if hex.starts_with('-') {
         x.neg()
     } else {
@@ -74,6 +82,82 @@ impl<const W: usize> Fixture<W> {
     }
 }
 
+fn check_ideal<S: ideal::IdealSet<W, D>, const W: usize, const D: usize>(
+    line: &str,
+    expected: &Fixture<W>,
+    bounds: &Bounds<W, D>,
+) {
+    let mut fields = line.split_whitespace();
+    let mut values = fields.by_ref().take(11).map(scalar);
+    let n: Scalar<W> = values.next().unwrap();
+    let two = n.shl(1);
+    let x = values.next().unwrap();
+    let y = values.next().unwrap();
+    let u: Vector<W> = std::array::from_fn(|_| values.next().unwrap());
+    let v: Vector<W> = std::array::from_fn(|_| values.next().unwrap());
+    let mut challenge = magnitude(fields.next().unwrap());
+    challenge.resize((S::CHALLENGE_BITS as usize).div_ceil(8), 0);
+    let root = std::array::from_fn(|_| scalar(fields.next().unwrap()));
+    assert!(fields.next().is_none());
+    let z = Scalar::zero;
+    let hnf = [
+        [two.clone(), z(), z(), z()],
+        [z(), two.clone(), z(), z()],
+        [x.clone(), y.clone(), Scalar::one(), z()],
+        [two.sub(&y), x, z(), Scalar::one()],
+    ];
+    let admit = |h, a, b| ideal::GuardedIdeal::<S, W, D>::admit(n.clone(), h, a, b);
+    let key = admit(&hnf, u.clone(), v.clone()).expect("valid ideal");
+    let intersection = key.intersection(&challenge, &root).unwrap();
+    for (got, want) in intersection
+        .u
+        .iter()
+        .chain(&intersection.v)
+        .chain([&intersection.norm])
+        .zip(expected.u.iter().chain(&expected.v).chain([&expected.t]))
+    {
+        check_bit(got.ct_eq(want), true);
+    }
+    let result = Basis::from_intersection(
+        &intersection.norm,
+        intersection.u,
+        intersection.v,
+        Class::Guarded,
+        bounds,
+    )
+    .reduce(Schedule::Reviewed);
+    expected.check(&result);
+    assert!(key.intersection(&[], &root).is_none());
+    let invalid = key.intersection(&challenge, &[z(), z()]).unwrap();
+    for value in invalid.u.iter().chain(&invalid.v).chain([&invalid.norm]) {
+        check_invalid(value);
+    }
+    // Unimodular shear within the same ideal preserves its HNF and index,
+    // but takes the second generator beyond the guard.
+    let long = std::array::from_fn(|i| v[i].add(&n.mul(&u[i]).shl(16)));
+    assert!(admit(&hnf, u.clone(), long).is_none());
+    // Shearing the ambient O0 numerator lattice by z1 += 2*z2 keeps its
+    // index, parity and Gaussian span. The new span fails left closure.
+    let shear = |w: &Vector<W>| {
+        [
+            w[0].add(&w[2].shl(1)),
+            w[1].add(&w[3].shl(1)),
+            w[2].clone(),
+            w[3].clone(),
+        ]
+    };
+    let mut unstable = hnf.clone();
+    let x = unstable[2][0].add(&Scalar::from_u64(2));
+    let x = Scalar::select(&x.sub(&two), &x, &x.ct_lt(&two));
+    unstable[2][0] = x.clone();
+    unstable[3][1] = x;
+    assert!(admit(&unstable, shear(&u), shear(&v)).is_none());
+    let mut wrong = hnf.clone();
+    wrong[2][0] = wrong[2][0].add(&Scalar::one());
+    assert!(admit(&wrong, u.clone(), v.clone()).is_none());
+    assert!(admit(&hnf, u.clone(), u).is_none());
+}
+
 fn check_ties<S: ReductionSet<W, D>, const W: usize, const D: usize>() {
     for steps in [1, 2, 3] {
         let result = reducer::tie_fixture::<S, W, D>(steps);
@@ -103,10 +187,30 @@ fn check_ties<S: ReductionSet<W, D>, const W: usize, const D: usize>() {
 
 const SCHEDULES: [Schedule; 2] = [Schedule::Reviewed, Schedule::Pr45Baseline];
 
-pub fn run<S: ReductionSet<W, D>, const W: usize, const D: usize>(corpus: &str, bench: bool) {
+pub fn run<S: ReductionSet<W, D> + ideal::IdealSet<W, D>, const W: usize, const D: usize>(
+    corpus: &str,
+    bench: bool,
+) {
     check_ties::<S, W, D>();
     let bounds = Bounds::new::<S>();
     let fixtures: Vec<_> = corpus.lines().map(Fixture::parse).collect();
+    let ideals = match S::NAME {
+        "p248" => include_str!("ideals/p248.txt"),
+        "p324" => include_str!("ideals/p324.txt"),
+        "p376" => include_str!("ideals/p376.txt"),
+        "p500" => include_str!("ideals/p500.txt"),
+        "p664" => include_str!("ideals/p664.txt"),
+        _ => unreachable!("unknown parameter set"),
+    };
+    let guarded: Vec<_> = fixtures
+        .iter()
+        .filter(|f| f.class == Class::Guarded)
+        .collect();
+    assert_eq!(guarded.len(), 6);
+    assert_eq!(ideals.lines().count(), guarded.len());
+    for (line, expected) in ideals.lines().zip(guarded) {
+        check_ideal::<S, _, _>(line, expected, &bounds);
+    }
     for f in &fixtures {
         for schedule in SCHEDULES {
             f.check(&f.input(&bounds).reduce(schedule));
@@ -126,7 +230,7 @@ pub fn run<S: ReductionSet<W, D>, const W: usize, const D: usize>(corpus: &str, 
             let invalid = Basis::from_intersection(&norm, f.u.clone(), v, class, &bounds)
                 .reduce(Schedule::Reviewed);
             for x in invalid.u.iter().chain(&invalid.v).chain(&invalid.form) {
-                assert_eq!(x.declassify().unwrap_err(), SecretError::Overflowed);
+                check_invalid(x);
             }
         }
     }
