@@ -12,13 +12,13 @@ even norms and non-generic ideals need no special case.
 
 | Condition | Meaning | Who establishes it |
 |---|---|---|
-| **C1** containment | `m·Z⁴ ⊆ span(G)` for the generator rows `G`. For an ideal this is Q1. It holds when `G ⊂ I` and `[Z⁴ : span G] = 4N²`. | Decode's exact membership and index checks (`GuardedIdeal::admit`). Or the free self-check `∏ d_c = 4N²` on the output (§3.3). |
+| **C1** containment | `m·Z⁴ ⊆ span(G)` for the generator rows `G`. For an ideal this is Q1. It holds when `G ⊂ I` and `[Z⁴ : span G] = 4N²`. | Decode's exact membership and index checks (`GuardedIdeal::admit`). Or, for any `G` and without ideal theory, the exact test `Δ(G) = ∏ d_c ≠ 0` (§3.3). The output's pivot product alone is **not** a certificate. |
 | **C2** range | `2 ≤ m < 2^K`, with `K = B + 1` (Q4: `N < 2^B`), and generator entries `|x| < 2^(2K)`. | Q4 is already tested at admission. Entries of a guarded key are far below the bound (§5.3). |
 | **C3** carried norm | `m` is exactly `2N` for the carried norm `N` (Q2). | The type that carries `N`. |
 
 It does **not** need `N` odd, prime, square-free, coprime to anything, or generic. It does **not** need `m` to be a multiple of the
-determinant `4N²`. If C1 fails the algorithm returns the HNF of the superlattice `span(G) + mZ⁴` and the self-check
-`∏ d_c = 4N²` fails (§6B). If C2 fails the output is undefined and must be masked by the same check.
+determinant `4N²`. If C1 fails the algorithm returns the HNF of the superlattice `span(G) + mZ⁴`; the exact test
+`Δ(G) = ∏ d_c` fails (§6B), but the pivot product by itself can still equal `4N²`. If C2 fails the output is undefined and must be masked by the same check.
 
 Per-set bounds for the decode class (`N < 2^B`, `k = 4` generator rows `u, Ju, v, Jv`; limbs are 64-bit; every number below is
 checked by the instrumented model, not only derived):
@@ -100,10 +100,10 @@ Composite or even `N`, prime powers, and non-primitive ideals only change which 
   pivot. They need `R ≡ 0 mod det`, because their lemma is "an index-`I` sublattice contains `I·Z^n`". Here `det = 4N²` does not divide `2N`,
   but we use the weaker and different fact that the **exponent** of `Z⁴/L` divides `2N` (Lemma 1). The containment `mZ⁴ ⊆ L` survives
   intersection with every coordinate subspace, so it never needs shrinking.
-- **What `4N²` is used for.** Not as a modulus. (i) As an index check: `∏ d_c = 4N²`. (ii) With membership, as the proof of C1:
+- **What `4N²` is used for.** Not as a modulus. (i) As an index check on `G`: `Δ(G) = 4N²`. (ii) With membership, as the proof of C1:
   if `G ⊂ I` and `[Z⁴ : span G] = 4N²` then `span G = I ⊇ 2N·Z⁴` (Lemma 1), so the output is exactly `HNF(I)`.
   `GuardedIdeal::admit` already computes both: the Gaussian determinant `|det(u,v)|² = 4N²`, and the Cramer membership test.
-  (iii) As the post-condition that detects C1 failing (§3.3).
+  (iii) `Δ(G) = ∏ d_c` is the post-condition that detects C1 failing (§3.3).
 - **Why `2N` and not `N`.** `Z⁴ ⊄ O0num` (for example `e₀ = (1,0,0,0)` has `a ≢ d`), so `N·Z⁴ ⊄ L` already for `I = O0` (`N = 1`, `L` has pivots `(2,2,1,1)`).
   The factor 2 is the denominator of `O0`, and `2N` is the least modulus that works for every ideal.
 
@@ -155,10 +155,13 @@ Step 3 replaces `P_c` by `P_c − qP_l` (unimodular) and reduces entries at `l' 
 contain `P_c` (`c > l'`). Processing `l` from `c−1` down to 0 fixes entry `l` in `[0, d_l)` exactly, and later steps use `P_{l''}` with `l'' < l`, whose support misses `l`. So the result is triangular, positive and
 canonical, and the HNF of a lattice is unique. If `mZ⁴ ⊆ span G` then `L̄ = span G`. ∎
 
-### 3.3 The self-check
+### 3.3 The self-check (corrected in the follow-up)
 
-`∏ d_c = [Z⁴ : L̄] ≤ [Z⁴ : span G]` with equality iff `m·Z⁴ ⊆ span G`. For decode `k = 4` and `|det| = 4N²` is already computed, so
-**`∏ d_c == 4N²` certifies C1 exactly** and costs three multiplications. (For `k = 8` use the index of the Z-span, or membership.) Demonstrated in §6B.
+`∏ d_c = [Z⁴ : L̄] ≤ [Z⁴ : span G] = Δ(G)` (`Δ(G) = |det|` of the four rows, 0 if rank-deficient), with equality iff `m·Z⁴ ⊆ span G` and rank 4.
+So **`Δ(G) ≠ 0 ∧ Δ(G) = ∏ d_c` certifies C1 exactly**, for any `G`. For decode `Δ(G) = |det_{Z[i]}(u,v)|²` is already computed.
+**Erratum.** The first version of this section, and the C1 row in §0, said that `∏ d_c = 4N²` on the output certifies C1. That is wrong without `Δ(G)`:
+`G` can be rank-deficient, or a proper sublattice of `I`, and still give `span G + 2N·Z⁴ = I` and `∏ d_c = 4N²`
+(`../fixed-modulus-hnf-followup/REPORT.md` §2, with examples at all five sets). Demonstrated in §6B for the case where the product does catch it.
 
 ## 4. The public operation count (proved, and equal to the measured count)
 
