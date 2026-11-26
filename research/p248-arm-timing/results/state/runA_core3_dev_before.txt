@@ -1,0 +1,31 @@
+== 2026-11-26T11:22:51-05:00 core=3
+ 11:22:51 up 4 days, 23:29,  2 users,  load average: 3.42, 3.34, 1.85
+3.42 3.34 1.85 1/244 36885
+governors:       4 ondemand 
+cpu0 freq=1800000 min=600000 max=1800000
+cpu1 freq=1800000 min=600000 max=1800000
+cpu2 freq=1700000 min=600000 max=1800000
+cpu3 freq=1800000 min=600000 max=1800000
+hwmon cpu_thermal: temp1_input=53069 
+hwmon rpi_volt: in0_lcrit_alarm=0 
+vcgencmd: Can't open device file: /dev/vcio
+cmdline: coherent_pool=1M 8250.nr_uarts=1 snd_bcm2835.enable_headphones=0 numa_policy=interleave nvme.max_host_mem_size_mb=0 snd_bcm2835.enable_headphones=1 snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_hdmi=0  numa=fake=2 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=DC:A6:32:F9:5A:D4 vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  console=ttyS0,115200 multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 panic=10 rootwait fixrtc
+aslr: 2 thp: always [madvise] never
+tasks on core 3 (psr pcpu comm):
+  3  3.5 bash
+  3  0.1 kworker/3:1-events
+  3  0.1 kworker/3:0-events
+  3  0.1 kworker/3:3-events
+  3  0.0 kworker/3:2-events
+  3  0.0 kworker/3:1H-kblockd
+top cpu:
+    PID %CPU COMMAND
+  36931  100 ps
+   1244 14.2 shekyld
+  36880  3.2 bash
+  36876  3.0 bash
+  35696  2.9 python3
+shekyl daemons: 1 shekyld, 1 wallet
+MemTotal:        7983940 kB
+MemFree:         1980704 kB
+MemAvailable:    6304796 kB

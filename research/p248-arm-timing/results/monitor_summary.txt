@@ -1,0 +1,8 @@
+runA_core3_dev: 1613 s sampled; core freq kHz {'1800000': 1608, '600000': 5}; temp 52.6-63.8 C; rpi_volt alarm ['0']; load1 1.02-3.42
+   seconds with the benchmark running: 1605; other tasks on the pinned core: mean 1.54 jiffies/s (of 100), >=3: 83, >=10: 68, max 56
+runB_core3_a5a6f60: 660 s sampled; core freq kHz {'1800000': 656, '600000': 3, '1200000': 1}; temp 55.0-63.8 C; rpi_volt alarm ['0']; load1 1.09-1.91
+   seconds with the benchmark running: 657; other tasks on the pinned core: mean 1.58 jiffies/s (of 100), >=3: 32, >=10: 26, max 47
+runC_core2_dev: 370 s sampled; core freq kHz {'1800000': 368, '600000': 2}; temp 55.5-63.8 C; rpi_volt alarm ['0']; load1 1.12-2.63
+   seconds with the benchmark running: 366; other tasks on the pinned core: mean 3.15 jiffies/s (of 100), >=3: 41, >=10: 32, max 69
+runD_procs: 1807 s sampled; core freq kHz {'1800000': 1800, '600000': 2, '700000': 3, '800000': 1, '1400000': 1}; temp 53.1-63.8 C; rpi_volt alarm ['0']; load1 0.75-2.7
+   seconds with the benchmark running: 1733; other tasks on the pinned core: mean 1.88 jiffies/s (of 100), >=3: 121, >=10: 93, max 52
