@@ -12,6 +12,8 @@ mod driver;
 mod reducer;
 
 fn main() {
-    let bench = std::env::args().nth(1).as_deref() == Some("bench");
-    driver::run::<prism_field::P500, _, _>(include_str!("stage2c/vectors/p500.txt"), bench);
+    driver::run::<prism_field::P500, _, _>(
+        include_str!("stage2c/vectors/p500.txt"),
+        driver::mode(),
+    );
 }
