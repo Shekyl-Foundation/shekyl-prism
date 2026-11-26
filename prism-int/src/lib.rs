@@ -8,8 +8,8 @@
 //! The signer's quaternion arithmetic runs on integers far wider than a
 //! field element: the coordinates of quaternions, the entries of lattice
 //! bases, norms. The C reference holds them in integers that grow to fit.
-//! These do not: an integer has `N` limbs of 64 bits, `N` is chosen once
-//! for a parameter set, and a result that does not fit is an error the
+//! These do not: an integer has `N` limbs of 64 bits, `N` is fixed by
+//! the public parameter set and purpose, and a result that does not fit is an error the
 //! caller sees. `docs/SIGNER_SPEC.md`, section 2.1, derives the widths
 //! and states every convention used here.
 //!
@@ -20,8 +20,8 @@
 //!   on the values.
 //! - [`SecretInt`] is a **secret** integer. It has only the operations
 //!   whose work depends on `N` alone: addition, subtraction, negation,
-//!   multiplication, shifts by a public count, selection, and comparisons
-//!   that return a [`SecretBit`] and not a `bool`.
+//!   multiplication, shifts by public or secret counts, secret bit length,
+//!   fixed word division, selection and comparisons returning [`SecretBit`].
 //!
 //! A secret leaves by one of three functions and no other way:
 //! [`SecretInt::declassify`], [`SecretBit::declassify`] and
@@ -41,9 +41,8 @@
 //!
 //! **This crate does not claim constant time.** The secret type's
 //! operations are written without a branch or an index that depends on a
-//! secret limb. Whether the compiled code keeps that shape has not been
-//! measured. Research code, unreviewed, and not for protecting anything of
-//! value.
+//! secret limb. The release shift probe checks compiled control flow on both
+//! audited targets. Integrated timing and erasure remain open.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]

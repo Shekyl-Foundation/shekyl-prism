@@ -52,3 +52,11 @@ required-features = ["signer"]
 
 [lints]
 workspace = true
+
+[[example]]
+name = "stage2c_p500"
+required-features = ["signer"]
+
+[[example]]
+name = "stage2c"
+required-features = ["signer"]

@@ -31,7 +31,7 @@ every result its operands have: `lines_for` says which, operation by
 operation.
 
 When to write the file again: when an operation or a width is added, and
-not otherwise. It is 3.3 MB, and every new copy is 3.3 MB more in the
+not otherwise. It is 4.0 MB, and every new copy is 4.0 MB more in the
 repository's history. A change of the crate that changes no result needs
 no new file, and `--check`, which CI runs, writes nothing. The file is
 left out of the crate's package (`exclude` in prism-int/Cargo.toml).
@@ -500,10 +500,34 @@ def lines_for(limbs):
     return out
 
 
+def stage_lines(width):
+    """Secret reducer operations at the coordinate and constructor widths."""
+    bits = 64 * width
+    modulus = 1 << bits
+    stream = Stream("stage2c", width)
+    for k in [0, 1, 62, 63, 64, 65, bits-1, bits, bits+1, LIMB-1, -1]:
+        for a in [0, -1, -(modulus-1), stream.exact(bits), -stream.exact(bits//2)]:
+            b = stream.exact(bits)
+            word = -stream.exact(63)
+            left = ("overflow" if k < 0 or a and abs(a).bit_length()+k > bits
+                    else a << k if a else 0)
+            right = ("overflow" if k < 0 else
+                     (-1 if a < 0 else 1) * (abs(a) >> min(k, bits)))
+            clipped = a if fits(a, 1) else "overflow"
+            product = a * word
+            values = [left, right, abs(a).bit_length(), abs(a*b) % modulus,
+                      product if fits(product, width) else "overflow",
+                      abs(a) % LIMB, clipped]
+            fields = ["stage", str(width), show(a), show(b), show(word), show(k), "="]
+            yield "\t".join(fields + [v if isinstance(v, str) else show(v) for v in values])
+
+
 def text():
     lines = ["# Written by scripts/int_vectors.py. Do not edit: run it, or run it with --check."]
     for limbs in WIDTHS:
         lines += ["\t".join(fields) for fields in lines_for(limbs)]
+    for width in (1, 2, 11, 14, 16, 21, 27, 22, 28, 32, 42, 54):
+        lines.extend(stage_lines(width))
     return "\n".join(lines) + "\n"
 
 

@@ -1,0 +1,11 @@
+[package]
+name = "prism-ct-barrier"
+description = "Register identity for secret selections in the native PRISM signer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints.rust]
+unsafe_code = "deny"

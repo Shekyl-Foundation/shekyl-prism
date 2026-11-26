@@ -9,7 +9,8 @@
 `prism-bench` does not inherit. Cargo rejects a member that both inherits
 workspace lints and overrides one, and the userspace counter (`cntvct_el0`
 / `rdtsc`) has no safe wrapper. That crate sets `deny` itself, and the
-allow sits on `counter` only.
+allow sits on `counter` only. The signer barrier has a separate override
+limited to its audited register identity.
 """
 
 import argparse
@@ -20,6 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 BENCH = "prism-bench"
+BARRIER = "prism-ct-barrier"
 
 
 def load(path: Path) -> dict:
@@ -42,6 +44,24 @@ def allow_is_on_counter(source: str) -> bool:
 
 
 def judge(package: str, own: str | None, source: str) -> str | None:
+    if package == BARRIER:
+        if own != "deny":
+            return f"{package} must deny unsafe_code"
+        code = re.sub(r"//[^\n]*", "", source)
+        audited = """
+            fn value_barrier_u64(mut x: u64) -> u64 {
+                #[allow(unsafe_code)]
+                unsafe {
+                    core::arch::asm!("/* {0} */", inout(reg) x, options(pure, nomem, nostack, preserves_flags));
+                }
+                x
+            }
+        """
+        if ("".join(audited.split()) not in "".join(code.split())
+                or len(re.findall(r"\bunsafe\b", code)) != 1
+                or code.count("allow(unsafe_code)") != 1):
+            return f"{package} must contain only the audited register identity"
+        return None
     if package == BENCH:
         if own != "deny":
             return f'{package} must set unsafe_code = "deny" (the counter override)'
@@ -77,9 +97,9 @@ def scan() -> list[str]:
         names.add(package)
         inherits = manifest.get("lints", {}).get("workspace") is True
         own = manifest.get("lints", {}).get("rust", {}).get("unsafe_code")
-        if package == BENCH:
+        if package in (BENCH, BARRIER):
             if inherits:
-                errors.append(f"{member} inherits forbid, which the counter cannot satisfy")
+                errors.append(f"{member} inherits forbid, which the audited override cannot satisfy")
         elif not inherits:
             errors.append(f"{member} does not inherit workspace lints")
             continue
@@ -87,6 +107,14 @@ def scan() -> list[str]:
         errors_or_none = judge(package, own, lib.read_text())
         if errors_or_none:
             errors.append(errors_or_none)
+    barrier_dir = ROOT / BARRIER
+    barrier_manifest = load(barrier_dir / "Cargo.toml")
+    if ({p.relative_to(barrier_dir).as_posix() for p in barrier_dir.rglob("*.rs")} != {"src/lib.rs"}
+            or any("dependencies" in key for key in barrier_manifest)
+            or "target" in barrier_manifest):
+        errors.append("the barrier must be a single dependency-free source file")
+    if BARRIER not in names:
+        errors.append(f"no {BARRIER} package")
     if BENCH not in names:
         errors.append(f"no {BENCH} package")
     return errors
@@ -111,6 +139,12 @@ def selftest() -> int:
             "other than counter",
         ),
     )
+    barrier = (ROOT / BARRIER / "src/lib.rs").read_text()
+    cases += (
+        (BARRIER, "deny", barrier, None),
+        (BARRIER, "deny", barrier + "\n#[allow(unsafe_code)] unsafe fn extra() {}", "identity"),
+        (BARRIER, "deny", barrier.replace("preserves_flags", "readonly"), "identity"),
+    )
     for package, own, source, needle in cases:
         result = judge(package, own, source)
         if needle is None and result is not None:
@@ -134,7 +168,7 @@ def main() -> int:
         for error in errors:
             print(error, file=sys.stderr)
         return 1
-    print("workspace lints: unsafe_code is forbid, inherited except the bench counter")
+    print("workspace lints: unsafe_code is forbid, inherited except the bench counter and signer barrier")
     return 0
 
 

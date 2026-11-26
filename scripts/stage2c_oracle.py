@@ -19,19 +19,23 @@ import unittest
 from fractions import Fraction
 from pathlib import Path
 from typing import NamedTuple
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PARAMETER_SETS = ("p248", "p324", "p376", "p500", "p664")
+SCHEDULE_HEADER = "| Native input class |"
 
-# The certificate's contraction. rho(S) = RHO_PAIR^floor((S-1)/2)
-# * RHO_STEP^((S-1) mod 2). The main phase runs while rho(S)^2 * Phi_1^2/Delta
-# is at least 1/POTENTIAL_SPLIT.
-RHO_PAIR = Fraction(87, 1000)
-RHO_STEP = Fraction(31, 100)
-POTENTIAL_SPLIT = Fraction(1, 1000)
-# After the main phase: four tail swaps, then the size reduction that does not swap.
-TAIL_SWAPS = 4
-FINAL_SIZE_REDUCTION = 1
+# Independent review, split at lambda=2^-9. Bands are ordered from
+# the tail toward the main phase; each pair is (transition cap, upper
+# ratio in billionths). All remaining transitions use the main ratio.
+BANDS = ((1, 289625053), (1, 275566686), (1, 273153948), (1, 272906433),
+         (1, 268713095), (2, 268605695), (3, 268525146))
+MAIN_RATIO = Fraction(537, 2000)
+MAX_POTENTIAL = Fraction(7998092957, 1 << 32)
+TAIL_THRESHOLD = 1 << 9
+# One boundary transition, up to four tail swaps, then final size reduction.
+TAIL_SLOTS = 1 + 4 + 1
 
 # exp64. The divisor is the top QUOTIENT_TOP_BITS of the norm. An exponent at
 # or below QUOTIENT_WINDOW is one exact half-up step. A big step drops the
@@ -59,11 +63,13 @@ class ClassBounds(NamedTuple):
 
     a0_squared: int
     delta: Fraction
-    c0: int
+    c0: Fraction
 
-    def contraction_ratio(self):
-        """Phi_1 <= 2*A0, so Phi_1^2/Delta <= 4*A0^2/Delta."""
-        return Fraction(4*self.a0_squared, 1)/self.delta
+    def first_ratio(self):
+        return self.a0_squared / self.delta
+
+    def second_ratio(self):
+        return self.c0**2 / self.delta
 
 
 def challenge_degree_bound(exponent):
@@ -84,9 +90,13 @@ def ceil_sqrt(value):
     return root + 1
 
 
-def generic_bounds(norm, prime):
-    """A0 <= norm^2, Delta = p*norm^2/4, C0 <= 2*norm^2 + p."""
-    return ClassBounds(norm**4, Fraction(prime*norm*norm, 4), 2*norm*norm + prime)
+def generic_bounds(ideal_norm, prime):
+    """A0 <= ideal_norm^2, Delta = p*ideal_norm^2/4, C0 <= 2*ideal_norm^2 + p/4.
+
+    ideal_norm is the class bound on the ideal norm T: Nmax*qmax, D, Nmax or qmax.
+    """
+    return ClassBounds(ideal_norm**4, Fraction(prime*ideal_norm*ideal_norm, 4),
+                       2*ideal_norm*ideal_norm + Fraction(prime, 4))
 
 
 def guarded_signing_bounds(guard, degree_bound, secret_bound, prime):
@@ -126,37 +136,73 @@ def half_up_quotient(dividend, divisor):
 def correct_half_up(estimate, dividend, divisor):
     """Move an estimate by at most one onto floor(dividend/divisor + 1/2).
 
-    The in-window exp64 estimate is at most one away from that integer.
-    X = 2*dividend + divisor - 2*estimate*divisor moves it: +1 when X >= 2*divisor,
-    -1 when X < 0.
+    Section 2.3: X = 2*dividend + divisor - 2*estimate*divisor.
+    Decrement when X < 0. Increment when X >= 2*divisor.
+    The in-window exp64 estimate is at most one away from the half-up integer.
     """
-    twice_residual = 2*(dividend - estimate*divisor)
-    if twice_residual >= divisor:
-        return estimate + 1
-    if twice_residual < -divisor:
+    x = 2*dividend + divisor - 2*estimate*divisor
+    if x < 0:
         return estimate - 1
+    if x >= 2*divisor:
+        return estimate + 1
     return estimate
 
 
-def size_reduce(p, u, v, a):
+def half_up_quotients(h0, h1, norm):
+    """The two exact half-up components of one Gaussian step."""
+    return half_up_quotient(h0, norm), half_up_quotient(h1, norm)
+
+
+def order_generators(p, u, v):
+    """Initial strict order: swap precisely when N4(V) < N4(U)."""
+    if inner(p, v, v) < inner(p, u, u):
+        return v, u
+    return u, v
+
+
+def gaussian_update(p, u, v, quotients):
+    """Replace V by V - m0*U - m1*J(U). Does not swap.
+
+    quotients(h0, h1, norm) returns the two integers m0, m1.
+    """
+    norm = inner(p, u, u)
+    if norm <= 0:
+        raise ValueError("the Gaussian generators must be independent")
     ju = times_i(u)
-    real = half_up_quotient(inner(p, v, u), a)
-    imag = half_up_quotient(inner(p, v, ju), a)
+    real, imag = quotients(inner(p, v, u), inner(p, v, ju), norm)
     return combine((v, u, ju), (1, -real, -imag))
 
 
+def gaussian_step(p, u, v, quotients):
+    """One size reduction and a strict swap. Returns (u, v, swapped)."""
+    norm = inner(p, u, u)
+    reduced = gaussian_update(p, u, v, quotients)
+    if inner(p, reduced, reduced) < norm:
+        return reduced, u, True
+    return u, reduced, False
+
+
+def reduce_steps(p, u, v, quotients, steps):
+    """Initial strict order, then exactly `steps` Gaussian steps."""
+    u, v = order_generators(p, u, v)
+    for _ in range(steps):
+        u, v, _swapped = gaussian_step(p, u, v, quotients)
+    return u, v
+
+
 def reduce_exact(p, u, v):
-    """Variable-time reference for the logical exact steps."""
-    if inner(p, v, v) < inner(p, u, u):
-        u, v = v, u
-    while True:
-        a = inner(p, u, u)
-        if a == 0:
-            raise ValueError("the Gaussian generators must be independent")
-        v = size_reduce(p, u, v, a)
-        if inner(p, v, v) >= a:
+    """At most A0 steps: each swap lowers the positive integral first norm."""
+    u, v = order_generators(p, u, v)
+    first_norm = inner(p, u, u)
+    while first_norm > 0:
+        u, v, swapped = gaussian_step(p, u, v, half_up_quotients)
+        if not swapped:
             return u, v
-        u, v = v, u
+        next_norm = inner(p, u, u)
+        if next_norm >= first_norm:
+            raise ArithmeticError("exact Gaussian swap must decrease the first norm")
+        first_norm = next_norm
+    raise ValueError("the Gaussian generators must be independent")
 
 
 def exp64_quotients(h0, h1, norm):
@@ -180,19 +226,6 @@ def exp64_quotients(h0, h1, norm):
         return -magnitude if component < 0 else magnitude
 
     return big(h0), big(h1)
-
-
-def reduce_exp64(p, u, v, steps):
-    if inner(p, v, v) < inner(p, u, u):
-        u, v = v, u
-    for _ in range(steps):
-        a = inner(p, u, u)
-        ju = times_i(u)
-        real, imag = exp64_quotients(inner(p, v, u), inner(p, v, ju), a)
-        v = combine((v, u, ju), (1, -real, -imag))
-        if inner(p, v, v) < a:
-            u, v = v, u
-    return u, v
 
 
 def determinant(basis):
@@ -223,47 +256,83 @@ def norm_form(p, basis, ideal_norm):
 
 
 def signer_parameters(name):
+    """e, the prime, and the secret ideal norm. One row of each, or a fault."""
     path = ROOT/"prism-vectors"/"data"/"signer"/(name + ".txt")
-    values = dict(line.split() for line in path.read_text().splitlines()
-                  if line.startswith(("e ", "f ", "secret_norm ")))
+    wanted = ("e", "f", "secret_norm")
+    values = {}
+    for line in path.read_text().splitlines():
+        fields = line.split()
+        if not fields or fields[0] not in wanted:
+            continue
+        key = fields[0]
+        if len(fields) != 2:
+            raise ValueError(f"{name}: expected one value for {key}")
+        if key in values:
+            raise ValueError(f"{name}: duplicate {key} row")
+        values[key] = fields[1]
+    for key in wanted:
+        if key not in values:
+            raise ValueError(f"{name}: missing {key} row")
     exponent = int(values["e"])
     prime = (int(values["f"]) << exponent) - 1
     secret_norm = int.from_bytes(bytes.fromhex(values["secret_norm"]), "little")
     return exponent, prime, secret_norm
 
 
-def main_phase_reaches(steps, ratio):
-    """Whether rho(steps)^2 * (Phi_1^2/Delta) is still at least 1/POTENTIAL_SPLIT."""
-    pairs, single = divmod(steps - 1, 2)
-    rho = RHO_PAIR**pairs*RHO_STEP**single
-    return rho*rho*ratio >= 1/POTENTIAL_SPLIT
+def schedule_rows(spec):
+    """The one native schedule table. A second header is a fault."""
+    lines = spec.splitlines()
+    starts = [index for index, line in enumerate(lines) if line.startswith(SCHEDULE_HEADER)]
+    if len(starts) != 1:
+        raise ValueError(f"SIGNER_SPEC has {len(starts)} native schedule tables")
+    header = [cell.strip() for cell in lines[starts[0]].strip().strip("|").split("|")]
+    sets = header[1:]
+    rows = []
+    for line in lines[starts[0] + 2:]:
+        if not line.startswith("|"):
+            break
+        rows.append([cell.strip() for cell in line.strip().strip("|").split("|")])
+    return sets, rows
 
 
-def big_steps_fit(count, max_norm):
-    """Lemma B2: `count` big sub-steps fit when 4^(progress*count + loss) < C0.
+def main_steps(ratio):
+    """Largest main-phase transition count still allowed by the potential."""
+    remaining = MAX_POTENTIAL**2 * ratio
+    count = 0
+    for cap, numerator in BANDS:
+        squared = Fraction(numerator, 10**9)**2
+        for _ in range(cap):
+            remaining *= squared
+            if remaining < TAIL_THRESHOLD:
+                return count
+            count += 1
+    # The ratio is now constant. Find the last admissible power exactly.
+    lo, hi = 0, 1
+    while remaining * MAIN_RATIO**(2*hi) >= TAIL_THRESHOLD:
+        lo, hi = hi, 2*hi
+    while hi-lo > 1:
+        mid = (lo+hi)//2
+        if remaining * MAIN_RATIO**(2*mid) >= TAIL_THRESHOLD:
+            lo = mid
+        else:
+            hi = mid
+    return count + lo
 
-    lambda_1 >= 1, so the comparison is against the reduced-norm bound C0.
-    """
-    bits = QUOTIENT_PROGRESS_BITS*count + QUOTIENT_EXPONENT_LOSS
-    return 4**bits < max_norm
 
-
-def schedule(bounds):
-    """Exact steps, then exp64 steps, after the initial strict ordering.
-
-    The exact count keeps at least one main-phase step, then adds the tail
-    swaps and the final size reduction. Exp64 appends the big sub-steps that
-    Lemma B2 allows under the class's C0.
-    """
-    ratio = bounds.contraction_ratio()
-    main = 1
-    while main_phase_reaches(main + 1, ratio):
-        main += 1
-    exact = main + TAIL_SWAPS + FINAL_SIZE_REDUCTION
-    extra = 0
-    while big_steps_fit(extra + 1, bounds.c0):
-        extra += 1
-    return exact, exact + extra
+def schedule(bounds, minimum_norm_bounds=None):
+    """Account for each feasible number of initial big substeps, even on a tail-only run."""
+    r0 = bounds.first_ratio()
+    rc = bounds.second_ratio()
+    if minimum_norm_bounds is not None:
+        rc = max(rc, minimum_norm_bounds.second_ratio())
+    exact = main_steps(r0) + TAIL_SLOTS
+    exp64 = exact
+    k = 1
+    while 4**(QUOTIENT_PROGRESS_BITS*k + 3) < rc:
+        head_ratio = rc / 16**(QUOTIENT_PROGRESS_BITS*k + 2)
+        exp64 = max(exp64, k + main_steps(min(r0, head_ratio)) + TAIL_SLOTS)
+        k += 1
+    return exact, exp64
 
 
 def native_schedules(name):
@@ -271,15 +340,15 @@ def native_schedules(name):
     exponent, prime, secret_norm = signer_parameters(name)
     secret_bound = q4_norm_bound(prime)
     degree_bound = challenge_degree_bound(exponent)
-    rows = {
-        "Signing, generic HNF": generic_bounds(secret_bound*degree_bound, prime),
-        f"Signing, pre-reduced, guard {PREREDUCED_NORM_GUARD}": guarded_signing_bounds(
-            PREREDUCED_NORM_GUARD, degree_bound, secret_bound, prime),
-        "Key generation, norm D": generic_bounds(secret_norm, prime),
-        "Secret ideal pre-reduction, Q4": generic_bounds(secret_bound, prime),
-        "Challenge alone": generic_bounds(degree_bound, prime),
+    low = generic_bounds(1, prime)
+    return {
+        "Signing, generic HNF": schedule(generic_bounds(secret_bound*degree_bound, prime), low),
+        f"Signing, pre-reduced, guard {PREREDUCED_NORM_GUARD}": schedule(guarded_signing_bounds(
+            PREREDUCED_NORM_GUARD, degree_bound, secret_bound, prime)),
+        "Key generation, norm D": schedule(generic_bounds(secret_norm, prime)),
+        "Secret ideal pre-reduction, Q4": schedule(generic_bounds(secret_bound, prime), low),
+        "Challenge alone": schedule(generic_bounds(degree_bound, prime), low),
     }
-    return {label: schedule(bounds) for label, bounds in rows.items()}
 
 
 class Stage2cOracle(unittest.TestCase):
@@ -324,20 +393,20 @@ class Stage2cOracle(unittest.TestCase):
             self.assertEqual(value*4*ideal_norm, a*a + b*b + p*(k*k + d*d))
 
     def test_class_bounds_are_the_reduced_norm_inputs(self):
-        # The cancelled numerals are the test's, not the schedule's.
-        prime, norm = 19, 5
-        generic = generic_bounds(norm, prime)
-        self.assertEqual(generic.a0_squared, norm**4)
-        self.assertEqual(generic.delta, Fraction(prime*norm*norm, 4))
-        self.assertEqual(generic.c0, 2*norm*norm + prime)
-        self.assertEqual(generic.contraction_ratio(), Fraction(16*norm*norm, prime))
+        # The expected ratios are the cancelled forms of A0^2/Delta.
+        prime, ideal_norm = 19, 5
+        generic = generic_bounds(ideal_norm, prime)
+        self.assertEqual(generic.a0_squared, ideal_norm**4)
+        self.assertEqual(generic.delta, Fraction(prime*ideal_norm*ideal_norm, 4))
+        self.assertEqual(generic.c0, 2*ideal_norm*ideal_norm + Fraction(prime, 4))
+        self.assertEqual(generic.first_ratio(), Fraction(4*ideal_norm*ideal_norm, prime))
 
         guard, degree, secret = 4, 8, 16
         guarded = guarded_signing_bounds(guard, degree, secret, prime)
         self.assertEqual(guarded.a0_squared, guard*guard*prime*secret*secret*degree**4)
         self.assertEqual(guarded.delta, Fraction(prime*(secret*degree)**2, 4))
         self.assertEqual(guarded.c0, (degree + 1)**2*guard*ceil_sqrt(prime)*secret)
-        self.assertEqual(guarded.contraction_ratio(), 16*guard*guard*degree*degree)
+        self.assertEqual(guarded.first_ratio(), 4*guard*guard*degree*degree)
 
     def test_exp64_window_is_half_up(self):
         # No truncation: the correction must not move an already exact quotient.
@@ -374,20 +443,35 @@ class Stage2cOracle(unittest.TestCase):
                 new_exponent = max(r0.bit_length(), r1.bit_length()) - norm.bit_length()
                 self.assertLessEqual(new_exponent, offset - QUOTIENT_PROGRESS_BITS)
 
+    def test_big_first_step_can_go_straight_to_the_tail(self):
+        # At equality a big head is excluded. Immediately above it, the
+        # remaining chain can be empty and the head still takes one slot.
+        at_cutoff = ClassBounds(1, Fraction(1), Fraction(2**61))
+        above = at_cutoff._replace(c0=at_cutoff.c0 + 1)
+        self.assertEqual(schedule(at_cutoff), (TAIL_SLOTS, TAIL_SLOTS))
+        self.assertEqual(schedule(above), (TAIL_SLOTS, TAIL_SLOTS + 1))
+
+    def test_signer_parameters_require_one_scalar_per_row(self):
+        rows = ("e 2", "f 3", "secret_norm 05")
+        with patch.object(Path, "read_text", return_value="\n".join((*rows, "other 1 2"))):
+            self.assertEqual(signer_parameters("fixture"), (2, 11, 5))
+        for row in rows:
+            key = row.split()[0]
+            other_rows = [other for other in rows if other != row]
+            for malformed in ([], [row, row], [key], [row + " 999"]):
+                with self.subTest(key=key, malformed=malformed):
+                    text = "\n".join(other_rows + malformed)
+                    with patch.object(Path, "read_text", return_value=text):
+                        with self.assertRaisesRegex(ValueError, key):
+                            signer_parameters("fixture")
+
     def test_native_schedule_table(self):
-        sets = ("p248", "p324", "p376", "p500", "p664")
-        schedules = [native_schedules(name) for name in sets]
-        spec = (ROOT/"docs/SIGNER_SPEC.md").read_text()
-        table = spec.split("| Native input class |", 1)[1].splitlines()
-        rows = []
-        for line in table[2:]:
-            if not line.startswith("|"):
-                break
-            rows.append([cell.strip() for cell in line.strip("|").split("|")])
+        schedules = [native_schedules(name) for name in PARAMETER_SETS]
+        sets, rows = schedule_rows((ROOT/"docs/SIGNER_SPEC.md").read_text())
+        self.assertEqual(sets, [name.upper() for name in PARAMETER_SETS])
         self.assertCountEqual([row[0] for row in rows], schedules[0])
-        self.assertEqual([cell.strip() for cell in table[0].strip("| ").split("|")],
-                         [name.upper() for name in sets])
         for label, *counts in rows:
+            self.assertEqual(len(counts), len(PARAMETER_SETS), label)
             self.assertEqual(counts, [f"{s[label][0]} / {s[label][1]}" for s in schedules])
 
     def test_native_hermitian_determinant(self):
@@ -414,17 +498,34 @@ class Stage2cOracle(unittest.TestCase):
     def test_final_size_reduction_after_last_swap(self):
         # A norm-five ideal at toy prime 3. Exactly one swap, two active steps.
         u, v = (10, 0, 0, 0), (4, 9, 1, 0)
-        first = size_reduce(3, u, v, inner(3, u, u))
+        first = gaussian_update(3, u, v, half_up_quotients)
         self.assertEqual(first, (4, -1, 1, 0))
         a = inner(3, first, first)
         self.assertLess(a, inner(3, u, u))
         # After swapping, the first vector is already shortest. The imaginary
         # projection of the second is exactly +1/2, outside the terminal range.
         self.assertEqual(2*inner(3, u, times_i(first)), a)
-        last = size_reduce(3, first, u, a)
+        last = gaussian_update(3, first, u, half_up_quotients)
         self.assertEqual(last, (1, -2, -2, -1))
         self.assertEqual(inner(3, last, last), a)
         self.assertEqual(self.check_reduction(3, u, v), (first, last))
+
+    def test_strict_descent_allows_slow_swaps(self):
+        # Three consecutive swaps. Two can leave 96% of the earlier norm.
+        p = 3
+        start = ((25, -5, 4, 0), (60, -10, 8, 0))
+        u, v = start
+        for expected in (100, 98, 96):
+            u, v, swapped = gaussian_step(p, u, v, half_up_quotients)
+            self.assertTrue(swapped)
+            self.assertEqual(inner(p, u, u), expected)
+        self.assertEqual(self.check_reduction(p, *start),
+                         ((0, 0, 4, -4), (-5, -5, -4, 0)))
+
+        # A faulty step reporting a swap without any decrease must fail promptly.
+        with patch(__name__ + ".gaussian_step", return_value=(*start, True)):
+            with self.assertRaisesRegex(ArithmeticError, "must decrease"):
+                reduce_exact(p, *start)
 
     def test_exhaustive_minima(self):
         for p, u, v in ((3, (4, 0, 0, 0), (2, 1, 1, 0)),
@@ -441,7 +542,7 @@ class Stage2cOracle(unittest.TestCase):
                         self.assertFalse(in_lattice(basis, det, x), x)
 
     def test_field_weights_and_full_quotients(self):
-        for name in ("p248", "p324", "p376", "p500", "p664"):
+        for name in PARAMETER_SETS:
             with self.subTest(name=name):
                 _, p, _ = signer_parameters(name)
                 t = 3
@@ -478,10 +579,12 @@ class Stage2cOracle(unittest.TestCase):
         for key, scale, a, b in (("model_minimum", t, x, y),
                                  ("o0_numerator_minimum", 2*t, ox, oy)):
             with self.subTest(key=key):
-                pair = self.check_reduction(p, (scale, 0, 0, 0), (a, b, 1, 0))
+                start = ((scale, 0, 0, 0), (a, b, 1, 0))
+                pair = self.check_reduction(p, *start)
                 self.assertEqual(inner(p, pair[0], pair[0]), int(fixture[key], 16))
-                steps = native_schedules("p500")["Signing, generic HNF"][1]
-                self.assertEqual(reduce_exp64(p, (scale, 0, 0, 0), (a, b, 1, 0), steps), pair)
+                exact_steps, exp64_steps = native_schedules("p500")["Signing, generic HNF"]
+                self.assertEqual(reduce_steps(p, *start, half_up_quotients, exact_steps), pair)
+                self.assertEqual(reduce_steps(p, *start, exp64_quotients, exp64_steps), pair)
                 if key == "o0_numerator_minimum":
                     self.check_form(p, pair, t)
 

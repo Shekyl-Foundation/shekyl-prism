@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "prism-ct-barrier",
     "prism-int",
     "prism-field",
     "prism-isogeny",
@@ -21,6 +22,7 @@ license = "BSD-3-Clause"
 publish = false
 
 [workspace.dependencies]
+prism-ct-barrier = { version = "0.1.0", path = "prism-ct-barrier" }
 fp2 = { version = "=0.6.0", default-features = false }
 sha3 = "=0.10.9"
 prism-int = { version = "0.1.0", path = "prism-int" }
@@ -32,9 +34,7 @@ prism-vectors = { version = "0.1.0", path = "prism-vectors" }
 prism-testkit = { version = "0.1.0", path = "prism-testkit" }
 shekyl-prism = { version = "0.1.0", path = "shekyl-prism" }
 
-# Library members inherit this. prism-bench cannot: Cargo rejects a member
-# that both inherits and overrides, and its counter has no safe form.
-# scripts/ci/check_workspace_lints.py is what keeps that the only exception.
+# The benchmark counter and the signing mask barrier have audited local overrides.
 [workspace.lints.rust]
 unsafe_code = "forbid"
 

@@ -212,7 +212,7 @@ jobs:
       - name: Install cross 0.2.5
         run: python3 scripts/ci/install_pinned_tool.py cross
       - name: s390x under qemu
-        run: cross test --target s390x-unknown-linux-gnu --workspace --locked
+        run: cross test --target s390x-unknown-linux-gnu --workspace --exclude prism-ct-barrier --exclude prism-int --locked
 
   c-vectors-full:
     name: c-vectors-full

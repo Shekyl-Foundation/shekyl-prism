@@ -17,16 +17,19 @@
 use core::fmt;
 use core::ops::{Deref, DerefMut};
 
-use subtle::{Choice, ConditionallySelectable, ConstantTimeEq};
+use prism_ct_barrier::mask_from_bit;
 use zeroize::Zeroize;
 
 use crate::error::SecretError;
 use crate::limbs;
 use crate::public::Int;
 
+#[path = "secret_steps.rs"]
+mod steps;
+
 /// 1 when the limb is zero, else 0, without a branch.
 fn is_zero(limb: u64) -> u8 {
-    limb.ct_eq(&0).unwrap_u8()
+    (((limb | limb.wrapping_neg()) >> 63) as u8) ^ 1
 }
 
 /// Writes `if_set` to `out` when `bit` is 1 and `if_clear` when it is 0,
@@ -38,9 +41,9 @@ fn select_limbs<const N: usize>(
     bit: u8,
     out: &mut [u64; N],
 ) {
-    let choice = Choice::from(bit);
+    let mask = Scratch::new(mask_from_bit(u64::from(bit)));
     for i in 0..N {
-        out[i] = u64::conditional_select(&if_clear[i], &if_set[i], choice);
+        out[i] = if_clear[i] ^ ((if_clear[i] ^ if_set[i]) & *mask);
     }
 }
 
@@ -97,16 +100,15 @@ impl<T: Zeroize> DerefMut for Scratch<T> {
 
 /// `if_set` when `bit` is 1 and `if_clear` when it is 0.
 fn select_flag(if_clear: u8, if_set: u8, bit: u8) -> u8 {
-    u8::conditional_select(&if_clear, &if_set, Choice::from(bit))
+    if_clear ^ ((if_clear ^ if_set) & mask_from_bit(u64::from(bit)) as u8)
 }
 
 /// The answer to a comparison of secrets: a bit that is not a `bool`.
 ///
 /// A caller who could branch on comparisons of a secret with values of
 /// their choosing would read the secret one bit at a time. So a
-/// comparison of [`SecretInt`]s returns this type, which selects between
-/// two secret integers ([`SecretInt::select`], [`SecretInt::swap`]) and
-/// does nothing else. It becomes a `bool` only through
+/// comparison of [`SecretInt`]s returns this type, which combines with other secret predicates,
+/// selects or swaps secret integers, and can mark an invalid result. It becomes a `bool` only through
 /// [`SecretBit::declassify`], which is one of the three counted exits.
 ///
 /// The bit carries the overflow mark of the integers it was computed
@@ -197,22 +199,20 @@ impl SecretBit {
 ///
 /// # The operations
 ///
-/// Only those whose work depends on `N` and on public counts: addition,
-/// subtraction, negation, schoolbook multiplication, shifts, selection
-/// and swap by a [`SecretBit`], and equality and comparison, which return
-/// a [`SecretBit`]. Everything else (division, a greatest common divisor,
-/// a square root, a bit length) is an operation of [`Int`] and is reached
-/// through [`SecretInt::declassify`].
+/// Arithmetic, comparisons and selections run fixed public loops. Secret
+/// shift counts and bit lengths stay in the secret domain. The reducer
+/// has fixed-width multiplication and 128-by-64 division. General
+/// division, square roots and greatest common divisors are public operations.
 ///
-/// **No constant-time claim is made.** The operations are written with no
-/// branch and no index on a secret limb. Whether the compiled code keeps
-/// that shape is not measured here.
+/// The release shift consumer is inspected by `scripts/ci/check_ct_shift.py`.
+/// Instruction latency and the integrated signer require separate evidence.
 ///
 /// # Overflow
 ///
 /// An operation cannot report an overflow without showing that it
 /// happened. So a secret integer carries a mark, *overflowed*. An
-/// operation whose true result does not fit `N` limbs sets it, and every
+/// operation whose true result does not fit `N` limbs sets it. An admission
+/// failure sets the same mark through [`SecretInt::mark_if`]. Every
 /// operation passes it on from its operands: arithmetic to its result,
 /// a comparison to its [`SecretBit`], a selection from the value selected
 /// and from the bit. The limbs of a marked value mean nothing. The mark is
@@ -380,13 +380,13 @@ impl SecretBit {
 /// let text = a.declassify().unwrap().public_hex();
 /// ```
 ///
-/// And none of the public type's variable-time operations:
+/// A secret bit length stays inside the secret domain:
 ///
 /// ```compile_fail
 /// use prism_int::SecretInt;
 ///
 /// let a = SecretInt::<4>::from_u64(5);
-/// let bits = a.bit_length();
+/// let bits: u32 = a.bit_length();
 /// ```
 ///
 /// ```
@@ -775,8 +775,8 @@ mod tests {
     fn every_operation_wipes_what_it_held() {
         let a = SecretInt::<3>::from_i64(-9).shl(70);
         let b = SecretInt::<3>::from_u64(5);
-        assert_eq!(wipes_of(|| a.add(&b)), 10);
-        assert_eq!(wipes_of(|| a.sub(&b)), 10);
+        assert_eq!(wipes_of(|| a.add(&b)), 12);
+        assert_eq!(wipes_of(|| a.sub(&b)), 12);
         assert_eq!(wipes_of(|| a.mul(&b)), 2);
         assert_eq!(wipes_of(|| a.shl(3)), 2);
         assert_eq!(wipes_of(|| a.shr(3)), 1);
@@ -785,10 +785,10 @@ mod tests {
         assert_eq!(wipes_of(|| a.ct_lt(&b)), 5);
         assert_eq!(wipes_of(|| SecretInt::<3>::from_le_bytes(&[1; 30])), 2);
         let bit = a.ct_lt(&b);
-        assert_eq!(wipes_of(|| SecretInt::select(&a, &b, &bit)), 1);
+        assert_eq!(wipes_of(|| SecretInt::select(&a, &b, &bit)), 2);
         // A swap selects twice, and wipes the two values it selected.
         let (mut x, mut y) = (a.clone(), b.clone());
-        assert_eq!(wipes_of(|| SecretInt::swap(&mut x, &mut y, &bit)), 4);
+        assert_eq!(wipes_of(|| SecretInt::swap(&mut x, &mut y, &bit)), 6);
         assert!(x.ct_eq(&b).declassify().unwrap() && y.ct_eq(&a).declassify().unwrap());
         let (mut bytes, mut sign) = ([0u8; 24], 0u8);
         assert_eq!(wipes_of(|| a.export_le_bytes(&mut bytes, &mut sign)), 1);

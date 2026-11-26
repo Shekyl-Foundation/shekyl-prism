@@ -6,23 +6,16 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
-# The committed vectors are 3.3 MB, and the test that reads them cannot be
+# The committed vectors are 4.0 MB, and the test that reads them cannot be
 # built without them, so neither is in the package. They are regenerated
-# only when an operation or a width is added: each new copy is 3.3 MB more
+# only when an operation or a width is added: each new copy is 4.0 MB more
 # in the repository's history (`scripts/int_vectors.py` says the same).
 # `scripts/ci/check_consumer_build.py` reads the package's list.
 exclude = ["/tests/data/", "/tests/vectors.rs"]
 
-# No features, and no dependency on a crate of this workspace: this is the
-# lowest crate of the order `scripts/ci/check_no_upward_edge.py` holds.
-#
-# `zeroize` writes the zeros of the wipe on drop in a way the compiler may
-# not remove. `subtle` gives the selection of one limb by a bit without a
-# branch, and the barrier that keeps the compiler from turning the bit back
-# into one. Both are pinned: `deny.toml` refuses two versions of a crate.
 [dependencies]
 zeroize = "=1.8.2"
-subtle = { version = "=2.6.1", default-features = false }
+prism-ct-barrier.workspace = true
 
 # The oracle of `tests/oracle.rs`: an arbitrary-precision integer the
 # results are compared with, and the two crates it is built on, named for
