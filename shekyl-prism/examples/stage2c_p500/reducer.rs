@@ -20,10 +20,12 @@ pub enum Class {
 }
 
 impl Class {
-    pub fn schedules(self) -> [usize; 2] {
-        match self {
-            Self::Guarded => [594, 533],
-            Self::Generic => [609, 546],
+    pub fn steps(self, schedule: Schedule) -> usize {
+        match (self, schedule) {
+            (Self::Guarded, Schedule::Reviewed) => 533,
+            (Self::Generic, Schedule::Reviewed) => 546,
+            (Self::Guarded, Schedule::Pr45Baseline) => 594,
+            (Self::Generic, Schedule::Pr45Baseline) => 609,
         }
     }
 }
@@ -31,7 +33,7 @@ impl Class {
 #[derive(Clone, Copy, Debug)]
 pub enum Schedule {
     Reviewed,
-    Candidate,
+    Pr45Baseline,
 }
 
 pub struct Bounds {
@@ -250,11 +252,7 @@ impl Basis {
     }
 
     pub fn reduce(self, schedule: Schedule) -> Reduced {
-        let [reviewed, candidate] = self.class.schedules();
-        let steps = match schedule {
-            Schedule::Reviewed => reviewed,
-            Schedule::Candidate => candidate,
-        };
+        let steps = self.class.steps(schedule);
         self.reduce_steps(steps)
     }
 

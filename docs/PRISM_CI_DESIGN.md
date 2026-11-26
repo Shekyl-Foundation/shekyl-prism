@@ -52,7 +52,7 @@ the committed responses of `prism-vectors/data/verify/identity_refusals.tsv`.
 | `codeql` | CodeQL Rust | per core ruling |
 | `ci-pass` | the aggregator: needs every job, and treats `c-vectors` "skipped" as passing only when the path filter said not needed (core's pattern) | anything above |
 
-Both architecture jobs run the P500 fixture executable and record paired wall-clock samples for the reviewed and candidate schedules. They compare QEMU traces of the release shift probe and archive the visited functions' assembly. On x86-64, Memcheck checks tainted limbs and counts in the probe and tainted norms and coordinates through the complete reducer. The harness verifies its trace and taint controls. Hardware side-channel timing is a separate G7 measurement.
+Both architecture jobs run the P500 fixture executable and record paired wall-clock samples for the adopted and PR #45 baseline schedules. They compare QEMU traces of the release shift probe and archive the visited functions' assembly. On x86-64, Memcheck checks tainted limbs and counts in the probe and tainted norms and coordinates through the complete reducer. The harness verifies its trace and taint controls. Hardware side-channel timing is a separate G7 measurement.
 
 The first checks in `lint` exercise the certificate verifier and run `python3 scripts/ci/check_signer_prime_certificates.py` on the fixed signer constants (O19). Both use the Python standard library.
 

@@ -105,6 +105,8 @@ fn check_ties() {
     }
 }
 
+const SCHEDULES: [Schedule; 2] = [Schedule::Reviewed, Schedule::Pr45Baseline];
+
 fn main() {
     check_ties();
     let bench = std::env::args().nth(1).as_deref() == Some("bench");
@@ -114,7 +116,7 @@ fn main() {
         .map(Fixture::parse)
         .collect();
     for f in &fixtures {
-        for schedule in [Schedule::Reviewed, Schedule::Candidate] {
+        for schedule in SCHEDULES {
             f.check(&f.input(&bounds).reduce(schedule));
         }
     }
@@ -146,13 +148,14 @@ fn main() {
             for i in 0..41 {
                 let f = cases[i % cases.len()];
                 for j in [i % 2, 1 - i % 2] {
-                    let schedule = [Schedule::Reviewed, Schedule::Candidate][j];
+                    let schedule = SCHEDULES[j];
                     let start = Instant::now();
                     drop(black_box(f.input(&bounds).reduce(schedule)));
                     times[j].push(start.elapsed());
                 }
             }
-            for (steps, mut samples) in class.schedules().into_iter().zip(times) {
+            for (schedule, mut samples) in SCHEDULES.into_iter().zip(times) {
+                let steps = class.steps(schedule);
                 samples.sort();
                 println!(
                     "{class:?}, {steps} steps, median {:?} including setup and drop ({} samples)",

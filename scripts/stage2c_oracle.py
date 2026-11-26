@@ -23,15 +23,16 @@ from typing import NamedTuple
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# The certificate's contraction. rho(S) = RHO_PAIR^floor((S-1)/2)
-# * RHO_STEP^((S-1) mod 2). The main phase runs while rho(S)^2 * Phi_1^2/Delta
-# is at least 1/POTENTIAL_SPLIT.
-RHO_PAIR = Fraction(87, 1000)
-RHO_STEP = Fraction(31, 100)
-POTENTIAL_SPLIT = Fraction(1, 1000)
-# After the main phase: four tail swaps, then the size reduction that does not swap.
-TAIL_SWAPS = 4
-FINAL_SIZE_REDUCTION = 1
+# Independent review, split at lambda=2^-9. Bands are ordered from
+# the tail toward the main phase; each pair is (transition cap, upper
+# ratio in billionths). All remaining transitions use the main ratio.
+BANDS = ((1, 289625053), (1, 275566686), (1, 273153948), (1, 272906433),
+         (1, 268713095), (2, 268605695), (3, 268525146))
+MAIN_RATIO = Fraction(537, 2000)
+MAX_POTENTIAL = Fraction(7998092957, 1 << 32)
+TAIL_THRESHOLD = 1 << 9
+# One boundary transition, up to four tail swaps, then final size reduction.
+TAIL_SLOTS = 1 + 4 + 1
 
 # exp64. The divisor is the top QUOTIENT_TOP_BITS of the norm. An exponent at
 # or below QUOTIENT_WINDOW is one exact half-up step. A big step drops the
@@ -59,11 +60,13 @@ class ClassBounds(NamedTuple):
 
     a0_squared: int
     delta: Fraction
-    c0: int
+    c0: Fraction
 
-    def contraction_ratio(self):
-        """Phi_1 <= 2*A0, so Phi_1^2/Delta <= 4*A0^2/Delta."""
-        return Fraction(4*self.a0_squared, 1)/self.delta
+    def first_ratio(self):
+        return self.a0_squared / self.delta
+
+    def second_ratio(self):
+        return self.c0**2 / self.delta
 
 
 def challenge_degree_bound(exponent):
@@ -85,8 +88,8 @@ def ceil_sqrt(value):
 
 
 def generic_bounds(norm, prime):
-    """A0 <= norm^2, Delta = p*norm^2/4, C0 <= 2*norm^2 + p."""
-    return ClassBounds(norm**4, Fraction(prime*norm*norm, 4), 2*norm*norm + prime)
+    """A0 <= norm^2, Delta = p*norm^2/4, C0 <= 2*norm^2 + p/4."""
+    return ClassBounds(norm**4, Fraction(prime*norm*norm, 4), 2*norm*norm + Fraction(prime, 4))
 
 
 def guarded_signing_bounds(guard, degree_bound, secret_bound, prime):
@@ -232,38 +235,44 @@ def signer_parameters(name):
     return exponent, prime, secret_norm
 
 
-def main_phase_reaches(steps, ratio):
-    """Whether rho(steps)^2 * (Phi_1^2/Delta) is still at least 1/POTENTIAL_SPLIT."""
-    pairs, single = divmod(steps - 1, 2)
-    rho = RHO_PAIR**pairs*RHO_STEP**single
-    return rho*rho*ratio >= 1/POTENTIAL_SPLIT
+def main_steps(ratio):
+    """Largest main-phase transition count still allowed by the potential."""
+    remaining = MAX_POTENTIAL**2 * ratio
+    count = 0
+    for cap, numerator in BANDS:
+        squared = Fraction(numerator, 10**9)**2
+        for _ in range(cap):
+            remaining *= squared
+            if remaining < TAIL_THRESHOLD:
+                return count
+            count += 1
+    # The ratio is now constant. Find the last admissible power exactly.
+    lo, hi = 0, 1
+    while remaining * MAIN_RATIO**(2*hi) >= TAIL_THRESHOLD:
+        lo, hi = hi, 2*hi
+    while hi-lo > 1:
+        mid = (lo+hi)//2
+        if remaining * MAIN_RATIO**(2*mid) >= TAIL_THRESHOLD:
+            lo = mid
+        else:
+            hi = mid
+    return count + lo
 
 
-def big_steps_fit(count, max_norm):
-    """Lemma B2: `count` big sub-steps fit when 4^(progress*count + loss) < C0.
-
-    lambda_1 >= 1, so the comparison is against the reduced-norm bound C0.
-    """
-    bits = QUOTIENT_PROGRESS_BITS*count + QUOTIENT_EXPONENT_LOSS
-    return 4**bits < max_norm
-
-
-def schedule(bounds):
-    """Exact steps, then exp64 steps, after the initial strict ordering.
-
-    The exact count keeps at least one main-phase step, then adds the tail
-    swaps and the final size reduction. Exp64 appends the big sub-steps that
-    Lemma B2 allows under the class's C0.
-    """
-    ratio = bounds.contraction_ratio()
-    main = 1
-    while main_phase_reaches(main + 1, ratio):
-        main += 1
-    exact = main + TAIL_SWAPS + FINAL_SIZE_REDUCTION
-    extra = 0
-    while big_steps_fit(extra + 1, bounds.c0):
-        extra += 1
-    return exact, exact + extra
+def schedule(bounds, minimum_norm_bounds=None):
+    """Account for each feasible number of initial big substeps, even on a tail-only run."""
+    r0 = bounds.first_ratio()
+    rc = bounds.second_ratio()
+    if minimum_norm_bounds is not None:
+        rc = max(rc, minimum_norm_bounds.second_ratio())
+    exact = main_steps(r0) + TAIL_SLOTS
+    exp64 = exact
+    k = 1
+    while 4**(QUOTIENT_PROGRESS_BITS*k + 3) < rc:
+        head_ratio = rc / 16**(QUOTIENT_PROGRESS_BITS*k + 2)
+        exp64 = max(exp64, k + main_steps(min(r0, head_ratio)) + TAIL_SLOTS)
+        k += 1
+    return exact, exp64
 
 
 def native_schedules(name):
@@ -271,15 +280,15 @@ def native_schedules(name):
     exponent, prime, secret_norm = signer_parameters(name)
     secret_bound = q4_norm_bound(prime)
     degree_bound = challenge_degree_bound(exponent)
-    rows = {
-        "Signing, generic HNF": generic_bounds(secret_bound*degree_bound, prime),
-        f"Signing, pre-reduced, guard {PREREDUCED_NORM_GUARD}": guarded_signing_bounds(
-            PREREDUCED_NORM_GUARD, degree_bound, secret_bound, prime),
-        "Key generation, norm D": generic_bounds(secret_norm, prime),
-        "Secret ideal pre-reduction, Q4": generic_bounds(secret_bound, prime),
-        "Challenge alone": generic_bounds(degree_bound, prime),
+    low = generic_bounds(1, prime)
+    return {
+        "Signing, generic HNF": schedule(generic_bounds(secret_bound*degree_bound, prime), low),
+        f"Signing, pre-reduced, guard {PREREDUCED_NORM_GUARD}": schedule(guarded_signing_bounds(
+            PREREDUCED_NORM_GUARD, degree_bound, secret_bound, prime)),
+        "Key generation, norm D": schedule(generic_bounds(secret_norm, prime)),
+        "Secret ideal pre-reduction, Q4": schedule(generic_bounds(secret_bound, prime), low),
+        "Challenge alone": schedule(generic_bounds(degree_bound, prime), low),
     }
-    return {label: schedule(bounds) for label, bounds in rows.items()}
 
 
 class Stage2cOracle(unittest.TestCase):
@@ -329,15 +338,15 @@ class Stage2cOracle(unittest.TestCase):
         generic = generic_bounds(norm, prime)
         self.assertEqual(generic.a0_squared, norm**4)
         self.assertEqual(generic.delta, Fraction(prime*norm*norm, 4))
-        self.assertEqual(generic.c0, 2*norm*norm + prime)
-        self.assertEqual(generic.contraction_ratio(), Fraction(16*norm*norm, prime))
+        self.assertEqual(generic.c0, 2*norm*norm + Fraction(prime, 4))
+        self.assertEqual(generic.first_ratio(), Fraction(4*norm*norm, prime))
 
         guard, degree, secret = 4, 8, 16
         guarded = guarded_signing_bounds(guard, degree, secret, prime)
         self.assertEqual(guarded.a0_squared, guard*guard*prime*secret*secret*degree**4)
         self.assertEqual(guarded.delta, Fraction(prime*(secret*degree)**2, 4))
         self.assertEqual(guarded.c0, (degree + 1)**2*guard*ceil_sqrt(prime)*secret)
-        self.assertEqual(guarded.contraction_ratio(), 16*guard*guard*degree*degree)
+        self.assertEqual(guarded.first_ratio(), 4*guard*guard*degree*degree)
 
     def test_exp64_window_is_half_up(self):
         # No truncation: the correction must not move an already exact quotient.
@@ -373,6 +382,14 @@ class Stage2cOracle(unittest.TestCase):
                 self.assertLess(r0*r0 + r1*r1, h0*h0 + h1*h1)
                 new_exponent = max(r0.bit_length(), r1.bit_length()) - norm.bit_length()
                 self.assertLessEqual(new_exponent, offset - QUOTIENT_PROGRESS_BITS)
+
+    def test_big_first_step_can_go_straight_to_the_tail(self):
+        # At equality a big head is excluded. Immediately above it, the
+        # remaining chain can be empty and the head still takes one slot.
+        at_cutoff = ClassBounds(1, Fraction(1), Fraction(2**61))
+        above = at_cutoff._replace(c0=at_cutoff.c0 + 1)
+        self.assertEqual(schedule(at_cutoff), (TAIL_SLOTS, TAIL_SLOTS))
+        self.assertEqual(schedule(above), (TAIL_SLOTS, TAIL_SLOTS + 1))
 
     def test_native_schedule_table(self):
         sets = ("p248", "p324", "p376", "p500", "p664")
