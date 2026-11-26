@@ -215,17 +215,11 @@ impl<S: IdealSet<W, D>, const W: usize, const D: usize> GuardedIdeal<S, W, D> {
         // O0 = <1,i,(i+j)/2,(1+k)/2>; (1+k)/2 = 1 + i(i+j)/2.
         // i-stability is automatic for a Gaussian pair. Test the remaining
         // generator on *all four* integer columns, including iU and iV.
+        let p_plus_one_over_two = p.shr(ORDER_DENOMINATOR_BITS).add(&Scalar::one());
         for w in [&span.u, &span.v] {
-            ok = ok
-                .and(&w[0].sub(&w[3]).low_bits_zero(ORDER_DENOMINATOR_BITS))
-                .and(&w[1].sub(&w[2]).low_bits_zero(ORDER_DENOMINATOR_BITS));
-            for col in [w.clone(), rotate(w)] {
-                let [a, b, c, d] = &col;
-                let twice = [b.neg().sub(&p.mul(c)), a.add(&p.mul(d)), a.sub(d), c.sub(b)];
-                for x in &twice {
-                    ok = ok.and(&x.low_bits_zero(ORDER_DENOMINATOR_BITS));
-                }
-                ok = ok.and(&span.contains(&twice.map(|x| x.shr(ORDER_DENOMINATOR_BITS))));
+            for col in [w, &rotate(w)] {
+                let (image, integral) = geometry::left_half_i_plus_j(col, &p_plus_one_over_two);
+                ok = ok.and(&integral).and(&span.contains(&image));
             }
         }
         let weight = |w: &Vector<D>| hermitian(w, w, &p).0;

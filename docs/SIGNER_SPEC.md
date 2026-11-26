@@ -39,7 +39,7 @@ Standing from Round 0 (2026-11-14): we are not transcribing the C; other code ba
 | Stage | Layer | Section here |
 | --- | --- | --- |
 | 1 | The constants: what each is (1a, this section) and the generator that produces them (1b) | 1 |
-| 2 | Integers and the quaternion algebra: the integers (2a), then the algebra, the maximal order, lattices, ideals, lattice reduction (2b to 2d) | 2.1 for 2a; the rest to be written |
+| 2 | Integers and the quaternion algebra: the integers (2a), then the algebra, the maximal order, lattices, ideals, lattice reduction (2b to 2d) | 2.1 integers, 2.2 maximal-order arithmetic, 2.3 reduction and the guarded intersection. General fixed-schedule lattice arithmetic is open. |
 | 3 | Cornacchia; the norm equation of the ideal-to-isogeny translation; sampling an ideal of prime norm, with the equivalent prime-norm ideal for key generation. No step that represents an integer by the order's norm form (1.2) | to be written |
 | 4 | Ideal to isogeny: first the engine's forward chain as the signer needs it (1.9), then the starting curve, its basis, the action of its endomorphisms, and the translation | to be written |
 | 5 | Key generation and signing | to be written |
@@ -399,7 +399,7 @@ Constants the signer's path reads that are written in the reference's code and n
 
 ## 2. Integers and the quaternion algebra
 
-Section 2.1 covers the integers (Stage 2a). Section 2.3 proposes Gaussian basis reduction (Stage 2c). The signer feature implements admission of an ideal component and its guarded challenge intersection (2b/2d). Rulings that stand over 2.1, from Round 0 (2026-11-14) and the plan of 2026-11-21:
+Section 2.1 covers the integers (Stage 2a). Section 2.2 gives the maximal-order action used during ideal admission. Section 2.3 proposes Gaussian basis reduction (Stage 2c). The signer feature implements admission of an ideal component and its guarded challenge intersection (2b/2d). Rulings that stand over 2.1, from Round 0 (2026-11-14) and the plan of 2026-11-21:
 
 - **S5.** Integers are fixed-width. No value decides a length.
 - **S6.** The first signer is correct, wipes its secrets, and classifies every step as secret or public. It makes no constant-time claim.
@@ -662,6 +662,8 @@ And for the error an exit returns when the overflow mark is set, **U**: a proof 
 | 1 | 2c fixture | `stage2c/driver.rs::check_bit` | SecretBit::declassify | Predicate on public oracle data | Compare the basis, form and half-tie control | I, public fixture only | Fail the fixture |
 | 2 | 2c fixture | `stage2c/driver.rs::check_invalid` | SecretInt::declassify | Refusal on an invalid public input | Check every returned coordinate and form entry | I, public fixture only | Expected on this negative control |
 | 3 | 2b/2d ideal component | `GuardedIdeal::admit` | SecretBit::declassify | Aggregate validity of the generated or imported ideal component | I, reject the candidate or refuse import | Refuse admission |
+| 4 | 2d fixture | `ideal_lattice::public_fixture` | SecretInt::declassify | Numerators and carried norm of a public test intersection | Compare the full integer lattice with Q3 | I, test binary and public vectors only | Fail the fixture |
+| 5 | 2b unit test | `geometry::tests::left_action_on_order_basis_and_fractional_inputs` | SecretBit::declassify | Agreement on public basis vectors and fractional inputs | Check the order action and exact division | I, test binary only | Fail the fixture |
 
 Signing accumulates admission failures without a new exit. At the existing signature exits, an invalid invariant fails the operation. Only key generation may draw another candidate. Decoding must establish left-order stability, full span, Q4 and the same factor-256 guard before a key can supply an intersection. Use the Stage 2b canonical ideal HNF as the comparison target and verify closure under the maximal order generators. A Gram determinant alone certifies neither the source ideal nor this closure.
 
@@ -756,6 +758,10 @@ Not merged in this part, and not decided. Ledger O34 holds the question for stag
 
 The Stage 2c fixture exits are listed in 2.1.3 and counted by `scripts/ci/check_secret_exits.py`.
 
+### 2.2 Maximal-order arithmetic (Stage 2b)
+
+For raw numerators `(a,b,c,d)` over two, coordinates in the ordered basis of 1.4.5 are `(A,B,C,D) = ((a−d)/2, (b−c)/2, c, d)`. Both divisions must be exact. In the admission constructor the raw inputs are widened before subtraction. Left multiplication by `H = (i+j)/2` gives raw numerators `(−B−mC, A+mD, A, −B)`, where `m = (p+1)/2`. This follows from `i²=−1`, `j²=−p` and `ji=−ij`. Apply this action to the four integer basis columns for the closure check in 2.3. An inexact division contributes to the single admission verdict.
+
 ### 2.3 Gaussian-integer basis reduction (Stage 2c, design for review)
 
 The reduction returns a basis of the same left ideal and a quadratic form for evaluating a linear combination of its columns. Key generation samples combinations of those columns. Shortest-equivalent-ideal construction needs the first column to attain the shortest nonzero norm. The mathematical oracle below uses variable-time integers on public fixtures. The exact rule defines the oracle. The production candidate is exp64 with the native schedules below. O33 remains open for the operand widths of the port and the construction of its admitted inputs. G7 also requires compiled-code evidence.
@@ -769,6 +775,8 @@ Write a quaternion numerator as two Gaussian integers. The determinant d of the 
 For signing, derive the public q from the challenge scalar and use the verifier's primality predicate and the set's degree bound. A challenge ideal with Gaussian root r acts on w=(a,b) by φ(w)=a−br modulo q, where r·conj(r)=−p modulo q. In the field of q² elements, compute γ=−φ(u)/φ(v) and center both integer residues. The returned columns are qv and u+γv with carried norm Nq. They are in both ideals and have Gaussian determinant −q times the original determinant, giving the required intersection index. The guard and Q4 give 0<nrd(v)≤256√p N<q at all five sets, so v cannot lie in the challenge ideal. The root and the inverse product are checked. A secret failure marks all nine output values until an existing exit. Only malformed public challenges cause an early refusal.
 
 All membership products use the double constructor width. On admitted inputs Q4 gives N<2ᴮ, and the guard gives each numerator coordinate magnitude at most √(1024√p N). The largest left-generator image has magnitude at most (p+1) times this bound. Each complex cross product takes four coordinate products, followed by a complex product with |d|=2N. These bounds fit the double width at every set. The Hensel product-back verifies exact division. Montgomery products of residues below q fit the double width and the fixed-size coordinate fold accepts either sign. The candidate-generation path builds that `GenericHnf`, pre-reduces its generators for the certified Q4 exp64 count of 22/22/23/22/24 steps, and returns them only when `admit` accepts the same columns. Import calls `admit` on the decoded columns. The five-set integration corpus checks this generated key basis against the imported one, then checks the generated intersection before reduction and the reduced basis and form. It includes inconsistent HNFs, dependent pairs, excessive norms, a wrong challenge root and equal-index lattices without left closure. This arithmetic needs its own compiled-code and spill review before production signing.
+
+The Rust test `guarded_intersections_match_the_coprime_lattice_sum` crosses the six public key components with the six public challenges at each set. For each pair it computes an ordinary unbounded column HNF from the eight Q3 generators and compares it with the HNF of the four returned integer columns. It checks the carried norm separately. The unbounded arithmetic belongs to the test binary. These fixtures exercise the specialized signing path. Q1 still needs a general fixed-schedule construction for secret inputs.
 
 #### Native prototype boundary
 

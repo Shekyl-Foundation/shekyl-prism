@@ -30,6 +30,9 @@ prism-isogeny = { workspace = true }
 prism-verify = { workspace = true }
 
 [dev-dependencies]
+# Unbounded public arithmetic for the independent ideal-lattice test oracle.
+num-bigint = "=0.4.6"
+num-integer = "=0.1.47"
 prism-vectors = { workspace = true }
 # The negatives and the responses built from public data, for the tests
 # that run both entries on them (`tests/support/entries.rs`). The testkit
