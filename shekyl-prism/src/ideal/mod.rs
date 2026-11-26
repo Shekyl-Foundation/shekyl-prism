@@ -346,8 +346,9 @@ impl<S: IdealSet<W, D>, const W: usize, const D: usize> GuardedIdeal<S, W, D> {
             )
             .ct_eq(&Scalar::zero());
         // The guard bounds nrd(v) below q at each set, so nonzero v cannot
-        // belong to the challenge ideal. With q = 3 mod 4 its nonzero Gaussian
-        // residue has invertible norm. Check the inverse before using the result.
+        // belong to the challenge ideal. For prime q = 3 mod 4, its nonzero
+        // Gaussian residue has invertible norm. Verify the inverse product
+        // even though the public degree passed the probable-prime predicate.
         let u = &self.u;
         let v = &self.v;
         let ru = ring.residue(u, &root);

@@ -172,3 +172,22 @@ fn canonical_form_distinguishes_span_from_index() {
     other[0] = other[0].clone().map(|x| x * 2);
     assert_ne!(column_hnf(other.to_vec()), basis);
 }
+
+#[test]
+fn comaximal_ideals_can_have_equal_norms() {
+    // At p=3 both 5i+j and 9i+j define roots of norm-7 ideals.
+    // For the second residue map the first root maps to -4i, a unit mod 7.
+    let ideal = |y| {
+        gaussian_columns(
+            [14, 0, 0, 0].map(BigInt::from),
+            [0, y, 1, 0].map(BigInt::from),
+        )
+    };
+    for y in [5, 9] {
+        assert_eq!((y * y + 3) % 28, 0);
+    }
+    let sum = ideal(5).into_iter().chain(ideal(9)).collect();
+    let order =
+        [[2, 0, 0, 0], [0, 2, 0, 0], [0, 1, 1, 0], [1, 0, 0, 1]].map(|c| c.map(BigInt::from));
+    assert_eq!(column_hnf(sum), order);
+}
