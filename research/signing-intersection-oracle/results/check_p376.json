@@ -1,0 +1,1810 @@
+[
+ {
+  "case": "rand0-N223b",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3318511044240925962103682182603447825048198249396113700548,
+   4166131660537642331589687288689630509109307072752333755450,
+   1380559430944751420292919179764410480438796149252504733000,
+   -1383833064022598330798220129722346801778764840500717861069
+  ],
+  "swaps_spec_vs_generic": [
+   239,
+   233
+  ],
+  "steps_spec_vs_generic": [
+   241,
+   234
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "rand1-N223b",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   2717612191703878806581284199629133450704448175109520229978,
+   4533937919151554988189218140652485741702451150271263180876,
+   -1065557561708134117011953668536973721118778604857259572700,
+   -1087040207351186821772317715086714648287667782687366903667
+  ],
+  "swaps_spec_vs_generic": [
+   239,
+   253
+  ],
+  "steps_spec_vs_generic": [
+   241,
+   255
+  ],
+  "max_output_bits": 969,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "rand2-N222b",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   2258253805129314216577634731521412712887790604022481497326,
+   4698187332505214559633212900573378927891162750964287595246,
+   -585452309324072539624701194329775216932253423563035040646,
+   512376208019135217202861363168996640933167969597635394321
+  ],
+  "swaps_spec_vs_generic": [
+   233,
+   237
+  ],
+  "steps_spec_vs_generic": [
+   235,
+   239
+  ],
+  "max_output_bits": 968,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "rand3-N211b",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   1634368490704176841004424379307832487242535463712461719722,
+   6424296881468328078479638546956948906427966178441705173342,
+   -552928602558751430008267834365058766814775815599797456486,
+   -435342075464894608424088844021929547423502670755986538333
+  ],
+  "swaps_spec_vs_generic": [
+   236,
+   237
+  ],
+  "steps_spec_vs_generic": [
+   238,
+   239
+  ],
+  "max_output_bits": 958,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "rand4-N196b",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   761406002005262974145664546097725115140147025923377726544,
+   13272744022286178301183133238683307726663509130459403891544,
+   -64086548255305244866058045389345887044117333950866880004,
+   -312128563540100769767074728684499806924905872465607930009
+  ],
+  "swaps_spec_vs_generic": [
+   226,
+   231
+  ],
+  "steps_spec_vs_generic": [
+   228,
+   233
+  ],
+  "max_output_bits": 942,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "rand5-N185b",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   929620299126220016654175772213655344128467082462722841700,
+   10946751603942469583086786202266631324654609312665882693850,
+   14326532450754470751186045963785209173361603461296828460,
+   -414368936072769653739641679138174021954468979407419849669
+  ],
+  "swaps_spec_vs_generic": [
+   226,
+   243
+  ],
+  "steps_spec_vs_generic": [
+   228,
+   245
+  ],
+  "max_output_bits": 932,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "rand6-N177b",
+  "oracle_admit": false,
+  "oracle_admit_reason": "guard",
+  "rust_admit": false,
+  "ok": true
+ },
+ {
+  "case": "rand7-N40b",
+  "oracle_admit": false,
+  "oracle_admit_reason": "guard",
+  "rust_admit": false,
+  "ok": true
+ },
+ {
+  "case": "rand8-N223b",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   2963945498622909604679188759164055465336229315394415276098,
+   3991744615092174012317432277078758896188724754678289262804,
+   1180109648474736172434672337273399191271893931765209500092,
+   -658968182333742850189097487665968358265052285942440123067
+  ],
+  "swaps_spec_vs_generic": [
+   248,
+   246
+  ],
+  "steps_spec_vs_generic": [
+   250,
+   248
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "rand9-N223b",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   2393474053665901635462900998726913368826294341269734637856,
+   4468437316910470796818184550631629284539131808874884332610,
+   815958548099716546484191423503758476971211817409545887220,
+   157749137675635219392412229057396806314506913801907903161
+  ],
+  "swaps_spec_vs_generic": [
+   234,
+   260
+  ],
+  "steps_spec_vs_generic": [
+   236,
+   262
+  ],
+  "max_output_bits": 969,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "rand10-N222b",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3459593432765607187514993967673503765864855612754039463482,
+   3551042678889062912064476914044922870459307687277996484436,
+   1013194253565089737209694525338792215738687014945937498128,
+   1119904326312915807994106254911954324114618242157101998077
+  ],
+  "swaps_spec_vs_generic": [
+   238,
+   249
+  ],
+  "steps_spec_vs_generic": [
+   240,
+   251
+  ],
+  "max_output_bits": 969,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "rand11-N211b",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3017635652207046851313133590884173308496290305568047305434,
+   3442925987936045303605124670046680847748590795891848295038,
+   -607161073782797139308367348811047238110955087438716068738,
+   -128202978848442597173356843918044699218891418975317260003
+  ],
+  "swaps_spec_vs_generic": [
+   238,
+   241
+  ],
+  "steps_spec_vs_generic": [
+   240,
+   243
+  ],
+  "max_output_bits": 958,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "rand12-N196b",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   2043599300004896545487809100942618734986386164844175074854,
+   5062721962636343535917930769104090201057737739709575974016,
+   326387239996959226241371803432944702550368327868675729596,
+   -485005971846666291086852709280599830802877492791895252647
+  ],
+  "swaps_spec_vs_generic": [
+   239,
+   228
+  ],
+  "steps_spec_vs_generic": [
+   241,
+   230
+  ],
+  "max_output_bits": 943,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "rand13-N185b",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   1675333615345608804399872641933477322678620524284635341150,
+   6432664178143574841229016090595690114690870382212425258554,
+   -413860564487701109799693479157401769091422954886062590194,
+   -775346587812250745983335332459373494266564858606147393475
+  ],
+  "swaps_spec_vs_generic": [
+   249,
+   237
+  ],
+  "steps_spec_vs_generic": [
+   251,
+   238
+  ],
+  "max_output_bits": 932,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "rand14-N177b",
+  "oracle_admit": false,
+  "oracle_admit_reason": "guard",
+  "rust_admit": false,
+  "ok": true
+ },
+ {
+  "case": "rand15-N40b",
+  "oracle_admit": false,
+  "oracle_admit_reason": "guard",
+  "rust_admit": false,
+  "ok": true
+ },
+ {
+  "case": "base",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3250599589997052136319359670188786828099806037284758470292,
+   3277814245666684682762498336726076739746894563979662218522,
+   -626226047434554284550138634448595520222775294236044781716,
+   508219386448245976941531873402734473378028733335618925173
+  ],
+  "swaps_spec_vs_generic": [
+   238,
+   246
+  ],
+  "steps_spec_vs_generic": [
+   239,
+   248
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "shear-small0",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3250599589997052136319359670188786828099806037284758470292,
+   3277814245666684682762498336726076739746894563979662218522,
+   -626226047434554284550138634448595520222775294236044781716,
+   508219386448245976941531873402734473378028733335618925173
+  ],
+  "swaps_spec_vs_generic": [
+   234,
+   246
+  ],
+  "steps_spec_vs_generic": [
+   236,
+   248
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "shear-small1",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3250599589997052136319359670188786828099806037284758470292,
+   3277814245666684682762498336726076739746894563979662218522,
+   626226047434554284550138634448595520222775294236044781716,
+   -508219386448245976941531873402734473378028733335618925173
+  ],
+  "swaps_spec_vs_generic": [
+   252,
+   246
+  ],
+  "steps_spec_vs_generic": [
+   254,
+   248
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "shear-small2",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3250599589997052136319359670188786828099806037284758470292,
+   3277814245666684682762498336726076739746894563979662218522,
+   -626226047434554284550138634448595520222775294236044781716,
+   508219386448245976941531873402734473378028733335618925173
+  ],
+  "swaps_spec_vs_generic": [
+   230,
+   246
+  ],
+  "steps_spec_vs_generic": [
+   232,
+   248
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "shear-small3",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3250599589997052136319359670188786828099806037284758470292,
+   3277814245666684682762498336726076739746894563979662218522,
+   -626226047434554284550138634448595520222775294236044781716,
+   508219386448245976941531873402734473378028733335618925173
+  ],
+  "swaps_spec_vs_generic": [
+   252,
+   246
+  ],
+  "steps_spec_vs_generic": [
+   254,
+   248
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "guard-last-pass-re",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3250599589997052136319359670188786828099806037284758470292,
+   3277814245666684682762498336726076739746894563979662218522,
+   -626226047434554284550138634448595520222775294236044781716,
+   508219386448245976941531873402734473378028733335618925173
+  ],
+  "swaps_spec_vs_generic": [
+   245,
+   246
+  ],
+  "steps_spec_vs_generic": [
+   247,
+   248
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "guard-first-fail-re",
+  "oracle_admit": false,
+  "oracle_admit_reason": "guard",
+  "rust_admit": false,
+  "ok": true
+ },
+ {
+  "case": "guard-last-pass-im",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3250599589997052136319359670188786828099806037284758470292,
+   3277814245666684682762498336726076739746894563979662218522,
+   626226047434554284550138634448595520222775294236044781716,
+   -508219386448245976941531873402734473378028733335618925173
+  ],
+  "swaps_spec_vs_generic": [
+   231,
+   246
+  ],
+  "steps_spec_vs_generic": [
+   233,
+   248
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "guard-first-fail-im",
+  "oracle_admit": false,
+  "oracle_admit_reason": "guard",
+  "rust_admit": false,
+  "ok": true
+ },
+ {
+  "case": "guard-last-pass-neg-re",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3250599589997052136319359670188786828099806037284758470292,
+   3277814245666684682762498336726076739746894563979662218522,
+   626226047434554284550138634448595520222775294236044781716,
+   -508219386448245976941531873402734473378028733335618925173
+  ],
+  "swaps_spec_vs_generic": [
+   243,
+   246
+  ],
+  "steps_spec_vs_generic": [
+   245,
+   248
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "guard-first-fail-neg-re",
+  "oracle_admit": false,
+  "oracle_admit_reason": "guard",
+  "rust_admit": false,
+  "ok": true
+ },
+ {
+  "case": "order-swapped",
+  "oracle_admit": false,
+  "oracle_admit_reason": "order",
+  "rust_admit": false,
+  "ok": true
+ },
+ {
+  "case": "unit-neg-u",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3250599589997052136319359670188786828099806037284758470292,
+   3277814245666684682762498336726076739746894563979662218522,
+   626226047434554284550138634448595520222775294236044781716,
+   -508219386448245976941531873402734473378028733335618925173
+  ],
+  "swaps_spec_vs_generic": [
+   238,
+   246
+  ],
+  "steps_spec_vs_generic": [
+   239,
+   248
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "unit-i-u",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3250599589997052136319359670188786828099806037284758470292,
+   3277814245666684682762498336726076739746894563979662218522,
+   508219386448245976941531873402734473378028733335618925173,
+   626226047434554284550138634448595520222775294236044781716
+  ],
+  "swaps_spec_vs_generic": [
+   238,
+   246
+  ],
+  "steps_spec_vs_generic": [
+   239,
+   248
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "unit-i-v",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3250599589997052136319359670188786828099806037284758470292,
+   3277814245666684682762498336726076739746894563979662218522,
+   -508219386448245976941531873402734473378028733335618925173,
+   -626226047434554284550138634448595520222775294236044781716
+  ],
+  "swaps_spec_vs_generic": [
+   238,
+   246
+  ],
+  "steps_spec_vs_generic": [
+   239,
+   248
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "unit-neg-both",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3250599589997052136319359670188786828099806037284758470292,
+   3277814245666684682762498336726076739746894563979662218522,
+   -626226047434554284550138634448595520222775294236044781716,
+   508219386448245976941531873402734473378028733335618925173
+  ],
+  "swaps_spec_vs_generic": [
+   238,
+   246
+  ],
+  "steps_spec_vs_generic": [
+   239,
+   248
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "wrong-ideal-root",
+  "oracle_admit": false,
+  "oracle_admit_reason": "lattice != ideal(norm, root)",
+  "rust_admit": false,
+  "ok": true
+ },
+ {
+  "case": "wrong-norm",
+  "oracle_admit": false,
+  "oracle_admit_reason": "index",
+  "rust_admit": false,
+  "ok": true
+ },
+ {
+  "case": "root-parity-bad",
+  "oracle_admit": false,
+  "oracle_admit_reason": "lattice != ideal(norm, root)",
+  "rust_admit": false,
+  "ok": true
+ },
+ {
+  "case": "N-max-below-2^B",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   2701630928162714489934535120390932313201715570791039537984,
+   4336811688638363467232425463585569191786240814592320034616,
+   -584746095286383948221135222580671257439037333355175564996,
+   1170521659725702170604597919879632228439053787506688434983
+  ],
+  "swaps_spec_vs_generic": [
+   221,
+   245
+  ],
+  "steps_spec_vs_generic": [
+   223,
+   247
+  ],
+  "max_output_bits": 971,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "extreme-Nmax-guard-re-qmax",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3009829038063396939670217768946781255195958634580532551762,
+   3995631011549827248866196245411628613888893978600954988862,
+   -533585581660807007861238345785500557500297277930772041718,
+   1317967008384393032617792144641192908931608160774883762059
+  ],
+  "swaps_spec_vs_generic": [
+   254,
+   262
+  ],
+  "steps_spec_vs_generic": [
+   255,
+   263
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "extreme-Nmax-guard-im-qmax",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3009829038063396939670217768946781255195958634580532551762,
+   3995631011549827248866196245411628613888893978600954988862,
+   -533585581660807007861238345785500557500297277930772041718,
+   1317967008384393032617792144641192908931608160774883762059
+  ],
+  "swaps_spec_vs_generic": [
+   237,
+   262
+  ],
+  "steps_spec_vs_generic": [
+   238,
+   263
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "extreme-Nmax-guard-diag-qmax",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3009829038063396939670217768946781255195958634580532551762,
+   3995631011549827248866196245411628613888893978600954988862,
+   -533585581660807007861238345785500557500297277930772041718,
+   1317967008384393032617792144641192908931608160774883762059
+  ],
+  "swaps_spec_vs_generic": [
+   232,
+   262
+  ],
+  "steps_spec_vs_generic": [
+   233,
+   263
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "extreme-Nmax-guard-anti-qmax",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3009829038063396939670217768946781255195958634580532551762,
+   3995631011549827248866196245411628613888893978600954988862,
+   533585581660807007861238345785500557500297277930772041718,
+   -1317967008384393032617792144641192908931608160774883762059
+  ],
+  "swaps_spec_vs_generic": [
+   236,
+   262
+  ],
+  "steps_spec_vs_generic": [
+   237,
+   263
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "N-first-prime-above-2^B",
+  "oracle_admit": false,
+  "oracle_admit_reason": "norm range/parity",
+  "rust_admit": false,
+  "ok": true
+ },
+ {
+  "case": "composite-N-2primes",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   2608718181889106911050770673220703888342777905832805535744,
+   4333579778764548034104780635922512735510556126668120001092,
+   324574362243939116850846100281552312253299880247742631628,
+   1093308835188257480184587058772224162016074991057164672615
+  ],
+  "swaps_spec_vs_generic": [
+   230,
+   247
+  ],
+  "steps_spec_vs_generic": [
+   232,
+   249
+  ],
+  "max_output_bits": 968,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "composite-N-3primes",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3425135441369115017747813316909222091533825803727722654886,
+   4026841022649629321870141219542518241872367339885242356438,
+   -1291709098128735927783025646321591096516123679124564936150,
+   -1455866708680591587202859671747905449871756132535793070223
+  ],
+  "swaps_spec_vs_generic": [
+   234,
+   254
+  ],
+  "steps_spec_vs_generic": [
+   236,
+   256
+  ],
+  "max_output_bits": 969,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "N-1mod4-0",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   2984610771189301261160022585874126476510993342159459333160,
+   3395271249665987432828354603765012202842352570837632478932,
+   -342321234287748729406865607657743247512005495576907629240,
+   -109378606751466166551240731756957885191884932286197899791
+  ],
+  "swaps_spec_vs_generic": [
+   227,
+   248
+  ],
+  "steps_spec_vs_generic": [
+   229,
+   250
+  ],
+  "max_output_bits": 969,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "N-1mod4-1",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   2799343656460310781838714287174547290310494991151259402514,
+   4243824284986677049907714300683020675106570730930317765676,
+   1291606379109110132827356846035737722941584159544548557300,
+   -455258077304550910849859826519440799476707070614322955325
+  ],
+  "swaps_spec_vs_generic": [
+   230,
+   238
+  ],
+  "steps_spec_vs_generic": [
+   232,
+   239
+  ],
+  "max_output_bits": 969,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "N-prime-square",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   1842493492049630821245800384943189009166390528066885487042,
+   5733084700405982451332062463248460284690433588995496028244,
+   323618680269468440873555652350912664117791064273202126460,
+   -673814932933882036385789095229647391198414909678167813947
+  ],
+  "swaps_spec_vs_generic": [
+   232,
+   248
+  ],
+  "steps_spec_vs_generic": [
+   234,
+   249
+  ],
+  "max_output_bits": 968,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "q-max-s",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3251727136536359858010554353705409141552665015644132305214,
+   3495154628776557749623438507456784125970346675703663683338,
+   -1160584751137823625701101644797841385597756764773078608238,
+   117968438179329221773773295749392483240570305613612229043
+  ],
+  "swaps_spec_vs_generic": [
+   231,
+   251
+  ],
+  "steps_spec_vs_generic": [
+   233,
+   252
+  ],
+  "max_output_bits": 969,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "q-min-s",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   1626762066920155454621145440687733864726990860176172932786,
+   6620509688538069604227350373818888340570404950381735482338,
+   -715835507651939394344029459389762745640802946200080470310,
+   -503148005235546184432190825788496790751507005546558625473
+  ],
+  "swaps_spec_vs_generic": [
+   242,
+   252
+  ],
+  "steps_spec_vs_generic": [
+   244,
+   254
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "s-above-challenge-range",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "none",
+  "rust_inter": "none",
+  "ok": true
+ },
+ {
+  "case": "q-composite",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "none",
+  "rust_inter": "none",
+  "ok": true
+ },
+ {
+  "case": "q-root-wrong",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "marked",
+  "rust_inter": "marked",
+  "all_marked": true,
+  "ok": true
+ },
+ {
+  "case": "q-root-plus-multiples",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3150723069246878113945715926140714453328335193345459006506,
+   3624824015432273438387240087095278982725166302721197233534,
+   -1180588081697723267961701873339460716311687200024849257098,
+   -150375506424981986805825208002336948646860583803459262819
+  ],
+  "swaps_spec_vs_generic": [
+   234,
+   248
+  ],
+  "steps_spec_vs_generic": [
+   236,
+   250
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "q-root-negated",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   3345036311921685927459522558627948151872966303894963559242,
+   4146766722739044778354976490680052167988202290039105846046,
+   1458739063951646405949855676122129625610250993782937552322,
+   1318616688855703590444230673557292508168145538821433376397
+  ],
+  "swaps_spec_vs_generic": [
+   228,
+   250
+  ],
+  "steps_spec_vs_generic": [
+   230,
+   251
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "q-root-swap-coords",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "ok",
+  "rust_inter": "ok",
+  "exact_vectors_equal_spec": true,
+  "routes": {
+   "sage": true,
+   "pari_dual": true,
+   "kernel": true,
+   "q3": true
+  },
+  "routes_agree_each_other": true,
+  "crt_root_hnf_shape": true,
+  "crt_generic_lattice_equal": true,
+  "T_equals_Nq": true,
+  "index_ok": true,
+  "left_ideal": true,
+  "gram_exact": true,
+  "gram_det_p": true,
+  "generic_gram_exact": true,
+  "generic_gram_det_p": true,
+  "reduced_A_C_equal": true,
+  "reduced_gram_spec": [
+   2820608752366092499893817720324606135672375940972218840310,
+   3952357714212931848796554928523785959196778126737557090336,
+   84591826140412265757370414106769500738084433089197086536,
+   1066059730192254943777916568392526493582134726248518920895
+  ],
+  "swaps_spec_vs_generic": [
+   249,
+   253
+  ],
+  "steps_spec_vs_generic": [
+   251,
+   255
+  ],
+  "max_output_bits": 970,
+  "width_bits": 1024,
+  "ok": true
+ },
+ {
+  "case": "q-root-zero",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "marked",
+  "rust_inter": "marked",
+  "all_marked": true,
+  "ok": true
+ },
+ {
+  "case": "s-even",
+  "oracle_admit": true,
+  "oracle_admit_reason": "",
+  "rust_admit": true,
+  "oracle_inter": "none",
+  "rust_inter": "none",
+  "ok": true
+ }
+]

@@ -276,6 +276,9 @@ def general_constructions(p, N, root_s, q, root_q, Hs=None):
     """Return dict of lattices (row HNFs) for I_s ∩ I_q by independent routes.
     I_s = O0 N + O0 (x+yi+j), I_q likewise, built by left-closure, not from any shape."""
     Hs = Hs if Hs is not None else ideal_root(p, N, root_s)
+    # the ideal depends on the root mod q only: lift to x even, y odd before building (x,y,1,0)
+    rx, ry = root_q[0] % q, root_q[1] % q
+    root_q = (rx + (rx % 2) * q, ry + (1 - ry % 2) * q)
     Hq = ideal_root(p, q, root_q)
     out = {"Hs": Hs, "Hq": Hq}
     out["sage"] = inter_sage(Hs, Hq)

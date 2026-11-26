@@ -1,0 +1,507 @@
+{
+ "p248": {
+  "stats": {
+   "rows": 11,
+   "reduced_equal": 11,
+   "form_equal": 11,
+   "lattice_ideal": 11,
+   "gram_exact": 11,
+   "ideal_corpus_rows": 6,
+   "ideal_corpus_agree": 6
+  },
+  "detail": [
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 167,
+    "swaps": 166,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 170,
+    "swaps": 168,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 10,
+    "swaps": 8,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 10,
+    "swaps": 8,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 9,
+    "swaps": 7,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 147,
+    "swaps": 145,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 147,
+    "swaps": 145,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 153,
+    "swaps": 151,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 156,
+    "swaps": 154,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 156,
+    "swaps": 155,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 169,
+    "swaps": 167,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   }
+  ]
+ },
+ "p324": {
+  "stats": {
+   "rows": 11,
+   "reduced_equal": 11,
+   "form_equal": 11,
+   "lattice_ideal": 11,
+   "gram_exact": 11,
+   "ideal_corpus_rows": 6,
+   "ideal_corpus_agree": 6
+  },
+  "detail": [
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 226,
+    "swaps": 224,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 217,
+    "swaps": 215,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 10,
+    "swaps": 8,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 6,
+    "swaps": 4,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 12,
+    "swaps": 10,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 207,
+    "swaps": 206,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 214,
+    "swaps": 212,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 202,
+    "swaps": 200,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 199,
+    "swaps": 197,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 203,
+    "swaps": 201,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 204,
+    "swaps": 203,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   }
+  ]
+ },
+ "p376": {
+  "stats": {
+   "rows": 11,
+   "reduced_equal": 11,
+   "form_equal": 11,
+   "lattice_ideal": 11,
+   "gram_exact": 11,
+   "ideal_corpus_rows": 6,
+   "ideal_corpus_agree": 6
+  },
+  "detail": [
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 249,
+    "swaps": 247,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 242,
+    "swaps": 240,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 9,
+    "swaps": 7,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 11,
+    "swaps": 9,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 9,
+    "swaps": 7,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 228,
+    "swaps": 226,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 240,
+    "swaps": 238,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 234,
+    "swaps": 233,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 238,
+    "swaps": 237,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 239,
+    "swaps": 238,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 235,
+    "swaps": 233,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   }
+  ]
+ },
+ "p500": {
+  "stats": {
+   "rows": 11,
+   "reduced_equal": 11,
+   "form_equal": 11,
+   "lattice_ideal": 11,
+   "gram_exact": 11,
+   "ideal_corpus_rows": 6,
+   "ideal_corpus_agree": 6
+  },
+  "detail": [
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 325,
+    "swaps": 323,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 327,
+    "swaps": 325,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 10,
+    "swaps": 8,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 11,
+    "swaps": 10,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 11,
+    "swaps": 9,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 332,
+    "swaps": 330,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 319,
+    "swaps": 317,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 331,
+    "swaps": 329,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 320,
+    "swaps": 318,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 311,
+    "swaps": 309,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 319,
+    "swaps": 317,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   }
+  ]
+ },
+ "p664": {
+  "stats": {
+   "rows": 11,
+   "reduced_equal": 11,
+   "form_equal": 11,
+   "lattice_ideal": 11,
+   "gram_exact": 11,
+   "ideal_corpus_rows": 6,
+   "ideal_corpus_agree": 6
+  },
+  "detail": [
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 428,
+    "swaps": 426,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 426,
+    "swaps": 425,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 9,
+    "swaps": 7,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 9,
+    "swaps": 7,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "sign-generic",
+    "steps_to_fixed_point": 8,
+    "swaps": 6,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 420,
+    "swaps": 418,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 418,
+    "swaps": 416,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 412,
+    "swaps": 410,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 414,
+    "swaps": 412,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 423,
+    "swaps": 421,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   },
+   {
+    "class": "prered-guard256",
+    "steps_to_fixed_point": 432,
+    "swaps": 430,
+    "reduced_equal": true,
+    "form_equal": true,
+    "ideal_ok": true
+   }
+  ]
+ }
+}
