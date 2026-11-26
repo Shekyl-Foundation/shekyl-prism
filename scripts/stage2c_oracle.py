@@ -19,6 +19,7 @@ import unittest
 from fractions import Fraction
 from pathlib import Path
 from typing import NamedTuple
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -181,17 +182,6 @@ def gaussian_step(p, u, v, quotients):
     return u, reduced, False
 
 
-def exact_step_bound(numerator_norm):
-    """Counted ceiling for exact reduction, the Euclid bound of section 2.1.
-
-    A swap replaces the first numerator norm by a smaller positive integer.
-    From the second division on, each remainder is below half of the one two
-    before it, so two steps per bit of the larger norm cover the slowest
-    operands. One further step is the final size reduction, which does not swap.
-    """
-    return 2*numerator_norm.bit_length() + 1
-
-
 def reduce_steps(p, u, v, quotients, steps):
     """Initial strict order, then exactly `steps` Gaussian steps."""
     u, v = order_generators(p, u, v)
@@ -201,14 +191,18 @@ def reduce_steps(p, u, v, quotients, steps):
 
 
 def reduce_exact(p, u, v):
-    """Half-up steps until the fixed point, inside `exact_step_bound`."""
+    """At most A0 steps: each swap lowers the positive integral first norm."""
     u, v = order_generators(p, u, v)
-    larger = max(inner(p, u, u), inner(p, v, v))
-    for _ in range(exact_step_bound(larger)):
+    first_norm = inner(p, u, u)
+    while first_norm > 0:
         u, v, swapped = gaussian_step(p, u, v, half_up_quotients)
         if not swapped:
             return u, v
-    raise ValueError("exact reduction exceeded its counted bound")
+        next_norm = inner(p, u, u)
+        if next_norm >= first_norm:
+            raise ArithmeticError("exact Gaussian swap must decrease the first norm")
+        first_norm = next_norm
+    raise ValueError("the Gaussian generators must be independent")
 
 
 def exp64_quotients(h0, h1, norm):
@@ -497,6 +491,23 @@ class Stage2cOracle(unittest.TestCase):
         self.assertEqual(last, (1, -2, -2, -1))
         self.assertEqual(inner(3, last, last), a)
         self.assertEqual(self.check_reduction(3, u, v), (first, last))
+
+    def test_strict_descent_allows_slow_swaps(self):
+        # Three consecutive swaps. Two can leave 96% of the earlier norm.
+        p = 3
+        start = ((25, -5, 4, 0), (60, -10, 8, 0))
+        u, v = start
+        for expected in (100, 98, 96):
+            u, v, swapped = gaussian_step(p, u, v, half_up_quotients)
+            self.assertTrue(swapped)
+            self.assertEqual(inner(p, u, u), expected)
+        self.assertEqual(self.check_reduction(p, *start),
+                         ((0, 0, 4, -4), (-5, -5, -4, 0)))
+
+        # A faulty step reporting a swap without any decrease must fail promptly.
+        with patch(__name__ + ".gaussian_step", return_value=(*start, True)):
+            with self.assertRaisesRegex(ArithmeticError, "must decrease"):
+                reduce_exact(p, *start)
 
     def test_exhaustive_minima(self):
         for p, u, v in ((3, (4, 0, 0, 0), (2, 1, 1, 0)),
