@@ -259,16 +259,20 @@ def signer_parameters(name):
     """e, the prime, and the secret ideal norm. One row of each, or a fault."""
     path = ROOT/"prism-vectors"/"data"/"signer"/(name + ".txt")
     wanted = ("e", "f", "secret_norm")
-    found = {key: [] for key in wanted}
-    for line in path.read_text().splitlines():
-        key, _, value = line.partition(" ")
-        if key in found:
-            found[key].append(value.split()[0] if value else "")
     values = {}
-    for key, rows in found.items():
-        if len(rows) != 1 or rows[0] == "":
-            raise ValueError(f"{name}: {len(rows)} rows `{key}`")
-        values[key] = rows[0]
+    for line in path.read_text().splitlines():
+        fields = line.split()
+        if not fields or fields[0] not in wanted:
+            continue
+        key = fields[0]
+        if len(fields) != 2:
+            raise ValueError(f"{name}: expected one value for {key}")
+        if key in values:
+            raise ValueError(f"{name}: duplicate {key} row")
+        values[key] = fields[1]
+    for key in wanted:
+        if key not in values:
+            raise ValueError(f"{name}: missing {key} row")
     exponent = int(values["e"])
     prime = (int(values["f"]) << exponent) - 1
     secret_norm = int.from_bytes(bytes.fromhex(values["secret_norm"]), "little")
@@ -446,6 +450,20 @@ class Stage2cOracle(unittest.TestCase):
         above = at_cutoff._replace(c0=at_cutoff.c0 + 1)
         self.assertEqual(schedule(at_cutoff), (TAIL_SLOTS, TAIL_SLOTS))
         self.assertEqual(schedule(above), (TAIL_SLOTS, TAIL_SLOTS + 1))
+
+    def test_signer_parameters_require_one_scalar_per_row(self):
+        rows = ("e 2", "f 3", "secret_norm 05")
+        with patch.object(Path, "read_text", return_value="\n".join((*rows, "other 1 2"))):
+            self.assertEqual(signer_parameters("fixture"), (2, 11, 5))
+        for row in rows:
+            key = row.split()[0]
+            other_rows = [other for other in rows if other != row]
+            for malformed in ([], [row, row], [key], [row + " 999"]):
+                with self.subTest(key=key, malformed=malformed):
+                    text = "\n".join(other_rows + malformed)
+                    with patch.object(Path, "read_text", return_value=text):
+                        with self.assertRaisesRegex(ValueError, key):
+                            signer_parameters("fixture")
 
     def test_native_schedule_table(self):
         schedules = [native_schedules(name) for name in PARAMETER_SETS]
