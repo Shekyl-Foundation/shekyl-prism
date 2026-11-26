@@ -1,0 +1,222 @@
+{
+ "p248": [
+  {
+   "ideal": "O0*pi",
+   "N": 102531293108194461848228532446186906458479265513,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p248 admit=0"
+  },
+  {
+   "ideal": "O0*conj(pi)",
+   "N": 102531293108194461848228532446186906458479265513,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p248 admit=0"
+  },
+  {
+   "ideal": "O0*l",
+   "N": 55672520404567556282232556714726347434219710729,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p248 admit=0"
+  }
+ ],
+ "p324": [
+  {
+   "ideal": "O0*pi",
+   "N": 23034207797010192681442986899965190090530362266754499376141,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p324 admit=0"
+  },
+  {
+   "ideal": "O0*conj(pi)",
+   "N": 23034207797010192681442986899965190090530362266754499376141,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p324 admit=0"
+  },
+  {
+   "ideal": "O0*l",
+   "N": 6136685432374671360720954541764060137474808334393950608761,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p324 admit=0"
+  }
+ ],
+ "p376": [
+  {
+   "ideal": "O0*pi",
+   "N": 10140352462254010312330643954268748813320329274748809969167149151177,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p376 admit=0"
+  },
+  {
+   "ideal": "O0*conj(pi)",
+   "N": 10140352462254010312330643954268748813320329274748809969167149151177,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p376 admit=0"
+  },
+  {
+   "ideal": "O0*l",
+   "N": 2760637392974346733282826055424902257202432607257550835460126505441,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p376 admit=0"
+  }
+ ],
+ "p500": [
+  {
+   "ideal": "O0*pi",
+   "N": 30924215967109677529060515409031339783733162481704874004954745631334911741405155124361,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p500 admit=0"
+  },
+  {
+   "ideal": "O0*conj(pi)",
+   "N": 30924215967109677529060515409031339783733162481704874004954745631334911741405155124361,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p500 admit=0"
+  },
+  {
+   "ideal": "O0*l",
+   "N": 2303730250253229766997038976828949573129896089304071319147737225566759342451586069689,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p500 admit=0"
+  }
+ ],
+ "p664": [
+  {
+   "ideal": "O0*pi",
+   "N": 96794559907414471099907442675216741511062746535809802835079334194353992487202861024652980112405969044860267781,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p664 admit=0"
+  },
+  {
+   "ideal": "O0*conj(pi)",
+   "N": 96794559907414471099907442675216741511062746535809802835079334194353992487202861024652980112405969044860267781,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p664 admit=0"
+  },
+  {
+   "ideal": "O0*l",
+   "N": 15741299407196146188389671991652900823906914185673857599665230713357065674502570332598483439394362771690983649,
+   "guard_ok": false,
+   "spec_equals_routes": {
+    "sage": true,
+    "pari_dual": true,
+    "kernel": true,
+    "q3": true
+   },
+   "is_left_ideal": true,
+   "index_ok": true,
+   "rust": "p664 admit=0"
+  }
+ ]
+}

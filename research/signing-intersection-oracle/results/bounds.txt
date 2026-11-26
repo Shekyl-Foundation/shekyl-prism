@@ -1,0 +1,30 @@
+== p248: e=248 f=5 p prime=True p mod 4=3 L=251 B=158 limbs=11
+  q = 2^(2e-5) - s^2, s odd  =>  q = 7 (mod 8)  =>  q = 3 (mod 4)           [checked on samples; proof: s^2 = 1 mod 8, 8 | 2^(2e-5)]
+  (256*2^B)^2 * p < (2^(2e-6))^2 : yes, margin 398 bits  =>  nrd(v) < 2^(2e-6) <= q for every admitted v
+  N < 2^B = 2^158 <= 2^(2e-6) = 2^490 <= q: q prime does not divide N, coprime
+  width bits: T=Nq <= 649; |U_k|,|V_k| <= q sqrt(Cmax) <= 638; A' <= 512 sqrt(p) q: 626; C' < 512 sqrt(p) q: 626; limb capacity 704
+  -> all below 64*W with margin 55 bits
+== p324: e=324 f=3 p prime=True p mod 4=3 L=326 B=195 limbs=14
+  q = 2^(2e-5) - s^2, s odd  =>  q = 7 (mod 8)  =>  q = 3 (mod 4)           [checked on samples; proof: s^2 = 1 mod 8, 8 | 2^(2e-5)]
+  (256*2^B)^2 * p < (2^(2e-6))^2 : yes, margin 553 bits  =>  nrd(v) < 2^(2e-6) <= q for every admitted v
+  N < 2^B = 2^195 <= 2^(2e-6) = 2^642 <= q: q prime does not divide N, coprime
+  width bits: T=Nq <= 838; |U_k|,|V_k| <= q sqrt(Cmax) <= 827; A' <= 512 sqrt(p) q: 815; C' < 512 sqrt(p) q: 815; limb capacity 896
+  -> all below 64*W with margin 58 bits
+== p376: e=376 f=65 p prime=True p mod 4=3 L=383 B=224 limbs=16
+  q = 2^(2e-5) - s^2, s odd  =>  q = 7 (mod 8)  =>  q = 3 (mod 4)           [checked on samples; proof: s^2 = 1 mod 8, 8 | 2^(2e-5)]
+  (256*2^B)^2 * p < (2^(2e-6))^2 : yes, margin 646 bits  =>  nrd(v) < 2^(2e-6) <= q for every admitted v
+  N < 2^B = 2^224 <= 2^(2e-6) = 2^746 <= q: q prime does not divide N, coprime
+  width bits: T=Nq <= 971; |U_k|,|V_k| <= q sqrt(Cmax) <= 960; A' <= 512 sqrt(p) q: 948; C' < 512 sqrt(p) q: 948; limb capacity 1024
+  -> all below 64*W with margin 53 bits
+== p500: e=500 f=27 p prime=True p mod 4=3 L=505 B=285 limbs=21
+  q = 2^(2e-5) - s^2, s odd  =>  q = 7 (mod 8)  =>  q = 3 (mod 4)           [checked on samples; proof: s^2 = 1 mod 8, 8 | 2^(2e-5)]
+  (256*2^B)^2 * p < (2^(2e-6))^2 : yes, margin 898 bits  =>  nrd(v) < 2^(2e-6) <= q for every admitted v
+  N < 2^B = 2^285 <= 2^(2e-6) = 2^994 <= q: q prime does not divide N, coprime
+  width bits: T=Nq <= 1280; |U_k|,|V_k| <= q sqrt(Cmax) <= 1269; A' <= 512 sqrt(p) q: 1257; C' < 512 sqrt(p) q: 1257; limb capacity 1344
+  -> all below 64*W with margin 64 bits
+== p664: e=664 f=17 p prime=True p mod 4=3 L=669 B=367 limbs=27
+  q = 2^(2e-5) - s^2, s odd  =>  q = 7 (mod 8)  =>  q = 3 (mod 4)           [checked on samples; proof: s^2 = 1 mod 8, 8 | 2^(2e-5)]
+  (256*2^B)^2 * p < (2^(2e-6))^2 : yes, margin 1226 bits  =>  nrd(v) < 2^(2e-6) <= q for every admitted v
+  N < 2^B = 2^367 <= 2^(2e-6) = 2^1322 <= q: q prime does not divide N, coprime
+  width bits: T=Nq <= 1690; |U_k|,|V_k| <= q sqrt(Cmax) <= 1679; A' <= 512 sqrt(p) q: 1667; C' < 512 sqrt(p) q: 1667; limb capacity 1728
+  -> all below 64*W with margin 38 bits

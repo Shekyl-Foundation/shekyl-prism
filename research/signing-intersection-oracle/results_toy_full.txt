@@ -1,0 +1,18 @@
+3 5 7 {'nongeneric_Is': 16, 'pairs': 48, 'comaximal': 48, 'spec_ok': 949, 'spec_equals_general': 949, 'gram_ok': 949, 'fail_v_in_Iq': 11, 'generic_Is': 32} ok
+3 5 11 {'nongeneric_Is': 24, 'pairs': 72, 'comaximal': 72, 'spec_ok': 1426, 'spec_equals_general': 1426, 'gram_ok': 1426, 'fail_v_in_Iq': 14, 'generic_Is': 48} ok
+3 7 11 {'generic_Is': 96, 'pairs': 96, 'comaximal': 96, 'spec_ok': 1900, 'spec_equals_general': 1900, 'gram_ok': 1900, 'fail_v_in_Iq': 20} ok
+3 5 19 {'nongeneric_Is': 40, 'pairs': 120, 'comaximal': 120, 'spec_ok': 2396, 'spec_equals_general': 2396, 'gram_ok': 2396, 'fail_v_in_Iq': 4, 'generic_Is': 80} ok
+7 5 3 {'nongeneric_Is': 8, 'pairs': 24, 'comaximal': 24, 'spec_ok': 432, 'spec_equals_general': 432, 'gram_ok': 432, 'fail_v_in_Iq': 48, 'generic_Is': 16} ok
+7 11 3 {'generic_Is': 48, 'pairs': 48, 'comaximal': 48, 'spec_ok': 864, 'spec_equals_general': 864, 'gram_ok': 864, 'fail_v_in_Iq': 96} ok
+11 5 7 {'nongeneric_Is': 16, 'pairs': 48, 'comaximal': 48, 'spec_ok': 939, 'spec_equals_general': 939, 'gram_ok': 939, 'fail_v_in_Iq': 21, 'generic_Is': 32} ok
+3 5 13 {'nongeneric_Is': 28, 'pairs': 84, 'comaximal': 84, 'nongeneric_Iq': 12, 'fail_zero_divisor(q=1 mod 4)': 181, 'spec_ok': 1250, 'spec_equals_general': 1250, 'gram_ok': 1250, 'fail_v_in_Iq': 9, 'generic_Is': 56} ok
+3 13 7 {'nongeneric_Is': 16, 'pairs': 112, 'comaximal': 112, 'spec_ok': 2197, 'spec_equals_general': 2197, 'gram_ok': 2197, 'fail_v_in_Iq': 43, 'generic_Is': 96} ok
+3 5 5 {'nongeneric_Is': 12, 'pairs': 36, 'not_comaximal': 6, 'nongeneric_Iq': 12, 'comaximal': 30, 'spec_ok': 336, 'spec_equals_general': 336, 'gram_ok': 336, 'fail_zero_divisor(q=1 mod 4)': 40, 'generic_Is': 24, 'fail_v_in_Iq': 104} ok
+3 5 3 {'nongeneric_Is': 2, 'pairs': 6, 'comaximal': 6, 'spec_ok': 108, 'spec_equals_general': 108, 'gram_ok': 108, 'fail_v_in_Iq': 12, 'generic_Is': 4} ok
+7 5 11 {'nongeneric_Is': 24, 'pairs': 72, 'comaximal': 72, 'spec_ok': 1428, 'spec_equals_general': 1428, 'gram_ok': 1428, 'fail_v_in_Iq': 12, 'generic_Is': 48} ok
+19 7 11 {'generic_Is': 96, 'pairs': 96, 'comaximal': 96, 'spec_ok': 1907, 'spec_equals_general': 1907, 'gram_ok': 1907, 'fail_v_in_Iq': 13} ok
+23 5 3 {'nongeneric_Is': 8, 'pairs': 24, 'comaximal': 24, 'spec_ok': 432, 'spec_equals_general': 432, 'gram_ok': 432, 'fail_v_in_Iq': 48, 'generic_Is': 16} ok
+3 11 19 {'generic_Is': 240, 'pairs': 240, 'comaximal': 240, 'spec_ok': 4792, 'spec_equals_general': 4792, 'gram_ok': 4792, 'fail_v_in_Iq': 8} ok
+7 13 11 {'nongeneric_Is': 24, 'pairs': 168, 'comaximal': 168, 'spec_ok': 3338, 'spec_equals_general': 3338, 'gram_ok': 3338, 'fail_v_in_Iq': 22, 'generic_Is': 144} ok
+TOTAL {'nongeneric_Is': 218, 'pairs': 1294, 'comaximal': 1288, 'spec_ok': 24694, 'spec_equals_general': 24694, 'gram_ok': 24694, 'fail_v_in_Iq': 485, 'generic_Is': 1076, 'nongeneric_Iq': 24, 'fail_zero_divisor(q=1 mod 4)': 221, 'not_comaximal': 6}
+BAD [] 0
