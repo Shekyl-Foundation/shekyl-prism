@@ -1140,3 +1140,17 @@ Ran exact integer products on all 55 rows and checked the second column under al
 Open for independent proof: establish integrality of that quotient on every admitted input, including imported bases, derive the orientation through swaps, and compare with the full right-product lattice in both norm parities. Its magnitude alone does not establish integrality. The general Q1 fixed-schedule HNF and its intermediate widths remain open.
 
 Rick directed the Stage 2b/2d work. OpenAI Codex implemented the native order action and lattice comparison, and ran the public-fixture checks.
+
+## 2026-11-26 — Determinant orientation and the shortest-equivalent ideal
+
+The preceding entry asked whether the last two raw coordinates in the shortest-equivalent construction are a Gaussian unit. The following derivation uses only the admitted ideal's index and its closure under the maximal order. It applies to an imported basis once those properties have been checked.
+
+Write the raw numerator columns as Gaussian pairs U = (z₁,w₁), V = (z₂,w₂), representing z + wj. Let L be their Gaussian span and d = z₁w₂ − z₂w₁. The integer index of L in the raw coordinate lattice is d·conj(d) = 4T², where T > 0 is the carried ideal norm. Left multiplication by j belongs to the order since j = 2H − i with H = (i+j)/2. It sends (z,w) to (−p·conj(w),conj(z)). The columns jU,jV therefore equal (U,V)M for a Gaussian integer matrix M. Taking determinants gives d·det(M) = p·conj(d).
+
+Remove the largest power of p dividing d in the Gaussian integers, writing d = pᵏd₀. The field prime p is 3 modulo 4, so it stays prime in the Gaussian integers. Thus d₀ is coprime to p, and d₀ divides conj(d₀). Their norms agree, so they differ by a unit. The same holds for d and conj(d). Writing d = a+bi, this forces a = 0, b = 0, or |a| = |b|. The last case would give a² = 2T², impossible by the parity of the exponent of 2. Consequently ε = d/(2T) is one of 1, −1, i, −i. A Gaussian size reduction preserves d, a column swap negates it, and the ordered signing intersection (qV,U+γV) has determinant −qd.
+
+For β = U/2, right multiplication by conj(β)/T takes the two raw columns to (2F00,0) and (h,ε), in Gaussian pairs. Here F00 is the first diagonal of the integral norm form, h = F20+iF21 = (z₂·conj(z₁)+p w₂·conj(w₁))/(2T), and the identities follow by quaternion multiplication. This gives the full image lattice because right multiplication commutes with the left Gaussian action. To see that the second column lies in the order, take det(HU,V)/d. This is a Gaussian integer by closure. Expanding the determinant gives (iε−h)/(2ε), so h ≡ iε modulo 2. In raw coordinates these are exactly the two order parity checks. The first column also lies in the order, and the raw index of their span is |2F00·ε|² = 4F00². Its carried norm is therefore F00 for either output parity.
+
+Checked the unit and both parity congruences with exact integer arithmetic on the 55 committed reducer rows, rotating the second vector by each of the four Gaussian units (220 checks). At `0b98bd3` the native signing-intersection replay also passed all 280 independent fixture rows across the five sets in debug and release on x86-64. Those runs exercise the signing intersection and reducer. The equivalent-ideal derivation above is ready for independent review. A native implementation still needs intermediate-width bounds.
+
+Rick directed the Stage 2b/2d work. OpenAI Codex derived the orientation and parity identities and ran the fixture checks.
