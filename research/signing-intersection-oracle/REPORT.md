@@ -1,5 +1,7 @@
 # Signing-intersection oracle (Rick, t45u, question 2)
 
+> **Follow-up (t49u, t51u):** oracle-only fixtures with the column HNF, composite odd key norms accepted by admission, and a corrected comaximal-versus-coprime statement are in [`followup/FOLLOWUP.md`](followup/FOLLOWUP.md). Section 3 below has been corrected accordingly.
+
 Branch `experiment/signing-intersection-oracle`, off `research` (`c94f25b`). Prototype code read and run
 from `origin/dev` `470d537` (PR #47, #48, #49 and #50 merged); nothing pushed to any PR, `dev` untouched.
 
@@ -44,7 +46,7 @@ products in own quaternion arithmetic, associativity and `O0`-closure tested), `
 `{N, root}`, with no shape assumed. `I_sec ∩ I_q` is then computed four ways, each canonicalized to row-HNF:
 (a) Sage `FreeModule.submodule(...).intersection`; (b) the dual-lattice route `(L₁* + L₂*)*` with PARI `mathnf`;
 (c) the kernel of `ρ` restricted to `I_sec` by integer linear algebra, which uses no coprimality;
-(d) the coprime formula `q·I_sec + N·I_q` (Q3). A fifth check: the lattice of `GenericHnf(Nq, root_CRT)`, the general constructor
+(d) the coprime formula `q·I_sec + N·I_q` (Q3, under `gcd(N,q) = 1`). A fifth check: the lattice of `GenericHnf(Nq, root_CRT)`, the general constructor
 at the product norm with the parity-lifted CRT root, equals the specialized lattice. The four routes agreed
 with each other on every row, and the specialized lattice `Z-span{U, JU, V, JV}` equals all of them.
 
@@ -71,7 +73,17 @@ prototype's Baillie–PSW), lattices from Sage and PARI.
 
     Z[i]·qv ⊕ Z[i]·(u + γv) = I_s ∩ I_q,    γ ≡ −ρ(u)/ρ(v),
 
-this ideal has norm `Nq`, and `I_s + I_q = O0`.
+this ideal has index `N²q²` in `O0` (norm `Nq`), and `I_s + I_q = O0` (the ideals are **comaximal**).
+
+The hypothesis `ρ(v)` unit proves comaximality of the *ideals*. It does **not** prove that the integer norms `N` and `q`
+are coprime (they could share a factor; see the shared-factor toy sweep in `followup/`). Which conclusion needs which hypothesis:
+
+| Conclusion | Needs |
+|---|---|
+| lattice equality `⟨qv, u+γv⟩ = I_s ∩ I_q` | `(u,v)` a `Z[i]`-basis of `I_s`, `ρ(v)` a unit mod `q`; nothing about `gcd(N,q)` |
+| `I_s + I_q = O0` (comaximal) | the same unit condition (`ρ|_{I_s}` onto) |
+| carried norm `T = Nq`, index `N²q²` | the same unit condition (index count in step 4, equivalently CRT for comaximal ideals); not `gcd(N,q) = 1` |
+| `gcd(N, q) = 1`, the coprime formula `q·I_s + N·I_q` as a *proved* statement (CRT), and the root `CRT(root_N, root_q)` at modulus `Nq` | **separately**: `q` genuinely prime and `0 < N < q` (so `q ∤ N`). In the signer this is the public Baillie–PSW test on `q` plus Q4 (`N < 2^B ≤ 2^(2e−6) ≤ q`) |
 
 *Proof.* (1) `ρ` is `Z[i]`-linear for left multiplication by Gaussian integers (`J` rotates both components).
 (2) `I_q = O0·q + O0·(r + j)`: both generators lie in `ker ρ` (the `O0` generators `1, i, (i+j)/2, (1+k)/2` applied to
@@ -85,13 +97,18 @@ intersection in `I_s` is `q²` as a `Z`-module index, `[O0 : I_s ∩ I_q] = N²q
 
 Consequences:
 
-* **Coprimality is not a separate precondition of the equality.** It is a consequence of `ρ(v)` being a unit.
-  The Q3 formula `qI_s + NI_q` needs `gcd(N, q) = 1`, and that holds anyway here (`N < 2^B ≤ 2^(2e−6) ≤ q`). The toy sweep
-  includes `q = N` and `q = p`: the specialized output was never produced for non-comaximal ideals (0 of the 6
-  non-comaximal pairs).
-* **Primality of `q` is not needed for correctness.** The inverse is verified by product-back. A composite `q`
-  with a wrong Fermat inverse is marked; if it passes, the inverse is right and the theorem still applies. The
-  public Baillie–PSW test is a compatibility check with the verifier, not a premise of this equality.
+* **Comaximality and norm coprimality are different facts.** `ρ(v)` a unit gives `I_s + I_q = O0`, and with it the
+  lattice equality and the norm `Nq`. It says nothing about `gcd(N, q)`. Norm coprimality comes from `q` prime and
+  `0 < N < q` (here `N < 2^B ≤ 2^(2e−6) ≤ q`), and it is what the Q3 formula `q·I_s + N·I_q` and the CRT root at modulus
+  `Nq` are proved under. The toy sweeps in `followup/shared_factor_toy.py` include `q | N` and `q = N` (p = 3 and p = 7,
+  `N ∈ {5, 7, 35}`, `q ∈ {5, 7}`): wherever the specialized output exists the ideals are comaximal and the lattice equality and
+  the norm `Nq` hold with `gcd(N,q) > 1`; where the ideals are not comaximal (for example `I_s = I_q`) the specialized
+  construction refuses, the intersection's norm is not `Nq`, and the Q3 formula is wrong. (The Q3 formula did equal the
+  intersection on every comaximal shared-factor toy pair, 612 pairs; I have no proof of that without `gcd = 1`, and the signer does not rely on it.)
+* **Primality of `q` is a premise for norm coprimality, not for the lattice equality.** The inverse is verified by
+  product-back, which I keep as the check that carries the equality: a composite `q` with a wrong Fermat inverse is marked,
+  and if the product-back passes the inverse is right and the theorem applies. But a composite `q > N` could share a factor with `N`,
+  so the public Baillie–PSW test is also what gives `gcd(N, q) = 1`.
 * **`q ≡ 3 (mod 4)` always.** `s` is odd, so `s² ≡ 1 (mod 8)`, and `8 | 2^(2e−5)`, so `q ≡ 7 (mod 8)`. `Z[i]/q` is a
   field for prime `q`, and `ρ(v)` is a unit iff `ρ(v) ≠ 0` iff `v ∉ I_q`. (The toy sweep with `q ≡ 1 mod 4` shows the other
   case: `ρ(v)` can be a nonzero zero divisor and the check marks the output; 221 of 24,694 attempts, none reachable at
@@ -119,7 +136,7 @@ Consequences:
 | challenge scalar odd, `q` prime, bit length `2e−5` | `intersection` returns `None` | `s-even`, `q-composite`, `s-above-challenge-range` → `none` |
 | `p + x² + y² ≡ 0 (mod q)` | `intersection`: sets `ok`, marks all outputs | `q-root-wrong`, `q-root-zero` → all nine marked |
 | `ρ(v)` unit mod `q` | `intersection`: product-back check, marks outputs | unreachable at the sets (guard); toy sweeps: every failure is `v ∈ I_q` or, for `q ≡ 1 mod 4`, a zero divisor; never an unexplained failure |
-| `N < q` (coprime) | follows from `N < 2^B ≤ q`; not checked at runtime | `bounds.py` |
+| `gcd(N, q) = 1` (needed for Q3 and CRT, not for the lattice equality or `T = Nq`) | `q` prime (checked above) and `0 < N < q`, from `N < 2^B ≤ q`; not checked at runtime | `bounds.py`; `followup/shared_factor_toy.py` |
 
 ## 4. Mismatches
 
@@ -159,7 +176,7 @@ intermediates inside `intersection` or `admit`.
   reduction of `(U, V)` needs `2·D(u,v) = (odd)·N4(v)`; for a pre-reduced pair that forces `2|D(u,v)| = N4(v) = N4(u)`, an
   extremal hexagonal-type basis, and I found none at real sizes. Tie handling in the reducer is covered by the committed fixtures
   and the earlier research, not by this oracle.
-* Primality of `q` beyond pseudoprimality (the verifier's own premise).
+* Primality of `q` beyond pseudoprimality (the verifier's own premise; it is what gives `gcd(N, q) = 1`).
 
 ## 7. Fixtures Rick can commit
 

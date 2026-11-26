@@ -1,0 +1,2070 @@
+[
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "27139754071271",
+    1
+   ],
+   [
+    "4535385884312456025384444862061687",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 7.998916703418988e-06,
+  "composite": true,
+  "case": "semiprime-0",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "29815328460440465963",
+    1
+   ],
+   [
+    "2628114512544990222976756207",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.02194321553044108,
+  "composite": true,
+  "case": "semiprime-1",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "three",
+  "factors": [
+   [
+    "4138601",
+    1
+   ],
+   [
+    "35990489",
+    1
+   ],
+   [
+    "563364536451619878831361750076947",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.010384641069733332,
+  "composite": true,
+  "case": "three-2",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "many",
+  "factors": [
+   [
+    "13",
+    1
+   ],
+   [
+    "79",
+    1
+   ],
+   [
+    "83",
+    1
+   ],
+   [
+    "103",
+    1
+   ],
+   [
+    "139",
+    1
+   ],
+   [
+    "1747",
+    1
+   ],
+   [
+    "10194218239275524200817556718839703",
+    1
+   ]
+  ],
+  "N_bits": 154,
+  "guard_ratio_sq": 1.0259040948859446e-05,
+  "composite": true,
+  "case": "many-3",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-times-large",
+  "factors": [
+   [
+    "19",
+    1
+   ],
+   [
+    "4609571534673823176218477828374511467754192423",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 7.686693743813891e-06,
+  "composite": true,
+  "case": "small-times-large-4",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square",
+  "factors": [
+   [
+    "215160393718209405500053",
+    2
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.01162295751053364,
+  "composite": true,
+  "case": "square-5",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "cube",
+  "factors": [
+   [
+    "3396744470911439",
+    3
+   ]
+  ],
+  "N_bits": 155,
+  "guard_ratio_sq": 0.0018411192987107612,
+  "composite": true,
+  "case": "cube-6",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square-times-prime",
+  "factors": [
+   [
+    "3457049",
+    2
+   ],
+   [
+    "6402755436227569710504341775952913",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 7.014471998135887e-06,
+  "composite": true,
+  "case": "square-times-prime-7",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-power",
+  "factors": [
+   [
+    "3",
+    99
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 7.205066687424235e-06,
+  "composite": true,
+  "case": "small-power-8",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "56713",
+    1
+   ],
+   [
+    "1672985299279502756979009851234657967904171",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 0.0023521682426971085,
+  "composite": true,
+  "case": "semiprime-9",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "225163",
+    1
+   ],
+   [
+    "559750457655173200038266261777457735970327",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 5.051138397154775e-06,
+  "composite": true,
+  "case": "semiprime-10",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "three",
+  "factors": [
+   [
+    "11",
+    1
+   ],
+   [
+    "30861190707443",
+    1
+   ],
+   [
+    "217283253194255161258200667300889",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 9.353600257176106e-06,
+  "composite": true,
+  "case": "three-11",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "many",
+  "factors": [
+   [
+    "61",
+    1
+   ],
+   [
+    "89",
+    1
+   ],
+   [
+    "263",
+    1
+   ],
+   [
+    "389",
+    1
+   ],
+   [
+    "62571197530656839314631868259160110721",
+    1
+   ]
+  ],
+  "N_bits": 155,
+  "guard_ratio_sq": 0.03552942601485978,
+  "composite": true,
+  "case": "many-12",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-times-large",
+  "factors": [
+   [
+    "7",
+    1
+   ],
+   [
+    "19860948976735499923853380623856390326899597369",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 0.01370500588514778,
+  "composite": true,
+  "case": "small-times-large-13",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square",
+  "factors": [
+   [
+    "239216972243897297947523",
+    2
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.0032512159172846202,
+  "composite": true,
+  "case": "square-14",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "cube",
+  "factors": [
+   [
+    "2350003617832669",
+    3
+   ]
+  ],
+  "N_bits": 154,
+  "guard_ratio_sq": 4.840046397126965e-06,
+  "composite": true,
+  "case": "cube-15",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square-times-prime",
+  "factors": [
+   [
+    "8466203903",
+    2
+   ],
+   [
+    "1793720564388671355530870107",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 0.0029932195005717825,
+  "composite": true,
+  "case": "square-times-prime-16",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-power",
+  "factors": [
+   [
+    "7",
+    55
+   ]
+  ],
+  "N_bits": 155,
+  "guard_ratio_sq": 5.13011206209977e-06,
+  "composite": true,
+  "case": "small-power-17",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "907556841363217",
+    1
+   ],
+   [
+    "128220767171167075904911120693289",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 0.007286034135429924,
+  "composite": true,
+  "case": "semiprime-18",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "5731269359",
+    1
+   ],
+   [
+    "15063691589989674088953296199521009543",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 6.098361298398154e-06,
+  "composite": true,
+  "case": "semiprime-19",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "three",
+  "factors": [
+   [
+    "127",
+    1
+   ],
+   [
+    "239",
+    1
+   ],
+   [
+    "3361448262307443642047839206347719904074601",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 0.004103883964509216,
+  "composite": true,
+  "case": "three-20",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "many",
+  "factors": [
+   [
+    "11",
+    1
+   ],
+   [
+    "17",
+    1
+   ],
+   [
+    "41",
+    1
+   ],
+   [
+    "61",
+    1
+   ],
+   [
+    "73",
+    1
+   ],
+   [
+    "2011",
+    1
+   ],
+   [
+    "14916651000326094964245005570839789",
+    1
+   ]
+  ],
+  "N_bits": 150,
+  "guard_ratio_sq": 0.019558708817858844,
+  "composite": true,
+  "case": "many-21",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-times-large",
+  "factors": [
+   [
+    "19",
+    1
+   ],
+   [
+    "3226131234945267733815036452698638159418129217",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.0049823417385963945,
+  "composite": true,
+  "case": "small-times-large-22",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square",
+  "factors": [
+   [
+    "190663066552562786224517",
+    2
+   ]
+  ],
+  "N_bits": 155,
+  "guard_ratio_sq": 5.978590710044835e-06,
+  "composite": true,
+  "case": "square-23",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "cube",
+  "factors": [
+   [
+    "3470155528142543",
+    3
+   ]
+  ],
+  "N_bits": 155,
+  "guard_ratio_sq": 1.1987423873702887e-05,
+  "composite": true,
+  "case": "cube-24",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square-times-prime",
+  "factors": [
+   [
+    "99719",
+    2
+   ],
+   [
+    "5731609260362879941571620673388340589",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 1.0034050877594234e-05,
+  "composite": true,
+  "case": "square-times-prime-25",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-power",
+  "factors": [
+   [
+    "7",
+    55
+   ]
+  ],
+  "N_bits": 155,
+  "guard_ratio_sq": 5.324652332723506e-06,
+  "composite": true,
+  "case": "small-power-26",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "2723696647625003",
+    1
+   ],
+   [
+    "39279865710857350005121051020761",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 5.453837651310317e-06,
+  "composite": true,
+  "case": "semiprime-27",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "2661331549",
+    1
+   ],
+   [
+    "21575156475415638751541759358563011903",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 7.616983727896358e-06,
+  "composite": true,
+  "case": "semiprime-28",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "three",
+  "factors": [
+   [
+    "931127",
+    1
+   ],
+   [
+    "760572023",
+    1
+   ],
+   [
+    "99283168075256064532392850305637",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.003696565248971473,
+  "composite": true,
+  "case": "three-29",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "many",
+  "factors": [
+   [
+    "11",
+    1
+   ],
+   [
+    "73",
+    1
+   ],
+   [
+    "331",
+    1
+   ],
+   [
+    "863",
+    1
+   ],
+   [
+    "144593496461102707875733207475155721401",
+    1
+   ]
+  ],
+  "N_bits": 155,
+  "guard_ratio_sq": 0.003618969206341398,
+  "composite": true,
+  "case": "many-30",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-times-large",
+  "factors": [
+   [
+    "3",
+    1
+   ],
+   [
+    "30875388272920126075876123596780675091723325477",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 0.01861489249838152,
+  "composite": true,
+  "case": "small-times-large-31",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square",
+  "factors": [
+   [
+    "277943147745537334668121",
+    2
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 8.244947191521745e-06,
+  "composite": true,
+  "case": "square-32",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "cube",
+  "factors": [
+   [
+    "3947890269043757",
+    3
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 5.300207938248901e-06,
+  "composite": true,
+  "case": "cube-33",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square-times-prime",
+  "factors": [
+   [
+    "8307319",
+    1
+   ],
+   [
+    "146852960635722133033",
+    2
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 7.16682050047562e-06,
+  "composite": true,
+  "case": "square-times-prime-34",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-power",
+  "factors": [
+   [
+    "3",
+    99
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 0.006697386655632119,
+  "composite": true,
+  "case": "small-power-35",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "2652183406597",
+    1
+   ],
+   [
+    "41214510496306003537386799269542507",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 5.041705911292426e-06,
+  "composite": true,
+  "case": "semiprime-36",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "106894089175441129",
+    1
+   ],
+   [
+    "839098474316050584139060689157",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 1.3718534258405451e-05,
+  "composite": true,
+  "case": "semiprime-37",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "three",
+  "factors": [
+   [
+    "12097",
+    1
+   ],
+   [
+    "209504711697269",
+    1
+   ],
+   [
+    "25305941474503985608297113673",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 4.941778229895188e-06,
+  "composite": true,
+  "case": "three-38",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "many",
+  "factors": [
+   [
+    "67",
+    1
+   ],
+   [
+    "71",
+    1
+   ],
+   [
+    "181",
+    1
+   ],
+   [
+    "271",
+    1
+   ],
+   [
+    "317",
+    1
+   ],
+   [
+    "1307",
+    1
+   ],
+   [
+    "50411920365837164075708673851411",
+    1
+   ]
+  ],
+  "N_bits": 152,
+  "guard_ratio_sq": 5.123647382538243e-06,
+  "composite": true,
+  "case": "many-39",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-times-large",
+  "factors": [
+   [
+    "7",
+    1
+   ],
+   [
+    "19336476610525847364994727899734913207349159651",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 3.9862280101296357e-05,
+  "composite": true,
+  "case": "small-times-large-40",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square",
+  "factors": [
+   [
+    "270646375874338968737461",
+    2
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.0056099971832195405,
+  "composite": true,
+  "case": "square-41",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "cube",
+  "factors": [
+   [
+    "4205323930543009",
+    3
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.0042518052909611475,
+  "composite": true,
+  "case": "cube-42",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square-times-prime",
+  "factors": [
+   [
+    "10688938417",
+    2
+   ],
+   [
+    "479639271841724000087294677",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 5.852305663525466e-06,
+  "composite": true,
+  "case": "square-times-prime-43",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-power",
+  "factors": [
+   [
+    "5",
+    67
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 1.0887329798051721e-05,
+  "composite": true,
+  "case": "small-power-44",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "1109408719760447",
+    1
+   ],
+   [
+    "96014888148650336580692408857847",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 5.091543745868475e-06,
+  "composite": true,
+  "case": "semiprime-45",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "211",
+    1
+   ],
+   [
+    "626306685027343937248245486557490434195658829",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 0.006045712697978211,
+  "composite": true,
+  "case": "semiprime-46",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "three",
+  "factors": [
+   [
+    "172561",
+    1
+   ],
+   [
+    "5848534513469",
+    1
+   ],
+   [
+    "62760466447037400032111337593",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 3.635022507327615e-05,
+  "composite": true,
+  "case": "three-47",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "many",
+  "factors": [
+   [
+    "281",
+    1
+   ],
+   [
+    "431",
+    1
+   ],
+   [
+    "877",
+    1
+   ],
+   [
+    "1291",
+    1
+   ],
+   [
+    "185714606509110736296982156907615027",
+    1
+   ]
+  ],
+  "N_bits": 155,
+  "guard_ratio_sq": 0.0011099247301869723,
+  "composite": true,
+  "case": "many-48",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-times-large",
+  "factors": [
+   [
+    "17",
+    1
+   ],
+   [
+    "3757521388785003137338292590180734200393187443",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 3.6935714397952956e-05,
+  "composite": true,
+  "case": "small-times-large-49",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square",
+  "factors": [
+   [
+    "281908353213138826918123",
+    2
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 5.547566804627347e-06,
+  "composite": true,
+  "case": "square-50",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "cube",
+  "factors": [
+   [
+    "3836758840658651",
+    3
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.003293732081862455,
+  "composite": true,
+  "case": "cube-51",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square-times-prime",
+  "factors": [
+   [
+    "18746856425641",
+    1
+   ],
+   [
+    "56782049073765149",
+    2
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.006175227188163095,
+  "composite": true,
+  "case": "square-times-prime-52",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-power",
+  "factors": [
+   [
+    "7",
+    55
+   ]
+  ],
+  "N_bits": 155,
+  "guard_ratio_sq": 2.095064210123501e-05,
+  "composite": true,
+  "case": "small-power-53",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "442823",
+    1
+   ],
+   [
+    "241680839128971550088351955644094547320313",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 4.765252664797335e-05,
+  "composite": true,
+  "case": "semiprime-54",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "821",
+    1
+   ],
+   [
+    "98118376308055397852969095506163313067410507",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.0017437604138229924,
+  "composite": true,
+  "case": "semiprime-55",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "three",
+  "factors": [
+   [
+    "664099",
+    1
+   ],
+   [
+    "201118627",
+    1
+   ],
+   [
+    "368527979932203708133063337026633",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 6.442097557214051e-06,
+  "composite": true,
+  "case": "three-56",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "many",
+  "factors": [
+   [
+    "23",
+    1
+   ],
+   [
+    "29",
+    1
+   ],
+   [
+    "47",
+    1
+   ],
+   [
+    "59",
+    1
+   ],
+   [
+    "881",
+    1
+   ],
+   [
+    "1019",
+    1
+   ],
+   [
+    "31596139537206993667987350917184793",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.007734259899016994,
+  "composite": true,
+  "case": "many-57",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-times-large",
+  "factors": [
+   [
+    "7",
+    1
+   ],
+   [
+    "22234673265618811903774199430044508018113756177",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 6.10291497061357e-06,
+  "composite": true,
+  "case": "small-times-large-58",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square",
+  "factors": [
+   [
+    "223279094314309963582993",
+    2
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 2.0581553048266832e-05,
+  "composite": true,
+  "case": "square-59",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "cube",
+  "factors": [
+   [
+    "2611618962077707",
+    3
+   ]
+  ],
+  "N_bits": 154,
+  "guard_ratio_sq": 0.008486507235179193,
+  "composite": true,
+  "case": "cube-60",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square-times-prime",
+  "factors": [
+   [
+    "515841223",
+    2
+   ],
+   [
+    "631782714160261493126507006347",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 6.014090091758376e-06,
+  "composite": true,
+  "case": "square-times-prime-61",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-power",
+  "factors": [
+   [
+    "5",
+    67
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 3.595819048939391e-05,
+  "composite": true,
+  "case": "small-power-62",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "160789225569591552823",
+    1
+   ],
+   [
+    "605267254565578212620430167",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 2.1403459327199453e-05,
+  "composite": true,
+  "case": "semiprime-63",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "31339586569",
+    1
+   ],
+   [
+    "3477803801626436484686502445066190581",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 0.010009882795308827,
+  "composite": true,
+  "case": "semiprime-64",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "three",
+  "factors": [
+   [
+    "4638911",
+    1
+   ],
+   [
+    "164726772131",
+    1
+   ],
+   [
+    "69052738602935782894147319419",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 7.543753154759661e-06,
+  "composite": true,
+  "case": "three-65",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "many",
+  "factors": [
+   [
+    "29",
+    1
+   ],
+   [
+    "181",
+    1
+   ],
+   [
+    "1303",
+    1
+   ],
+   [
+    "302837557483859325840757102538291863337",
+    1
+   ]
+  ],
+  "N_bits": 151,
+  "guard_ratio_sq": 2.2820602271045758e-05,
+  "composite": true,
+  "case": "many-66",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-times-large",
+  "factors": [
+   [
+    "13",
+    1
+   ],
+   [
+    "6856007792068979774601152496967313906565302117",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 6.66668906353986e-06,
+  "composite": true,
+  "case": "small-times-large-67",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square",
+  "factors": [
+   [
+    "234930625882618625856991",
+    2
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.005359029547954621,
+  "composite": true,
+  "case": "square-68",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "cube",
+  "factors": [
+   [
+    "2352679042415467",
+    3
+   ]
+  ],
+  "N_bits": 154,
+  "guard_ratio_sq": 0.016412151339726174,
+  "composite": true,
+  "case": "cube-69",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square-times-prime",
+  "factors": [
+   [
+    "268281026813",
+    2
+   ],
+   [
+    "1565416367878606146823597",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 5.1735687506300174e-06,
+  "composite": true,
+  "case": "square-times-prime-70",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-power",
+  "factors": [
+   [
+    "5",
+    67
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.008969922227581533,
+  "composite": true,
+  "case": "small-power-71",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "2416441",
+    1
+   ],
+   [
+    "38373409500993577837784834488114711386427",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 6.926705342860353e-06,
+  "composite": true,
+  "case": "semiprime-72",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "245370784789370431705219",
+    1
+   ],
+   [
+    "369591365205456888785887",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 8.755564694763093e-06,
+  "composite": true,
+  "case": "semiprime-73",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "three",
+  "factors": [
+   [
+    "6572191",
+    1
+   ],
+   [
+    "88478479",
+    1
+   ],
+   [
+    "127078414746135084546896048897803",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.005299864958581173,
+  "composite": true,
+  "case": "three-74",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "many",
+  "factors": [
+   [
+    "11",
+    1
+   ],
+   [
+    "13",
+    1
+   ],
+   [
+    "23",
+    1
+   ],
+   [
+    "163",
+    1
+   ],
+   [
+    "191",
+    1
+   ],
+   [
+    "239",
+    1
+   ],
+   [
+    "1212085250604846826165405205442682741",
+    1
+   ]
+  ],
+  "N_bits": 155,
+  "guard_ratio_sq": 1.899691550819387e-05,
+  "composite": true,
+  "case": "many-75",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-times-large",
+  "factors": [
+   [
+    "11",
+    1
+   ],
+   [
+    "6884148187034572318030340939746509664030805479",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.00014012869171094186,
+  "composite": true,
+  "case": "small-times-large-76",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square",
+  "factors": [
+   [
+    "182280658045164629761543",
+    2
+   ]
+  ],
+  "N_bits": 155,
+  "guard_ratio_sq": 0.002175943046618538,
+  "composite": true,
+  "case": "square-77",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "cube",
+  "factors": [
+   [
+    "3202384663685633",
+    3
+   ]
+  ],
+  "N_bits": 155,
+  "guard_ratio_sq": 0.023294111715549525,
+  "composite": true,
+  "case": "cube-78",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square-times-prime",
+  "factors": [
+   [
+    "7873",
+    2
+   ],
+   [
+    "1867783007839975583224680476614368582797",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 6.153267184619912e-06,
+  "composite": true,
+  "case": "square-times-prime-79",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-power",
+  "factors": [
+   [
+    "3",
+    99
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 0.000715146293532969,
+  "composite": true,
+  "case": "small-power-80",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "2006022237346349637479",
+    1
+   ],
+   [
+    "76905282274794077792851577",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 6.292556247178359e-06,
+  "composite": true,
+  "case": "semiprime-81",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "semiprime",
+  "factors": [
+   [
+    "10971293",
+    1
+   ],
+   [
+    "9675699846157967163835906157656710494201",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 4.821246458327195e-06,
+  "composite": true,
+  "case": "semiprime-82",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "three",
+  "factors": [
+   [
+    "521",
+    1
+   ],
+   [
+    "133916819119",
+    1
+   ],
+   [
+    "1214747703538899100312620340420853",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.0007148654598216614,
+  "composite": true,
+  "case": "three-83",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "many",
+  "factors": [
+   [
+    "17",
+    1
+   ],
+   [
+    "31",
+    1
+   ],
+   [
+    "61",
+    1
+   ],
+   [
+    "67",
+    1
+   ],
+   [
+    "367",
+    1
+   ],
+   [
+    "739",
+    1
+   ],
+   [
+    "1901",
+    1
+   ],
+   [
+    "14348931735928286843769810754013",
+    1
+   ]
+  ],
+  "N_bits": 154,
+  "guard_ratio_sq": 2.5091912386568916e-05,
+  "composite": true,
+  "case": "many-84",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-times-large",
+  "factors": [
+   [
+    "23",
+    1
+   ],
+   [
+    "4394787434673132116663651806673042140495097783",
+    1
+   ]
+  ],
+  "N_bits": 157,
+  "guard_ratio_sq": 5.253979767545232e-06,
+  "composite": true,
+  "case": "small-times-large-85",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square",
+  "factors": [
+   [
+    "262997981705578998155443",
+    2
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 6.360101591392244e-06,
+  "composite": true,
+  "case": "square-86",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "cube",
+  "factors": [
+   [
+    "3184596151971097",
+    3
+   ]
+  ],
+  "N_bits": 155,
+  "guard_ratio_sq": 0.0017779117113092158,
+  "composite": true,
+  "case": "cube-87",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "square-times-prime",
+  "factors": [
+   [
+    "1171",
+    2
+   ],
+   [
+    "35102850994434348625406517593508242994071",
+    1
+   ]
+  ],
+  "N_bits": 156,
+  "guard_ratio_sq": 0.00040683027286512617,
+  "composite": true,
+  "case": "square-times-prime-88",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ },
+ {
+  "shape": "small-power",
+  "factors": [
+   [
+    "7",
+    55
+   ]
+  ],
+  "N_bits": 155,
+  "guard_ratio_sq": 5.354959473258405e-06,
+  "composite": true,
+  "case": "small-power-89",
+  "oracle_admit": true,
+  "rust_admit": true,
+  "inter": "ok",
+  "agree": true,
+  "all_routes": true
+ }
+]
