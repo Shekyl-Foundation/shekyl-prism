@@ -343,6 +343,7 @@ jobs:
             grep -q 'test the_ideal_layer_is_under_hazmat ... ok' signer.log || { cat signer.log; exit 1; }
             grep -Fxq 'test ideal_lattice::guarded_intersections_match_the_coprime_lattice_sum ... ok' signer.log || { cat signer.log; exit 1; }
             grep -Fxq 'test driver::intersection_oracle::replays_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test driver::intersection_oracle::intersection_spans_match_oracle_hnfs_at_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
             grep -Fxq 'test hazmat::ideal::geometry::tests::left_action_on_order_basis_and_fractional_inputs ... ok' signer.log || { cat signer.log; exit 1; }
           done
 
@@ -421,6 +422,7 @@ jobs:
             grep -q 'test the_ideal_layer_is_under_hazmat ... ok' signer.log || { cat signer.log; exit 1; }
             grep -Fxq 'test ideal_lattice::guarded_intersections_match_the_coprime_lattice_sum ... ok' signer.log || { cat signer.log; exit 1; }
             grep -Fxq 'test driver::intersection_oracle::replays_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test driver::intersection_oracle::intersection_spans_match_oracle_hnfs_at_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
             grep -Fxq 'test hazmat::ideal::geometry::tests::left_action_on_order_basis_and_fractional_inputs ... ok' signer.log || { cat signer.log; exit 1; }
           done
 

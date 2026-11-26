@@ -11,49 +11,11 @@ use num_bigint::{BigInt, Sign};
 use num_integer::Integer;
 use shekyl_prism::hazmat::field::{P248, P324, P376, P500, P664};
 use shekyl_prism::hazmat::ideal::{geometry::degree_bits, GenericHnf, GuardedIdeal, IdealSet};
-use shekyl_prism::hazmat::int::{Int, SecretInt};
+use shekyl_prism::hazmat::int::SecretInt;
 
-type Column = [BigInt; 4];
-
-fn subtract_multiple(column: &mut Column, q: &BigInt, pivot: &Column) {
-    for (x, y) in column.iter_mut().zip(pivot) {
-        *x -= q * y;
-    }
-}
-
-/// Full-rank column HNF. Each pivot clears its row in the remaining
-/// generators. Later columns have canonical residues above their pivots.
-fn column_hnf(mut generators: Vec<Column>) -> Vec<Column> {
-    let mut basis: Vec<Column> = Vec::new();
-    for row in (0..4).rev() {
-        let mut pivot = generators.pop().unwrap();
-        for col in &mut generators {
-            while col[row] != BigInt::ZERO {
-                let q = &pivot[row] / &col[row];
-                subtract_multiple(&mut pivot, &q, col);
-                std::mem::swap(&mut pivot, col);
-            }
-        }
-        assert_ne!(pivot[row], BigInt::ZERO, "rank-deficient generators");
-        if pivot[row].sign() == Sign::Minus {
-            pivot = pivot.map(|x| -x);
-        }
-        for col in &mut basis {
-            let q = col[row].div_floor(&pivot[row]);
-            subtract_multiple(col, &q, &pivot);
-        }
-        basis.push(pivot);
-    }
-    basis.reverse();
-    basis
-}
-
-fn gaussian_columns(u: Column, v: Column) -> [Column; 4] {
-    let rotate = |[a, b, c, d]: &Column| [-b, a.clone(), -d, c.clone()];
-    let iu = rotate(&u);
-    let iv = rotate(&v);
-    [u, iu, v, iv]
-}
+#[path = "../support/lattice.rs"]
+mod lattice;
+use lattice::{column_hnf, gaussian_columns, public_fixture, subtract_multiple};
 
 fn scalar<const W: usize>(value: &BigInt) -> SecretInt<W> {
     let (sign, bytes) = value.to_bytes_le();
@@ -63,18 +25,6 @@ fn scalar<const W: usize>(value: &BigInt) -> SecretInt<W> {
     } else {
         x
     }
-}
-
-fn public_fixture<const W: usize>(value: &SecretInt<W>) -> BigInt {
-    let x: Int<W> = value.declassify().expect("marked public fixture");
-    let mut bytes = vec![0; W * 8];
-    x.to_le_bytes(&mut bytes).unwrap();
-    let sign = if x.is_negative() {
-        Sign::Minus
-    } else {
-        Sign::Plus
-    };
-    BigInt::from_bytes_le(sign, &bytes)
 }
 
 fn compare_intersections<S: IdealSet<W, D>, const W: usize, const D: usize>(corpus: &str) {
