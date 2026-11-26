@@ -1,0 +1,38 @@
+{
+ "set": "P376",
+ "K": 225,
+ "runs": 349,
+ "maxact": 219,
+ "widths": {
+  "add": 450,
+  "cmp": 449,
+  "sub": 450,
+  "sel": 450,
+  "shl_public": 450,
+  "abs": 450,
+  "mul": 899,
+  "red_prod_u": 899,
+  "shr_public": 899,
+  "signbit": 450,
+  "bitlen": 225,
+  "neg": 450,
+  "red_prod_t": 675,
+  "shl_secret": 450
+ },
+ "shapes": {
+  "small N|wide=False": 11,
+  "generic (2N,2N,1,1)|wide=False": 13,
+  "other d=(30,30,3,3)|wide=False": 1,
+  "other d=(70,70,5,5)|wide=False": 1,
+  "other d=(6,6,3,3)|wide=False": 2,
+  "other d=(big,big,1009,1009)|wide=False": 1,
+  "other d=(22,22,11,11)|wide=False": 1,
+  "other d=(big,big,big,big)|wide=True": 1,
+  "other d=(2312,4,1156,2)|wide=False": 2,
+  "other d=(2720,16,1360,8)|wide=False": 1,
+  "other d=(29248,32,14624,16)|wide=False": 1,
+  "other d=(big,2,big,1)|wide=False": 3,
+  "other d=(big,42,big,21)|wide=False": 1,
+  "generic (2N,2N,1,1)|wide=True": 1
+ }
+}

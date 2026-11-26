@@ -1,0 +1,2 @@
+generators without 2N Z^4 inside: 3000 cases equal HNF(span G + mZ^4)
+

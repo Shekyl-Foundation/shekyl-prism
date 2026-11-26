@@ -1,0 +1,41 @@
+{
+ "set": "P500",
+ "K": 286,
+ "runs": 349,
+ "maxact": 284,
+ "widths": {
+  "add": 572,
+  "cmp": 571,
+  "sub": 572,
+  "sel": 572,
+  "shl_public": 572,
+  "abs": 572,
+  "mul": 1143,
+  "red_prod_u": 1143,
+  "shr_public": 1143,
+  "signbit": 572,
+  "bitlen": 286,
+  "neg": 572,
+  "red_prod_t": 858,
+  "shl_secret": 572
+ },
+ "shapes": {
+  "small N|wide=False": 11,
+  "generic (2N,2N,1,1)|wide=False": 12,
+  "other d=(30,30,3,3)|wide=False": 1,
+  "other d=(70,70,5,5)|wide=False": 1,
+  "other d=(6,6,3,3)|wide=False": 2,
+  "other d=(big,big,1009,1009)|wide=False": 1,
+  "other d=(22,22,11,11)|wide=False": 1,
+  "other d=(big,big,big,big)|wide=True": 1,
+  "other d=(820,10,410,5)|wide=False": 1,
+  "other d=(40,20,20,10)|wide=False": 1,
+  "other d=(4640,32,2320,16)|wide=False": 1,
+  "other d=(20288,64,10144,32)|wide=False": 1,
+  "other d=(big,6,big,3)|wide=False": 1,
+  "other d=(big,2,big,1)|wide=False": 2,
+  "other d=(big,12,big,6)|wide=False": 1,
+  "other d=(10,2,5,1)|wide=False": 1,
+  "generic (2N,2N,1,1)|wide=True": 1
+ }
+}

@@ -1,0 +1,7 @@
+P324: p has 326 bits, B=195, K=196; 40 ideals generated in 0.2s
+  349 runs, all equal to Sage and PARI (true lattice, with and without 2N rows) and to the ideal HNF
+  trace hash identical per k: {4: '847386cc7bf5', 5: 'f7d5ea634465', 7: 'a1bd1fedabb0', 8: 'e1b1a8ee2a9d'}
+  max active elimination steps observed 192 (schedule 391)
+  largest N bits 326 (B=195)
+  shapes: {('small N', False): 11, ('generic (2N,2N,1,1)', False): 12, ('other d=(30,30,3,3)', False): 1, ('other d=(70,70,5,5)', False): 1, ('other d=(6,6,3,3)', False): 3, ('other d=(big,big,1009,1009)', False): 1, ('other d=(22,22,11,11)', False): 1, ('other d=(big,big,big,big)', True): 1, ('other d=(2468,2,1234,1)', False): 1, ('other d=(1508,4,754,2)', False): 1, ('other d=(2896,8,1448,4)', False): 1, ('other d=(5568,192,2784,96)', False): 1, ('other d=(big,2,big,1)', False): 3, ('other d=(big,24,big,12)', False): 1, ('generic (2N,2N,1,1)', True): 1}
+  observed max bit-lengths: {'abs': 392, 'add': 392, 'bitlen': 196, 'cmp': 391, 'mul': 783, 'neg': 392, 'red_prod_t': 588, 'red_prod_u': 783, 'sel': 392, 'shl_public': 392, 'shl_secret': 392, 'shr_public': 783, 'signbit': 392, 'sub': 392}

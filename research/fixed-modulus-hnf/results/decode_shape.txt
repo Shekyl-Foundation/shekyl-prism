@@ -1,0 +1,6 @@
+P248: decode-shape (u,Ju,v,Jv) equal to Sage/PARI/ideal HNF for 7 ideals x 5 pairs
+P324: decode-shape (u,Ju,v,Jv) equal to Sage/PARI/ideal HNF for 7 ideals x 5 pairs
+P376: decode-shape (u,Ju,v,Jv) equal to Sage/PARI/ideal HNF for 7 ideals x 5 pairs
+P500: decode-shape (u,Ju,v,Jv) equal to Sage/PARI/ideal HNF for 7 ideals x 5 pairs
+P664: decode-shape (u,Ju,v,Jv) equal to Sage/PARI/ideal HNF for 7 ideals x 5 pairs
+total 175 runs

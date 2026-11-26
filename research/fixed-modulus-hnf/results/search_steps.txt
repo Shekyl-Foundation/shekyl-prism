@@ -1,0 +1,5 @@
+P248 K=159: worst observed active steps  161 (1.01 K) vs proved 2K-1 = 317
+P324 K=196: worst observed active steps  187 (0.95 K) vs proved 2K-1 = 391
+P376 K=225: worst observed active steps  210 (0.93 K) vs proved 2K-1 = 449
+P500 K=286: worst observed active steps  267 (0.93 K) vs proved 2K-1 = 571
+P664 K=368: worst observed active steps  325 (0.88 K) vs proved 2K-1 = 735
