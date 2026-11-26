@@ -1,0 +1,2 @@
+p324 {"bases": 292, "orient": 1460, "integral": 1460, "unit": 1460, "lattice_eq": 1460, "ideal_out": 1460, "hnf_shape_eq": 1460, "gram_inv": 1460, "even_out": 638, "A_even": 292, "C_even": 292, "admit_in": 30, "admit_out": 298, "out_even_only_fail": 32, "out_other_fail": 191, "guard_transfer": 292, "red_in": 62, "red_out": 62, "red_out_tie_only": 0, "second_col": 0, "j_identities": 292}
+FAILS 0
