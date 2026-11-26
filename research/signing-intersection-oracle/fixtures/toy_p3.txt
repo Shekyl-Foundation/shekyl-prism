@@ -1,0 +1,8 @@
+p=3 T=5 generic: U=(10, 0, 0, 0) V=(4, 9, 1, 0)
+  normalized Gram (2T,(x^2+y^2+p)/2T,x,y) = (10, 10, 4, 9)  det = 3
+  reduced: u=(4, -1, 1, 0) v=(1, -2, -2, -1) swaps=1 active-steps-incl-final=3  normalized Gram = (2, 2, 0, -1)
+p=3 N=5 root=(4,9) Gaussian basis u=(-2, -2, 2, 0) v=(1, 4, 0, 1); q=7 root=(0, 5)
+  specialised: U=(7, 28, 0, 7) V=(5, -8, 4, -1) T=35
+  equals sage=True pari_dual=True kernel=True q3=True
+  canonical row-HNF of the intersection: ((1, 0, 42, 53), (0, 1, 17, 42), (0, 0, 70, 0), (0, 0, 0, 70))
+  CRT root of norm 35: (14, 19)  GenericHnf(35) lattice equal: True
