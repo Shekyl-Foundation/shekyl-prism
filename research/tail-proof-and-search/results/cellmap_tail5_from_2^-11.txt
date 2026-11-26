@@ -1,0 +1,23 @@
+cellmap LMIN=2^-11 KMAX=5 depths 24,28,32,40; Lemma 1 on, Lemma C on, Endgame on
+G_2^0: nodes 2775361, good leaves 86493, bad leaves 1348460, bad volume 0.0799, queries 2883325
+   lowest bad lam 0.000488281 = 2^-11.0000
+   validation: 3000000 samples, 1478285 with >= 2 swaps, 1559325 in BAD leaves, violations 0
+   region lam in [2^-11, 2^-0]: fewer than 2 further swaps NOT PROVED
+G_2^1: nodes 1128549, good leaves 49597, bad leaves 533884, bad volume 0.0314, queries 1171205
+   lowest bad lam 0.000488281 = 2^-11.0000
+G_3^0: nodes 1946287, good leaves 286185, bad leaves 862248, bad volume 0.00289, queries 2375627
+   lowest bad lam 0.000488281 = 2^-11.0000
+   validation: 3000000 samples, 280153 with >= 3 swaps, 490825 in BAD leaves, violations 0
+   region lam in [2^-11, 2^-0]: fewer than 3 further swaps NOT PROVED
+G_3^1: nodes 1885455, good leaves 279665, bad leaves 829908, bad volume 0.00279, queries 2288491
+   lowest bad lam 0.000488281 = 2^-11.0000
+G_4^0: nodes 1205597, good leaves 335962, bad leaves 475044, bad volume 7.16e-05, queries 1714357
+   lowest bad lam 0.000488281 = 2^-11.0000
+   validation: 3000000 samples, 2229 with >= 4 swaps, 31459 in BAD leaves, violations 0
+   region lam in [2^-11, 2^-0]: fewer than 4 further swaps NOT PROVED
+G_4^1: nodes 1100469, good leaves 318102, bad leaves 428152, bad volume 6.52e-05, queries 1574969
+   lowest bad lam 0.000488281 = 2^-11.0000
+G_5^0: nodes 1, good leaves 2418, bad leaves 0, bad volume 0, queries 20961  ALL GOOD
+   validation: 3000000 samples, 0 with >= 5 swaps, 0 in BAD leaves, violations 0
+   region lam in [2^-11, 2^-0]: fewer than 5 further swaps PROVED
+G_5^1: nodes 1, good leaves 2414, bad leaves 0, bad volume 0, queries 20749  ALL GOOD

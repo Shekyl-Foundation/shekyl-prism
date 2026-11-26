@@ -1,0 +1,3 @@
+cellmap
+*.o
+__pycache__/
