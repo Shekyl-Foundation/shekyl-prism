@@ -7,7 +7,7 @@
 #
 # An entry is here for one of two reasons only:
 #
-#   - the mutant changes no behaviour, for any input, and the reason says
+#   - the mutant changes no behaviour for any input of the named job configuration, and the reason says
 #     why; or
 #   - it is a timeout whose hang is understood, and the reason says what
 #     hangs and why that is acceptable.
@@ -24,7 +24,7 @@
 #
 # Fields, all required:
 #
-#   job       the nightly job, `mutants` or `mutants-front`
+#   job       the nightly job that ran this mutant
 #   file      the source file, as the tool prints it
 #   mutation  the tool's line for the mutant without `line:col: `, so an
 #             edit above the mutant does not orphan the entry
@@ -167,3 +167,171 @@ ORDER_DENOMINATOR_BITS is exactly 1 at every set. The original 2 * 1 \
 and the mutant 2 / 1 both evaluate to 2 at compile time. The multiplication \
 expresses the exponent of the squared denominator used in the index check.
 """
+
+[[mutant]]
+job = "mutants"
+file = "prism-field/src/tally.rs"
+mutation = "replace tally with ()"
+outcome = "missed"
+count = 1
+reason = "With op-count disabled the body only discards its arguments. Replacing it with () has the same effect in the default verifier."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace > with < in ChallengeScalar::derive_width"
+outcome = "missed"
+count = 1
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace > with == in ChallengeScalar::derive_width"
+outcome = "missed"
+count = 1
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace > with >= in ChallengeScalar::derive_width"
+outcome = "missed"
+count = 1
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace && with || in ChallengeScalar::derive_width"
+outcome = "missed"
+count = 1
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace <= with > in ChallengeScalar::derive_width"
+outcome = "missed"
+count = 1
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace ChallengeScalar::derive_width -> Option<Self> with None"
+outcome = "missed"
+count = 1
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace ChallengeScalar::derive_width -> Option<Self> with Some(Default::default())"
+outcome = "missed"
+count = 1
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace == with != in ChallengeScalar::research_bytes"
+outcome = "missed"
+count = 2
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace ChallengeScalar::research_bytes -> Option<Self> with None"
+outcome = "missed"
+count = 1
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace ChallengeScalar::research_bytes -> Option<Self> with Some(Default::default())"
+outcome = "missed"
+count = 1
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace || with && in ChallengeScalar::research_bytes"
+outcome = "missed"
+count = 4
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace > with < in ChallengeScalar::research_bytes"
+outcome = "missed"
+count = 1
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace > with == in ChallengeScalar::research_bytes"
+outcome = "missed"
+count = 1
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace > with >= in ChallengeScalar::research_bytes"
+outcome = "missed"
+count = 1
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace != with == in ChallengeScalar::research_bytes"
+outcome = "missed"
+count = 2
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace & with ^ in ChallengeScalar::research_bytes"
+outcome = "missed"
+count = 2
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "replace & with | in ChallengeScalar::research_bytes"
+outcome = "missed"
+count = 2
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/challenge.rs"
+mutation = "delete ! in ChallengeScalar::research_bytes"
+outcome = "missed"
+count = 1
+reason = "The research-reduced-width feature gates the entire method. The default verifier compiles no body at this location. The research configuration is outside this job."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/mark.rs"
+mutation = "replace Stage::enter with ()"
+outcome = "missed"
+count = 1
+reason = "With op-count disabled the body only discards its arguments. Replacing it with () has the same effect in the default verifier."
+
+[[mutant]]
+job = "mutants"
+file = "prism-verify/src/bin/degree_check.rs"
+mutation = "replace | with ^ in decode_hex"
+outcome = "missed"
+count = 1
+reason = "Each decoded digit is in 0..16. The high nibble is shifted left four bits and shares no set bit with the low nibble."

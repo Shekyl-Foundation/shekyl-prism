@@ -91,7 +91,7 @@ class MutantJob(NamedTuple):
 
 MUTANT_JOBS = (
     MutantJob("mutants", "mutants", 24),
-    MutantJob("mutants-front", "front", 4),
+    MutantJob("mutants-front", "front", 2),
     MutantJob("mutants-signer", "signer", 6),
     MutantJob("mutants-int", "int", 4),
 )
@@ -567,8 +567,8 @@ def selftest() -> int:
     full = dispatch_plan("", "")
     if json.loads(full["mutants_shards"]) != list(range(24)) or full["mutants_of"] != "24":
         failures.append("plan did not deal mutants into twenty-four")
-    if json.loads(full["front_shards"]) != list(range(4)) or full["front_of"] != "4":
-        failures.append("plan did not deal mutants-front into four")
+    if json.loads(full["front_shards"]) != list(range(2)) or full["front_of"] != "2":
+        failures.append("plan did not deal mutants-front into two")
     if json.loads(full["int_shards"]) != list(range(4)) or full["int_of"] != "4":
         failures.append("plan did not deal mutants-int into four")
     if full["other_jobs"] != "true" or full["mutants_run"] != "true" or full["front_run"] != "true":
@@ -597,7 +597,7 @@ def selftest() -> int:
         ("", "1", "shard is set"),
         ("mutants", "24", "not in 0.."),
         ("mutants", "nope", "one index"),
-        ("mutants-front", "4", "not in 0.."),
+        ("mutants-front", "2", "not in 0.."),
         ("mutants-int", "4", "not in 0.."),
     ):
         try:

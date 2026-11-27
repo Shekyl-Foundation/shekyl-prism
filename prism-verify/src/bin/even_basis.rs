@@ -16,10 +16,10 @@ use prism_verify::set::Set;
 use std::env;
 use std::process::ExitCode;
 
-use prism_field::{Field, ParameterSet, P248, P324, P376, P500, P664};
+use prism_field::{ParameterSet, P248, P324, P376, P500, P664};
 use prism_isogeny::torsion::{even_basis, mul_odd_then_double};
-use prism_verify::basis::basis_hint;
 use prism_verify::set::Committed;
+use prism_verify::{basis::basis_hint, identity::KeyIdentity};
 use sha3::{Digest, Sha3_256};
 
 fn main() -> ExitCode {
@@ -97,35 +97,21 @@ fn show<L: ParameterSet>(hex: &str) -> ExitCode {
 /// data passes its committed label, which is what its existing samples
 /// were drawn with; a set without passes its name.
 fn sample<L: ParameterSet>(count: u32, domain: &str) -> ExitCode {
-    let mut produced = 0u32;
-    let mut counter = 0u64;
-    while produced < count {
-        counter += 1;
-        let mut bytes = vec![0u8; L::FP2_LEN];
-        let mut filled = 0;
-        let mut block = 0u64;
-        while filled < bytes.len() {
+    let coefficients = (1u64..).filter_map(|counter| {
+        let mut bytes = vec![0; L::FP2_LEN];
+        for (block, chunk) in bytes.chunks_mut(32).enumerate() {
             let mut hasher = Sha3_256::new();
             hasher.update(domain.as_bytes());
             hasher.update(counter.to_le_bytes());
-            hasher.update(block.to_le_bytes());
-            let digest = hasher.finalize();
-            let take = (bytes.len() - filled).min(digest.len());
-            bytes[filled..filled + take].copy_from_slice(&digest[..take]);
-            filled += take;
-            block += 1;
+            hasher.update((block as u64).to_le_bytes());
+            chunk.copy_from_slice(&hasher.finalize()[..chunk.len()]);
         }
-        let Some(coefficient) = L::ext_decode(&bytes) else {
-            continue;
-        };
-        if coefficient.square().same(L::Ext::from_u64(4)) || coefficient.is_zero() {
-            continue;
-        }
-        if basis_hint::<L>(coefficient).is_err() {
-            continue;
-        }
-        println!("{}", hex_encode(&L::ext_encode(coefficient)));
-        produced += 1;
+        let key = KeyIdentity::<L>::decode(&bytes).ok()?;
+        basis_hint::<L>(key.coefficient()).ok()?;
+        Some(bytes)
+    });
+    for bytes in coefficients.take(count as usize) {
+        println!("{}", hex_encode(&bytes));
     }
     ExitCode::SUCCESS
 }
@@ -141,13 +127,7 @@ fn decode_hex(text: &str) -> Result<Vec<u8>, ()> {
 }
 
 fn hex_encode(bytes: &[u8]) -> String {
-    const HEX: &[u8; 16] = b"0123456789abcdef";
-    let mut out = String::with_capacity(bytes.len() * 2);
-    for byte in bytes {
-        out.push(HEX[(byte >> 4) as usize] as char);
-        out.push(HEX[(byte & 0xf) as usize] as char);
-    }
-    out
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
 #[cfg(test)]

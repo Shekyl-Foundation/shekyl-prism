@@ -38,7 +38,7 @@ on:
         type: string
         default: ""
       scope:
-        description: "Optional directory of compiled library sources to mutate."
+        description: "Optional directory of compiled sources to mutate."
         type: string
         default: ""
       timeout_multiplier:
@@ -110,7 +110,7 @@ jobs:
           toolchain: 1.97.1
       - name: Install cargo-mutants 27.1.0
         run: python3 scripts/ci/install_pinned_tool.py cargo-mutants
-      - name: Determine which library sources this build compiles
+      - name: Determine which library and binary sources this build compiles
         env:
           MUTATE: ${{ inputs.mutate }}
           FEATURES: ${{ inputs.features }}
@@ -118,6 +118,19 @@ jobs:
         run: |
           python3 scripts/ci/mutants_scope.py --packages "$MUTATE" --features "$FEATURES" \
             --scope "$SCOPE" --inventory "$RUNNER_TEMP/compiled.json" > "$RUNNER_TEMP/mutation-files"
+      - name: Reject a signer mutant against the default front inventory
+        if: inputs.job == 'mutants-front' && inputs.shard == '0'
+        run: |
+          set -euo pipefail
+          cargo mutants -p shekyl-prism --features signer --list --json \
+            --file shekyl-prism/src/ideal/mod.rs > "$RUNNER_TEMP/signer-mutants.json"
+          if python3 scripts/ci/mutants_scope.py --packages shekyl-prism \
+            --verify "$RUNNER_TEMP/signer-mutants.json" --inventory "$RUNNER_TEMP/compiled.json" \
+            2>"$RUNNER_TEMP/rejection"; then
+            echo "default inventory accepted signer mutants" >&2
+            exit 1
+          fi
+          grep -F "mutants outside compiled sources: ['shekyl-prism/src/ideal/mod.rs']" "$RUNNER_TEMP/rejection"
       - name: Catch the named Montgomery arithmetic control
         if: inputs.job == 'mutants-signer' && inputs.shard == '0'
         env:
@@ -163,7 +176,7 @@ jobs:
           fi
           while IFS= read -r file; do args+=(--file "$file"); done < "$RUNNER_TEMP/mutation-files"
           if [ "$JOB" = mutants-signer ]; then
-            args+=(--cargo-test-arg=--test=signer_layers --cargo-test-arg=--example=stage2c)
+            args+=(--cargo-test-arg=--test=signer_layers)
           fi
           args+=(--no-shuffle --shard "${SHARD}/${OF}" --sharding round-robin)
           cargo mutants "${args[@]}" > mutants.txt

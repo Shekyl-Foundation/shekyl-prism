@@ -4,7 +4,7 @@
 # All rights reserved.
 # BSD-3-Clause
 
-"""Select compiled library sources and check cargo-mutants' actual inventory."""
+"""Select compiled library and binary sources and check cargo-mutants' actual inventory."""
 
 import argparse
 import json
@@ -18,22 +18,25 @@ CONTROL = "replace * with + in Modulus<W, D>::mul"
 
 
 def compiled_sources(packages, features):
-    """Read dep-info only for the library artifacts Cargo selected in this build."""
-    args = ["cargo", "check", "--lib", "--locked", "--message-format=json-render-diagnostics"]
+    """Read the selected packages' library and binary dep-info from this build."""
+    metadata = json.loads(subprocess.check_output(
+        ["cargo", "metadata", "--no-deps", "--format-version=1", "--locked"], text=True))
+    ids = {p["id"]: p["name"] for p in metadata["packages"] if p["name"] in packages}
+    args = ["cargo", "check", "--lib", "--bins", "--locked", "--message-format=json-render-diagnostics"]
     for package in packages:
         args += ["-p", package]
     if features:
         args += ["--features", features]
     artifacts = subprocess.check_output(args, text=True)
     sources = set()
-    names = {name.replace("-", "_") for name in packages}
-    seen = set()
+    built_roots = set()
+    features_by_package = {}
     for line in artifacts.splitlines():
         message = json.loads(line)
         if message["reason"] != "compiler-artifact":
             continue
         target = message["target"]
-        if target["name"] not in names or "lib" not in target["kind"]:
+        if message["package_id"] not in ids or not {"lib", "bin"}.intersection(target["kind"]):
             continue
         meta, = (Path(f) for f in message["filenames"] if f.endswith(".rmeta"))
         deps = meta.with_name(meta.stem.removeprefix("lib") + ".d")
@@ -43,9 +46,21 @@ def compiled_sources(packages, features):
                 path = Path(name).resolve()
                 if path.is_relative_to(Path.cwd()):
                     sources.add(str(path.relative_to(Path.cwd())))
-        seen.add(target["name"])
-    if seen != names or not sources:
-        raise ValueError(f"incomplete compiler inventory for {packages}: {seen}")
+        built_roots.add(target["src_path"])
+        if str(Path(target["src_path"]).relative_to(Path.cwd())) not in sources:
+            raise ValueError(f"missing target root in dep-info: {target}")
+        if "lib" in target["kind"]:
+            features_by_package[ids[message["package_id"]]] = set(message["features"])
+    if set(features_by_package) != set(packages):
+        raise ValueError(f"missing library inventory for {set(packages) - features_by_package.keys()}")
+    for package in metadata["packages"]:
+        if package["id"] not in ids:
+            continue
+        enabled = features_by_package[package["name"]]
+        for target in package["targets"]:
+            if ("bin" in target["kind"] and set(target.get("required-features", ())) <= enabled
+                    and target["src_path"] not in built_roots):
+                raise ValueError(f"missing compiler inventory for binary {target['name']}")
     return sources
 
 
