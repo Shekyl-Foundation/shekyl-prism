@@ -1,0 +1,28 @@
+| set | L = bits(p) | modulus class | b | BY2019 divsteps | 2026 divsteps | ratio | 62-jumps (2019 / 2026) |
+|---|---|---|---|---|---|---|---|
+| P248 | 251 | q (challenge degree, public) | 491 | 1419 | 1132 | 0.7977 | 23 / 19 |
+| P248 | 251 | n (qlapoti norm, secret) | 128 | 373 | 295 | 0.7909 | 7 / 5 |
+| P248 | 251 | N (secret key norm; no inverse site) | 158 | 460 | 365 | 0.7935 | 8 / 6 |
+| P324 | 326 | q (challenge degree, public) | 643 | 1858 | 1482 | 0.7976 | 30 / 24 |
+| P324 | 326 | n (qlapoti norm, secret) | 165 | 480 | 381 | 0.7937 | 8 / 7 |
+| P324 | 326 | N (secret key norm; no inverse site) | 195 | 566 | 450 | 0.7951 | 10 / 8 |
+| P376 | 383 | q (challenge degree, public) | 747 | 2157 | 1722 | 0.7983 | 35 / 28 |
+| P376 | 383 | n (qlapoti norm, secret) | 194 | 563 | 447 | 0.7940 | 10 / 8 |
+| P376 | 383 | N (secret key norm; no inverse site) | 224 | 650 | 517 | 0.7954 | 11 / 9 |
+| P500 | 505 | q (challenge degree, public) | 995 | 2872 | 2293 | 0.7984 | 47 / 37 |
+| P500 | 505 | n (qlapoti norm, secret) | 255 | 739 | 588 | 0.7957 | 12 / 10 |
+| P500 | 505 | N (secret key norm; no inverse site) | 285 | 826 | 657 | 0.7954 | 14 / 11 |
+| P664 | 669 | q (challenge degree, public) | 1323 | 3818 | 3049 | 0.7986 | 62 / 50 |
+| P664 | 669 | n (qlapoti norm, secret) | 337 | 976 | 777 | 0.7961 | 16 / 13 |
+| P664 | 669 | N (secret key norm; no inverse site) | 367 | 1062 | 846 | 0.7966 | 18 / 14 |
+
+check: 2026 bound at b = 256 is 590 (paper: 590)
+asymptotic ratio 9437/4096 / (49/17) = 0.7993
+
+| set | W limbs (bits) | D limbs (bits) | q bits | n bound | N bound B | Nq bits | 2N bits |
+|---|---|---|---|---|---|---|---|
+| P248 | 11 (704) | 22 (1408) | 491 | 128 | 158 | 649 | 159 |
+| P324 | 14 (896) | 28 (1792) | 643 | 165 | 195 | 838 | 196 |
+| P376 | 16 (1024) | 32 (2048) | 747 | 194 | 224 | 971 | 225 |
+| P500 | 21 (1344) | 42 (2688) | 995 | 255 | 285 | 1280 | 286 |
+| P664 | 27 (1728) | 54 (3456) | 1323 | 337 | 367 | 1690 | 368 |
