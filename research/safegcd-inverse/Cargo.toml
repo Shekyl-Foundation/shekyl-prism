@@ -13,6 +13,8 @@ description = "Research: fixed-count divstep (safegcd, EUROCRYPT 2026 bound) mod
 [dependencies]
 # The comparison baselines only: `Int::inv_mod` (variable time) and the
 # signer's Fermat inverse in Montgomery form, both on dev's prism-int.
+# The audited asm value barrier the signer uses for its masks.
+prism-ct-barrier = { git = "https://github.com/Shekyl-Foundation/shekyl-prism", rev = "82321847dca91c6fc6afe5d0ee840413e55cfc37" }
 prism-int = { git = "https://github.com/Shekyl-Foundation/shekyl-prism", rev = "82321847dca91c6fc6afe5d0ee840413e55cfc37" }
 
 [dev-dependencies]

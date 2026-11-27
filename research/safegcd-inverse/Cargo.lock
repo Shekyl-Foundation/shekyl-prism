@@ -57,6 +57,7 @@ dependencies = [
  "num-bigint",
  "num-integer",
  "num-traits",
+ "prism-ct-barrier",
  "prism-int",
 ]
 

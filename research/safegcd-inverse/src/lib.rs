@@ -97,7 +97,16 @@ impl<const K: usize> S62<K> {
 /// All ones when `x < 0`, else zero.
 #[inline(always)]
 fn neg_mask(x: i64) -> i64 {
-    x >> 63
+    barrier(x >> 63)
+}
+
+/// The signer's audited register identity (`prism-ct-barrier`): LLVM cannot
+/// see that a mask is 0 or −1 after it, so it cannot turn a masked select
+/// back into a branch. Without it, release builds branched on `ok` (audit,
+/// REPORT.md §5).
+#[inline(always)]
+fn barrier(x: i64) -> i64 {
+    prism_ct_barrier::value_barrier_u64(x as u64) as i64
 }
 
 /// One jump: 62 divsteps on the low words of `f` and `g`, returning the
@@ -111,7 +120,7 @@ fn divsteps_62(mut d2: i64, f0: u64, g0: u64) -> (i64, [i64; 4]) {
     for _ in 0..STEPS_PER_JUMP {
         // c1: δ > 0 (2δ is odd, never zero). c2: g odd.
         let c1 = neg_mask(d2.wrapping_neg());
-        let c2 = -(g & 1);
+        let c2 = barrier(-(g & 1));
         let c = c1 & c2;
         // Swap case: (1 − δ, g, (g − f)/2); else (1 + δ, f, (g + (g mod 2) f)/2).
         let nf = (g & c) | (f & !c);
@@ -279,7 +288,7 @@ pub fn inv_mod_ct<const K: usize>(x: &S62<K>, m: &S62<K>, jumps: u32) -> Inverse
         acc |= g.0[i] as u64;
     }
     // ok = all ones iff acc == 0.
-    let ok = ((acc | acc.wrapping_neg()) >> 63).wrapping_sub(1);
+    let ok = prism_ct_barrier::value_barrier_u64(((acc | acc.wrapping_neg()) >> 63).wrapping_sub(1));
     // d ∈ (−2m, m): add m if negative, negate if f < 0, add m if negative.
     normalize_carries(&mut d);
     let s = neg_mask(d.0[K - 1]);
