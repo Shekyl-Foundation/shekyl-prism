@@ -219,3 +219,33 @@ fn exhaustive_small_b() {
         eprintln!("b={b}: worst {worst}, bound {}", divsteps_2026(b));
     }
 }
+
+/// Hard inputs from the backward beam search (`backward.py 3100 100`,
+/// `backward.txt`): each line is b, n, f, g with f < 2^b needing n divsteps
+/// (about 95.6 % of the 2026 bound at every width). The CT routine with the
+/// bound's jump count must invert them; with ⌊n/62⌋ jumps (< n divsteps) it
+/// must not finish.
+#[test]
+fn backward_search_vectors() {
+    let mut t = Tally::default();
+    let mut lines = 0;
+    for line in include_str!("../backward.txt").lines() {
+        let p: Vec<&str> = line.split_whitespace().collect();
+        let (b, n): (u32, u32) = (p[0].parse().unwrap(), p[1].parse().unwrap());
+        let f = BigUint::parse_bytes(p[2].as_bytes(), 16).unwrap();
+        let g = BigUint::parse_bytes(p[3].as_bytes(), 16).unwrap();
+        assert!(f.bits() <= b as u64 && g <= f);
+        let big = |v: &BigUint| num_like::Big { mag: v.to_u64_digits(), neg: false };
+        assert_eq!(divsteps_to_zero_vartime(&big(&f), &big(&g), 100_000), Some(n), "b={b}");
+        assert!(n <= divsteps_2026(b));
+        if g < f {
+            check::<22, 22>(&g, &f, jumps(divsteps_2026(b)), &mut t, "backward");
+            let xs = S62::<22>::from_u64_limbs(&from_big(&g, 24));
+            let ms = S62::<22>::from_u64_limbs(&from_big(&f, 24));
+            assert_eq!(inv_mod_ct(&xs, &ms, n / 62).ok, 0, "b={b}: {} divsteps finished early", 62 * (n / 62));
+        }
+        lines += 1;
+    }
+    assert_eq!(lines, 16);
+    eprintln!("backward vectors: {lines} lines, {} invertible, {} non-invertible", t.invertible, t.non_invertible);
+}
