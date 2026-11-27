@@ -22,8 +22,9 @@ def load_tsv(paths):
             r[row["file"]] = row
     return r
 
-R09 = load_tsv([W + "/main/rtlf_a09.tsv", W + "/q2_a09.tsv", W + "/q4_a09.tsv"])
-R01 = load_tsv([W + "/q3_a01.tsv", W + "/q4_a01.tsv"])
+# R reference results take priority; the numpy port fills the rest.
+R09 = load_tsv([W + "/np_new_a09.tsv", W + "/np_main_a09.tsv", W + "/main/rtlf_a09.tsv"])
+R01 = load_tsv([W + "/np_new_a01.tsv", W + "/np_main_a01.tsv"])
 
 def man(name):
     return json.load(open("%s/%s/manifest.json" % (W, name)))
@@ -42,6 +43,7 @@ def rate(rows, key):
     return "%d/%d" % (sum(v), len(v)) if v else "-"
 
 main = [r for r in man("main") if r["run"][0] not in "BF"] + man("bf")
+main = [r for r in main if r["file"] in R09 or True]
 for r in main:
     r.update(verdicts(r))
 runG = man("runG")
