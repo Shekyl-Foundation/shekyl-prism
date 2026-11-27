@@ -1191,3 +1191,18 @@ The old 56 CLI survivors were 12 in `degree_check`, 28 in `even_basis`, 3 in `s5
 The signer measurement covers viable mutations in the width helpers, admission and intersection comparisons, `hermitian`, `inverse_odd`, the Montgomery reduction shift and the encoding loop bound. Arithmetic method calls in `product`, `cross`, `difference`, `rotate`, `abs_squared`, `Span::contains` and the modular add, subtract, center and residue methods have no corresponding arithmetic mutations. `Modulus::new` has no inventory entry. The five-set fixture comparisons exercise these paths. Of the 136 signer candidates, 100 replacement expressions failed to compile.
 
 Part C owns the 30 surviving `prism-int/src/secret_steps.rs` mutations in the separate integer job alongside F9. Acceptance requires a test, structural removal or checked equivalence for each, followed by a complete integer mutation run. These 30 remain unexplained in Part A.
+
+### Calibration after PR #51
+
+The reconciled branch at `8aadc0b` includes dev's two new Stage 2d example tests. The signer shards run the library unit tests, `signer_layers` and both example tests. The example's reduction code remains outside the mutation inventory. All six signer artifacts agree with the single recorded equivalent. The inventory grew from 136 to 140 candidates, with the unviable count increasing from 100 to 104. The default front rejected the real signer inventory, and the signer control caught the named Montgomery mutation. [Default control](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/45928328234/job/140275138818) · [Signer control](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/45928328234/job/140275139520)
+
+The first run of the new CLI tests exposed an s390x harness failure. Cargo ran the test process under QEMU but the test launched its children directly. Using the same Cargo runner for the four child binaries fixed it. The complete s390x job passed.
+
+| Job | Shards | Caught | Missed | Timed out | Unviable | Total | Slowest shard |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Verifier layers | 24 | 495 | 34 | 2 | 245 | 776 | 24m 06s |
+| Verifier front | 2 | 78 | 0 | 0 | 29 | 107 | 32m 04s |
+| Signer ideals | 6 | 35 | 1 | 0 | 104 | 140 | 3m 43s |
+| Signer integers | 4 | 584 | 30 | 0 | 96 | 710 | 41m 40s |
+
+Across all 24 verifier artifacts, `degree_check` had 25 catches, one equivalent nibble mutation and two unviable. `even_basis` caught all 14, `s5_challenge` caught 11 with one unviable, and `verify_bytes` caught all eight. This accounts for all 62 current binary candidates. The verifier's 34 misses consist of the six existing equivalents, the 27 configuration-specific entries and the equivalent nibble mutation. Both verifier timeouts have existing records. The longest of the 36 shards was an integer shard at 41m 40s. [Hosted run and mutation artifacts](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/45928328234)
