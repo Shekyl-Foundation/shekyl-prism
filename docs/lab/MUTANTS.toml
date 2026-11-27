@@ -153,3 +153,17 @@ length zero. The tool reports a timeout because the corpus walks in the \
 same run are 64 times as slow and pass its time limit before the test \
 binary that fails has been run.
 """
+
+[[mutant]]
+job = "mutants-signer"
+file = "shekyl-prism/src/ideal/geometry.rs"
+mutation = "replace * with /"
+outcome = "missed"
+count = 1
+reason = """
+DENOMINATOR_SQUARE_BITS is twice ORDER_DENOMINATOR_BITS. The raw O0 \
+numerator represents a quaternion over the fixed denominator 2, so \
+ORDER_DENOMINATOR_BITS is exactly 1 at every set. The original 2 * 1 \
+and the mutant 2 / 1 both evaluate to 2 at compile time. The multiplication \
+expresses the exponent of the squared denominator used in the index check.
+"""
