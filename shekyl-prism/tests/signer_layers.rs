@@ -12,8 +12,11 @@ use shekyl_prism::hazmat::ideal::geometry::{
     degree_bits, secret_norm_bits, DEGREE_EXPONENT, DEGREE_SHIFT, ORDER_DENOMINATOR_BITS,
     Q4_SLACK_BITS,
 };
-use shekyl_prism::hazmat::ideal::GenericHnf;
+#[path = "support/signer_fixtures.rs"]
+mod signer_fixtures;
+use shekyl_prism::hazmat::ideal::{GenericHnf, GuardedIdeal, IdealSet, Vector};
 use shekyl_prism::hazmat::int::{Int, SecretBit, SecretInt};
+use signer_fixtures::{check_bit, check_invalid, magnitude, scalar};
 
 /// The integer crate is the one behind `hazmat::int`: its two types are
 /// there and compute. No exit of the secret type is called: a call site
@@ -36,7 +39,90 @@ fn the_ideal_layer_is_under_hazmat() {
     let root = [SecretInt::from_u64(2), SecretInt::from_u64(1)];
     let hnf = GenericHnf::from_norm_and_root(&norm, &root);
     let (pivot, root_column) = hnf.generators();
-    let _: SecretBit = pivot[0].ct_eq(&norm.shl(ORDER_DENOMINATOR_BITS));
-    let _: SecretBit = root_column[2].ct_eq(&SecretInt::one());
-    let _: SecretBit = hnf.pivot().ct_eq(&pivot[0]);
+    check_bit(pivot[0].ct_eq(&norm.shl(ORDER_DENOMINATOR_BITS)), true);
+    check_bit(root_column[2].ct_eq(&SecretInt::one()), true);
+    check_bit(hnf.pivot().ct_eq(&pivot[0]), true);
+}
+
+fn check_intersection<S: IdealSet<W, D>, const W: usize, const D: usize>(
+    ideals: &str,
+    reductions: &str,
+    first_failing_shear: u64,
+    composite_scalar: u8,
+) {
+    let inputs: Vec<_> = ideals.lines().next().unwrap().split_whitespace().collect();
+    let [norm, x, y, a, b, c, d, e, f, g, h, s, xq, yq] = inputs[..] else {
+        panic!("ideal fixture schema")
+    };
+    let n = scalar(norm);
+    let hnf = GenericHnf::from_norm_and_root(&n, &[scalar(x), scalar(y)]);
+    let u = [a, b, c, d].map(scalar);
+    let v = [e, f, g, h].map(scalar);
+    let admit =
+        |cols: &[Vector<W>; 4], v| GuardedIdeal::<S, W, D>::admit(n.clone(), cols, u.clone(), v);
+    let key = admit(hnf.columns(), v.clone()).unwrap();
+    let mut challenge = magnitude(s);
+    challenge.resize(S::S_LEN, 0);
+    let root = [scalar(xq), scalar(yq)];
+    let intersection = key.intersection(&challenge, &root).unwrap();
+    let mut expected = reductions
+        .lines()
+        .find_map(|l| l.strip_prefix("prered-guard256 "))
+        .unwrap()
+        .split_whitespace();
+    for value in std::iter::once(&intersection.norm)
+        .chain(&intersection.u)
+        .chain(&intersection.v)
+    {
+        check_bit(value.ct_eq(&scalar(expected.next().unwrap())), true);
+    }
+    let marked = key
+        .intersection(&challenge, &[SecretInt::zero(), SecretInt::zero()])
+        .unwrap();
+    for value in std::iter::once(&marked.norm)
+        .chain(&marked.u)
+        .chain(&marked.v)
+    {
+        check_invalid(value);
+    }
+    challenge.fill(0);
+    challenge[0] = composite_scalar;
+    assert!(key.intersection(&challenge, &root).is_none());
+
+    // Unimodular column operations preserve the ideal but violate the two
+    // canonical HNF conditions independently.
+    let mut cols = hnf.columns().clone();
+    cols[0][1] = cols[1][1].clone();
+    assert!(admit(&cols, v.clone()).is_none());
+    let mut cols = hnf.columns().clone();
+    cols[2][0] = cols[2][0].add(hnf.pivot());
+    assert!(admit(&cols, v.clone()).is_none());
+
+    // The integer inequality N4(v+k*u)^2 <= p*(1024*N)^2 on the
+    // first fixture yields the consecutive boundary cases below.
+    let shear = |k| std::array::from_fn(|i| v[i].add(&u[i].mul(&SecretInt::from_u64(k))));
+    assert!(admit(hnf.columns(), shear(first_failing_shear - 1)).is_some());
+    assert!(admit(hnf.columns(), shear(first_failing_shear)).is_none());
+}
+
+#[test]
+fn guarded_ideal_intersection_and_admission_boundaries() {
+    use shekyl_prism::hazmat::field::{P248, P324, P376, P500, P664};
+    macro_rules! run {
+        ($set:ty,$file:literal,$shear:literal,$scalar:literal) => {
+            check_intersection::<$set, _, _>(
+                include_str!(concat!("../examples/stage2c/ideals/", $file)),
+                include_str!(concat!("../examples/stage2c/vectors/", $file)),
+                $shear,
+                $scalar,
+            );
+        };
+    }
+    // The selected odd scalars give composite public degrees, divisible
+    // by 7, 7, 7, 31 and 7 respectively.
+    run!(P248, "p248.txt", 33, 5);
+    run!(P324, "p324.txt", 27, 3);
+    run!(P376, "p376.txt", 22, 1);
+    run!(P500, "p500.txt", 39, 1);
+    run!(P664, "p664.txt", 28, 1);
 }

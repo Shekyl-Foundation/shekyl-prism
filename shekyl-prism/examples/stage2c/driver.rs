@@ -4,35 +4,14 @@
 // BSD-3-Clause
 
 use crate::reducer::{self, Basis, Bounds, Class, Reduced, ReductionSet, Scalar, Schedule, Vector};
-use prism_int::{Int, SecretBit, SecretError, SecretInt};
+use prism_int::Int;
 use shekyl_prism::hazmat::ideal;
 use std::hint::black_box;
 use std::time::Instant;
 
-fn check_bit(bit: SecretBit, expected: bool) {
-    assert_eq!(bit.declassify(), Ok(expected));
-}
-
-fn check_invalid<const W: usize>(value: &Scalar<W>) {
-    assert_eq!(value.declassify().unwrap_err(), SecretError::Overflowed);
-}
-
-fn magnitude(hex: &str) -> Vec<u8> {
-    hex.trim_start_matches('-')
-        .as_bytes()
-        .rchunks(2)
-        .map(|chunk| u8::from_str_radix(std::str::from_utf8(chunk).unwrap(), 16).unwrap())
-        .collect()
-}
-
-fn scalar<const W: usize>(hex: &str) -> Scalar<W> {
-    let x = SecretInt::from_le_bytes(&magnitude(hex));
-    if hex.starts_with('-') {
-        x.neg()
-    } else {
-        x
-    }
-}
+#[path = "../../tests/support/signer_fixtures.rs"]
+mod signer_fixtures;
+use signer_fixtures::{check_bit, check_invalid, magnitude, scalar};
 
 struct Fixture<const W: usize> {
     class: Class,

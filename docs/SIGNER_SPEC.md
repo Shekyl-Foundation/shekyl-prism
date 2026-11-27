@@ -659,8 +659,8 @@ And for the error an exit returns when the overflow mark is set, **U**: a proof 
 
 | # | Stage | Call site | Exit | What leaves | Operation | Treatment at the last stage | Its overflow error |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 2c fixture | `stage2c/driver.rs::check_bit` | SecretBit::declassify | Predicate on public oracle data | Compare the basis, form and half-tie control | I, public fixture only | Fail the fixture |
-| 2 | 2c fixture | `stage2c/driver.rs::check_invalid` | SecretInt::declassify | Refusal on an invalid public input | Check every returned coordinate and form entry | I, public fixture only | Expected on this negative control |
+| 1 | 2c fixture | `tests/support/signer_fixtures.rs::check_bit` | SecretBit::declassify | Predicate on public oracle data | Compare the basis, form and half-tie control | I, public fixture only | Fail the fixture |
+| 2 | 2c fixture | `tests/support/signer_fixtures.rs::check_invalid` | SecretInt::declassify | Refusal on an invalid public input | Check every returned coordinate and form entry | I, public fixture only | Expected on this negative control |
 | 3 | 2b/2d ideal component | `GuardedIdeal::admit` | SecretBit::declassify | Aggregate validity of the generated or imported ideal component | I, reject the candidate or refuse import | Refuse admission |
 
 Signing accumulates admission failures without a new exit. At the existing signature exits, an invalid invariant fails the operation. Only key generation may draw another candidate. Decoding must establish left-order stability, full span, Q4 and the same factor-256 guard before a key can supply an intersection. Use the Stage 2b canonical ideal HNF as the comparison target and verify closure under the maximal order generators. A Gram determinant alone certifies neither the source ideal nor this closure.

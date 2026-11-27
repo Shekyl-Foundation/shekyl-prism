@@ -33,6 +33,14 @@ on:
         description: "Packages whose tests run, separated by spaces. Each is one --test-package."
         type: string
         required: true
+      features:
+        description: "Cargo feature list for both mutation discovery and tests."
+        type: string
+        default: ""
+      scope:
+        description: "Optional directory of compiled library sources to mutate."
+        type: string
+        default: ""
       timeout_multiplier:
         description: "Passed to --timeout-multiplier when set. Empty leaves the tool's default."
         type: string
@@ -102,6 +110,21 @@ jobs:
           toolchain: 1.97.1
       - name: Install cargo-mutants 27.1.0
         run: python3 scripts/ci/install_pinned_tool.py cargo-mutants
+      - name: Determine which library sources this build compiles
+        env:
+          MUTATE: ${{ inputs.mutate }}
+          FEATURES: ${{ inputs.features }}
+          SCOPE: ${{ inputs.scope }}
+        run: |
+          python3 scripts/ci/mutants_scope.py --packages "$MUTATE" --features "$FEATURES" \
+            --scope "$SCOPE" --inventory "$RUNNER_TEMP/compiled.json" > "$RUNNER_TEMP/mutation-files"
+      - name: Catch the named Montgomery arithmetic control
+        if: inputs.job == 'mutants-signer' && inputs.shard == '0'
+        env:
+          FEATURES: ${{ inputs.features }}
+        run: |
+          python3 scripts/ci/mutants_scope.py --packages shekyl-prism --features "$FEATURES" \
+            --inventory "$RUNNER_TEMP/compiled.json" --control
       # This step does not judge. The exit code is passed on, and verdict
       # reads it once the output is kept.
       #
@@ -114,6 +137,8 @@ jobs:
         name: cargo mutants
         timeout-minutes: 80
         env:
+          FEATURES: ${{ inputs.features }}
+          JOB: ${{ inputs.job }}
           SHARD: ${{ inputs.shard }}
           OF: ${{ inputs.of }}
           MUTATE: ${{ inputs.mutate }}
@@ -132,6 +157,13 @@ jobs:
           done
           if [ -n "$TIMEOUT_MULTIPLIER" ]; then
             args+=(--timeout-multiplier "$TIMEOUT_MULTIPLIER")
+          fi
+          if [ -n "$FEATURES" ]; then
+            args+=(--features "$FEATURES")
+          fi
+          while IFS= read -r file; do args+=(--file "$file"); done < "$RUNNER_TEMP/mutation-files"
+          if [ "$JOB" = mutants-signer ]; then
+            args+=(--cargo-test-arg=--test=signer_layers --cargo-test-arg=--example=stage2c)
           fi
           args+=(--no-shuffle --shard "${SHARD}/${OF}" --sharding round-robin)
           cargo mutants "${args[@]}" > mutants.txt
@@ -161,6 +193,13 @@ jobs:
           retention-days: 30
           overwrite: true
           if-no-files-found: error
+      - name: Every listed mutant belongs to the compiled feature set
+        if: ${{ always() && steps.run.outcome != 'skipped' }}
+        env:
+          MUTATE: ${{ inputs.mutate }}
+        run: |
+          python3 scripts/ci/mutants_scope.py --verify mutants.out/mutants.json \
+            --packages "$MUTATE" --inventory "$RUNNER_TEMP/compiled.json"
       - name: The shard tested its mutants
         if: ${{ always() && steps.run.outcome != 'skipped' }}
         run: python3 scripts/ci/mutants_report.py verdict --out mutants.out
