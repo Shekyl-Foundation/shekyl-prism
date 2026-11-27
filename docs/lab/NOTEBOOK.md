@@ -1136,3 +1136,14 @@ Part A separates the two feature configurations. Rustc dep-info identifies the f
 Rick confirmed G7 and amended G2 on November 26 and directed the four-part cleanup. OpenAI Codex implemented the feature selection and public API tests.
 
 The [hosted signer calibration](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/45916468830) at `7ab2d60` completed all 136 mutations. The runner reported 35 caught, 100 unviable, one missed and zero timeouts. Shard zero caught the named control and was the slowest at 2 minutes 17 seconds including setup and the separate control run. The one survivor replaces multiplication with division when computing the squared-denominator exponent. Both expressions yield 2 for the fixed raw order denominator. Its reason is in `MUTANTS.toml`.
+
+The [full branch nightly](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/45916838052) passed on `5802d60`. Counts below come from the merged artifact. Elapsed times use GitHub job start and finish, including tool installation and upload.
+
+| Job | Shards | Caught | Missed | Timed out | Unviable | Total | Slowest shard |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Verifier layers | 24 | 437 | 33 | 2 | 242 | 714 | 22m 34s |
+| Verifier front | 4 | 78 | 0 | 0 | 29 | 107 | 20m 02s |
+| Signer ideals | 6 | 35 | 1 | 0 | 100 | 136 | 2m 26s |
+| Signer integers | 4 | 584 | 30 | 0 | 96 | 710 | 39m 19s |
+
+The 107 default-feature and 136 signer candidates account for all 243 original front-crate mutants. The full run caught the named arithmetic control and reproduced the one equivalent signer mutant. Timeouts and misses in the other layers retain the nightly's existing report-only policy.
