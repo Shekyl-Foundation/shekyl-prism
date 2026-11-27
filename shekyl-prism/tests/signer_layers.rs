@@ -108,21 +108,27 @@ fn check_intersection<S: IdealSet<W, D>, const W: usize, const D: usize>(
 #[test]
 fn guarded_ideal_intersection_and_admission_boundaries() {
     use shekyl_prism::hazmat::field::{P248, P324, P376, P500, P664};
+    // scripts/stage2d_fixtures.py derives one row per set from its first ideal.
+    let mut rows = include_str!("../examples/stage2c/admission-boundaries.txt").lines();
     macro_rules! run {
-        ($set:ty,$file:literal,$shear:literal,$scalar:literal) => {
+        ($set:ty, $name:literal) => {{
+            let fields: Vec<_> = rows.next().unwrap().split_whitespace().collect();
+            let [name, shear, scalar, _factor] = fields[..] else {
+                panic!("admission boundary fixture schema")
+            };
+            assert_eq!(name, $name);
             check_intersection::<$set, _, _>(
-                include_str!(concat!("../examples/stage2c/ideals/", $file)),
-                include_str!(concat!("../examples/stage2c/vectors/", $file)),
-                $shear,
-                $scalar,
+                include_str!(concat!("../examples/stage2c/ideals/", $name, ".txt")),
+                include_str!(concat!("../examples/stage2c/vectors/", $name, ".txt")),
+                shear.parse().unwrap(),
+                scalar.parse().unwrap(),
             );
-        };
+        }};
     }
-    // The selected odd scalars give composite public degrees, divisible
-    // by 7, 7, 7, 31 and 7 respectively.
-    run!(P248, "p248.txt", 33, 5);
-    run!(P324, "p324.txt", 27, 3);
-    run!(P376, "p376.txt", 22, 1);
-    run!(P500, "p500.txt", 39, 1);
-    run!(P664, "p664.txt", 28, 1);
+    run!(P248, "p248");
+    run!(P324, "p324");
+    run!(P376, "p376");
+    run!(P500, "p500");
+    run!(P664, "p664");
+    assert!(rows.next().is_none());
 }
