@@ -1133,7 +1133,7 @@ The November 26 nightly enumerated 243 front-crate mutations on dev at `470d537`
 
 Part A separates the two feature configurations. Rustc dep-info identifies the files built at each one. A local negative control presented the same Montgomery mutation to both inventories. The default build rejected the ideal source and the signer build accepted it. The runner control changes the right shift in Montgomery multiplication from 64·W to 64+W and requires the named mutant to be caught. The public API tests compare all nine outputs at five sets. They also check a marked root, a composite public degree, two noncanonical column forms and consecutive shears straddling the factor-256 guard. The adjacent shears follow from exact integer evaluation on the first guarded fixture of each set. The reducer itself is in an example binary and is outside the mutation inventory.
 
-Rick confirmed G7 and amended G2 on November 26 and directed the four-part cleanup. OpenAI Codex implemented the feature selection and public API tests.
+Rick ruled G7 and amended G2 on November 25. He confirmed both rulings and directed the four-part cleanup on November 26. OpenAI Codex implemented the feature selection and public API tests.
 
 The [hosted signer calibration](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/45916468830) at `7ab2d60` completed all 136 mutations. The runner reported 35 caught, 100 unviable, one missed and zero timeouts. Shard zero caught the named control and was the slowest at 2 minutes 17 seconds including setup and the separate control run. The one survivor replaces multiplication with division when computing the squared-denominator exponent. Both expressions yield 2 for the fixed raw order denominator. Its reason is in `MUTANTS.toml`.
 
@@ -1147,3 +1147,13 @@ The [full branch nightly](https://github.com/Shekyl-Foundation/shekyl-prism/acti
 | Signer integers | 4 | 584 | 30 | 0 | 96 | 710 | 39m 19s |
 
 The 107 default-feature and 136 signer candidates account for all 243 original front-crate mutants. The full run caught the named arithmetic control and reproduced the one equivalent signer mutant. Timeouts and misses in the other layers retain the nightly's existing report-only policy.
+
+### Part A review corrections
+
+The 833-candidate verifier baseline included 26 in feature-only files and 93 in the five command-line tools. At `5802d60` library-only discovery omitted both groups, leaving 714. The four tools with callers are now selected from Cargo's binary artifacts and checked against the manifest. The unused `s5_vector` target was deleted (O25). The compiler-derived inventory contains 776 candidates, including 62 in the four tools. Of the original 93 tool candidates, nine belonged to the retired target (four caught and five missed), and 22 disappeared with the sampler and hex-formatting rewrite. Rust test binaries now run the CLI protocols and check exact verdict streams, challenge bytes and basis coordinates against committed fixtures.
+
+The old 56 CLI survivors were 12 in `degree_check`, 28 in `even_basis`, 3 in `s5_challenge`, 8 in `verify_bytes` and 5 in the retired tool. The degree tests cover both verdicts and both hex cases. The nibble OR/XOR is equivalent and recorded. The sampler now uses chunk iteration and the verifier's existing key decoder, removing its manual index arithmetic and duplicate curve checks. Its stream test fixes the accepted counters and block order. The byte verifier must accept a real vector, emit its next refusal, and fail on malformed records. The challenge tool must reproduce the pinned C vector's scalar.
+
+The signer measurement covers viable mutations in the width helpers, admission and intersection comparisons, `hermitian`, `inverse_odd`, the Montgomery reduction shift and the encoding loop bound. Arithmetic method calls in `product`, `cross`, `difference`, `rotate`, `abs_squared`, `Span::contains` and the modular add, subtract, center and residue methods have no corresponding arithmetic mutations. `Modulus::new` has no inventory entry. The five-set fixture comparisons exercise these paths. Of the 136 signer candidates, 100 replacement expressions failed to compile.
+
+Part C owns the 30 surviving `prism-int/src/secret_steps.rs` mutations in the separate integer job alongside F9. Acceptance requires a test, structural removal or checked equivalence for each, followed by a complete integer mutation run. These 30 remain unexplained in Part A.
