@@ -1,0 +1,29 @@
+P248 N: Tally { total: 4363, invertible: 1882, non_invertible: 2481, prism_int_compared: 4363 }
+P248 n: Tally { total: 8363, invertible: 3519, non_invertible: 4844, prism_int_compared: 8363 }
+P248 q: Tally { total: 8363, invertible: 3542, non_invertible: 4821, prism_int_compared: 8363 }
+P324 N: Tally { total: 4363, invertible: 1887, non_invertible: 2476, prism_int_compared: 4363 }
+P324 n: Tally { total: 8363, invertible: 3510, non_invertible: 4853, prism_int_compared: 8363 }
+P324 q: Tally { total: 8363, invertible: 3567, non_invertible: 4796, prism_int_compared: 8363 }
+P376 N: Tally { total: 4363, invertible: 1902, non_invertible: 2461, prism_int_compared: 4363 }
+P376 n: Tally { total: 8363, invertible: 3519, non_invertible: 4844, prism_int_compared: 8363 }
+P376 q: Tally { total: 8363, invertible: 3529, non_invertible: 4834, prism_int_compared: 8363 }
+P500 N: Tally { total: 4363, invertible: 1931, non_invertible: 2432, prism_int_compared: 4363 }
+P500 n: Tally { total: 8363, invertible: 3524, non_invertible: 4839, prism_int_compared: 8363 }
+P500 q: Tally { total: 8363, invertible: 3521, non_invertible: 4842, prism_int_compared: 8363 }
+P664 N: Tally { total: 4363, invertible: 1899, non_invertible: 2464, prism_int_compared: 4363 }
+P664 n: Tally { total: 8363, invertible: 3612, non_invertible: 4751, prism_int_compared: 8363 }
+P664 q: Tally { total: 8363, invertible: 3534, non_invertible: 4829, prism_int_compared: 8363 }
+b=10: worst 23, bound 24
+b=11: worst 25, bound 26
+b=1: worst 1, bound 3
+b=2: worst 3, bound 5
+b=3: worst 6, bound 7
+b=4: worst 8, bound 10
+b=5: worst 12, bound 12
+b=6: worst 14, bound 14
+b=7: worst 16, bound 17
+b=8: worst 19, bound 19
+b=9: worst 21, bound 21
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.75s
