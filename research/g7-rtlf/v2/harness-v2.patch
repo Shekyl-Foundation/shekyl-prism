@@ -1,0 +1,576 @@
+diff --git a/shekyl-prism/examples/stage2c/driver.rs b/shekyl-prism/examples/stage2c/driver.rs
+index c23758d..5c540ea 100644
+--- a/shekyl-prism/examples/stage2c/driver.rs
++++ b/shekyl-prism/examples/stage2c/driver.rs
+@@ -248,6 +248,15 @@ pub enum Mode {
+     Check,
+     Bench,
+     Timing { repeats: usize },
++    /// Research harness (experiment/p248-arm-timing): phase-split, randomized rounds.
++    Split { rounds: usize, seed: u64 },
++    /// Research harness (exp/g7-rtlf): the G7 contrast with an identical
++    /// pre-call sequence for both classes, plus a same-data null arm.
++    Matched { repeats: usize },
++    /// Research harness (exp/g7-rule-v2): shuffled rounds over fixtures, a
++    /// null copy, same-session injected delays and fixed vs random keys, all
++    /// measured through one persistent buffer.
++    V2 { rounds: usize, seed: u64 },
+ }
+ 
+ pub fn mode() -> Mode {
+@@ -263,7 +272,20 @@ pub fn mode() -> Mode {
+             );
+             Mode::Timing { repeats }
+         }
+-        _ => panic!("expected no arguments, bench, or timing REPEATS"),
++        [mode, rounds, seed] if mode == "split" => Mode::Split {
++            rounds: rounds.parse().expect("round count"),
++            seed: seed.parse().expect("seed"),
++        },
++        [mode, repeats] if mode == "matched" => Mode::Matched {
++            repeats: repeats.parse().expect("repeat count"),
++        },
++        [mode, rounds, seed] if mode == "v2" => Mode::V2 {
++            rounds: rounds.parse().expect("round count"),
++            seed: seed.parse().expect("seed"),
++        },
++        _ => panic!(
++            "expected no arguments, bench, timing REPEATS, split ROUNDS SEED, matched REPEATS, or v2 ROUNDS SEED"
++        ),
+     }
+ }
+ 
+@@ -291,6 +313,477 @@ fn time_reduction<const W: usize, const D: usize>(
+     started.elapsed().as_nanos()
+ }
+ 
++/// Research harness: phases of the `time_reduction` interval, measured apart.
++///
++/// `adm` is `Basis::from_intersection` and its drop. `red` is `reduce` and the
++/// drop of its result, on a basis admitted before the clock starts. `full` is
++/// `time_reduction`. `inv` is `geometry::inverse_odd` on the norm. `herm` is the
++/// three guarded Hermitian products that admission divides by the norm. `nop`
++/// is an empty interval, the timer's own cost.
++#[derive(Clone, Copy)]
++enum Phase {
++    Adm,
++    Red,
++    Full,
++    Inv,
++    Herm,
++    Nop,
++}
++
++const PHASES: [Phase; 6] = [
++    Phase::Adm,
++    Phase::Red,
++    Phase::Full,
++    Phase::Inv,
++    Phase::Herm,
++    Phase::Nop,
++];
++
++impl Phase {
++    const fn token(self) -> &'static str {
++        match self {
++            Self::Adm => "adm",
++            Self::Red => "red",
++            Self::Full => "full",
++            Self::Inv => "inv",
++            Self::Herm => "herm",
++            Self::Nop => "nop",
++        }
++    }
++}
++
++fn time_phase<const W: usize, const D: usize>(
++    phase: Phase,
++    case: &Fixture<W>,
++    bounds: &Bounds<W, D>,
++) -> u128 {
++    let schedule = Schedule::Reviewed;
++    match phase {
++        Phase::Full => time_reduction(case, bounds, schedule),
++        Phase::Adm => {
++            let input = black_box((case.t.clone(), case.u.clone(), case.v.clone()));
++            let started = Instant::now();
++            let (norm, u, v) = input;
++            drop(black_box(Basis::from_intersection(
++                &norm, u, v, case.class, bounds,
++            )));
++            drop(norm);
++            started.elapsed().as_nanos()
++        }
++        Phase::Red => {
++            let basis = black_box(Basis::from_intersection(
++                &case.t,
++                case.u.clone(),
++                case.v.clone(),
++                case.class,
++                bounds,
++            ));
++            let started = Instant::now();
++            drop(black_box(basis.reduce(schedule)));
++            started.elapsed().as_nanos()
++        }
++        Phase::Inv => {
++            let t = black_box(case.t.clone());
++            let started = Instant::now();
++            drop(black_box(ideal::geometry::inverse_odd(&t)));
++            drop(t);
++            started.elapsed().as_nanos()
++        }
++        Phase::Herm => {
++            let wide_u = black_box(case.u.each_ref().map(Scalar::resize::<D>));
++            let wide_v = black_box(case.v.each_ref().map(Scalar::resize::<D>));
++            let started = Instant::now();
++            let p = bounds.prime();
++            drop(black_box((
++                ideal::geometry::hermitian(&wide_u, &wide_u, p),
++                ideal::geometry::hermitian(&wide_v, &wide_v, p),
++                ideal::geometry::hermitian(&wide_v, &wide_u, p),
++            )));
++            drop(wide_u);
++            drop(wide_v);
++            started.elapsed().as_nanos()
++        }
++        Phase::Nop => {
++            let started = Instant::now();
++            black_box(());
++            started.elapsed().as_nanos()
++        }
++    }
++}
++
++/// xorshift64*; the harness only needs a reproducible shuffle.
++struct Shuffle(u64);
++
++impl Shuffle {
++    fn next(&mut self) -> u64 {
++        self.0 ^= self.0 >> 12;
++        self.0 ^= self.0 << 25;
++        self.0 ^= self.0 >> 27;
++        self.0.wrapping_mul(0x2545_F491_4F6C_DD1D)
++    }
++
++    fn shuffle<T>(&mut self, items: &mut [T]) {
++        for i in (1..items.len()).rev() {
++            let j = (self.next() % (i as u64 + 1)) as usize;
++            items.swap(i, j);
++        }
++    }
++}
++
++/// One round times every (fixture, phase) cell once, in a fresh random order.
++/// Fixture index `cases.len()` is a second copy of the reference row, so the
++/// harness carries its own null contrast. Rows:
++/// `split,set,class,fixture,phase,round,position,ns`.
++fn split_rounds<const W: usize, const D: usize>(
++    name: &str,
++    cases: &[&Fixture<W>],
++    bounds: &Bounds<W, D>,
++    rounds: usize,
++    seed: u64,
++) {
++    let mut rng = Shuffle(seed | 1);
++    for case in cases {
++        for phase in PHASES {
++            black_box(time_phase(phase, case, bounds));
++        }
++    }
++    let mut cells: Vec<(usize, Phase)> = (0..=cases.len())
++        .flat_map(|f| PHASES.into_iter().map(move |p| (f, p)))
++        .collect();
++    for round in 0..rounds {
++        rng.shuffle(&mut cells);
++        for (position, &(fixture, phase)) in cells.iter().enumerate() {
++            let case = cases[if fixture == cases.len() { REFERENCE_INDEX } else { fixture }];
++            let ns = time_phase(phase, case, bounds);
++            println!(
++                "split,{name},{},{fixture},{},{round},{position},{ns}",
++                case.class.token(),
++                phase.token()
++            );
++        }
++    }
++}
++
++/// Research harness (exp/g7-rtlf): one G7 measurement with a matched preamble.
++///
++/// Both classes run exactly this code before the clock starts: clone the
++/// fixture's inputs, run one untimed admission and reduction on that clone and
++/// drop it, then clone again into the black-boxed tuple that is timed. Every
++/// timed call therefore follows the same allocation sizes, the same copies and
++/// a warm-up on its own data, whichever fixture it is and whichever position
++/// it takes in the pair (ePrint 2026/2744, matched control).
++///
++/// `inject_ns` adds a known busy-wait inside the timed interval, for the
++/// positive control. It is zero except for the arm named by
++/// `STAGE2C_INJECT_INDEX`.
++fn time_reduction_matched<const W: usize, const D: usize>(
++    case: &Fixture<W>,
++    bounds: &Bounds<W, D>,
++    schedule: Schedule,
++    inject_ns: u128,
++) -> u128 {
++    let warm = black_box((case.t.clone(), case.u.clone(), case.v.clone()));
++    let (norm, u, v) = warm;
++    drop(black_box(
++        Basis::from_intersection(&norm, u, v, case.class, bounds).reduce(schedule),
++    ));
++    drop(norm);
++    let input = black_box((case.t.clone(), case.u.clone(), case.v.clone()));
++    let started = Instant::now();
++    let (norm, u, v) = input;
++    drop(black_box(
++        Basis::from_intersection(&norm, u, v, case.class, bounds).reduce(schedule),
++    ));
++    drop(norm);
++    if inject_ns > 0 {
++        let spin = Instant::now();
++        while spin.elapsed().as_nanos() < inject_ns {
++            std::hint::spin_loop();
++        }
++    }
++    started.elapsed().as_nanos()
++}
++
++/// G7 contrasts with `time_reduction_matched`. Index `cases.len()` is the
++/// reference row again (the null arm). Rows have the `timing` layout under the
++/// tag `matched`:
++/// `matched,set,class,schedule,index,repeat,reference_first,ref_ns,other_ns`.
++/// `STAGE2C_INJECT_NS` and `STAGE2C_INJECT_INDEX` add a delay to the other
++/// side of one arm (the positive control).
++fn contrasts_matched<const W: usize, const D: usize>(
++    name: &str,
++    cases: &[&Fixture<W>],
++    bounds: &Bounds<W, D>,
++    repeats: usize,
++) {
++    let inject_ns: u128 = std::env::var("STAGE2C_INJECT_NS")
++        .map(|v| v.parse().expect("STAGE2C_INJECT_NS"))
++        .unwrap_or(0);
++    let inject_index: Option<usize> = std::env::var("STAGE2C_INJECT_INDEX")
++        .ok()
++        .map(|v| v.parse().expect("STAGE2C_INJECT_INDEX"));
++    let reference = cases[REFERENCE_INDEX];
++    for case in cases {
++        black_box(time_reduction_matched(case, bounds, Schedule::Reviewed, 0));
++    }
++    for index in REFERENCE_INDEX + 1..=cases.len() {
++        let other = cases[if index == cases.len() { REFERENCE_INDEX } else { index }];
++        let delay = if inject_index == Some(index) { inject_ns } else { 0 };
++        for repeat in 0..repeats {
++            let reference_first = reference_runs_first(repeat);
++            let (reference_ns, other_ns) = if reference_first {
++                let r = time_reduction_matched(reference, bounds, Schedule::Reviewed, 0);
++                (r, time_reduction_matched(other, bounds, Schedule::Reviewed, delay))
++            } else {
++                let o = time_reduction_matched(other, bounds, Schedule::Reviewed, delay);
++                (time_reduction_matched(reference, bounds, Schedule::Reviewed, 0), o)
++            };
++            println!(
++                "matched,{name},{},{},{index},{repeat},{reference_first},{reference_ns},{other_ns}",
++                reference.class.token(),
++                Schedule::Reviewed.token(),
++            );
++        }
++    }
++}
++
++/// Research harness (exp/g7-rule-v2).
++///
++/// One measurement's inputs, held apart from the fixtures.
++#[derive(Clone)]
++struct Datum<const W: usize> {
++    t: Scalar<W>,
++    u: Vector<W>,
++    v: Vector<W>,
++}
++
++/// An arm of the v2 experiment. `Fixture(i)` is the i-th generic fixture by
++/// its original index; the others are copies or key arms.
++#[derive(Clone, Copy, PartialEq)]
++enum Arm {
++    Fixture(usize),
++    Null,
++    InjLow,
++    InjMid,
++    InjHigh,
++    KeyFixed,
++    KeyRandom,
++}
++
++impl Arm {
++    fn token(self) -> String {
++        match self {
++            Self::Fixture(i) => format!("f{i}"),
++            Self::Null => "null".into(),
++            Self::InjLow => "injL".into(),
++            Self::InjMid => "injM".into(),
++            Self::InjHigh => "injH".into(),
++            Self::KeyFixed => "kfix".into(),
++            Self::KeyRandom => "krand".into(),
++        }
++    }
++}
++
++fn inject_for(arm: Arm, phase: Phase) -> u128 {
++    let level = match arm {
++        Arm::InjLow => 0,
++        Arm::InjMid => 1,
++        Arm::InjHigh => 2,
++        _ => return 0,
++    };
++    match phase {
++        Phase::Full => [1600, 3200, 6400][level],
++        _ => [100, 200, 400][level],
++    }
++}
++
++/// One phase on the data in `slot`. Every arm goes through this same code: the
++/// datum is first written into the one persistent buffer `slot`, one untimed
++/// run on a clone of it warms the path, a second clone is taken, then the
++/// timed run. `inject_ns` busy-waits inside the timed interval.
++fn time_cell_v2<const W: usize, const D: usize>(
++    phase: Phase,
++    slot: &mut Datum<W>,
++    datum: &Datum<W>,
++    class: Class,
++    bounds: &Bounds<W, D>,
++    inject_ns: u128,
++) -> u128 {
++    slot.t = datum.t.clone();
++    slot.u = datum.u.clone();
++    slot.v = datum.v.clone();
++    black_box(&*slot);
++    black_box(phase_once(phase, slot, class, bounds, 0));
++    phase_once(phase, slot, class, bounds, inject_ns)
++}
++
++fn phase_once<const W: usize, const D: usize>(
++    phase: Phase,
++    slot: &Datum<W>,
++    class: Class,
++    bounds: &Bounds<W, D>,
++    inject_ns: u128,
++) -> u128 {
++    let schedule = Schedule::Reviewed;
++    // The injected delay is added to the interval (its own clock), whatever the
++    // phase's duration, so the control is an effect of exactly `inject_ns`.
++    let spin = |_started: &Instant| {
++        if inject_ns > 0 {
++            let s = Instant::now();
++            while s.elapsed().as_nanos() < inject_ns {
++                std::hint::spin_loop();
++            }
++        }
++    };
++    match phase {
++        Phase::Herm => {
++            let wide_u = black_box(slot.u.each_ref().map(Scalar::resize::<D>));
++            let wide_v = black_box(slot.v.each_ref().map(Scalar::resize::<D>));
++            let started = Instant::now();
++            let p = bounds.prime();
++            drop(black_box((
++                ideal::geometry::hermitian(&wide_u, &wide_u, p),
++                ideal::geometry::hermitian(&wide_v, &wide_v, p),
++                ideal::geometry::hermitian(&wide_v, &wide_u, p),
++            )));
++            drop(wide_u);
++            drop(wide_v);
++            spin(&started);
++            started.elapsed().as_nanos()
++        }
++        _ => {
++            let input = black_box((slot.t.clone(), slot.u.clone(), slot.v.clone()));
++            let started = Instant::now();
++            let (norm, u, v) = input;
++            let basis = Basis::from_intersection(&norm, u, v, class, bounds);
++            if matches!(phase, Phase::Full) {
++                drop(black_box(basis.reduce(schedule)));
++            } else {
++                drop(black_box(basis));
++            }
++            drop(norm);
++            spin(&started);
++            started.elapsed().as_nanos()
++        }
++    }
++}
++
++fn parse_key<const W: usize>(line: &str) -> Datum<W> {
++    let mut f = line.split_whitespace();
++    let n: Scalar<W> = scalar(f.next().unwrap());
++    let root = [scalar(f.next().unwrap()), scalar(f.next().unwrap())];
++    let (u, v) = ideal::GenericHnf::from_norm_and_root(&n, &root).generators();
++    Datum { t: n, u, v }
++}
++
++fn datum_of<const W: usize>(case: &Fixture<W>) -> Datum<W> {
++    Datum {
++        t: case.t.clone(),
++        u: case.u.clone(),
++        v: case.v.clone(),
++    }
++}
++
++/// Shuffled rounds over arms x phases. Rows:
++/// `v2,set,class,arm,phase,round,position,ns`, preceded by one
++/// `v2meta,...` line with the seed, the fixture permutation, the layout pad,
++/// the reference fixture and the slot address.
++fn v2_rounds<const W: usize, const D: usize>(
++    name: &str,
++    cases: &[&Fixture<W>],
++    bounds: &Bounds<W, D>,
++    corpus: &str,
++    rounds: usize,
++    seed: u64,
++) {
++    let class = cases[0].class;
++    let mut rng = Shuffle(seed | 1);
++    // Layout jitter: a seeded padding allocation shifts everything allocated later.
++    let pad = (rng.next() % 8192) as usize;
++    let _pad = std::mem::ManuallyDrop::new(black_box(vec![0u8; pad]));
++    // Per-process fixture order; the first element is this process's reference.
++    let mut perm: Vec<usize> = (0..cases.len()).collect();
++    rng.shuffle(&mut perm);
++    let reference = perm[0];
++    let pool_path = std::env::var("STAGE2C_KEYPOOL").expect("STAGE2C_KEYPOOL");
++    let pool_text = std::fs::read_to_string(&pool_path).expect("key pool");
++    let pool: Vec<Datum<W>> = pool_text.lines().map(parse_key::<W>).collect();
++    let fixed_key = parse_key::<W>(corpus.lines().next().unwrap());
++    if let Ok(n) = std::env::var("STAGE2C_CHECKPOOL") {
++        let n: usize = n.parse().expect("STAGE2C_CHECKPOOL");
++        let mut ok = 0;
++        for key in pool.iter().take(n) {
++            let r = Basis::from_intersection(&key.t, key.u.clone(), key.v.clone(), class, bounds)
++                .reduce(Schedule::Reviewed);
++            ok += usize::from(
++                r.u.iter().chain(&r.v).chain(&r.form).all(|x| x.declassify().is_ok()),
++            );
++        }
++        let fixed = {
++            let k = parse_key::<W>(corpus.lines().next().unwrap());
++            let r = Basis::from_intersection(&k.t, k.u, k.v, class, bounds).reduce(Schedule::Reviewed);
++            r.u.iter().chain(&r.v).chain(&r.form).all(|x| x.declassify().is_ok())
++        };
++        let fix: Vec<bool> = cases
++            .iter()
++            .map(|c| {
++                let r = Basis::from_intersection(&c.t, c.u.clone(), c.v.clone(), class, bounds)
++                    .reduce(Schedule::Reviewed);
++                r.u.iter().chain(&r.v).chain(&r.form).all(|x| x.declassify().is_ok())
++            })
++            .collect();
++        println!("v2check,pool_ok={ok}/{n},corpus_key_ok={fixed},fixtures_ok={fix:?}");
++        return;
++    }
++    let ref_datum = datum_of(cases[reference]);
++    let mut arms: Vec<(Arm, Datum<W>)> = perm
++        .iter()
++        .map(|&i| (Arm::Fixture(i), datum_of(cases[i])))
++        .collect();
++    for arm in [Arm::Null, Arm::InjLow, Arm::InjMid, Arm::InjHigh] {
++        arms.push((arm, ref_datum.clone()));
++    }
++    arms.push((Arm::KeyFixed, fixed_key));
++    arms.push((Arm::KeyRandom, pool[0].clone()));
++    let mut slot = Box::new(ref_datum.clone());
++    println!(
++        "v2meta,{name},seed={seed},pad={pad},perm={},reference=f{reference},pool={},slot=0x{:x}",
++        perm.iter().map(|i| i.to_string()).collect::<Vec<_>>().join("-"),
++        pool.len(),
++        &*slot as *const Datum<W> as usize
++    );
++    let phases = [Phase::Adm, Phase::Herm, Phase::Full];
++    let mut cells: Vec<(usize, Phase)> = (0..arms.len())
++        .flat_map(|a| phases.into_iter().map(move |p| (a, p)))
++        .collect();
++    for (a, (_, d)) in arms.iter().enumerate() {
++        for p in phases {
++            let _ = a;
++            black_box(time_cell_v2(p, &mut slot, d, class, bounds, 0));
++        }
++    }
++    for round in 0..rounds {
++        rng.shuffle(&mut cells);
++        for (position, &(a, phase)) in cells.iter().enumerate() {
++            let arm = arms[a].0;
++            let ns = if arm == Arm::KeyRandom {
++                // A fresh random admitted key per measurement, chosen and copied
++                // outside the timed region (the copy into `slot` is untimed).
++                let key = &pool[(rng.next() % pool.len() as u64) as usize];
++                time_cell_v2(phase, &mut slot, key, class, bounds, 0)
++            } else {
++                time_cell_v2(phase, &mut slot, &arms[a].1, class, bounds, inject_for(arm, phase))
++            };
++            println!(
++                "v2,{name},{},{},{},{round},{position},{ns}",
++                class.token(),
++                arm.token(),
++                phase.token()
++            );
++        }
++    }
++}
++
+ fn of_class<const W: usize>(fixtures: &[Fixture<W>], class: Class) -> Vec<&Fixture<W>> {
+     fixtures
+         .iter()
+@@ -343,6 +836,12 @@ fn contrasts<const W: usize, const D: usize>(
+ }
+ 
+ pub fn run<S: ReductionSet<W, D>, const W: usize, const D: usize>(corpus: &str, mode: Mode) {
++    // Research harness: STAGE2C_ONLY=p248 restricts the run to one set.
++    if let Ok(only) = std::env::var("STAGE2C_ONLY") {
++        if !only.split(',').any(|name| name == S::NAME) {
++            return;
++        }
++    }
+     check_ties::<S, W, D>();
+     let bounds = Bounds::new::<S>();
+     let fixtures: Vec<_> = corpus.lines().map(Fixture::parse).collect();
+@@ -401,6 +900,26 @@ pub fn run<S: ReductionSet<W, D>, const W: usize, const D: usize>(corpus: &str,
+                 contrasts(S::NAME, &of_class(&fixtures, class), &bounds, repeats);
+             }
+         }
++        Mode::Split { rounds, seed } => {
++            for class in [Class::Guarded, Class::Generic] {
++                split_rounds(S::NAME, &of_class(&fixtures, class), &bounds, rounds, seed);
++            }
++        }
++        Mode::V2 { rounds, seed } => {
++            v2_rounds(
++                S::NAME,
++                &of_class(&fixtures, Class::Generic),
++                &bounds,
++                S::IDEAL_CORPUS,
++                rounds,
++                seed,
++            );
++        }
++        Mode::Matched { repeats } => {
++            for class in [Class::Guarded, Class::Generic] {
++                contrasts_matched(S::NAME, &of_class(&fixtures, class), &bounds, repeats);
++            }
++        }
+         Mode::Bench => {
+             // Paired smoke measurement on committed inputs. Alternate which
+             // schedule runs first so a warm cache does not always favor the
+diff --git a/shekyl-prism/examples/stage2c/reducer.rs b/shekyl-prism/examples/stage2c/reducer.rs
+index e357c0e..9ad545f 100644
+--- a/shekyl-prism/examples/stage2c/reducer.rs
++++ b/shekyl-prism/examples/stage2c/reducer.rs
+@@ -126,6 +126,11 @@ pub struct Bounds<const W: usize, const D: usize> {
+ }
+ 
+ impl<const W: usize, const D: usize> Bounds<W, D> {
++    /// The field prime at the wide width. Used only by the P248 timing-split harness.
++    pub fn prime(&self) -> &SecretInt<D> {
++        &self.p
++    }
++
+     pub fn steps(&self, class: Class) -> Steps {
+         match class {
+             Class::Guarded => self.guarded_steps,
