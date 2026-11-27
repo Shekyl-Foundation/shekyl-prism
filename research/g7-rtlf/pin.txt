@@ -1,0 +1,6 @@
+RTLF reference implementation
+  repo   https://github.com/tls-attacker/RTLF
+  commit 2497d660e4b23fc9acd21b077a35e82178fcd728 (2025-03-21, "Merge pull request #2 from tls-attacker/useability_upgrade")
+  file   rtlf.R, sha256 below; no release tags exist
+R 4.5.3 (conda-forge), tidyverse 2.0.0, optparse 1.8.2, jsonlite 2.0.0, crayon 1.5.3
+50e5d4e5239e492337a131afaf2d1e3c0fdcadbb902d5433d56eac2ead1bd04e  /workspace/rtlf-ref/RTLF/rtlf.R
