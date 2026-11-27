@@ -22,6 +22,17 @@
 # timeouts it explains, how many it does not, and which entries match no
 # mutant any more. An entry that matches none is stale and is removed.
 #
+# Open gate for signer cleanup Part C (F9), before Part C closes.
+# The complete mutants-int run at 8aadc0b left 30 unexplained misses in
+# prism-int/src/secret_steps.rs. The baseline by method is SecretBit::and 3,
+# or 4, not 2, and SecretInt::is_odd 1, low_bits_zero 5, resize 1, mul_low 1,
+# mul_word 2, shift 4, div_word 7. The individual substitutions are in
+# mutants-int-missed.txt in the missed-mutants artifact of nightly 45928328234.
+# Part C must account for each baseline mutation with a test that catches it,
+# a structural change that removes it, or a checked equivalence recorded here.
+# Close the gate against the missed list of a complete mutants-int run.
+# Until triage, the nightly continues to count these misses as unexplained.
+#
 # Fields, all required:
 #
 #   job       the nightly job that ran this mutant
