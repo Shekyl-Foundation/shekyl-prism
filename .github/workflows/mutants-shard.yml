@@ -33,6 +33,38 @@ on:
         description: "Packages whose tests run, separated by spaces. Each is one --test-package."
         type: string
         required: true
+      features:
+        description: "Cargo feature list for both mutation discovery and tests."
+        type: string
+        default: ""
+      scope:
+        description: "Optional directory of compiled sources to mutate."
+        type: string
+        default: ""
+      test_args:
+        description: "Cargo test filters, separated by spaces. Each is one --cargo-test-arg. Empty runs the test packages' default targets."
+        type: string
+        default: ""
+      reject_file:
+        description: "Source whose mutants must fall outside this build. Empty skips the check. Shard zero lists it under reject_features."
+        type: string
+        default: ""
+      reject_features:
+        description: "Cargo features for the reject_file listing. Empty lists the default build."
+        type: string
+        default: ""
+      control_file:
+        description: "Source of the one mutant shard zero must catch. Empty skips the control."
+        type: string
+        default: ""
+      control_mutant:
+        description: "Exact cargo-mutants description of that mutant, matched at the end of its name."
+        type: string
+        default: ""
+      control_tests:
+        description: "Cargo test filters for the control run only, separated by spaces. Empty runs the test packages' default targets."
+        type: string
+        default: ""
       timeout_multiplier:
         description: "Passed to --timeout-multiplier when set. Empty leaves the tool's default."
         type: string
@@ -56,6 +88,11 @@ jobs:
           MUTATE: ${{ inputs.mutate }}
           TEST: ${{ inputs.test }}
           TIMEOUT_MULTIPLIER: ${{ inputs.timeout_multiplier }}
+          TEST_ARGS: ${{ inputs.test_args }}
+          REJECT_FILE: ${{ inputs.reject_file }}
+          CONTROL_FILE: ${{ inputs.control_file }}
+          CONTROL_MUTANT: ${{ inputs.control_mutant }}
+          CONTROL_TESTS: ${{ inputs.control_tests }}
         run: |
           set -euo pipefail
           case "$SHARD" in
@@ -93,6 +130,43 @@ jobs:
             echo "mutants: the job has no name" >&2
             exit 1
           fi
+          check_path() {
+            label=$1
+            value=$2
+            if [ -z "$value" ]; then
+              return
+            fi
+            case "$value" in
+              /*|*..*|*[!A-Za-z0-9._/-]*) echo "mutants: ${label} has '${value}'" >&2; exit 1 ;;
+            esac
+          }
+          check_words() {
+            label=$1
+            value=$2
+            if [ -z "$value" ]; then
+              return
+            fi
+            read -r -a words <<< "$value"
+            for word in "${words[@]}"; do
+              case "$word" in
+                --[A-Za-z0-9_-]*) ;;
+                --[A-Za-z0-9_-]*=[A-Za-z0-9_-]*) ;;
+                *) echo "mutants: ${label} has '${word}'" >&2; exit 1 ;;
+              esac
+            done
+          }
+          check_path "reject file" "$REJECT_FILE"
+          check_path "control file" "$CONTROL_FILE"
+          check_words "test args" "$TEST_ARGS"
+          check_words "control tests" "$CONTROL_TESTS"
+          if [ -n "$CONTROL_FILE" ] && [ -z "$CONTROL_MUTANT" ]; then
+            echo "mutants: a control file needs its mutant" >&2
+            exit 1
+          fi
+          if [ -z "$CONTROL_FILE" ] && [ -n "$CONTROL_MUTANT" ]; then
+            echo "mutants: a control mutant needs its file" >&2
+            exit 1
+          fi
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
@@ -102,6 +176,36 @@ jobs:
           toolchain: 1.97.1
       - name: Install cargo-mutants 27.1.0
         run: python3 scripts/ci/install_pinned_tool.py cargo-mutants
+      - name: Determine which library and binary sources this build compiles
+        env:
+          MUTATE: ${{ inputs.mutate }}
+          FEATURES: ${{ inputs.features }}
+          SCOPE: ${{ inputs.scope }}
+        run: |
+          python3 scripts/ci/mutants_scope.py --packages "$MUTATE" --features "$FEATURES" \
+            --scope "$SCOPE" --inventory "$RUNNER_TEMP/compiled.json" > "$RUNNER_TEMP/mutation-files"
+      - name: Reject mutants of a source this build does not compile
+        if: inputs.shard == '0' && inputs.reject_file != ''
+        env:
+          MUTATE: ${{ inputs.mutate }}
+          REJECT_FILE: ${{ inputs.reject_file }}
+          REJECT_FEATURES: ${{ inputs.reject_features }}
+        run: |
+          python3 scripts/ci/mutants_scope.py --packages "$MUTATE" \
+            --reject-file "$REJECT_FILE" --reject-features "$REJECT_FEATURES" \
+            --inventory "$RUNNER_TEMP/compiled.json"
+      - name: Catch the one named control mutant
+        if: inputs.shard == '0' && inputs.control_file != ''
+        env:
+          MUTATE: ${{ inputs.mutate }}
+          FEATURES: ${{ inputs.features }}
+          CONTROL_FILE: ${{ inputs.control_file }}
+          CONTROL_MUTANT: ${{ inputs.control_mutant }}
+          CONTROL_TESTS: ${{ inputs.control_tests }}
+        run: |
+          python3 scripts/ci/mutants_scope.py --packages "$MUTATE" --features "$FEATURES" \
+            --control-file "$CONTROL_FILE" --control-mutant "$CONTROL_MUTANT" \
+            --control-tests "$CONTROL_TESTS" --inventory "$RUNNER_TEMP/compiled.json"
       # This step does not judge. The exit code is passed on, and verdict
       # reads it once the output is kept.
       #
@@ -114,6 +218,9 @@ jobs:
         name: cargo mutants
         timeout-minutes: 80
         env:
+          FEATURES: ${{ inputs.features }}
+          TEST_ARGS: ${{ inputs.test_args }}
+          JOB: ${{ inputs.job }}
           SHARD: ${{ inputs.shard }}
           OF: ${{ inputs.of }}
           MUTATE: ${{ inputs.mutate }}
@@ -132,6 +239,16 @@ jobs:
           done
           if [ -n "$TIMEOUT_MULTIPLIER" ]; then
             args+=(--timeout-multiplier "$TIMEOUT_MULTIPLIER")
+          fi
+          if [ -n "$FEATURES" ]; then
+            args+=(--features "$FEATURES")
+          fi
+          while IFS= read -r file; do args+=(--file "$file"); done < "$RUNNER_TEMP/mutation-files"
+          if [ -n "$TEST_ARGS" ]; then
+            read -r -a test_words <<< "$TEST_ARGS"
+            for word in "${test_words[@]}"; do
+              args+=(--cargo-test-arg="$word")
+            done
           fi
           args+=(--no-shuffle --shard "${SHARD}/${OF}" --sharding round-robin)
           cargo mutants "${args[@]}" > mutants.txt
@@ -161,6 +278,13 @@ jobs:
           retention-days: 30
           overwrite: true
           if-no-files-found: error
+      - name: Every listed mutant belongs to the compiled feature set
+        if: ${{ always() && steps.run.outcome != 'skipped' }}
+        env:
+          MUTATE: ${{ inputs.mutate }}
+        run: |
+          python3 scripts/ci/mutants_scope.py --verify mutants.out/mutants.json \
+            --packages "$MUTATE" --inventory "$RUNNER_TEMP/compiled.json"
       - name: The shard tested its mutants
         if: ${{ always() && steps.run.outcome != 'skipped' }}
         run: python3 scripts/ci/mutants_report.py verdict --out mutants.out

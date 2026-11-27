@@ -35,7 +35,7 @@ on:
         type: boolean
         default: false
       only:
-        description: "Empty runs every job. mutants, mutants-front or mutants-int runs that job and mutants-summary."
+        description: "Empty runs every job. mutants, mutants-front, mutants-signer or mutants-int runs that job and mutants-summary."
         type: string
         default: ""
       shard:
@@ -65,6 +65,9 @@ jobs:
       front_shards: ${{ steps.plan.outputs.front_shards }}
       front_of: ${{ steps.plan.outputs.front_of }}
       front_run: ${{ steps.plan.outputs.front_run }}
+      signer_shards: ${{ steps.plan.outputs.signer_shards }}
+      signer_of: ${{ steps.plan.outputs.signer_of }}
+      signer_run: ${{ steps.plan.outputs.signer_run }}
       int_shards: ${{ steps.plan.outputs.int_shards }}
       int_of: ${{ steps.plan.outputs.int_of }}
       int_run: ${{ steps.plan.outputs.int_run }}
@@ -277,6 +280,31 @@ jobs:
       of: ${{ needs.dispatch.outputs.front_of }}
       mutate: shekyl-prism
       test: shekyl-prism
+      reject_file: shekyl-prism/src/ideal/mod.rs
+      reject_features: signer
+
+  mutants-signer:
+    name: mutants-signer (${{ matrix.shard }}/${{ needs.dispatch.outputs.signer_of }})
+    needs: dispatch
+    if: ${{ needs.dispatch.result == 'success' && needs.dispatch.outputs.signer_run == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.dispatch.outputs.signer_shards || '[0]') }}
+    uses: ./.github/workflows/mutants-shard.yml
+    with:
+      job: mutants-signer
+      shard: ${{ matrix.shard }}
+      of: ${{ needs.dispatch.outputs.signer_of }}
+      mutate: shekyl-prism
+      test: shekyl-prism
+      features: signer
+      scope: shekyl-prism/src/ideal
+      test_args: "--lib --test=signer_layers --example=stage2c"
+      control_file: shekyl-prism/src/ideal/mod.rs
+      control_mutant: "replace * with + in Modulus<W, D>::mul"
+      control_tests: "--test=signer_layers"
+      timeout_multiplier: "4"
 
   # The signer's integers, against their own tests. The crate depends on
   # no other of the workspace and none of the verifier's tests reaches it,
@@ -308,7 +336,7 @@ jobs:
   # one-shard dispatch does not replace `missed-mutants`.
   mutants-summary:
     name: mutants-summary
-    needs: [dispatch, mutants, mutants-front, mutants-int]
+    needs: [dispatch, mutants, mutants-front, mutants-signer, mutants-int]
     if: ${{ always() && needs.dispatch.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -326,6 +354,7 @@ jobs:
         env:
           RUN_MUTANTS: ${{ needs.dispatch.outputs.mutants_run }}
           RUN_FRONT: ${{ needs.dispatch.outputs.front_run }}
+          RUN_SIGNER: ${{ needs.dispatch.outputs.signer_run }}
           RUN_INT: ${{ needs.dispatch.outputs.int_run }}
         run: |
           set -euo pipefail
@@ -335,6 +364,9 @@ jobs:
           fi
           if [ "$RUN_FRONT" = true ]; then
             args+=(--expect mutants-front)
+          fi
+          if [ "$RUN_SIGNER" = true ]; then
+            args+=(--expect mutants-signer)
           fi
           if [ "$RUN_INT" = true ]; then
             args+=(--expect mutants-int)
@@ -395,7 +427,7 @@ jobs:
 
   report-red:
     name: report-red
-    needs: [dispatch, fuzz, differential-prime, big-endian, c-vectors-full, mutants, mutants-front, mutants-int, mutants-summary, coverage]
+    needs: [dispatch, fuzz, differential-prime, big-endian, c-vectors-full, mutants, mutants-front, mutants-signer, mutants-int, mutants-summary, coverage]
     # `failure()` is false for a job its own time limit cancelled. A
     # cancelled job is red and is reported.
     if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) && (github.event_name == 'schedule' || inputs.report) }}

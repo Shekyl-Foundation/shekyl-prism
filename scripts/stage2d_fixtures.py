@@ -7,6 +7,7 @@ import argparse
 from collections import Counter
 from pathlib import Path
 from math import gcd, isqrt
+import itertools
 
 from stage2c_fixtures import SET_WIDTHS, VECTORS
 from stage2c_oracle import combine, half_up_quotient, inner, native_schedules, signer_parameters, times_i
@@ -49,17 +50,39 @@ def inputs(name):
         yield " ".join(format(value, "x") for value in (n, xn, yn, *u, *v, scalar, xq, yq))
 
 
+def admission_boundary(name, first_row):
+    """Consecutive shears straddling the squared guard, and a composite q witness."""
+    e, p, _ = signer_parameters(name)
+    n, _, _, *rest = (int(field, 16) for field in first_row.split())
+    u, v = rest[:4], rest[4:8]
+    limit = p * (1024*n)**2
+    if inner(p, v, v)**2 > limit or not any(u):
+        raise ValueError(f"{name}: invalid starting basis for the shear")
+    for shear in itertools.count(1):
+        w = tuple(b + shear*a for a, b in zip(u, v))
+        if inner(p, w, w)**2 > limit:
+            break
+    for scalar in range(1, 256, 2):
+        q = (1 << (2*e-5)) - scalar**2
+        for factor in (3, 5, 7, 11, 13, 17, 19, 23, 29, 31):
+            if q > factor and q % factor == 0:
+                return f"{name} {shear} {scalar} {factor}"
+    raise ValueError(f"{name}: no byte-sized composite-degree witness")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--native-log", type=Path)
     args = parser.parse_args()
     expected = []
+    boundaries = []
 
     for name in SET_WIDTHS:
         rows = list(inputs(name))
         if len(rows) != 6:
             raise ValueError(f"{name} has {len(rows)} guarded inputs")
+        boundaries.append(admission_boundary(name, rows[0]))
         text = "\n".join(rows) + "\n"
         path = VECTORS.parent / "ideals" / f"{name}.txt"
         count = native_schedules(name)["Secret ideal pre-reduction, Q4"][1]
@@ -69,6 +92,12 @@ if __name__ == "__main__":
             path.write_text(text)
         elif path.read_text() != text:
             raise ValueError(f"{name} ideal inputs differ")
+    path = VECTORS.parent / "admission-boundaries.txt"
+    text = "\n".join(boundaries) + "\n"
+    if args.write:
+        path.write_text(text)
+    elif path.read_text() != text:
+        raise ValueError("admission boundary fixtures differ")
     if args.native_log:
         actual = [s for s in args.native_log.read_text().splitlines() if s.startswith("stage2d ")]
         if Counter(actual) != Counter(expected):

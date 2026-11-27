@@ -120,6 +120,11 @@ mod tests {
     use prism_verify::set::Set;
 
     #[test]
+    fn each_hex_nibble_keeps_its_place_and_case() {
+        assert_eq!(super::decode_hex("aFBc10"), Ok(vec![0xaf, 0xbc, 0x10]));
+    }
+
+    #[test]
     fn a_multibyte_scalar_is_refused() {
         let err = judge("p248 4 a€").expect_err("a split character is not hex");
         assert_eq!(err, "scalar hex is not hexadecimal");

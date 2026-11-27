@@ -80,10 +80,8 @@ class MutantJob(NamedTuple):
 
     `output` is the prefix of that job's dispatch outputs:
     `<output>_shards`, `<output>_of`, `<output>_run`. `shards` is how
-    many ways the job is dealt. Sixteen and two are the measured sizes:
-    the slowest shard stays under 60 minutes (`docs/PRISM_CI_DESIGN.md`).
-    Four, for the integer crate, is derived from a run on a build VM and
-    not yet measured on a runner.
+    many ways the job is dealt. The runner measurements are recorded in
+    `docs/PRISM_CI_DESIGN.md`.
     """
 
     name: str
@@ -92,8 +90,9 @@ class MutantJob(NamedTuple):
 
 
 MUTANT_JOBS = (
-    MutantJob("mutants", "mutants", 16),
+    MutantJob("mutants", "mutants", 24),
     MutantJob("mutants-front", "front", 2),
+    MutantJob("mutants-signer", "signer", 6),
     MutantJob("mutants-int", "int", 4),
 )
 
@@ -566,14 +565,17 @@ def selftest() -> int:
 
     failures = []
     full = dispatch_plan("", "")
-    if json.loads(full["mutants_shards"]) != list(range(16)) or full["mutants_of"] != "16":
-        failures.append("plan did not deal mutants into sixteen")
+    if json.loads(full["mutants_shards"]) != list(range(24)) or full["mutants_of"] != "24":
+        failures.append("plan did not deal mutants into twenty-four")
     if json.loads(full["front_shards"]) != list(range(2)) or full["front_of"] != "2":
         failures.append("plan did not deal mutants-front into two")
     if json.loads(full["int_shards"]) != list(range(4)) or full["int_of"] != "4":
         failures.append("plan did not deal mutants-int into four")
     if full["other_jobs"] != "true" or full["mutants_run"] != "true" or full["front_run"] != "true":
         failures.append("an empty dispatch does not run the nightly")
+    if (full["signer_run"] != "true" or json.loads(full["signer_shards"]) != list(range(6))
+            or dispatch_plan("mutants-signer", "5")["other_jobs"] != "false"):
+        failures.append("signer dispatch is incomplete or runs unrelated jobs")
     if full["int_run"] != "true":
         failures.append("an empty dispatch does not run mutants-int")
     one = dispatch_plan("mutants", "3")
@@ -586,14 +588,14 @@ def selftest() -> int:
     alone = dispatch_plan("mutants-int", "3")
     if json.loads(alone["int_shards"]) != [3] or alone["int_run"] != "true" or alone["mutants_run"] != "false":
         failures.append("a mutants-int shard dispatch did not run that shard alone")
-    if json.loads(dispatch_plan("mutants", "")["mutants_shards"]) != list(range(16)):
+    if json.loads(dispatch_plan("mutants", "")["mutants_shards"]) != list(range(24)):
         failures.append("mutants without a shard did not run every shard")
     if json.loads(dispatch_plan("mutants-front", "1")["front_shards"]) != [1]:
         failures.append("mutants-front shard 1 was not dealt")
     for only, shard_text, text in (
         ("fuzz", "", "only is"),
         ("", "1", "shard is set"),
-        ("mutants", "16", "not in 0.."),
+        ("mutants", "24", "not in 0.."),
         ("mutants", "nope", "one index"),
         ("mutants-front", "2", "not in 0.."),
         ("mutants-int", "4", "not in 0.."),

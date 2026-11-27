@@ -4,7 +4,7 @@
 // BSD-3-Clause
 
 use crate::reducer::{self, Basis, Bounds, Class, Reduced, ReductionSet, Scalar, Schedule, Vector};
-use prism_int::{Int, SecretBit, SecretError, SecretInt};
+use prism_int::{Int, SecretError, SecretInt};
 use shekyl_prism::hazmat::ideal;
 use std::hint::black_box;
 use std::time::Instant;
@@ -13,9 +13,9 @@ use std::time::Instant;
 #[path = "intersection_oracle.rs"]
 mod intersection_oracle;
 
-fn check_bit(bit: SecretBit, expected: bool) {
-    assert_eq!(bit.declassify(), Ok(expected));
-}
+#[path = "../../tests/support/signer_fixtures.rs"]
+mod signer_fixtures;
+use signer_fixtures::check_bit;
 
 fn check_invalid<const W: usize>(value: &Scalar<W>) {
     assert_eq!(value.declassify().unwrap_err(), SecretError::Overflowed);

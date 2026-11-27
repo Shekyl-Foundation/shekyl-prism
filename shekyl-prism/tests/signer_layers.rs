@@ -15,8 +15,11 @@ use shekyl_prism::hazmat::ideal::geometry::{
     degree_bits, secret_norm_bits, DEGREE_EXPONENT, DEGREE_SHIFT, ORDER_DENOMINATOR_BITS,
     Q4_SLACK_BITS,
 };
+#[path = "support/signer_fixtures.rs"]
+mod signer_fixtures;
 use shekyl_prism::hazmat::ideal::GenericHnf;
 use shekyl_prism::hazmat::int::{Int, SecretBit, SecretInt};
+use signer_fixtures::check_bit;
 
 /// The integer crate is the one behind `hazmat::int`: its two types are
 /// there and compute. No exit of the secret type is called: a call site
@@ -30,7 +33,8 @@ fn the_integers_are_under_hazmat() {
 }
 
 /// Ideal admission is the other signer layer behind `hazmat`. The generic
-/// column-HNF is the norm-and-root constructor. No secret exit is called.
+/// column-HNF is the norm-and-root constructor. The comparisons leave
+/// through `check_bit`, the fixture exit the treatment table counts.
 #[test]
 fn the_ideal_layer_is_under_hazmat() {
     assert_eq!(degree_bits(8), DEGREE_EXPONENT * 8 - DEGREE_SHIFT);
@@ -39,7 +43,7 @@ fn the_ideal_layer_is_under_hazmat() {
     let root = [SecretInt::from_u64(2), SecretInt::from_u64(1)];
     let hnf = GenericHnf::from_norm_and_root(&norm, &root);
     let (pivot, root_column) = hnf.generators();
-    let _: SecretBit = pivot[0].ct_eq(&norm.shl(ORDER_DENOMINATOR_BITS));
-    let _: SecretBit = root_column[2].ct_eq(&SecretInt::one());
-    let _: SecretBit = hnf.pivot().ct_eq(&pivot[0]);
+    check_bit(pivot[0].ct_eq(&norm.shl(ORDER_DENOMINATOR_BITS)), true);
+    check_bit(root_column[2].ct_eq(&SecretInt::one()), true);
+    check_bit(hnf.pivot().ct_eq(&pivot[0]), true);
 }
