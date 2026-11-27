@@ -12,7 +12,16 @@ use prism_vectors::corpus::Primary;
 use sha3::{Digest, Sha3_256};
 
 fn run(binary: &str, args: &[&str], input: &str) -> Output {
-    let mut child = Command::new(binary)
+    // Cargo's runner launches the test harness. Nested CLI processes need
+    // the same runner in the nightly s390x cross container.
+    let mut command = Command::new(binary);
+    #[cfg(target_arch = "s390x")]
+    if let Ok(runner) = std::env::var("CARGO_TARGET_S390X_UNKNOWN_LINUX_GNU_RUNNER") {
+        let mut words = runner.split_whitespace();
+        command = Command::new(words.next().expect("empty s390x runner"));
+        command.args(words).arg(binary);
+    }
+    let mut child = command
         .args(args)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
