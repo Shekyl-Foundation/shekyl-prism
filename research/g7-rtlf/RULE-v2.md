@@ -63,4 +63,18 @@ A fixture or key contrast that is a LEAK in any phase fails G7 timing. NOISE and
 
 ## 6. Maximum r per phase
 
-To be filled from the measured same-session floors: see `REPORT-v2.md`.
+Measured on the Pi 4 (Cortex-A72, timer tick 18.5 ns), core 3, three fresh processes, 8192 rounds each, null arm clean in all three (`REPORT-v2.md`, `v2/results/runV2/verdict_runV2.md`). The lowest control level was already detected in every case, so the measured values are **upper bounds** on the true floor, not the floor itself. r is the *real* median shift of the control (nominal delay plus about 100 to 120 ns of overhead from the second timer read).
+
+| phase | typical duration | RTLF α=.01 floor (upper bound) | max r (G7) | Welch t floor | t-test usable for PASS |
+|---|---|---|---|---|---|
+| adm (`Basis::from_intersection` and drop) | 30.2 µs | r ≤ 0.22 µs (nominal 100 ns); 3/3 whole runs and 6/6 chunks of 4096 | **0.25 µs** | not reached below 0.5 µs (0.5 µs: 1/3 runs, 3/6 chunks) | no |
+| herm (three Hermitian products) | 72.9 µs | r ≤ 0.20 µs (nominal 100 ns); 3/3 and 6/6 | **0.25 µs** | not reached below 0.5 µs (0.5 µs: 0/3 runs, 1/6 chunks) | no |
+| full (admission plus reduce) | 2.49 ms | r ≤ 1.65 µs (nominal 1.6 µs); 3/3 and 6/6 | **2.0 µs** | not reached at 6.5 µs (0/3 runs, 0/6 chunks) | no |
+
+Use of the table:
+
+- A session is PASS-eligible for a phase only if its own control reproduces the row: the lowest level (L) flagged by RTLF at α = 0.01 in every valid process, with at least 4096 rounds per process. If the lowest level is missed, r(phase) is the next level that is flagged, and it is compared with max r above.
+- The limits are the lowest level that was tested. They can be tightened only by adding control levels below L (for example 25 and 50 ns nominal) in a later session. Until then, 0.25 µs / 0.25 µs / 2.0 µs is the strictest resolution G7 claims.
+- max r is about 0.8 % of the admission phase, 0.3 % of the Hermitian phase and 0.08 % of the full path. A shift of that size is below what any single call could expose over a network, so these limits describe the instrument, not an attack.
+- The t-test never sets r: it did not reach the control at the nominal levels below 0.5 µs (adm/herm) or 6.4 µs (full). It stays in the report as a flag, not as evidence of absence.
+- The controls are constant delays. A leak that moves only a few percent of calls (a rare branch) is a different shape; the decile test is less sensitive to it, and the structural checks stay primary for it.
