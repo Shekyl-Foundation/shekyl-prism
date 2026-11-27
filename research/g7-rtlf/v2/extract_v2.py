@@ -67,7 +67,22 @@ def main():
                     f = write(out, cid, x[sl], y[sl])
                     man.append(dict(id=cid, file=f, run=run, src=base, seed=meta.get("seed"), perm=meta.get("perm"),
                                     ref=ref, phase=ph, arm=a, versus=r, kind=kind, span=tag, n=len(x[sl]), **stat(x[sl], y[sl])))
-        # fixture identity offsets: each fixture's median minus the median over all fixtures, per phase
+            # identity contrasts: fixture f against the pooled other fixtures, independent of
+            # which fixture is this process's reference
+            fx = sorted(a for a in arms if a.startswith("f"))
+            for f in fx:
+                rounds = sorted(set.intersection(*[set(cells[(a, ph)]) for a in fx]))
+                y = [cells[(f, ph)][k] for k in rounds]
+                x = [cells[(a, ph)][k] for k in rounds for a in fx if a != f]
+                cid = "%s__%s__%s__%s__vsothers__all" % (run, base, ph, f)
+                fl = write(out, cid, x, y)
+                yy = np.asarray(y, float); others = np.mean([[cells[(a, ph)][k] for k in rounds] for a in fx if a != f], axis=0)
+                d = yy - others; sd = d.std(ddof=1)
+                man.append(dict(id=cid, file=fl, run=run, src=base, seed=meta.get("seed"), perm=meta.get("perm"), ref=ref, phase=ph, arm=f,
+                                versus="others", kind="loo", span="all", n=len(y),
+                                t_welch=float(stats.ttest_ind(yy, np.asarray(x, float), equal_var=False).statistic),
+                                t_paired=float(d.mean() * math.sqrt(len(d)) / sd), mean_diff_ns=float(d.mean()), median_diff_ns=float(np.median(yy) - np.median(x)),
+                                sd_pair_ns=float(sd)))
     json.dump(man, open(out + "/manifest.json", "w"))
     print(len(man), "contrasts")
 
