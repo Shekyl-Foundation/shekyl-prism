@@ -280,6 +280,8 @@ jobs:
       of: ${{ needs.dispatch.outputs.front_of }}
       mutate: shekyl-prism
       test: shekyl-prism
+      reject_file: shekyl-prism/src/ideal/mod.rs
+      reject_features: signer
 
   mutants-signer:
     name: mutants-signer (${{ matrix.shard }}/${{ needs.dispatch.outputs.signer_of }})
@@ -298,6 +300,10 @@ jobs:
       test: shekyl-prism
       features: signer
       scope: shekyl-prism/src/ideal
+      test_args: "--lib --test=signer_layers --example=stage2c"
+      control_file: shekyl-prism/src/ideal/mod.rs
+      control_mutant: "replace * with + in Modulus<W, D>::mul"
+      control_tests: "--test=signer_layers"
       timeout_multiplier: "4"
 
   # The signer's integers, against their own tests. The crate depends on
