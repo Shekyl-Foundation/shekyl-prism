@@ -1,0 +1,33 @@
+[package]
+name = "safegcd-inverse"
+version = "0.0.0"
+edition = "2021"
+license = "BSD-3-Clause"
+publish = false
+description = "Research: fixed-count divstep (safegcd, EUROCRYPT 2026 bound) modular inverse for prism-int widths (not part of the workspace)"
+
+# Standalone: an empty workspace table keeps this crate out of the
+# repository workspace, its build and its CI.
+[workspace]
+
+[dependencies]
+# The comparison baselines only: `Int::inv_mod` (variable time) and the
+# signer's Fermat inverse in Montgomery form, both on dev's prism-int.
+# The audited asm value barrier the signer uses for its masks.
+prism-ct-barrier = { git = "https://github.com/Shekyl-Foundation/shekyl-prism", rev = "82321847dca91c6fc6afe5d0ee840413e55cfc37" }
+prism-int = { git = "https://github.com/Shekyl-Foundation/shekyl-prism", rev = "82321847dca91c6fc6afe5d0ee840413e55cfc37" }
+
+[dev-dependencies]
+num-bigint = "=0.4.6"
+num-integer = "=0.1.47"
+num-traits = "=0.2.19"
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "fat"
+debug = 1
+
+[profile.test]
+opt-level = 1
+overflow-checks = true
