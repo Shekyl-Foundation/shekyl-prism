@@ -176,7 +176,7 @@ jobs:
           fi
           while IFS= read -r file; do args+=(--file "$file"); done < "$RUNNER_TEMP/mutation-files"
           if [ "$JOB" = mutants-signer ]; then
-            args+=(--cargo-test-arg=--test=signer_layers)
+            args+=(--cargo-test-arg=--lib --cargo-test-arg=--test=signer_layers --cargo-test-arg=--example=stage2c)
           fi
           args+=(--no-shuffle --shard "${SHARD}/${OF}" --sharding round-robin)
           cargo mutants "${args[@]}" > mutants.txt

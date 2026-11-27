@@ -215,6 +215,8 @@ dependencies = [
 name = "shekyl-prism"
 version = "0.1.0"
 dependencies = [
+ "num-bigint",
+ "num-integer",
  "prism-field",
  "prism-int",
  "prism-isogeny",

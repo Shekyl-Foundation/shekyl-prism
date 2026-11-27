@@ -9,6 +9,10 @@ use shekyl_prism::hazmat::ideal;
 use std::hint::black_box;
 use std::time::Instant;
 
+#[cfg(test)]
+#[path = "intersection_oracle.rs"]
+mod intersection_oracle;
+
 #[path = "../../tests/support/signer_fixtures.rs"]
 mod signer_fixtures;
 use signer_fixtures::{check_bit, check_invalid, magnitude, scalar};
