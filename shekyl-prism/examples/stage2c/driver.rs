@@ -4,7 +4,7 @@
 // BSD-3-Clause
 
 use crate::reducer::{self, Basis, Bounds, Class, Reduced, ReductionSet, Scalar, Schedule, Vector};
-use prism_int::Int;
+use prism_int::{Int, SecretError, SecretInt};
 use shekyl_prism::hazmat::ideal;
 use std::hint::black_box;
 use std::time::Instant;
@@ -15,7 +15,28 @@ mod intersection_oracle;
 
 #[path = "../../tests/support/signer_fixtures.rs"]
 mod signer_fixtures;
-use signer_fixtures::{check_bit, check_invalid, magnitude, scalar};
+use signer_fixtures::check_bit;
+
+fn check_invalid<const W: usize>(value: &Scalar<W>) {
+    assert_eq!(value.declassify().unwrap_err(), SecretError::Overflowed);
+}
+
+fn magnitude(hex: &str) -> Vec<u8> {
+    hex.trim_start_matches('-')
+        .as_bytes()
+        .rchunks(2)
+        .map(|chunk| u8::from_str_radix(std::str::from_utf8(chunk).unwrap(), 16).unwrap())
+        .collect()
+}
+
+fn scalar<const W: usize>(hex: &str) -> Scalar<W> {
+    let x = SecretInt::from_le_bytes(&magnitude(hex));
+    if hex.starts_with('-') {
+        x.neg()
+    } else {
+        x
+    }
+}
 
 struct Fixture<const W: usize> {
     class: Class,

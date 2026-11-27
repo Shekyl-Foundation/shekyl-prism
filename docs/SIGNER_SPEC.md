@@ -659,8 +659,8 @@ And for the error an exit returns when the overflow mark is set, **U**: a proof 
 
 | # | Stage | Call site | Exit | What leaves | Operation | Treatment at the last stage | Its overflow error |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 2c fixture | `tests/support/signer_fixtures.rs::check_bit` | SecretBit::declassify | Predicate on public oracle data | Compare the basis, form and half-tie control | I, public fixture only | Fail the fixture |
-| 2 | 2c fixture | `tests/support/signer_fixtures.rs::check_invalid` | SecretInt::declassify | Refusal on an invalid public input | Check every returned coordinate and form entry | I, public fixture only | Expected on this negative control |
+| 1 | 2c fixture | `tests/support/signer_fixtures.rs::check_bit` | SecretBit::declassify | Predicate on public oracle data | Compare a public fixture: the basis, the form, the half-tie control, and the norm-and-root HNF generators | I, public fixture only | Fail the fixture |
+| 2 | 2c fixture | `stage2c/driver.rs::check_invalid` | SecretInt::declassify | Refusal on an invalid public input | Check every returned coordinate and form entry | I, public fixture only | Expected on this negative control |
 | 3 | 2b/2d ideal component | `GuardedIdeal::admit` | SecretBit::declassify | Aggregate validity of the generated or imported ideal component | Admit the candidate or decoded component | I, reject the candidate or refuse import | Refuse admission |
 | 4 | 2d fixture | `ideal_lattice::public_fixture` | SecretInt::declassify | Numerators and carried norm of a public test intersection | Compare the full integer lattice with Q3 | I, test binary and public vectors only | Fail the fixture |
 | 5 | 2b unit test | `geometry::tests::left_action_on_order_basis_and_fractional_inputs` | SecretBit::declassify | Agreement on public basis vectors and fractional inputs | Check the order action and exact division | I, test binary only | Fail the fixture |
