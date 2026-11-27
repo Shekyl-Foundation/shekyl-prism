@@ -9,6 +9,10 @@ use shekyl_prism::hazmat::ideal;
 use std::hint::black_box;
 use std::time::Instant;
 
+#[cfg(test)]
+#[path = "intersection_oracle.rs"]
+mod intersection_oracle;
+
 fn check_bit(bit: SecretBit, expected: bool) {
     assert_eq!(bit.declassify(), Ok(expected));
 }

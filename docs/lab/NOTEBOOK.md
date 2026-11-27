@@ -1126,3 +1126,37 @@ The review left the ARM timing record open after the sampler changed. The expect
 Ran the Rust 1.97.1 locked release example at `a5a6f60`, cross-built for `aarch64-unknown-linux-gnu`, with `taskset -c 3 ./stage2c timing 512` on a Raspberry Pi 4. The separate stack record comes from the ARM CI job for the same revision. The [measurement report](../benchmarks/stage2c/README.md) gives the results, raw files and reproduction commands. Production spill erasure and G7 remain open.
 
 Rick requested validation. OpenAI Codex ran the hardware measurement, checked both stack logs and compared the recorded timings with the contrast design.
+
+## 2026-11-26 — Stage 2b/2d order action, intersection and shortest-equivalent handoff
+
+The question was whether the signing intersection spans the general coprime-ideal sum in Q3 when the key and challenge are chosen independently from the public corpus. The expectation was equality of the carried norm and of the full integer lattices. Equal indices alone would permit different lattices.
+
+Ran the Rust oracle at `6f693a0` with `cargo test --locked -p shekyl-prism --features signer --lib --test signer_layers` in the debug and release profiles. Each of the six keys was paired with all six challenges in each of the five sets. The oracle computes an ordinary column HNF with unbounded integers on both sides. The norm and lattice agreed on the 180 pairs. The controls cover a changed basis of the same lattice, a different lattice of equal index, and a proper sublattice.
+
+A separate question for the research lane is whether the reduced form already gives the shortest-equivalent ideal needed by Stage 3. Use the `stage2c/vectors` corpus at the same revision. In each row let `U,V` be the returned raw columns, `β=U/2`, `T` the carried norm, and `F` the returned form. Write each column as two Gaussian entries. For `I·conj(β)/T`, direct quaternion multiplication gives first raw column `(2F00,0,0,0)`. The first two entries of the second raw column are `F20,F21`. Its last two are the real and imaginary parts of `det(U,V)/(2T)`.
+
+Ran exact integer products on all 55 rows and checked the second column under all four rotations of V by Gaussian units (220 checks). The determinant quotient was a Gaussian unit throughout. The original rows gave only +1 or −1. Of the 55 output norms, 22 were even. The rotations are changes of basis of the same fixtures.
+
+Open for independent proof: establish integrality of that quotient on every admitted input, including imported bases, derive the orientation through swaps, and compare with the full right-product lattice in both norm parities. Its magnitude alone does not establish integrality. The general Q1 fixed-schedule HNF and its intermediate widths remain open.
+
+Rick directed the Stage 2b/2d work. OpenAI Codex implemented the native order action and lattice comparison, and ran the public-fixture checks.
+
+## 2026-11-26 — Determinant orientation and the shortest-equivalent ideal
+
+The preceding entry asked whether the last two raw coordinates in the shortest-equivalent construction are a Gaussian unit. The following derivation uses only the admitted ideal's index and its closure under the maximal order. It applies to an imported basis once those properties have been checked.
+
+Write the raw numerator columns as Gaussian pairs U = (z₁,w₁), V = (z₂,w₂), representing z + wj. Let L be their Gaussian span and d = z₁w₂ − z₂w₁. The integer index of L in the raw coordinate lattice is d·conj(d) = 4T², where T > 0 is the carried ideal norm. Left multiplication by j belongs to the order since j = 2H − i with H = (i+j)/2. It sends (z,w) to (−p·conj(w),conj(z)). The columns jU,jV therefore equal (U,V)M for a Gaussian integer matrix M. Taking determinants gives d·det(M) = p·conj(d).
+
+Remove the largest power of p dividing d in the Gaussian integers, writing d = pᵏd₀. The field prime p is 3 modulo 4, so it stays prime in the Gaussian integers. Thus d₀ is coprime to p, and d₀ divides conj(d₀). Their norms agree, so they differ by a unit. The same holds for d and conj(d). Writing d = a+bi, this forces a = 0, b = 0, or |a| = |b|. The last case would give a² = 2T², impossible by the parity of the exponent of 2. Consequently ε = d/(2T) is one of 1, −1, i, −i. A Gaussian size reduction preserves d, a column swap negates it, and the ordered signing intersection (qV,U+γV) has determinant −qd.
+
+For β = U/2, right multiplication by conj(β)/T takes the two raw columns to (2F00,0) and (h,ε), in Gaussian pairs. Here F00 is the first diagonal of the integral norm form, h = F20+iF21 = (z₂·conj(z₁)+p w₂·conj(w₁))/(2T), and the identities follow by quaternion multiplication. This gives the full image lattice because right multiplication commutes with the left Gaussian action. To see that the second column lies in the order, take det(HU,V)/d. This is a Gaussian integer by closure. Expanding the determinant gives (iε−h)/(2ε), so h ≡ iε modulo 2. In raw coordinates these are exactly the two order parity checks. The first column also lies in the order, and the raw index of their span is |2F00·ε|² = 4F00². Its carried norm is therefore F00 for either output parity.
+
+Checked the unit and both parity congruences with exact integer arithmetic on the 55 committed reducer rows, rotating the second vector by each of the four Gaussian units (220 checks). At `0b98bd3` the native signing-intersection replay also passed all 280 independent fixture rows across the five sets in debug and release on x86-64. Those runs exercise the signing intersection and reducer. The equivalent-ideal derivation above is ready for independent review. A native implementation still needs intermediate-width bounds.
+
+Rick directed the Stage 2b/2d work. OpenAI Codex derived the orientation and parity identities and ran the fixture checks.
+
+## 2026-11-26 — Even diagonals of the shortest-equivalent form
+
+The independent shortcut review confirms the unit and order parity for imported bases. There is also a short direct check for the output norm. For X = (z,w), left multiplication by H = (i+j)/2 gives 2HX = (iz−p·conj(w), iw+conj(z)). Thus det(X,2HX) = |z|²+p|w|² = N4(X). For X equal to either basis vector, HX lies in the original Gaussian span, so det(X,HX)/D is a Gaussian integer, where D = 2Tε as proved above. Multiplication by ε now gives N4(X)/(4T), which is a real Gaussian integer. Both normalized Gram diagonals are even. This derivation uses only the admitted basis and the half-order action already checked at import.
+
+OpenAI Codex checked this determinant identity and exact divisibility with integer arithmetic on both columns for all 55 reducer fixtures and all four rotations of V. The 220 orientations passed. Of the 55 original first columns, 22 give an even output norm. The Stage 2d contract therefore keeps both norm parities and states the positive half-tie endpoint explicitly. The independent research proof and exact-division policy are linked in section 2.3 of the signer specification.

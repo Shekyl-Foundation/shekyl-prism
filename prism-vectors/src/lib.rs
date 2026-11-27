@@ -208,7 +208,7 @@ pub enum Group {
     Isogeny,
     /// The archive the protocol comparison replays.
     Compare,
-    /// The signer's constants and their comparison values.
+    /// Signer constants, their comparison values and signing-intersection fixtures.
     Signer,
 }
 

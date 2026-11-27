@@ -209,6 +209,11 @@ pub struct Basis<const W: usize> {
 }
 
 impl<const W: usize> Basis<W> {
+    #[cfg(test)]
+    pub(super) fn ordered_gram(&self) -> [&Scalar<W>; 4] {
+        [&self.gram.a, &self.gram.c, &self.gram.h[0], &self.gram.h[1]]
+    }
+
     pub fn from_intersection<const D: usize>(
         t: &Scalar<W>,
         u: Vector<W>,

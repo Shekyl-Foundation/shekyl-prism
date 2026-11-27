@@ -331,16 +331,20 @@ jobs:
       - name: The research module's tests
         run: "cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::"
       # The second configuration of the front crate: `signer` on, which the
-      # workspace run above leaves off. What runs is signer_layers, not the
+      # workspace run above leaves off. The lib unit tests and signer_layers run, not the
       # verifier's tests a second time. Without the feature that file is
       # skipped, so the log must show each layer test ran.
       - name: The front crate with the signer feature, debug and release
         run: |
           set -euo pipefail
           for profile in "" "--release"; do
-            cargo test -p shekyl-prism --features signer --locked $profile --test signer_layers > signer.log 2>&1 || { cat signer.log; exit 1; }
+            cargo test -p shekyl-prism --features signer --locked $profile --lib --test signer_layers --example stage2c > signer.log 2>&1 || { cat signer.log; exit 1; }
             grep -q 'test the_integers_are_under_hazmat ... ok' signer.log || { cat signer.log; exit 1; }
             grep -q 'test the_ideal_layer_is_under_hazmat ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test ideal_lattice::guarded_intersections_match_the_coprime_lattice_sum ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test driver::intersection_oracle::replays_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test driver::intersection_oracle::intersection_spans_match_oracle_hnfs_at_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test hazmat::ideal::geometry::tests::left_action_on_order_basis_and_fractional_inputs ... ok' signer.log || { cat signer.log; exit 1; }
           done
 
   test-aarch64:
@@ -406,16 +410,20 @@ jobs:
       - name: The research module's tests
         run: "cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::"
       # The second configuration of the front crate: `signer` on, which the
-      # workspace run above leaves off. What runs is signer_layers, not the
+      # workspace run above leaves off. The lib unit tests and signer_layers run, not the
       # verifier's tests a second time. Without the feature that file is
       # skipped, so the log must show each layer test ran.
       - name: The front crate with the signer feature, debug and release
         run: |
           set -euo pipefail
           for profile in "" "--release"; do
-            cargo test -p shekyl-prism --features signer --locked $profile --test signer_layers > signer.log 2>&1 || { cat signer.log; exit 1; }
+            cargo test -p shekyl-prism --features signer --locked $profile --lib --test signer_layers --example stage2c > signer.log 2>&1 || { cat signer.log; exit 1; }
             grep -q 'test the_integers_are_under_hazmat ... ok' signer.log || { cat signer.log; exit 1; }
             grep -q 'test the_ideal_layer_is_under_hazmat ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test ideal_lattice::guarded_intersections_match_the_coprime_lattice_sum ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test driver::intersection_oracle::replays_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test driver::intersection_oracle::intersection_spans_match_oracle_hnfs_at_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test hazmat::ideal::geometry::tests::left_action_on_order_basis_and_fractional_inputs ... ok' signer.log || { cat signer.log; exit 1; }
           done
 
   # The field operations of a verification are deterministic, so the two

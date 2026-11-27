@@ -8,7 +8,8 @@
 //! The order denominator is the source. The index and the numerator norm
 //! square it. A shift that serves another job, such as the reducer's doubled
 //! diagonal, is not one of these constants.
-use prism_int::{Int, SecretInt};
+use super::Vector;
+use prism_int::{Int, SecretBit, SecretInt};
 
 /// Bits of the denominator of the maximal order `O0`.
 ///
@@ -48,6 +49,29 @@ pub fn degree_bits(exponent: u32) -> u32 {
     DEGREE_EXPONENT * exponent - DEGREE_SHIFT
 }
 
+/// Left action of (i+j)/2 on raw O0 numerators at the widened constructor
+/// width. The bit records integrality in the ordered basis (1, i, H, (1+k)/2).
+pub(super) fn left_half_i_plus_j<const D: usize>(
+    column: &Vector<D>,
+    p_plus_one_over_two: &SecretInt<D>,
+) -> (Vector<D>, SecretBit) {
+    let [a, b, c, d] = column;
+    let twice_real = a.sub(d);
+    let twice_imag = b.sub(c);
+    let integral = twice_real
+        .low_bits_zero(ORDER_DENOMINATOR_BITS)
+        .and(&twice_imag.low_bits_zero(ORDER_DENOMINATOR_BITS));
+    let real = twice_real.shr(ORDER_DENOMINATOR_BITS);
+    let imag = twice_imag.shr(ORDER_DENOMINATOR_BITS).neg();
+    let image = [
+        imag.sub(&p_plus_one_over_two.mul(c)),
+        real.add(&p_plus_one_over_two.mul(d)),
+        real,
+        imag,
+    ];
+    (image, integral)
+}
+
 /// Real and imaginary parts of the numerator Hermitian product.
 ///
 /// `left` and `right` are `O0` numerators `(1, i, j, k)`. `p` is the field
@@ -83,4 +107,36 @@ pub fn inverse_odd<const W: usize>(t: &SecretInt<W>) -> SecretInt<W> {
         x = x.mul_low(&SecretInt::select(&diff, &complement, &diff.is_negative()));
     }
     x
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn left_action_on_order_basis_and_fractional_inputs() {
+        // p=11. H=(i+j)/2, K=(1+k)/2. The four products are H, -K,
+        // -3, 3i. Their raw numerator coordinates fix signs and scale.
+        let scalar = |x| SecretInt::<2>::from_public(&Int::from_i64(x));
+        let weight = scalar(6);
+        let cases = [
+            ([2, 0, 0, 0], Some([0, 1, 1, 0])),
+            ([0, 2, 0, 0], Some([-1, 0, 0, -1])),
+            ([0, 1, 1, 0], Some([-6, 0, 0, 0])),
+            ([1, 0, 0, 1], Some([0, 6, 0, 0])),
+            ([1, 0, 0, 0], None),
+            ([0, -1, 0, 0], None),
+        ];
+        for (column, expected) in cases {
+            let (image, integral) = left_half_i_plus_j(&column.map(scalar), &weight);
+            let verdict = match expected {
+                Some(raw) => image
+                    .iter()
+                    .zip(raw)
+                    .fold(integral, |ok, (x, want)| ok.and(&x.ct_eq(&scalar(want)))),
+                None => integral.not(),
+            };
+            assert_eq!(verdict.declassify(), Ok(true));
+        }
+    }
 }
