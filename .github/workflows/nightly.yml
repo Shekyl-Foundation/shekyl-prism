@@ -296,7 +296,6 @@ jobs:
       of: ${{ needs.dispatch.outputs.signer_of }}
       mutate: shekyl-prism
       test: shekyl-prism
-
       features: signer
       scope: shekyl-prism/src/ideal
       timeout_multiplier: "4"

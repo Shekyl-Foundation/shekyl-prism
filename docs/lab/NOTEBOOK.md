@@ -1126,3 +1126,11 @@ The review left the ARM timing record open after the sampler changed. The expect
 Ran the Rust 1.97.1 locked release example at `a5a6f60`, cross-built for `aarch64-unknown-linux-gnu`, with `taskset -c 3 ./stage2c timing 512` on a Raspberry Pi 4. The separate stack record comes from the ARM CI job for the same revision. The [measurement report](../benchmarks/stage2c/README.md) gives the results, raw files and reproduction commands. Production spill erasure and G7 remain open.
 
 Rick requested validation. OpenAI Codex ran the hardware measurement, checked both stack logs and compared the recorded timings with the contrast design.
+
+## 2026-11-26 — Signer mutation coverage at the PR #50 boundary
+
+The November 26 nightly enumerated 243 front-crate mutations on dev at `470d537`. The two default-feature shards returned 42 and 39 misses in the gated ideal module. Together they completed 188 mutations. The 55 remaining candidates had no outcome. The tests exercised the verifier configuration. Ledger O35 records the gap.
+
+Part A separates the two feature configurations. Rustc dep-info identifies the files built at each one. A local negative control presented the same Montgomery mutation to both inventories. The default build rejected the ideal source and the signer build accepted it. The runner control changes the right shift in Montgomery multiplication from 64·W to 64+W and requires the named mutant to be caught. The public API tests compare all nine outputs at five sets. They also check a marked root, a composite public degree, two noncanonical column forms and consecutive shears straddling the factor-256 guard. The adjacent shears follow from exact integer evaluation on the first guarded fixture of each set. The reducer itself is in an example binary and is outside the mutation inventory.
+
+Rick confirmed G7 and amended G2 on November 26 and directed the four-part cleanup. OpenAI Codex implemented the feature selection and public API tests.

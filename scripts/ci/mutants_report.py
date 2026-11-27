@@ -80,10 +80,8 @@ class MutantJob(NamedTuple):
 
     `output` is the prefix of that job's dispatch outputs:
     `<output>_shards`, `<output>_of`, `<output>_run`. `shards` is how
-    many ways the job is dealt. Sixteen and two are the measured sizes:
-    the slowest shard stays under 60 minutes (`docs/PRISM_CI_DESIGN.md`).
-    Four, for the integer crate, is derived from a run on a build VM and
-    not yet measured on a runner.
+    many ways the job is dealt. The runner measurements are recorded in
+    `docs/PRISM_CI_DESIGN.md`.
     """
 
     name: str
