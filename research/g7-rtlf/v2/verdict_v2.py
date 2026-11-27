@@ -15,13 +15,13 @@ TT = 4.5
 os.makedirs(O, exist_ok=True)
 
 def tsv(p):
-    return {r["file"]: r for r in csv.DictReader(open(p), delimiter="\t")} if os.path.exists(p) else {}
+    return {os.path.basename(r["file"]): r for r in csv.DictReader(open(p), delimiter="\t")} if os.path.exists(p) else {}
 
 def load(run):
     man = json.load(open("%s/%s/manifest.json" % (W, run)))
     a01 = tsv("%s/%s_a01.tsv" % (W, run)); a09 = tsv("%s/%s_a09.tsv" % (W, run))
     for r in man:
-        a, b = a01.get(r["file"]), a09.get(r["file"])
+        a, b = a01.get(os.path.basename(r["file"])), a09.get(os.path.basename(r["file"]))
         r["R01"] = int(a["detect"]) if a else None
         r["R09"] = int(b["detect"]) if b else None
         r["dec01"] = a["sig_deciles"] if a else ""
@@ -96,6 +96,21 @@ def block(man, label):
             else: v = "NOISE"
             verdicts[(ph, arm, vs)] = (nf, same, both, v)
             L.append("| %s | %s vs %s | %s | %d (%s) | %s |" % (ph, arm, vs, " | ".join(cells), nf, "same sign" if same else "mixed/none", v))
+    # identity (leave-one-out) contrasts: fixture vs pooled other fixtures, reference-independent
+    L.append("\n### %s: identity contrasts (fixture vs pooled other fixtures); shift = median diff, R = RTLF .01 flag (>=3 ticks), T = |Welch t|>4.5\n" % label)
+    L.append("| phase | fixture | " + " | ".join(p.split("_")[-1] for p in valid) + " | flagged procs | same sign |")
+    L.append("|---|---|" + "---|" * len(valid) + "---|---|")
+    for ph in ("adm", "herm", "full"):
+        for fx in ("f0", "f1", "f2", "f3", "f4"):
+            cells = []; fl = []
+            for p in valid:
+                rr = [r for r in man if r["src"] == p and r["phase"] == ph and r["arm"] == fx and r["kind"] == "loo" and r["span"] == "all"]
+                if not rr:
+                    cells.append("–"); continue
+                x = rr[0]
+                cells.append("%s%+.0f ns (mean %+.0f) t%+.1f R%d%s" % ("**" if x["flag"] else "", x["median_diff_ns"], x["mean_diff_ns"], x["t_welch"], x["flagR"], "**" if x["flag"] else ""))
+                if x["flag"]: fl.append(x["sign"])
+            L.append("| %s | %s | %s | %d | %s |" % (ph, fx, " | ".join(cells), len(fl), "yes" if len(fl) >= 2 and len(set(fl)) == 1 else "no"))
     return L, valid, res, verdicts
 
 man = load(RUN)
