@@ -1,0 +1,6 @@
+R vs numpy, alpha=0.09, same files: 527, same verdict: 524
+  disagree A_noisy_dev__05_split_10000_s1__split__prered-guard256__adm__f3.csv 1 90 | 0 
+  disagree A_noisy_dev__06_split_10000_s2__split__prered-guard256__full__f3.csv 1 80 | 0 
+  disagree E_quiet_dev__01_orig_512__orig__sign-generic__i1.csv 1 30 | 0 
+median over files of the median per-decile relative threshold difference: 0.007; 90th pct 0.017
+orig real, RTLF x Welch: {(0, 0): 122, (1, 0): 4}
