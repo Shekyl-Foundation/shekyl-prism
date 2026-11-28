@@ -6,7 +6,7 @@
 # counted. Hashing and Baillie-PSW do not use the field, so the challenge
 # stage reads zero and this metric does not see their cost.
 # Profile: release. The counts do not depend on the machine.
-# Sources: sha256 0ca61bab6869545af867c4f530eba5a2db165453109f316e57cb9455ed51d14f
+# Sources: sha256 d08f3628793df630e778510e85cf01a40ebc53c6403c18d0b2909dcc3993f933
 accept set=p248 vector=s5_i_r40.txt stage=total ext_mul=137974 ext_square=93997 ext_inv=72 ext_sqrt=6 ext_is_square=6 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=16
 accept set=p248 vector=s5_i_r41.txt stage=total ext_mul=139972 ext_square=94692 ext_inv=71 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=0
 accept set=p248 vector=s5_i_r43.txt stage=total ext_mul=138253 ext_square=94095 ext_inv=72 ext_sqrt=6 ext_is_square=4 base_mul=0 base_square=0 base_inv=0 base_sqrt=0 base_is_square=10
