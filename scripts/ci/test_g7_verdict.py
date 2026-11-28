@@ -39,12 +39,14 @@ from g7_verdict import (  # noqa: E402
     SIGN_NEGATIVE,
     SIGN_POSITIVE,
     WELCH_MAGNITUDE,
+    Contrast,
     Flag,
     Refused,
     classify,
     evaluate,
     flag,
     follow_up,
+    within_limit,
     main,
     config_hash,
 )
@@ -167,7 +169,7 @@ def verdict_of(report, kind, arm, phase="phase"):
 def judged(first_flags, again_flags, again_resolution=1, largest=1):
     opening = classify(first_flags, 1, largest)
     follow = classify(again_flags, again_resolution, largest)
-    return follow_up(opening, again_flags, follow)
+    return follow_up(opening, Contrast(follow, again_flags, within_limit(again_resolution, largest)))
 
 
 def selftest():
@@ -305,8 +307,8 @@ def selftest():
          judged([plus, plus, Flag(True, True, SIGN_NEGATIVE)], [minus, minus, none]), CANDIDATE)
     case("one both-tests re-run, even on the qualified direction, stays a candidate",
          judged([plus, plus, none], [both, none, none]), CANDIDATE)
-    case("an inconclusive re-run is not reproduced",
-         judged([plus, plus, none], [none, none, none], again_resolution=None), NOT_REPRODUCED)
+    case("persistence takes priority over a missing re-run resolution",
+         judged([plus, plus, none], [plus, plus, none], again_resolution=None), PERSISTENT_LEAK)
 
     refused("a re-run needs four times the rounds", first, run_fixture(prefix="b"))
     refused("a re-run needs fresh seeds", first, run_fixture(rounds=RERUN_ROUNDS))
@@ -347,10 +349,34 @@ def selftest():
     case("a passing re-run is not reproduced", (found, status), (NOT_REPRODUCED, EXIT_COMPLETE))
     noise = mark(run_fixture(rounds=RERUN_ROUNDS, prefix="b"), (0,), "pooled", "a", **over_welch(SIGN_NEGATIVE))
     found, status, _report = outcome(first, noise)
-    case("a one-flag re-run is not reproduced", (found, status), (NOT_REPRODUCED, EXIT_COMPLETE))
+    case("a noise re-run at its resolution limit is not reproduced", (found, status), (NOT_REPRODUCED, EXIT_COMPLETE))
     blind = mark(run_fixture(rounds=RERUN_ROUNDS, prefix="b"), (1,), "delay", "20", rtlf=False, flagged_ns=0)
     found, status, _report = outcome(first, blind)
-    case("an inconclusive re-run retires the candidate", (found, status), (NOT_REPRODUCED, EXIT_COMPLETE))
+    case("an inconclusive re-run keeps the candidate open", (found, status), (CANDIDATE, EXIT_OPEN))
+    mark(blind, (0,), "pooled", "a", **over_welch(SIGN_NEGATIVE))
+    found, status, report = outcome(first, blind)
+    case("a noise re-run with no resolution keeps the candidate open",
+         (verdict_of(report["rerun"], "pooled", "a"), found, status), (NOISE, CANDIDATE, EXIT_OPEN))
+    coarse = mark(run_fixture(rounds=RERUN_ROUNDS, prefix="b"), (1,), "delay", "10", median_ns=11)
+    mark(coarse, (0,), "pooled", "a", **over_welch(SIGN_NEGATIVE))
+    found, status, report = outcome(first, coarse)
+    case("a noise re-run above its resolution limit keeps the candidate open",
+         (report["rerun"]["resolution_ns"]["phase"], found, status), (11, CANDIDATE, EXIT_OPEN))
+
+    # Both phases start with the same candidate and have the same noisy repeat.
+    # Only one phase misses a higher control.
+    two_phases = candidate("a", SIGN_POSITIVE)
+    repeat = mark(run_fixture(rounds=RERUN_ROUNDS, prefix="b"), (0,), "pooled", "a",
+                  **over_welch(SIGN_NEGATIVE))
+    for session in (two_phases, repeat):
+        session["config"]["phases"]["second"] = dict(session["config"]["phases"]["phase"])
+        for process in session["processes"]:
+            process["records"].extend(dict(r, phase="second") for r in tuple(process["records"]))
+    mark(repeat, (1,), "delay", "20", rtlf=False, flagged_ns=0)
+    found, status, report = outcome(two_phases, repeat)
+    case("each candidate uses its own re-run phase resolution",
+         (found, verdict_of(report, "pooled", "a", "second"), status),
+         (CANDIDATE, NOT_REPRODUCED, EXIT_OPEN))
 
     leaked = mark(run_fixture(rounds=RERUN_ROUNDS, prefix="b"), (0, 1), "pooled", "b", **both_over(SIGN_POSITIVE))
     # The original contrast stays not reproduced; the other fixture is a new leak.

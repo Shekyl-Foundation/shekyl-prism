@@ -55,8 +55,6 @@ INCONCLUSIVE = "Inconclusive"
 PERSISTENT_LEAK = "Persistent leak"
 NOT_REPRODUCED = "Not reproduced"
 
-# A re-run with one of these verdicts did not itself open a candidate.
-RETIRES_CANDIDATE = frozenset({NOISE, PASS, INCONCLUSIVE})
 OPEN = frozenset({LEAK, PERSISTENT_LEAK, CANDIDATE, INCONCLUSIVE})
 
 EXIT_COMPLETE = 0
@@ -176,10 +174,11 @@ class Sample:
 
 @dataclass(frozen=True)
 class Contrast:
-    """A ruling and the process flags it was read from, valid processes only."""
+    """A ruling, the valid-process flags, and whether its phase met its limit."""
 
     ruling: Ruling
     flags: tuple
+    adequate_resolution: bool
 
 
 def sign_of(median_ns, mean_ns):
@@ -238,6 +237,10 @@ def single_process_signs(flags):
     )
 
 
+def within_limit(resolution, largest):
+    return resolution is not None and resolution <= largest
+
+
 def classify(flags, resolution, largest):
     """The first matching row of the decision table.
 
@@ -257,30 +260,30 @@ def classify(flags, resolution, largest):
         return Ruling(CANDIDATE, single)
     if any(either_test(item) for item in flags):
         return Ruling(NOISE, frozenset())
-    if resolution is not None and resolution <= largest:
+    if within_limit(resolution, largest):
         return Ruling(PASS, frozenset())
     return Ruling(INCONCLUSIVE, frozenset())
 
 
-def follow_up(first, again_flags, again):
+def follow_up(first, again):
     """The candidate's verdict after its re-run.
 
     first is the first-run ruling, including the directions that qualified
-    it. again_flags and again are the re-run. A row-1 re-run is a leak. Two
+    it. again is the re-run contrast. A row-1 re-run is a leak. Two
     re-run processes that support a qualified direction make a persistent
-    leak. Any other re-run candidate stays a candidate. Noise, a pass, and
-    an inconclusive re-run are not reproduced.
+    leak. Only Noise or Pass with adequate re-run resolution retires the
+    candidate.
     """
-    if again.verdict == LEAK:
+    if again.ruling.verdict == LEAK:
         return LEAK
-    again_support = support(again_flags)
+    again_support = support(again.flags)
     if any(again_support[sign] >= AGREEING_PROCESSES for sign in first.signs):
         return PERSISTENT_LEAK
-    if again.verdict == CANDIDATE:
+    if again.ruling.verdict in (CANDIDATE, INCONCLUSIVE):
         return CANDIDATE
-    if again.verdict in RETIRES_CANDIDATE:
-        return NOT_REPRODUCED
-    raise RuntimeError(f"unexpected re-run verdict {again.verdict}")
+    if again.ruling.verdict in (NOISE, PASS):
+        return NOT_REPRODUCED if again.adequate_resolution else CANDIDATE
+    raise RuntimeError(f"unexpected re-run verdict {again.ruling.verdict}")
 
 
 def targets(fixtures):
@@ -425,12 +428,13 @@ def contrasts_of(valid, config):
     for phase, spec in config["phases"].items():
         resolution = resolution_of(valid, phase, spec["levels_ns"])
         resolutions[phase] = resolution
+        adequate_resolution = within_limit(resolution, spec["largest_ns"])
         phase_contrasts = {}
         rows = []
         for kind, arm in targets(config["fixtures"]):
             flags = tuple(records[phase, kind, arm].observed for records in valid)
             ruling = classify(flags, resolution, spec["largest_ns"])
-            phase_contrasts[kind, arm] = Contrast(ruling, flags)
+            phase_contrasts[kind, arm] = Contrast(ruling, flags, adequate_resolution)
             row = {"kind": kind, "arm": arm, "verdict": ruling.verdict}
             if ruling.verdict == PASS:
                 row["at_ns"] = resolution
@@ -485,7 +489,7 @@ def apply_rerun(report, first, second):
             follow = second[phase][key]
             if row["verdict"] == CANDIDATE:
                 row["first_verdict"] = CANDIDATE
-                row["verdict"] = follow_up(opening.ruling, follow.flags, follow.ruling)
+                row["verdict"] = follow_up(opening.ruling, follow)
             elif follow.ruling.verdict in (CANDIDATE, LEAK) and row["verdict"] != LEAK:
                 row["first_verdict"] = row["verdict"]
                 row.pop("at_ns", None)

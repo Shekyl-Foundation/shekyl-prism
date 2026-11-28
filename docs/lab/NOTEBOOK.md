@@ -1313,7 +1313,7 @@ The self-test passed 60 named cases, including all seven historical regressions,
 
 **Derived.** At the lowest detected delay, the largest observed process median gives the coarsest of the three measured shifts. The verdict file published control levels and no-flag counts. The replay adds explicit resolutions and pooled verdicts. The observed flags agree. The historical configuration did not record a numerical replacement cap. The replay uses zero because all three planned processes were valid and no replacements occurred.
 
-**Open.** Admission was outside every archived interval. Its harness awaits part C’s second merge. A new measurement needs Rick’s word. The reviewer proposed the four clarifications in section 0 and Rick’s confirmation is pending.
+**Open.** Admission was outside every archived interval. Its harness awaits part C’s second merge. A new measurement needs Rick’s word.
 
 **Who.** The reviewers identified the discrepancies. Rick relayed the repair brief. Codex implemented the checker and converter and checked the replay and synthetic cases. No independent implementation review is recorded here.
 
@@ -1336,6 +1336,16 @@ The self-test passed 75 named cases, 1,728 three-process combinations, and 20,73
 
 The full path's 2,000 ns is the largest of the three process medians, 1,649, 2,000 and 1,740.5 ns, equal to its limit. Four planned contrasts and one reference comparison have an RTLF detection of 18 or 19 ns. Each is below three ticks and none has a Welch flag, so none is a flag.
 
-**Open.** Unchanged: admission was outside every archived interval, and Rick's confirmation of the clarifications is pending.
+**Open.** Admission was outside every archived interval.
 
 **Who.** Review of the checker. The opposite-direction gap was in the brief.
+
+## 2026-11-28 — F5: resolution required to retire a candidate
+
+**Expected.** A quiet or noisy re-run can retire a candidate only if the phase could resolve the stated delay. A different phase’s calibration cannot answer that question.
+
+**Ran.** At `36d0ba1`, synthetic Inconclusive and Noise re-runs with a missing phase resolution both returned **Not reproduced**, exit 0. After F5, `python3 -B scripts/ci/test_g7_verdict.py` passed 78 named cases, 1,728 three-process combinations and 20,736 four-process combinations. Both former failures now return **Candidate**, exit 1, as does Noise above the limit. Noise exactly at the limit and Pass both retire the candidate. A two-phase case gives different verdicts for the same re-run flags according to each phase’s controls.
+
+**Correction.** This supersedes the preceding entry’s conclusion about inconclusive and noisy re-runs. Rick confirmed the six section 0 clarifications on 2026-11-28. The runV2 replay commands above produced the same report byte for byte. That historical run had no candidate to re-run.
+
+**Who.** Rick supplied the revised ruling. Codex implemented F5 and checked the synthetic cases and historical replay.
