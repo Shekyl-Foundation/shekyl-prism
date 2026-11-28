@@ -249,10 +249,11 @@ def evaluate(first, rerun, report):
                 if row["verdict"] == "Candidate":
                     row["first_verdict"] = "Candidate"
                     row["verdict"] = repeated(a[key], b[key], new["verdict"])
-                elif new["verdict"] == "Leak":
+                elif new["verdict"] in ("Candidate", "Leak") and row["verdict"] != "Leak":
+                    # A different contrast can first become a candidate during this repeat.
                     row["first_verdict"] = row["verdict"]
                     row.pop("at_ns", None)
-                    row["verdict"] = "Leak"
+                    row["verdict"] = new["verdict"]
     return int(any(row["verdict"] in ("Leak", "Persistent leak", "Candidate", "Inconclusive")
                    for phase in rows.values() for row in phase))
 

@@ -226,6 +226,11 @@ def selftest():
     record(again, 0, "pooled", "b").update(rtlf=True, flagged_ns=6, t=6)
     record(again, 1, "pooled", "b").update(rtlf=True, flagged_ns=6, t=6)
     case("new independent rerun leak fails gate", evaluate(first, again, {}), 1)
+    record(again, 1, "pooled", "b").update(rtlf=False, flagged_ns=0, t=0)
+    report = {}
+    case("new independent rerun candidate needs follow-up", evaluate(first, again, report), 1)
+    case("new candidate reported on the correct contrast", report["verdicts"]["phase"][1]["verdict"],
+         "Candidate")
     config = first["config"]
     case("config digest independent of object key order", config_hash(dict(reversed(list(config.items())))),
          config_hash(config))

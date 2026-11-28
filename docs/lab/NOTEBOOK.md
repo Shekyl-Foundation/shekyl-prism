@@ -1316,3 +1316,5 @@ The self-test passed 60 named cases, including all seven historical regressions,
 **Open.** Admission was outside every archived interval. Its harness awaits part C’s second merge. A new measurement needs Rick’s word. The reviewer proposed the four clarifications in section 0 and Rick’s confirmation is pending.
 
 **Who.** The reviewers identified the discrepancies. Rick relayed the repair brief. Codex implemented the checker and converter and checked the replay and synthetic cases. No independent implementation review is recorded here.
+
+**Additional re-run check, 2026-11-28 (Ran).** A synthetic repeat cleared one candidate and raised a new candidate on a different fixture. The new fixture needs its own follow-up. Two added cases check the exit status and the affected contrast, bringing the suite to 62 named cases. The runV2 replay is unchanged.
