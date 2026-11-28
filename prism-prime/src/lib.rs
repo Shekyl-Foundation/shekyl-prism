@@ -47,6 +47,9 @@
 //! Euclid's algorithm in `jacobi_nonneg`, have a count they provably do
 //! not need in full and stop early inside it.
 
+#![forbid(unsafe_code)]
+#![deny(missing_docs)]
+
 use core::cmp::Ordering;
 
 use prism_field::width::LIMB_BITS;
