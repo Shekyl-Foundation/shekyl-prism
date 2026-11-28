@@ -1297,3 +1297,25 @@ Specification only: no Rust source and no script changed. The review of 2026-11-
 **How the examples were checked.** A model of the checks in Python, at `p = 3` and other toy primes, confirmed that the examples for A1 and A3 to A10 fail their one check and no other, and that testing closure on two vectors agrees with testing it on four over 2,720 generic lattices. A2 was not in the model, and A11's example does not reach its bound at toy size. The width tables were recomputed from `prism-vectors/data/signer/` and agree with the research results where research has them. Neither script is committed: this part changes no script, and both are items D16 and D17 of the list.
 
 **Not done.** No research checker was re-run. Read at source for this part: the width lemmas, the intersection theorem, the timing rule and its run, the exp64 charge script, and the two reports on the tail. Taken from the inventory of 2026-11-28 without opening the source: the clamp trace's figures, the cell and band figures, the fixed-modulus counts and limb widths, and the corpus and sweep counts. Row 4 of the secret-treatment table named a path that does not exist; it now names `tests/support/lattice.rs::public_fixture`.
+
+## 2026-11-28 — Corrections from the review of the signer specification
+
+Two readers reviewed sections 2.2 to 2.4 of `docs/SIGNER_SPEC.md` at `327ccdf`. The first derived the statements independently and recomputed the tables and the 50 schedule counts with its own script; the second re-ran that script and checked five findings at source. This part makes the corrections they found. Specification, ledger and notebook only.
+
+**Corrected, each dated in place.**
+
+- A pivot of a normal form can equal `2N`; the text said every entry is below it.
+- The count of generic ideals needed the ramified exception: at `N = p` there is one ideal of norm `p`.
+- The largest ordinary product of admission is the guard's comparison, not the membership test. The double width still suffices. Modular products are stated apart.
+- A composite `q` does not necessarily fail the multiply-back. The check certifies an inverse; the proof that a secret failure is unreachable needs a prime `q` and a valid root, and says so.
+- The coordinate row of the intersection's width table was one bit too high in every column.
+- "Reduced" was used in three strengths. They are now named: terminal, guarded, shortest first.
+- G7's first phase is the reducer's constructor, not admission, and is named so.
+
+**Added.** What the admitted object keeps; that a key has no unique encoding yet (O44); the implied lower bound `N ≥ √p/1024` and the unknown effect on the key distribution (O45); what a replay must fix; that G7's program does not implement G7's rule (O46); that the reducer does not check its terminal state (O47, for part C).
+
+**Marked reviewed as mathematics**, by section, as the first reader recommends: in 2.2 the representation, P1 to P3, the eleven checks and the membership test; in 2.3 the exact step, shortestness, the `3M` bound, the class ratios, the starting bounds and W1 to W5; in 2.4 the kernel, the intersection under the unit hypothesis and the equivalent ideal's identities. The step table stays a proposal: its arithmetic was reproduced, its interval certificate was read. Labels are unchanged, because the review's script is not in the repository. O40 and O41 are closed; O39 is reduced to its checker.
+
+**An error of mine this corrects.** I wrote that A4 holds the largest product from a chain of triangle inequalities, without comparing it with the other products of the same function. The bound was safe and the attribution was false.
+
+**Still open after both readers:** independent verification of the interval certificate; the largest values the intermediates reach; the key sampler's distribution under the guards; compiled constant-time behaviour.
