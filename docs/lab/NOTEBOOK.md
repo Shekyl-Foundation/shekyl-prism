@@ -1220,3 +1220,65 @@ Rick ruled (2026-11-23, relayed through the session that keeps the runners): the
 **Owed from the part before this one.** The times of the integer crate's mutation runs in the entry of 2026-11-22 (97 minutes for the whole crate, about 49 a shard) were taken on a shared build VM under load, and the storage under it was found degraded the next day. They are upper figures and were never a measurement of a runner.
 
 Who. Rick ruled what moves. The session that keeps the runners probed the image and relayed the ruling. The coding agent (Claude Code, `claude-fable-5-2`) made the change; the session's advisor model's points on the reporter's queue and on the called workflow as a way round the rule are in it.
+
+## 2026-11-28 — The signer control's test filter reaches the script as one word
+
+The [first nightly on the merged tree](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/46033925322) at `8232184` failed. Signer shard zero stopped before testing anything:
+
+```text
+mutants_scope.py: error: argument --control-tests: expected one argument
+```
+
+The shard workflow passed the control's test filter as two words, `--control-tests "$CONTROL_TESTS"`. The filter's value is `--test=signer_layers`. Python's argument parser reads a separate word that begins with `--` as another option, so the option had no value. The other 35 shards do not run the control and passed.
+
+The fault arrived in `3a9ae7b`, the last commit of PR #52. The nightly that validated that PR ran at `8aadc0b`, four commits earlier, where the control was a fixed `--control` flag in the script and no filter was passed. `3a9ae7b` had PR checks but no nightly, and nothing in the PR checks runs the shard workflow's commands.
+
+**The fix.** The workflow joins the value to its option: `--control-tests="$CONTROL_TESTS"`. No option was renamed.
+
+**The check that would have caught it.** `mutants_scope.py --selftest` now reads `nightly.yml` and `mutants-shard.yml`, builds every command line each nightly job would run against the script, substituting the job's own inputs and the shard workflow's defaults, and requires each one to parse. It requires all four modes (discovery, verify, reject-file, control-file) to be reached, and it requires the two-word spelling to be refused. The self-test runs in the `hygiene` job on every PR. Against the workflow at `8232184` it fails with the nightly's own message; with the fix it passes.
+
+**Validation.** A [single signer shard](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/46087469999) at `9503917` caught the control. The [full nightly](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/46088154963) at `9503917` passed: 49 jobs succeeded and the failure reporter was skipped, as it is on a green run. Signer shard zero reported `Caught positive control: shekyl-prism/src/ideal/mod.rs:280:27: replace * with + in Modulus<W, D>::mul`.
+
+| Job | Shards | Caught | Missed | Timed out | Unviable | Total | Slowest shard |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Verifier layers | 24 | 495 | 34 | 2 | 245 | 776 | 25m 07s |
+| Verifier front | 2 | 78 | 0 | 0 | 29 | 107 | 39m 21s |
+| Signer ideals | 6 | 35 | 1 | 0 | 104 | 140 | 4m 20s |
+| Signer integers | 4 | 584 | 30 | 0 | 96 | 710 | 33m 07s |
+
+The counts equal those at `8aadc0b` in every cell. The 34 verifier misses, both timeouts and the one signer miss have recorded reasons. The 30 integer misses have none and belong to part C, as before. Elapsed times use GitHub job start and finish.
+
+This entry and the ledger change were committed after that run. They touch only `docs/lab/`; the PR's own checks cover them.
+
+**The lesson.** A commit after the validating run needs its own run before merge. A run validates the tree it ran on and no other. Ledger O35 now cites the run at `9503917`.
+
+## 2026-11-28 — The signer specification catches up with the code (clean-up part B2)
+
+Specification only: no Rust source and no script changed. The review of 2026-11-26 found that code for stages 2b to 2d had landed without its sections (F2) and that section 2.1's width budget described a design the code no longer follows (F3). Both are closed against this part.
+
+**What `docs/SIGNER_SPEC.md` now holds.**
+
+- **2.1.2** is reconciled and not deleted. One table gives each consumer, the width it uses and what proves it; each of Q1 to Q5 has a status. No code on `dev` uses the general width of 26 to 65 limbs: it is the budget of stages 3 to 5. Superseded statements are marked in place with the date.
+- **2.2**, the ideal layer, is a full section: the representation as a Gaussian pair, a normal form and a carried norm; why three properties of a pair make it an ideal; the eleven checks of admission, each with what it rules out and an input that would pass without it; why the set is sufficient; the widths; what is secret; what is not built.
+- **2.3** holds the reduction only. It states the counterexample to the clamped quotient and the reason for exp64 in the section, and the widths as lemmas W1 to W5.
+- **2.4** is new: the guarded intersection with its proof and its behaviour on failure, the shortest-equivalent ideal as a contract with a proof, and the form passed to a consumer.
+- **2.5** is the list for part D: fifteen normative items to bring from `research`, three to write, five kept for the record.
+- **Section 0** has the G7 timing procedure with the three changes of the review of 2026-11-27, and says that stage 3 opens with a design round before any code.
+
+**Four labels.** Every normative statement of 2.2 to 2.5 is one of: checked on dev, checked on research, measured, unproved (Rick, 2026-11-28). The part D list is what the second label names.
+
+**Downgrades made while writing.**
+
+- The step table is called a proposal (ledger O42): its certificate is on `research` only and is not reviewed. Read at source, the certificate does cover the table. The tail bound was checked at the table's split; the exp64 boundary inequality is written with the earlier threshold, whose form is the stronger; and the later tail proof from `2⁻¹¹` gives counts at or below the table in every cell.
+- Lemmas W1 to W4, which the narrow widths rest on, are labelled unproved: the research report gives each one line, and its script compares observed maxima.
+- "These bounds fit the double width at every set" had no source. The section gives a derivation and labels it unproved (O39).
+- The exact step's `3M` bound and the `diag(28, 14, 1, 1)` example are labelled unproved (O40, O41).
+- "Zero rejections in 10,000 sampled keys" was measured on simulated ideals of a model order, not on keys from our key generation, and now says so.
+- Two links pointed at text that was later corrected. Both now point at the corrected commits.
+- The −6.77 timing contrast at P248 on ARM is recorded as not reproduced.
+
+**What the mathematics showed of the code** is ledger O43, for part C. The one finding that is not a matter of tidiness is O38: admission accepts a non-primitive ideal.
+
+**How the examples were checked.** A model of the checks in Python, at `p = 3` and other toy primes, confirmed that the examples for A1 and A3 to A10 fail their one check and no other, and that testing closure on two vectors agrees with testing it on four over 2,720 generic lattices. A2 was not in the model, and A11's example does not reach its bound at toy size. The width tables were recomputed from `prism-vectors/data/signer/` and agree with the research results where research has them. Neither script is committed: this part changes no script, and both are items D16 and D17 of the list.
+
+**Not done.** No research checker was re-run. Read at source for this part: the width lemmas, the intersection theorem, the timing rule and its run, the exp64 charge script, and the two reports on the tail. Taken from the inventory of 2026-11-28 without opening the source: the clamp trace's figures, the cell and band figures, the fixed-modulus counts and limb widths, and the corpus and sweep counts. Row 4 of the secret-treatment table named a path that does not exist; it now names `tests/support/lattice.rs::public_fixture`.
