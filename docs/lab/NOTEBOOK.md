@@ -1318,3 +1318,24 @@ The self-test passed 60 named cases, including all seven historical regressions,
 **Who.** The reviewers identified the discrepancies. Rick relayed the repair brief. Codex implemented the checker and converter and checked the replay and synthetic cases. No independent implementation review is recorded here.
 
 **Additional re-run check, 2026-11-28 (Ran).** A synthetic repeat cleared one candidate and raised a new candidate on a different fixture. The new fixture needs its own follow-up. Two added cases check the exit status and the affected contrast, bringing the suite to 62 named cases. The runV2 replay is unchanged.
+
+## 2026-11-28 — The re-run keeps an open candidate
+
+**Question and expectation.** A re-run that flags the same contrast in the opposite direction was reported as not reproduced, and the gate cleared. The same held for one re-run process flagged by both tests. A refused input was also printing a partial process list. The exhaustive comparison covered three processes while a larger plan was accepted.
+
+**Ran.** `python3 -B scripts/ci/test_g7_verdict.py`, then the runV2 replay:
+
+```sh
+python3 -B scripts/g7_replay_runv2.py > /tmp/g7-runV2.json
+python3 -B scripts/g7_verdict.py /tmp/g7-runV2.json
+```
+
+The self-test passed 75 named cases, 1,728 three-process combinations, and 20,736 four-process combinations. The replay exited 0. The configuration digest and the eighteen passes are the ones in the entry above.
+
+**Derived.** The first-run ruling keeps the directions that qualified a candidate, and the re-run uses that set. Two re-run processes that support one of those directions are a persistent leak. A re-run that meets row 1 is a leak in its own right. Any other re-run candidate, including the opposite direction and a single both-tests process, stays a candidate and the gate stays open. Noise, a pass, or an inconclusive re-run is not reproduced. A refusal prints only `refused`. Plans of three and four are the tested populations; any other plan is refused. "The t-test does not see it" and "it is small" are restored as what does not explain a leak.
+
+The full path's 2,000 ns is the largest of the three process medians, 1,649, 2,000 and 1,740.5 ns, equal to its limit. Four planned contrasts and one reference comparison have an RTLF detection of 18 or 19 ns. Each is below three ticks and none has a Welch flag, so none is a flag.
+
+**Open.** Unchanged: admission was outside every archived interval, and Rick's confirmation of the clarifications is pending.
+
+**Who.** Review of the checker. The opposite-direction gap was in the brief.

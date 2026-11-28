@@ -4,11 +4,22 @@
 # All rights reserved.
 # BSD-3-Clause
 
-"""Apply SIGNER_SPEC section 0 to whole-process statistics. See docs/SIGNER_SPEC.md.
+"""Apply SIGNER_SPEC section 0 to whole-process statistics.
 
-Read one JSON file, optionally followed by --rerun FILE. Exit 0 for a completed
-observation, 1 for a leak, pending candidate or inconclusive contrast, and 2
-for refused input. Noise and a candidate that was not reproduced do not fail.
+Read one JSON run, and --rerun when a first run has a candidate. Exit 0
+when every contrast is closed: a pass, noise, or not reproduced. Exit 1
+when a contrast is a leak, a persistent leak, a candidate, or inconclusive.
+Exit 2 when the input is refused or the checker fails. A refusal prints
+only {"refused": "..."}: no verdicts and no process list.
+
+The decision is one ruling. classify names the verdict and the directions
+that qualified a candidate or a leak. follow_up consumes that set. It does
+not recover the signs from the flags a second time.
+
+A plan is three or four processes (TESTED_PLANNED). Those are the
+populations the self-test compares exhaustively with an independent pair
+oracle. Extending the set means extending that comparison in the same
+change. The self-test is python3 -B scripts/ci/test_g7_verdict.py.
 """
 
 import argparse
@@ -16,12 +27,47 @@ import hashlib
 import json
 import math
 import sys
+import traceback
 from dataclasses import dataclass
 from pathlib import Path
 
+# The rule in section 0. These names are the rule's quantities.
+WELCH_MAGNITUDE = 4.5
+DECILE_TICKS = 3
+AGREEING_PROCESSES = 2
+MINIMUM_ROUNDS = 4096
+MINIMUM_FIXTURES = 2
+RERUN_PROCESSES = 3
+RERUN_ROUND_FACTOR = 4
+DELAY_LEVELS = 3
+TESTED_PLANNED = frozenset({3, 4})
+
+SIGN_NEGATIVE = -1
+SIGN_ZERO = 0
+SIGN_POSITIVE = 1
+DIRECTIONS = (SIGN_NEGATIVE, SIGN_POSITIVE)
+
+LEAK = "Leak"
+CANDIDATE = "Candidate"
+NOISE = "Noise"
+PASS = "Pass"
+INCONCLUSIVE = "Inconclusive"
+PERSISTENT_LEAK = "Persistent leak"
+NOT_REPRODUCED = "Not reproduced"
+
+# A re-run with one of these verdicts did not itself open a candidate.
+RETIRES_CANDIDATE = frozenset({NOISE, PASS, INCONCLUSIVE})
+OPEN = frozenset({LEAK, PERSISTENT_LEAK, CANDIDATE, INCONCLUSIVE})
+
+EXIT_COMPLETE = 0
+EXIT_OPEN = 1
+EXIT_REFUSED = 2
+
+DESIGN_FIELDS = ("fixtures", "phases", "tick_ns")
+
 
 class Refused(ValueError):
-    pass
+    """The run is outside the rule. The report is not a verdict."""
 
 
 def require(condition, message):
@@ -54,238 +100,446 @@ def integer(value, minimum):
 
 def names(values, minimum):
     require(isinstance(values, list) and len(values) >= minimum and
-            all(type(v) is str and v.strip() for v in values) and len(set(values)) == len(values),
+            all(type(value) is str and value.strip() for value in values) and
+            len(set(values)) == len(values),
             "expected distinct, nonempty names")
 
 
 def config_hash(config):
+    """SHA-256 of the plan: sorted object keys, original array order, ASCII."""
     packed = json.dumps(config, sort_keys=True, separators=(",", ":"), allow_nan=False)
     return hashlib.sha256(packed.encode("ascii")).hexdigest()
 
 
-def check_config(c):
-    fields(c, "tick_ns planned rounds replacement_cap seeds fixtures phases")
-    require(number(c["tick_ns"]) > 0, "tick must be positive")
-    planned = integer(c["planned"], 3)
-    cap = integer(c["replacement_cap"], 0)
-    integer(c["rounds"], 4096)
-    names(c["seeds"], planned)
-    require(len(c["seeds"]) == planned + cap, "plan one seed per launch, including reserves")
-    names(c["fixtures"], 2)
-    require(isinstance(c["phases"], dict) and c["phases"], "expected phases")
-    names(list(c["phases"]), 1)
-    for phase in c["phases"].values():
+def check_config(config):
+    fields(config, "tick_ns planned rounds replacement_cap seeds fixtures phases")
+    require(number(config["tick_ns"]) > 0, "tick must be positive")
+    planned = integer(config["planned"], min(TESTED_PLANNED))
+    require(planned in TESTED_PLANNED,
+            f"planned process count must be one of {sorted(TESTED_PLANNED)}")
+    integer(config["replacement_cap"], 0)
+    integer(config["rounds"], MINIMUM_ROUNDS)
+    names(config["seeds"], planned)
+    require(len(config["seeds"]) == planned + config["replacement_cap"],
+            "plan one seed per launch, including reserves")
+    names(config["fixtures"], MINIMUM_FIXTURES)
+    require(isinstance(config["phases"], dict) and config["phases"], "expected phases")
+    names(list(config["phases"]), 1)
+    for phase in config["phases"].values():
         fields(phase, "levels_ns largest_ns")
         require(number(phase["largest_ns"]) > 0, "largest resolution must be positive")
         levels = phase["levels_ns"]
-        require(isinstance(levels, list) and len(levels) == 3 and
-                all(type(v) is int and v > 0 for v in levels) and
-                sorted(set(levels)) == levels, "expected three increasing nominal delays in ns")
+        require(isinstance(levels, list) and len(levels) == DELAY_LEVELS and
+                all(type(value) is int and value > 0 for value in levels) and
+                sorted(set(levels)) == levels,
+                "expected three increasing nominal delays in ns")
 
 
 @dataclass(frozen=True)
 class Flag:
+    """One process's two tests and the sign of the contrast.
+
+    decile is the RTLF result at α = 0.01 with a difference of at least
+    DECILE_TICKS timer ticks. welch is a t statistic beyond WELCH_MAGNITUDE.
+    sign is SIGN_NEGATIVE, SIGN_ZERO, or SIGN_POSITIVE. Zero agrees with
+    either direction.
+    """
+
     decile: bool
     welch: bool
     sign: int
 
 
-def flag(record, tick):
-    direction = record["median_ns"] or record["mean_ns"]
-    return Flag(record["rtlf"] and record["flagged_ns"] >= 3 * tick,
-                abs(record["t"]) > 4.5, (direction > 0) - (direction < 0))
+@dataclass(frozen=True)
+class Ruling:
+    """The verdict of one contrast, and the directions that qualified it.
+
+    signs is empty for noise, a pass, and an inconclusive result. A leak or
+    a candidate carries the directions the matching row used: an agreeing
+    pair's directions, or, when the only candidate is one both-tests
+    process, that process's directions.
+    """
+
+    verdict: str
+    signs: frozenset
+
+
+@dataclass(frozen=True)
+class Sample:
+    """One record after the tick rule has been applied. The raw record is not kept."""
+
+    median_ns: float
+    mean_ns: float
+    t: float
+    observed: Flag
+
+
+@dataclass(frozen=True)
+class Contrast:
+    """A ruling and the process flags it was read from, valid processes only."""
+
+    ruling: Ruling
+    flags: tuple
+
+
+def sign_of(median_ns, mean_ns):
+    """The median's sign, or the mean's sign when the median is zero."""
+    direction = mean_ns if median_ns == 0 else median_ns
+    if direction > 0:
+        return SIGN_POSITIVE
+    if direction < 0:
+        return SIGN_NEGATIVE
+    return SIGN_ZERO
+
+
+def agrees(observed, direction):
+    return observed == SIGN_ZERO or observed == direction
+
+
+def either_test(flag):
+    return flag.decile or flag.welch
+
+
+def both_tests(flag):
+    return flag.decile and flag.welch
+
+
+def flag(record, tick_ns):
+    """The two tests and the sign of one record."""
+    return Flag(
+        record["rtlf"] and record["flagged_ns"] >= DECILE_TICKS * tick_ns,
+        abs(record["t"]) > WELCH_MAGNITUDE,
+        sign_of(record["median_ns"], record["mean_ns"]),
+    )
 
 
 def support(flags):
-    """Number of flagged processes compatible with each direction."""
-    return {sign: sum((f.decile or f.welch) and f.sign in (0, sign) for f in flags)
-            for sign in (-1, 1)}
+    """How many flagged processes agree with each direction."""
+    return {
+        direction: sum(either_test(item) and agrees(item.sign, direction) for item in flags)
+        for direction in DIRECTIONS
+    }
+
+
+def agreeing_signs(flags, width):
+    return frozenset(
+        direction for direction, count in support(flags).items() if count >= width
+    )
+
+
+def single_process_signs(flags):
+    """Directions qualified by a both-tests flag that has no agreeing pair."""
+    return frozenset(
+        direction
+        for item in flags
+        if both_tests(item)
+        for direction in DIRECTIONS
+        if agrees(item.sign, direction)
+    )
 
 
 def classify(flags, resolution, largest):
-    both = [f for f in flags if f.decile and f.welch]
-    if max(support(both).values()) >= 2:
-        return "Leak"
-    counts = support(flags)
-    if max(counts.values()) >= 2 or both:
-        return "Candidate"
-    if max(counts.values()):
-        return "Noise"
+    """The first matching row of the decision table.
+
+    resolution is the phase's measured resolution, or None when the phase
+    has none. largest is that phase's largest resolution for a pass.
+    """
+    leak_signs = agreeing_signs(
+        [item for item in flags if both_tests(item)], AGREEING_PROCESSES
+    )
+    if leak_signs:
+        return Ruling(LEAK, leak_signs)
+    pair_signs = agreeing_signs(flags, AGREEING_PROCESSES)
+    if pair_signs:
+        return Ruling(CANDIDATE, pair_signs)
+    single = single_process_signs(flags)
+    if single:
+        return Ruling(CANDIDATE, single)
+    if any(either_test(item) for item in flags):
+        return Ruling(NOISE, frozenset())
     if resolution is not None and resolution <= largest:
-        return "Pass"
-    return "Inconclusive"
+        return Ruling(PASS, frozenset())
+    return Ruling(INCONCLUSIVE, frozenset())
 
 
-def repeated(first, again, rerun_verdict):
-    first_signs = {s for s, n in support(first).items() if n >= 2}
-    # A both-tests flag is itself sufficient evidence for a candidate sign.
-    if not first_signs:
-        for f in first:
-            if f.decile and f.welch:
-                first_signs.update(s for s in (-1, 1) if f.sign in (0, s))
-    if rerun_verdict == "Leak":
-        return "Leak"
-    if any(support(again)[s] >= 2 for s in first_signs):
-        return "Persistent leak"
-    return "Not reproduced"
+def follow_up(first, again_flags, again):
+    """The candidate's verdict after its re-run.
+
+    first is the first-run ruling, including the directions that qualified
+    it. again_flags and again are the re-run. A row-1 re-run is a leak. Two
+    re-run processes that support a qualified direction make a persistent
+    leak. Any other re-run candidate stays a candidate. Noise, a pass, and
+    an inconclusive re-run are not reproduced.
+    """
+    if again.verdict == LEAK:
+        return LEAK
+    again_support = support(again_flags)
+    if any(again_support[sign] >= AGREEING_PROCESSES for sign in first.signs):
+        return PERSISTENT_LEAK
+    if again.verdict == CANDIDATE:
+        return CANDIDATE
+    if again.verdict in RETIRES_CANDIDATE:
+        return NOT_REPRODUCED
+    raise RuntimeError(f"unexpected re-run verdict {again.verdict}")
 
 
 def targets(fixtures):
     return [("pooled", arm) for arm in fixtures] + [("keys", "fixed-random")]
 
 
-def records(process, c):
-    fixtures = c["fixtures"]
-    ref = process["reference"]
-    require(ref in fixtures, "unknown process reference")
-    expected = {(phase, kind, arm) for phase, spec in c["phases"].items()
-                for kind, arm in (targets(fixtures) + [("null", ref)] +
-                                  [("reference", f) for f in fixtures if f != ref] +
-                                  [("delay", str(n)) for n in spec["levels_ns"]])}
+def expected_records(config, reference):
+    fixtures = config["fixtures"]
+    require(reference in fixtures, "unknown process reference")
+    found = set()
+    for phase, spec in config["phases"].items():
+        for kind, arm in (
+            targets(fixtures)
+            + [("null", reference)]
+            + [("reference", fixture) for fixture in fixtures if fixture != reference]
+            + [("delay", str(level)) for level in spec["levels_ns"]]
+        ):
+            found.add((phase, kind, arm))
+    return found
+
+
+def read_records(process, config):
+    """Every planned record of one launch, keyed by phase, kind, and arm."""
+    expected = expected_records(config, process["reference"])
     indexed = {}
     require(isinstance(process["records"], list), "expected list of records")
-    for r in process["records"]:
-        fields(r, "phase kind arm rtlf flagged_ns t median_ns mean_ns count")
-        key = r["phase"], r["kind"], r["arm"]
-        require(all(type(x) is str for x in key) and key in expected and key not in indexed,
+    for record in process["records"]:
+        fields(record, "phase kind arm rtlf flagged_ns t median_ns mean_ns count")
+        key = record["phase"], record["kind"], record["arm"]
+        require(all(type(part) is str for part in key) and key in expected and key not in indexed,
                 f"unexpected or duplicate record {key}")
-        require(integer(r["count"], 1) == c["rounds"], f"{key}: incomplete rounds")
+        require(integer(record["count"], 1) == config["rounds"], f"{key}: incomplete rounds")
         for name in ("t", "median_ns", "mean_ns", "flagged_ns"):
-            number(r[name])
-        require(type(r["rtlf"]) is bool and r["flagged_ns"] >= 0 and
-                (r["rtlf"] or r["flagged_ns"] == 0), f"{key}: invalid RTLF statistics")
-        indexed[key] = (r, flag(r, c["tick_ns"]))
+            number(record[name])
+        require(type(record["rtlf"]) is bool and record["flagged_ns"] >= 0 and
+                (record["rtlf"] or record["flagged_ns"] == 0),
+                f"{key}: invalid RTLF statistics")
+        indexed[key] = Sample(
+            record["median_ns"], record["mean_ns"], record["t"], flag(record, config["tick_ns"])
+        )
     if missing := expected - indexed.keys():
         raise Refused(f"missing records {sorted(missing)}")
     return indexed
 
 
-def calibrate(valid, phase, levels):
+def solid_delay(detections):
+    """True when every miss sits below every detection.
+
+    A higher miss after a detection leaves the phase with no resolution.
+    """
+    seen = False
+    for detected in detections:
+        if seen and not detected:
+            return False
+        seen = seen or detected
+    return True
+
+
+def resolution_of(valid, phase, levels):
+    """The largest positive median at the lowest delay every process detects.
+
+    valid is the record maps of the valid processes. The Welch flag does not
+    detect a delay. None means the phase has no resolution.
+    """
     detected = []
-    for index in valid:
-        controls = [index[phase, "delay", str(level)] for level in levels]
-        flags = [f.decile for _, f in controls]
-        if flags != sorted(flags):
+    for records in valid:
+        flags = [records[phase, "delay", str(level)].observed.decile for level in levels]
+        if not solid_delay(flags):
             return None
         detected.append(flags)
-    for i, level in enumerate(levels):
-        if all(row[i] for row in detected):
-            shifts = [index[phase, "delay", str(level)][0]["median_ns"] for index in valid]
-            # Delayed minus reference must measure a positive delay in every process.
-            return max(shifts) if min(shifts) > 0 else None
+    for offset, level in enumerate(levels):
+        if not all(row[offset] for row in detected):
+            continue
+        shifts = [records[phase, "delay", str(level)].median_ns for records in valid]
+        if min(shifts) <= 0:
+            return None
+        return max(shifts)
     return None
 
 
-def assess(run, out):
+def read_launches(run):
+    """Validated launches. Raises Refused before any report exists."""
     fields(run, "config processes")
-    c = run["config"]
-    out["config_sha256"] = config_hash(c)
-    check_config(c)
+    config = run["config"]
+    check_config(config)
     require(isinstance(run["processes"], list), "expected list of launches")
-    valid = []
-    ids = set()
-    statuses = out["processes"] = []
-    references = []
-    for i, p in enumerate(run["processes"]):
-        fields(p, "id seed reference records")
-        require(type(p["id"]) is str and p["id"].strip() and p["id"] not in ids,
+    launches = []
+    seen = set()
+    valid_count = 0
+    for index, process in enumerate(run["processes"]):
+        fields(process, "id seed reference records")
+        require(type(process["id"]) is str and process["id"].strip() and process["id"] not in seen,
                 "process IDs must be unique")
-        ids.add(p["id"])
-        require(i < len(c["seeds"]) and p["seed"] == c["seeds"][i], "launch outside seed plan")
-        require(len(valid) < c["planned"], "extra launch after plan completed")
-        index = records(p, c)
-        void = [phase for phase in c["phases"]
-                if any_flag(index[phase, "null", p["reference"]][1])]
-        statuses.append(dict(id=p["id"], status="void" if void else "valid", void_phases=void))
-        for (phase, kind, arm), (rec, f) in index.items():
-            if kind == "reference":
-                references.append(dict(process=p["id"], phase=phase, arm=arm, versus=p["reference"],
-                                       decile=f.decile, welch=f.welch, median_ns=rec["median_ns"],
-                                       mean_ns=rec["mean_ns"], t=rec["t"]))
+        seen.add(process["id"])
+        require(index < len(config["seeds"]) and process["seed"] == config["seeds"][index],
+                "launch outside seed plan")
+        require(valid_count < config["planned"], "extra launch after plan completed")
+        records = read_records(process, config)
+        void = [
+            phase for phase in config["phases"]
+            if either_test(records[phase, "null", process["reference"]].observed)
+        ]
         if not void:
-            valid.append(index)
-    require(len(statuses) - len(valid) <= c["replacement_cap"], "replacement cap exceeded")
-    require(len(valid) == c["planned"], "planned valid process count not reached")
-    resolutions = {}
+            valid_count += 1
+        launches.append({
+            "id": process["id"],
+            "reference": process["reference"],
+            "records": records,
+            "void": void,
+        })
+    require(len(launches) - valid_count <= config["replacement_cap"], "replacement cap exceeded")
+    require(valid_count == config["planned"], "planned valid process count not reached")
+    return config, launches
+
+
+def references_of(launches):
+    rows = []
+    for launch in launches:
+        for key, record in launch["records"].items():
+            phase, kind, arm = key
+            if kind != "reference":
+                continue
+            rows.append({
+                "process": launch["id"],
+                "phase": phase,
+                "arm": arm,
+                "versus": launch["reference"],
+                "decile": record.observed.decile,
+                "welch": record.observed.welch,
+                "median_ns": record.median_ns,
+                "mean_ns": record.mean_ns,
+                "t": record.t,
+            })
+    return rows
+
+
+def contrasts_of(valid, config):
+    """Rulings for the planned contrasts, and the report rows in plan order."""
+    contrasts = {}
     verdicts = {}
-    evidence = {}
-    for phase, spec in c["phases"].items():
-        resolution = calibrate(valid, phase, spec["levels_ns"])
+    resolutions = {}
+    for phase, spec in config["phases"].items():
+        resolution = resolution_of(valid, phase, spec["levels_ns"])
         resolutions[phase] = resolution
-        rows = verdicts[phase] = []
-        for kind, arm in targets(c["fixtures"]):
-            flags = [index[phase, kind, arm][1] for index in valid]
-            evidence[phase, kind, arm] = flags
-            verdict = classify(flags, resolution, spec["largest_ns"])
-            row = dict(kind=kind, arm=arm, verdict=verdict)
-            if verdict == "Pass":
+        phase_contrasts = {}
+        rows = []
+        for kind, arm in targets(config["fixtures"]):
+            flags = tuple(records[phase, kind, arm].observed for records in valid)
+            ruling = classify(flags, resolution, spec["largest_ns"])
+            phase_contrasts[kind, arm] = Contrast(ruling, flags)
+            row = {"kind": kind, "arm": arm, "verdict": ruling.verdict}
+            if ruling.verdict == PASS:
                 row["at_ns"] = resolution
             rows.append(row)
-    out.update(resolution_ns=resolutions, verdicts=verdicts, references=references)
-    return evidence
+        contrasts[phase] = phase_contrasts
+        verdicts[phase] = rows
+    return contrasts, resolutions, verdicts
 
 
-def any_flag(f):
-    return f.decile or f.welch
+def assess(run):
+    """The finished report and the contrast rulings. Refusals raise."""
+    config, launches = read_launches(run)
+    valid = [item["records"] for item in launches if not item["void"]]
+    contrasts, resolutions, verdicts = contrasts_of(valid, config)
+    report = {
+        "config_sha256": config_hash(config),
+        "processes": [
+            {"id": item["id"], "status": "void" if item["void"] else "valid",
+             "void_phases": item["void"]}
+            for item in launches
+        ],
+        "resolution_ns": resolutions,
+        "verdicts": verdicts,
+        "references": references_of(launches),
+    }
+    return report, contrasts
 
 
-def evaluate(first, rerun, report):
-    a = assess(first, report)
-    rows = report["verdicts"]
+def require_rerun(first, second, report):
+    first_config, second_config = first["config"], second["config"]
+    require(second_config["planned"] == RERUN_PROCESSES and
+            second_config["rounds"] == RERUN_ROUND_FACTOR * first_config["rounds"],
+            "rerun needs three processes at four times the rounds")
+    require(all(first_config[key] == second_config[key] for key in DESIGN_FIELDS),
+            "rerun design changed")
+    require(set(first_config["seeds"]).isdisjoint(second_config["seeds"]),
+            "rerun needs fresh seeds")
+    require({process["id"] for process in first["processes"]}.isdisjoint(
+        process["id"] for process in second["processes"]),
+            "rerun needs fresh processes")
+    require(any(row["verdict"] == CANDIDATE
+                for rows in report["verdicts"].values() for row in rows),
+            "rerun requires a first-run candidate")
+
+
+def apply_rerun(report, first, second):
+    """Replace candidate rows from the re-run. Rows are matched by kind and arm."""
+    for phase, rows in report["verdicts"].items():
+        for row in rows:
+            key = row["kind"], row["arm"]
+            opening = first[phase][key]
+            follow = second[phase][key]
+            if row["verdict"] == CANDIDATE:
+                row["first_verdict"] = CANDIDATE
+                row["verdict"] = follow_up(opening.ruling, follow.flags, follow.ruling)
+            elif follow.ruling.verdict in (CANDIDATE, LEAK) and row["verdict"] != LEAK:
+                row["first_verdict"] = row["verdict"]
+                row.pop("at_ns", None)
+                row["verdict"] = follow.ruling.verdict
+
+
+def opens(verdicts):
+    return any(row["verdict"] in OPEN for rows in verdicts.values() for row in rows)
+
+
+def evaluate(first, rerun=None):
+    """Return the report and the exit status. The report exists only complete."""
+    report, contrasts = assess(first)
     if rerun is not None:
-        second = report["rerun"] = {}
-        b = assess(rerun, second)
-        c, d = first["config"], rerun["config"]
-        require(d["planned"] == 3 and d["rounds"] == 4 * c["rounds"], "rerun needs three at 4x rounds")
-        require(all(c[k] == d[k] for k in ("fixtures", "phases", "tick_ns")), "rerun design changed")
-        require(set(c["seeds"]).isdisjoint(d["seeds"]) and
-                {p["id"] for p in first["processes"]}.isdisjoint(p["id"] for p in rerun["processes"]),
-                "rerun needs fresh seeds and processes")
-        require(any(row["verdict"] == "Candidate" for rr in rows.values() for row in rr),
-                "rerun requires a first-run candidate")
-        for phase, contrasts in rows.items():
-            for row, new in zip(contrasts, second["verdicts"][phase]):
-                key = phase, row["kind"], row["arm"]
-                if row["verdict"] == "Candidate":
-                    row["first_verdict"] = "Candidate"
-                    row["verdict"] = repeated(a[key], b[key], new["verdict"])
-                elif new["verdict"] in ("Candidate", "Leak") and row["verdict"] != "Leak":
-                    # A different contrast can first become a candidate during this repeat.
-                    row["first_verdict"] = row["verdict"]
-                    row.pop("at_ns", None)
-                    row["verdict"] = new["verdict"]
-    return int(any(row["verdict"] in ("Leak", "Persistent leak", "Candidate", "Inconclusive")
-                   for phase in rows.values() for row in phase))
+        second, second_contrasts = assess(rerun)
+        require_rerun(first, rerun, report)
+        apply_rerun(report, contrasts, second_contrasts)
+        report["rerun"] = second
+    status = EXIT_OPEN if opens(report["verdicts"]) else EXIT_COMPLETE
+    return report, status
 
 
 def read(path):
-    run = json.loads(Path(path).read_text(), object_pairs_hook=object_pairs)
+    try:
+        text = Path(path).read_text()
+    except (OSError, UnicodeError) as error:
+        raise Refused(f"cannot read {path}: {error}") from error
+    try:
+        run = json.loads(text, object_pairs_hook=object_pairs)
+    except json.JSONDecodeError as error:
+        raise Refused(f"invalid JSON: {error.msg}") from error
     require(isinstance(run, dict), "expected run object")
     return run
 
 
-def main():
+def emit(body):
+    print(json.dumps(body, indent=2, allow_nan=False))
+
+
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("run", nargs="?")
+    parser.add_argument("run")
     parser.add_argument("--rerun")
-    parser.add_argument("--selftest", action="store_true")
-    args = parser.parse_args()
-    if args.selftest and not (args.run or args.rerun):
-        from ci.test_g7_verdict import selftest
-        selftest()
-        return 0
-    if not args.run or args.selftest:
-        parser.error("supply a run and optional --rerun, or --selftest")
-    report = {}
+    args = parser.parse_args(argv)
     try:
-        status = evaluate(read(args.run), read(args.rerun) if args.rerun else None, report)
-    except (ValueError, OSError, OverflowError, KeyError, TypeError) as error:
-        for part in (report, report.get("rerun", {})):
-            for key in ("verdicts", "resolution_ns", "references"):
-                part.pop(key, None)
-        report["refused"] = str(error)
-        status = 2
-    print(json.dumps(report, indent=2, allow_nan=False))
+        report, status = evaluate(read(args.run), read(args.rerun) if args.rerun else None)
+    except Refused as error:
+        emit({"refused": str(error)})
+        return EXIT_REFUSED
+    except Exception as error:
+        traceback.print_exc(file=sys.stderr)
+        emit({"refused": f"checker failed: {error}"})
+        return EXIT_REFUSED
+    emit(report)
     return status
 
 
