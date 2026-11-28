@@ -1206,3 +1206,34 @@ The first run of the new CLI tests exposed an s390x harness failure. Cargo ran t
 | Signer integers | 4 | 584 | 30 | 0 | 96 | 710 | 41m 40s |
 
 Across all 24 verifier artifacts, `degree_check` had 25 catches, one equivalent nibble mutation and two unviable. `even_basis` caught all 14, `s5_challenge` caught 11 with one unviable, and `verify_bytes` caught all eight. This accounts for all 62 current binary candidates. The verifier's 34 misses consist of the six existing equivalents, the 27 configuration-specific entries and the equivalent nibble mutation. Both verifier timeouts have existing records. The longest of the 36 shards was an integer shard at 41m 40s. [Hosted run and mutation artifacts](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/45928328234)
+
+## 2026-11-28 — The signer control's test filter reaches the script as one word
+
+The [first nightly on the merged tree](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/46033925322) at `8232184` failed. Signer shard zero stopped before testing anything:
+
+```text
+mutants_scope.py: error: argument --control-tests: expected one argument
+```
+
+The shard workflow passed the control's test filter as two words, `--control-tests "$CONTROL_TESTS"`. The filter's value is `--test=signer_layers`. Python's argument parser reads a separate word that begins with `--` as another option, so the option had no value. The other 35 shards do not run the control and passed.
+
+The fault arrived in `3a9ae7b`, the last commit of PR #52. The nightly that validated that PR ran at `8aadc0b`, four commits earlier, where the control was a fixed `--control` flag in the script and no filter was passed. `3a9ae7b` had PR checks but no nightly, and nothing in the PR checks runs the shard workflow's commands.
+
+**The fix.** The workflow joins the value to its option: `--control-tests="$CONTROL_TESTS"`. No option was renamed.
+
+**The check that would have caught it.** `mutants_scope.py --selftest` now reads `nightly.yml` and `mutants-shard.yml`, builds every command line each nightly job would run against the script, substituting the job's own inputs and the shard workflow's defaults, and requires each one to parse. It requires all four modes (discovery, verify, reject-file, control-file) to be reached, and it requires the two-word spelling to be refused. The self-test runs in the `hygiene` job on every PR. Against the workflow at `8232184` it fails with the nightly's own message; with the fix it passes.
+
+**Validation.** A [single signer shard](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/46087469999) at `9503917` caught the control. The [full nightly](https://github.com/Shekyl-Foundation/shekyl-prism/actions/runs/46088154963) at `9503917` passed: 49 jobs succeeded and the failure reporter was skipped, as it is on a green run. Signer shard zero reported `Caught positive control: shekyl-prism/src/ideal/mod.rs:280:27: replace * with + in Modulus<W, D>::mul`.
+
+| Job | Shards | Caught | Missed | Timed out | Unviable | Total | Slowest shard |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Verifier layers | 24 | 495 | 34 | 2 | 245 | 776 | 25m 07s |
+| Verifier front | 2 | 78 | 0 | 0 | 29 | 107 | 39m 21s |
+| Signer ideals | 6 | 35 | 1 | 0 | 104 | 140 | 4m 20s |
+| Signer integers | 4 | 584 | 30 | 0 | 96 | 710 | 33m 07s |
+
+The counts equal those at `8aadc0b` in every cell. The 34 verifier misses, both timeouts and the one signer miss have recorded reasons. The 30 integer misses have none and belong to part C, as before. Elapsed times use GitHub job start and finish.
+
+This entry and the ledger change were committed after that run. They touch only `docs/lab/`; the PR's own checks cover them.
+
+**The lesson.** A commit after the validating run needs its own run before merge. A run validates the tree it ran on and no other. Ledger O35 now cites the run at `9503917`.
