@@ -1,6 +1,6 @@
 # Signer specification
 
-Status: begun 2026-11-21. Section 1 (the constants) is written, and its values are generated and committed (stage 1b, `scripts/signer_constants.py`, `prism-vectors/data/signer/`). Section 2.1 (the integers, stage 2a) is written and its crate, `prism-int`, exists. Section 2.3 (Gaussian basis reduction, stage 2c) is a design for review: `scripts/stage2c_oracle.py` recomputes the schedules, and the signer-feature example `stage2c` is the native prototype. The signer feature implements admission of an ideal component and its guarded challenge intersection (2b/2d). This is a research specification, not an adopted standard, and it makes no security claim.
+Status: begun 2026-11-21, last brought into line with the code on 2026-11-28. Section 1 (the constants) is written, and its values are generated and committed (stage 1b, `scripts/signer_constants.py`, `prism-vectors/data/signer/`). Section 2.1 (the integers, stage 2a) is written and reviewed, and its crate, `prism-int`, exists. Sections 2.2 to 2.4 (the ideal layer, the reduction, the intersection: stages 2b to 2d) were written after their prototype code and are not reviewed; the table at the head of section 2 gives the state of each part, and 2.5 lists the checkers that are not yet on `dev`. This is a research specification, not an adopted standard, and it makes no security claim.
 
 ## What this document is
 
@@ -39,8 +39,8 @@ Standing from Round 0 (2026-11-14): we are not transcribing the C; other code ba
 | Stage | Layer | Section here |
 | --- | --- | --- |
 | 1 | The constants: what each is (1a, this section) and the generator that produces them (1b) | 1 |
-| 2 | Integers and the quaternion algebra: the integers (2a), then the algebra, the maximal order, lattices, ideals, lattice reduction (2b to 2d) | 2.1 integers, 2.2 maximal-order arithmetic, 2.3 reduction and the guarded intersection. General fixed-schedule lattice arithmetic is open. |
-| 3 | Cornacchia; the norm equation of the ideal-to-isogeny translation; sampling an ideal of prime norm, with the equivalent prime-norm ideal for key generation. No step that represents an integer by the order's norm form (1.2) | to be written |
+| 2 | Integers and the quaternion algebra: the integers (2a), the ideal layer (2b), the reduction of a Gaussian pair (2c), the intersection and the equivalent ideal (2d) | 2.1 integers: reviewed, built. 2.2 ideals, 2.3 reduction, 2.4 intersection: written 2026-11-28 after their prototypes, not reviewed; the shortest-equivalent step of 2.4.2 is not built. The table at the head of section 2 has each part. |
+| 3 | Cornacchia; the norm equation of the ideal-to-isogeny translation; sampling an ideal of prime norm, with the equivalent prime-norm ideal for key generation. No step that represents an integer by the order's norm form (1.2) | to be written. It opens with a design round, before any code: the failure budget and the modelled cost at all five sets (section 0) |
 | 4 | Ideal to isogeny: first the engine's forward chain as the signer needs it (1.9), then the starting curve, its basis, the action of its endomorphisms, and the translation | to be written |
 | 5 | Key generation and signing | to be written |
 | last | Constant-time hardening (G4) | to be written |
@@ -61,9 +61,53 @@ Use fixed-schedule Gaussian-integer Lagrange reduction with exact quotients as t
 
 The exception permits one dependency-free `no_std` crate with a safe value/mask API. Its only locally allowed unsafe operation is the register identity in `value_barrier_u64`, using one general-purpose input/output register on x86-64 and AArch64. The crate denies unsafe code elsewhere. Its implementation PR must pin this boundary in the workspace lint check, including a failing test for a second unsafe site. The existing benchmark counter has its own exception. Signing on an unaudited architecture must fail at build time. Verifier-only builds must remain portable, with the existing s390x big-endian verifier tests still executing. [Crate audit](https://github.com/Shekyl-Foundation/shekyl-prism/blob/53e2eb4fdd772ff8a53708ba60314c3dabea9d05/research/ct-barrier-policy/prism-ct-barrier/AUDIT.md)
 
-**Read:** in the research reduction on Rust 1.97.1 the isolated barrier passed four build configurations on each supported architecture. On x86-64 the observed timing maxima were |t| = 2.18 at P248 and 1.80 at P500. The ARM64 traces were collected under QEMU. The implementation PR must integrate release assembly inspection, control-flow trace comparisons on both architectures, and x86-64 Valgrind secret-branch/address checks with a known-leaky control. Exercise the consuming operations, especially a shift by a secret amount. Repeat on toolchain, barrier, consumer or code-generation changes. Review shift-count and other instruction-latency findings on the target CPU. Require native timing evidence on each architecture before accepting its timing claim. [Barrier experiment](https://github.com/Shekyl-Foundation/shekyl-prism/blob/53e2eb4fdd772ff8a53708ba60314c3dabea9d05/research/ct-barrier-policy/REPORT.md)
+**Read:** in the research reduction on Rust 1.97.1 the isolated barrier passed four build configurations on each supported architecture. On x86-64 the observed timing maxima were |t| = 2.18 at P248 and 1.80 at P500. The ARM64 traces were collected under QEMU. The implementation PR must integrate release assembly inspection, control-flow trace comparisons on both architectures, and x86-64 Valgrind secret-branch/address checks with a known-leaky control. Exercise the consuming operations, especially a shift by a secret amount. Repeat on toolchain, barrier, consumer or code-generation changes. Review shift-count and other instruction-latency findings on the target CPU. Require native timing evidence on each architecture before accepting its timing claim, by the timing procedure below. [Barrier experiment](https://github.com/Shekyl-Foundation/shekyl-prism/blob/53e2eb4fdd772ff8a53708ba60314c3dabea9d05/research/ct-barrier-policy/REPORT.md)
+
+### The timing procedure (G7)
+
+This is the test procedure for timing evidence under G7. It replaces the paired-t contrast of `docs/benchmarks/stage2c/README.md` as the rule; that record stays as data. It was adopted after the review of 2026-11-27, which made three changes to the first draft: a persistent candidate fails the gate until it is explained; a pass must meet a stated largest resolution, measured in the same session; and a class of a fixed secret against random secrets is added. The harness and scripts are on `research` (D15 of 2.5). [Rule as run](https://github.com/Shekyl-Foundation/shekyl-prism/blob/1cc5d2650cb017ddf2bab7587b404b58db05f8c8/research/g7-rtlf/RULE-v2.md) · [The run that set the resolutions](https://github.com/Shekyl-Foundation/shekyl-prism/blob/1cc5d2650cb017ddf2bab7587b404b58db05f8c8/research/g7-rtlf/REPORT-v2.md)
+
+**Timing is supporting evidence.** The primary evidence for G7 is structural: identical control-flow traces across the public corpus, the secret-dependent branch and address checks, the taint run, and the assembly scan of the release code. A timing result can add an objection or state a resolution. It cannot close G7, and a timing pass never stands in for a structural check that failed or was not run.
+
+**A run** is a set of fresh process launches of one binary on one machine and core. It is void, and not a pass, unless all of these hold:
+
+1. Every arm goes through the same code before the timed call, and every arm's input is written into one persistent buffer, so the data address is the same across arms.
+2. A *null arm*, the reference timed against a copy of itself, runs in the same shuffled rounds as the real arms.
+3. Each process shuffles the fixtures with a logged seed, and the first becomes its reference. Arms and phases are timed in a fresh random order every round.
+4. At least three fresh processes of at least 4,096 rounds each. The counts and seeds are fixed before the run, and nothing is added after looking, except the re-run below.
+5. Every process runs the injected-delay control below.
+6. A process whose null arm is flagged is void and is replaced, and the replacement is reported. No comparison is made across processes.
+
+**Flags.** A contrast is flagged in a process when either test flags it: the RTLF decile test at α = 0.01 with a flagged difference of at least three timer ticks, or a Welch t above 4.5 in magnitude. The contrasts are, for each phase: each fixture against the pooled other fixtures; and the fixed secret against random secrets.
+
+**The fixed secret against random secrets.** Besides the fixtures, every process times one fixed key against a fresh random admitted key for every measurement, drawn from a pool generated offline and copied in outside the timed region. Every pool key is checked to pass admission and reduction. This covers key values the chosen fixtures do not.
+
+**Resolution.** Each process times copies of the reference with a known delay added inside the timed interval, at three levels a phase. The session's resolution for a phase is the smallest level the decile test flags in every valid process. A pass is a statement about that resolution and no finer, and each phase has a stated largest resolution a session must meet:
+
+| Phase | Largest resolution for a pass |
+| --- | ---: |
+| Admission and drop | 0.25 µs |
+| The three Hermitian products | 0.25 µs |
+| The full path, admission and reduction | 2.0 µs |
+
+**Measured**: these were set on the floor device (a Raspberry Pi 4, Cortex-A72) at P248, generic class, three processes of 8,192 rounds, null arm clean in all three. The lowest injected level was detected every time, so they are upper bounds on what the instrument resolves. They are stated for that set, class and board only; another set, the guarded class or another board states its own before it can pass. The t-test never sets a resolution: it did not reach the control at these levels.
+
+**Verdicts**, for each contrast over the valid processes:
+
+- **Leak**: flagged by both tests in the same process, in at least two processes, with the same sign.
+- **Candidate**: flagged in at least two processes with the same sign and a clean null arm, or flagged by both tests in one process. Every candidate is run again: three new processes, new seeds, four times the rounds.
+- **Persistent**: a candidate flagged again in at least two of the three re-run processes, with the same sign and a clean null arm. **It counts as a leak and fails the gate until it is explained.** An explanation is a mechanism shown with a control, for example a shift that follows a data address and moves when the address is moved on purpose, and a clean repeat. "The t-test does not see it" and "it is small" are not explanations.
+- **Noise**: flagged in one process only, or with differing signs.
+- **Pass at r**: no flag in any valid process, and the session's resolution `r` is within the phase's largest. The report prints `r` beside every pass.
+- **Inconclusive**: no flag, and the resolution is coarser than the largest allowed. It is not a pass.
+
+A fixture or key contrast that is a leak in any phase fails G7's timing. The controls are constant delays; a leak that moves a few calls in a hundred has another shape, the decile test is less sensitive to it, and the structural checks remain primary for it.
+
+**Where it has been run. Measured**: P248, generic class, on the floor device: no candidate in admission, the Hermitian products or the full path; no flag for the fixed secret against random secrets; null arm clean in all three processes. Two of the three processes drew the same permutation, so the run has two distinct layouts and not three. The guarded class has no key generator in the harness and has fixtures only. No other set and no x86-64 run exists under this procedure.
 
 ### Stage 3 norm equation (O29)
+
+Stage 3 opens with a design round and no code. The round's section states the failure budget of a complete norm-equation invocation and its composition across key generation and signing, and the modelled cost at all five sets, and it is reviewed before the first line of stage 3 is written (G3, G7). The decisions below are that round's starting point, not its result.
 
 | Decision | Design and acceptance evidence |
 | --- | --- |
@@ -399,7 +443,25 @@ Constants the signer's path reads that are written in the reference's code and n
 
 ## 2. Integers and the quaternion algebra
 
-Section 2.1 covers the integers (Stage 2a). Section 2.2 gives the maximal-order action used during ideal admission. Section 2.3 proposes Gaussian basis reduction (Stage 2c). The signer feature implements admission of an ideal component and its guarded challenge intersection (2b/2d). Rulings that stand over 2.1, from Round 0 (2026-11-14) and the plan of 2026-11-21:
+Section 2.1 is the integers (stage 2a). Section 2.2 is the ideal layer (stage 2b): what an ideal is as integers, and admission. Section 2.3 is the reduction of a Gaussian pair (stage 2c). Section 2.4 is the intersection with a challenge ideal and the equivalent ideal passed on (stage 2d). Section 2.5 lists the checkers that are not yet on `dev`.
+
+**Where each part stands (2026-11-28).** *Reviewed*: its section was reviewed before or with its code (G3). *Implemented as a prototype*: code on `dev` implements a section that has not been reviewed; the code landed first, in PRs #45 to #51, and sections 2.2 to 2.4 were written after it on 2026-11-28. *Proposal*: specified, with no code.
+
+| Part | Section | State | Code on `dev` |
+| --- | --- | --- | --- |
+| The integers | 2.1 | Reviewed (PR #42) | `prism-int` |
+| The representation of an ideal, and admission | 2.2 | Implemented as a prototype | `shekyl-prism/src/ideal` (`GenericHnf`, `GuardedIdeal::admit`) |
+| The exact step, ties and terminal state | 2.3 | Settled as the oracle's definition; not reviewed under G3 | `scripts/stage2c_oracle.py` |
+| The exp64 quotient | 2.3 | Implemented as a prototype | `shekyl-prism/examples/stage2c/reducer.rs` |
+| The step table | 2.3 | Proposal, not certified as stated; implemented as a prototype under the name `Reviewed` | the same, and the oracle |
+| The widths `W` and `2W` | 2.2.4, 2.3, 2.4.1 | Implemented as a prototype; the reduction's are checked on research, the ideal layer's are unproved | `IdealSet` |
+| The guarded intersection | 2.4.1 | Implemented as a prototype | `GuardedIdeal::intersection` |
+| The shortest-equivalent ideal | 2.4.2 | Proposal | none |
+| The norm form passed to a consumer | 2.4.3 | Implemented as a prototype | the reducer's `Reduced::form` |
+
+The prototype's code is in the front crate and under `examples/`. Part C moves the ideal layer to its own crate (G1). No part of 2.2 to 2.4 leaves prototype status before its section is reviewed and its unproved statements are settled.
+
+Rulings that stand over 2.1, from Round 0 (2026-11-14) and the plan of 2026-11-21:
 
 - **S5.** Integers are fixed-width. No value decides a length.
 - **S6.** The first signer is correct, wipes its secrets, and classifies every step as secret or public. It makes no constant-time claim.
@@ -422,6 +484,36 @@ Ours do not grow. Every integer of a parameter set has the same number of 64-bit
 **Notation.** For a set: `e` and `f` with `p = f·2^e − 1`; `L` the bit length of `p` (251, 326, 383, 505, 669); `W` its `WIDTH_BITS` (256, 384, 384, 512, 768); `D` the first norm of the secret ideal, the next prime after `2^(2W)` (ruling R1), of `2W + 1` bits; `q = 2^(2e−5) − s²` the challenge degree, below `2^(2e−5)`. For an integer `N`, `b(N)` is its bit length. A width is counted in bits of magnitude: 2.1.3 holds a sign beside the limbs.
 
 `L` and `W` are kept apart in every formula. `2W/L` is 2.04, 2.01 and 2.03 at the three sets with a reference and 2.36 and 2.30 at `p324` and `p664`, so a formula in `L` alone that fits the three measured sets is wrong at the two that are not measured.
+
+##### Where this budget stands (2026-11-28)
+
+The budget below was written on 2026-11-21, before stages 2b to 2d were designed. It assumes a four-dimensional reduction and a normal form computed with a fixed modulus. The signing path that was then built does neither: it holds an ideal as a Gaussian pair (2.2), intersects without a normal form (2.4) and reduces a normalized two-by-two form (2.3). So the budget is kept, and it is no longer the width of everything. This subsection says who uses which width. Where a statement further down is superseded it is marked there with this date.
+
+**Each consumer, the width it uses, and what proves it.** "General" is `LIMBS` below: 26, 33, 38, 49, 65.
+
+| Consumer | Code on `dev` | Width, limbs | The bound, and its standing |
+| --- | --- | --- | --- |
+| A norm, a coordinate, an entry of a normal form, a residue modulo `q` (2b, 2d) | `shekyl-prism/src/ideal` | `W`: 11, 14, 16, 21, 27 | 2.2.4 and 2.4.1. Unproved: argued there, no checker (ledger O39) |
+| A product inside admission or the intersection (2b, 2d) | the same | `2W`: 22, 28, 32, 42, 54 | The same |
+| The normalized Gram form, a coordinate and the carried norm in the reduction (2c) | `shekyl-prism/examples/stage2c` | `W` | 2.3, W1 to W4. Checked on research (`widths.py`, `bounds_ng.py`) |
+| The reducer's constructor: a numerator before the division by `T`, and the check of that division (2c) | the same | `2W` | 2.3. Checked on research (`widths.py`) |
+| The quotient's divisor and digit, and its dividend (2c) | the same | 1 and 2 | 2.3, W5. Checked on research (`check_exp64_words.py`) |
+| Sampling, the norm equation, Cornacchia (stage 3) | none | General | Rows 6, 7 and 9 below. Proven there for the methods assumed; stage 3's design round states its own |
+| The step to an equivalent ideal (2d, stage 3) | none | Not fixed | Row 8 below, written for a four-dimensional basis. 2.4.2's form needs no such product; its widths are stated when it is built |
+| The translation (stage 4) | none | General | Row 10 below |
+| A normal form computed with the fixed modulus (Q1) | none | General | Row 2 below. Nothing on the signing path computes one (2.2.8) |
+
+So **no code on `dev` uses the general width today.** The integer crate is generic and names no set; its tests and its committed vectors run at the general widths and at the narrow ones. The general width is the budget of stages 3 to 5, and each of those stages confirms or replaces it in its own section. The narrow widths are not a second budget for the same values: they hold different values, the normalized form and a Gaussian pair, and `2W` limbs are fewer than `LIMBS` at every set.
+
+**The status of each obligation.**
+
+| | Status | Reason |
+| --- | --- | --- |
+| Q1 | **Superseded** for stages 2b to 2d, 2026-11-28. Not built | The layer checks a normal form and never computes one: admission tests a form it is given, the generic constructor writes one from a norm and a root, and the intersection needs none (2.2, 2.4). The method and what research established for it are kept in 2.2.8, not normative |
+| Q2 | **In use** | The norm is carried by the admitted ideal, by the intersection and by the reducer, and is never recovered from an index. Its second sentence, on a generator reduced modulo `N·O0`, is stage 3's and is not built |
+| Q3 | **Kept as a test oracle.** Superseded on the signing path, 2026-11-28 | The eight-generator sum is what `guarded_intersections_match_the_coprime_lattice_sum` computes in unbounded integers to check the guarded intersection. On the signing path a normal form at the modulus `2·N₁·N₂` would need 31 to 80 limbs, and the formula needs coprime norms where 2.4.1 needs only a unit |
+| Q4 | **In use**, and moved: it is tested by admission (2.2.3, A2), at generation and at import, not first at stage 5 | The bound itself, `B = ⌈L/2⌉ + 32`, is still the provisional rule of "the secret norm" below. How often key generation meets it is measured only on simulated ideals (2.3), and it is ruled at stage 5 against real key generation |
+| Q5 | **Open** (ledger O33). Stated, not reviewed | 2.3 states the largest intermediate as a formula for the exact step and for exp64, with lemmas W1 to W5. Their checkers are on `research` (D1 to D3 of 2.5) |
 
 ##### What the reference reaches (Ran)
 
@@ -524,11 +616,11 @@ The largest value of class C is the Gram matrix of the ideal about to be reduced
 
 The budget below is for these methods. Each is an obligation on the stage named, and that stage's review checks it. A stage that cannot meet one says so in its own section, and the width is derived again there.
 
-- **Q1 (2b).** A left ideal of `O0` of norm `N` is held by a basis in Hermite normal form with numerators over the denominator 2 (the denominator of `O0`'s basis, 1.4.5). The lattice of numerators contains `2N·Z⁴`: `N·O0` lies in the ideal, and `2N·Z⁴` lies in `N·O0`. So the normal form is computed with the four vectors `2N·eᵢ` among the generators and every entry reduced modulo `2N` as it is made, which changes no lattice. The modulus is **fixed**: it is never divided by a pivot. No determinant is computed. This is not the reference's routine, nor the textbook modular algorithm: both work modulo a multiple of the lattice's determinant, here `4N²`, and divide it by each pivot as they go (`ibz_mat_4xn_hnf_mod_core`); given `2N` they give a wrong form (**Derived**, by hand through the reference's routine: the lattice `2Z ⊕ 2Z` with modulus 2 comes out as `diag(1, 2)`), and given `4N²` their intermediates are near `4b` bits, above the width.
+- **Q1 (2b; superseded 2026-11-28, see above).** A left ideal of `O0` of norm `N` is held by a basis in Hermite normal form with numerators over the denominator 2 (the denominator of `O0`'s basis, 1.4.5). The lattice of numerators contains `2N·Z⁴`: `N·O0` lies in the ideal, and `2N·Z⁴` lies in `N·O0`. So the normal form is computed with the four vectors `2N·eᵢ` among the generators and every entry reduced modulo `2N` as it is made, which changes no lattice. The modulus is **fixed**: it is never divided by a pivot. No determinant is computed. This is not the reference's routine, nor the textbook modular algorithm: both work modulo a multiple of the lattice's determinant, here `4N²`, and divide it by each pivot as they go (`ibz_mat_4xn_hnf_mod_core`); given `2N` they give a wrong form (**Derived**, by hand through the reference's routine: the lattice `2Z ⊕ 2Z` with modulus 2 comes out as `diag(1, 2)`), and given `4N²` their intermediates are near `4b` bits, above the width.
 - **Q2 (2b, 2d).** An ideal's norm is carried with it and never recovered from an index. An element that generates an ideal together with `N` is reduced modulo `N·O0` before it is used.
-- **Q3 (2d).** The intersection of two left ideals of `O0` of coprime norms `N₁` and `N₂` is `N₂·I₁ + N₁·I₂`, one normal form of eight generators by the method of Q1 with the fixed modulus `2·N₁·N₂`, and no dual. (**Derived**: both terms lie in the intersection, and at each prime dividing `N₁` the sum is `I₁` and at each prime dividing `N₂` it is `I₂`.) The specialized signing path in 2.3 also accepts admitted secret ideals of composite odd norm. For a prime challenge degree `q`, Q4 gives coprimality because `s` has at most `e − 3` bits and `q > 2^(2e−6) > N`.
-- **Q4 (stage 5).** Key generation accepts a secret ideal only if its norm is below `2^B`, `B = ⌈L/2⌉ + 32`, and otherwise goes on searching. The same bound is tested wherever a secret key enters, so also when one is decoded: a replay of signing runs on keys imported from the reference (1.6). See "the secret norm" below.
-- **Q5 (2c).** The reduction of a basis states, in its own section, the largest intermediate it holds, as a formula. Section 2.3 proposes exact Gaussian reduction and identifies the starting-basis bounds needed to apply it.
+- **Q3 (2d; kept as the test oracle, superseded on the signing path 2026-11-28, see above).** The intersection of two left ideals of `O0` of coprime norms `N₁` and `N₂` is `N₂·I₁ + N₁·I₂`, one normal form of eight generators by the method of Q1 with the fixed modulus `2·N₁·N₂`, and no dual. (**Derived**: both terms lie in the intersection, and at each prime dividing `N₁` the sum is `I₁` and at each prime dividing `N₂` it is `I₂`.) The specialized signing path in 2.4 also accepts admitted secret ideals of composite odd norm. For a prime challenge degree `q`, Q4 gives coprimality because `s` has at most `e − 3` bits and `q > 2^(2e−6) > N`.
+- **Q4 (stage 5; tested by admission since stage 2b, see above).** Key generation accepts a secret ideal only if its norm is below `2^B`, `B = ⌈L/2⌉ + 32`, and otherwise goes on searching. The same bound is tested wherever a secret key enters, so also when one is decoded: a replay of signing runs on keys imported from the reference (1.6). See "the secret norm" below.
+- **Q5 (2c).** The reduction of a basis states, in its own section, the largest intermediate it holds, as a formula. Section 2.3 states it ("Widths of the reduction").
 
 ##### The budget, by consumer (Derived)
 
@@ -536,18 +628,18 @@ For an ideal `I` of norm `N`, with `b = b(N)`, under Q1 and Q2. An element of `O
 
 | # | Quantity | Consumer | Bound on its bits | Proven? |
 | --- | --- | --- | --- | --- |
-| 1 | An entry of the basis | 2b, 2d | `b + 1`: every entry of the normal form is in `[0, 2N]` | Proven |
+| 1 | An entry of the basis | 2b, 2d | `b + 1`: every entry of the normal form is in `[0, 2N]` | Proven; restated in 2.2.2 |
 | 2 | An intermediate of the normal form with the fixed modulus `2N` (Q1) | 2b | `2b + 3`: a combination `u·x + v·y` of two entries below `2N` with cofactors of a greatest common divisor, at most `2·(2N)²`, before it is reduced | Proven for that method, and for no method that works modulo the determinant; 2b states its own |
-| 3 | An entry of the Gram matrix of the basis, in the reference's scaling (`2·Σ wₖ·xₖ·yₖ`, weights 1, 1, `p`, `p`) | 2c | `2b + L + 4`: at most `16·(1 + p)·N²` | Proven |
+| 3 | An entry of the Gram matrix of the basis, in the reference's scaling (`2·Σ wₖ·xₖ·yₖ`, weights 1, 1, `p`, `p`) | 2c | `2b + L + 4`: at most `16·(1 + p)·N²` | Proven. Not what 2c holds (2026-11-28): the reducer carries the form divided by `2T`, of about `b + 4` bits (2.3) |
 | 4 | The same, when the normal form has its generic shape (two pivots near `N` in the coordinates of 1 and `i`, two pivots of 1 or 2) | 2c | `2b + 4` | Typical: the other shapes are a fraction near `1/N` of the ideals of a prime norm |
-| 5 | An intermediate of the reduction | 2c | — | **Open** (Q5) |
+| 5 | An intermediate of the reduction | 2c | `9·M₀` in the normalized form (2.3, since 2026-11-28) | Stated in 2.3; **Open** until reviewed (Q5, O33) |
 | 6 | The norm of a sampled trace-zero element with numerators below `N`; a coordinate of the product of two elements with numerators below `2N` | stage 3 | `2b + L + 4` | Proven |
 | 7 | A product in the square root modulo `N` | stage 3 | `2b` | Proven |
 | 8 | The step to an equivalent ideal `I·β̄/N`, for `β` in `I` of norm `N·n'`: a coordinate of `x·β̄` for `x` in the basis, and the product `N·n'` | 2d, stage 3 | `1.5·b + 0.5·b(n') + 0.5·L + 5` | Proven; below row 3 |
 | 9 | The norm equation: a coefficient of the generator, the target, the lattice of dimension 2, the values given to Cornacchia | stage 3 | `2.5·L + 80`, with the bounds of R2 (17 bits, 20,000 steps) and an ideal of norm below `2^(⌈L/2⌉ + 2)` | Proven, given a reduced basis in 2c's sense |
 | 10 | The translation: a coordinate of an endomorphism of norm `d₁·d₂ < 2^(2e)`, its product with a matrix entry below `2^e`, a degree times a norm | stage 4 | `e + b + ⌈L/2⌉ + 4` | Proven, as row 9 |
 
-Row 3 is the largest, and it is reached twice: by key generation, which reduces the ideal of norm `D`, and by signing, which reduces the intersection of the ideal of norm `q` with the secret ideal. So with `B` the bound on the secret norm's bits (Q4):
+Row 3 is the largest of this budget (a reducer that carried the reference's Gram matrix would reach it twice; ours does not, see row 3), and it is reached twice: by key generation, which reduces the ideal of norm `D`, and by signing, which reduces the intersection of the ideal of norm `q` with the secret ideal. So with `B` the bound on the secret norm's bits (Q4):
 
     need = max( 2·(2W + 1), 2·(2e − 5 + B) ) + L + 4,    B = ⌈L/2⌉ + 32
 
@@ -598,7 +690,7 @@ Credited in `docs/lab/CONTRIBUTIONS.md`. An oracle for the choice, and not its s
 
 ##### The rule proposed
 
-**Default width for each parameter set**, public or secret. Stage 2c uses the narrower, statically selected widths specified in 2.3 for its normalized Gram and constructor.
+**Default width for each parameter set**, public or secret. Since 2026-11-28 it is the width of stages 3 to 5 only: stages 2b to 2d use the narrower, statically selected widths of 2.2.4, 2.3 and 2.4.1, and no code uses this one yet ("where this budget stands", above).
 
     LIMBS = ⌈need / 64⌉ + 1
 
@@ -619,7 +711,7 @@ Credited in `docs/lab/CONTRIBUTIONS.md`. An oracle for the choice, and not its s
 
 ##### Bounds not proven
 
-1. **The reduction's intermediates** (row 5, Q5). The reference reduces with floating-point Gram–Schmidt coefficients (`lll/l2.c`) and exact integer updates of the basis and the Gram matrix. In 6,912 runs the largest integer it wrote was within two bits of the largest norm (`quat_lll_core` in signing: 634, 955, 1,263 bits, against norms of 632, 954, 1,262), so about the length of a basis entry. But no bound on a size-reduction coefficient is proven here, and ours is not written.
+1. **The reduction's intermediates** (row 5, Q5; stated in 2.3 since 2026-11-28 and not yet reviewed). The reference reduces with floating-point Gram–Schmidt coefficients (`lll/l2.c`) and exact integer updates of the basis and the Gram matrix. In 6,912 runs the largest integer it wrote was within two bits of the largest norm (`quat_lll_core` in signing: 634, 955, 1,263 bits, against norms of 632, 954, 1,262), so about the length of a basis entry. But no bound on a size-reduction coefficient is proven here, and ours is not written.
 2. **The secret norm** (Q4): typical `L/2 + 16`, proven only `2L + 18`. The budget assumes the rule of Q4.
 3. **The generic shape of a normal form** (row 4). Not used: the budget takes row 3, which is proven.
 4. **Anything at `p324` and `p664`** that is typical and not proven, for want of a signer to measure. The same two items, 1 and 2.
@@ -662,10 +754,10 @@ And for the error an exit returns when the overflow mark is set, **U**: a proof 
 | 1 | 2c fixture | `tests/support/signer_fixtures.rs::check_bit` | SecretBit::declassify | Predicate on public oracle data | Compare a public fixture: the basis, the form, the half-tie control, and the norm-and-root HNF generators | I, public fixture only | Fail the fixture |
 | 2 | 2c fixture | `stage2c/driver.rs::check_invalid` | SecretInt::declassify | Refusal on an invalid public input | Check every returned coordinate and form entry | I, public fixture only | Expected on this negative control |
 | 3 | 2b/2d ideal component | `GuardedIdeal::admit` | SecretBit::declassify | Aggregate validity of the generated or imported ideal component | Admit the candidate or decoded component | I, reject the candidate or refuse import | Refuse admission |
-| 4 | 2d fixture | `ideal_lattice::public_fixture` | SecretInt::declassify | Numerators and carried norm of a public test intersection | Compare the full integer lattice with Q3 | I, test binary and public vectors only | Fail the fixture |
+| 4 | 2d fixture | `tests/support/lattice.rs::public_fixture` | SecretInt::declassify | Numerators and carried norm of a public test intersection | Compare the full integer lattice with Q3 | I, test binary and public vectors only | Fail the fixture |
 | 5 | 2b unit test | `geometry::tests::left_action_on_order_basis_and_fractional_inputs` | SecretBit::declassify | Agreement on public basis vectors and fractional inputs | Check the order action and exact division | I, test binary only | Fail the fixture |
 
-Signing accumulates admission failures without a new exit. At the existing signature exits, an invalid invariant fails the operation. Only key generation may draw another candidate. Decoding must establish left-order stability, full span, Q4 and the same factor-256 guard before a key can supply an intersection. Use the Stage 2b canonical ideal HNF as the comparison target and verify closure under the maximal order generators. A Gram determinant alone certifies neither the source ideal nor this closure.
+Signing accumulates admission failures without a new exit. At the existing signature exits, an invalid invariant fails the operation. Only key generation may draw another candidate. Decoding must pass the admission of 2.2.3 before a key can supply an intersection. A Gram determinant alone certifies neither the source ideal nor its closure under the order.
 
 **Both types are wiped, and why this is more than the brief asked.** The brief asks that the secret type be wiped on drop. But in the first signer a declassified value is still a secret: it is a copy of one, held in the public type so that a variable-time routine may take it. If the public type were not wiped, S6's "wipes its secrets" would fail at every row of the table. So the proposal is that `Int<N>` is wiped on drop too. The cost is one pass over the limbs at each drop. A wipe on drop clears the place a value was dropped from. It does not clear the bytes a move left behind on the stack, and without `unsafe` nothing here can; step 2 states what its tests can show of this and what they cannot. What then separates the types is what S6 and plan 2.4 ask of them: which operations exist, and what may be printed or compared.
 
@@ -904,6 +996,8 @@ The Gaussian pair is not a value the reference has. It depends on the reduction'
 - **The layer's own crate.** The code is in the front crate, `shekyl-prism/src/ideal/`, re-exported as `hazmat::ideal` behind the `signer` feature. Ruling G1 asks for a layer crate; part C moves it, with its own surface check and mutation job. The modular arithmetic that 2.4 uses is in the same module today.
 - **Mutation coverage of the arithmetic.** The mutation tool generates no substitution for a method call such as `.add()` or `.mul()` on a secret integer, so the arithmetic of this layer is reached only through its comparisons (ledger O36).
 
+Provenance: [Fixed-modulus normal form](https://github.com/Shekyl-Foundation/shekyl-prism/blob/8293edcb9a501747a5a47f49ec1941011ebeece5/research/fixed-modulus-hnf/REPORT.md) · [Containment criterion](https://github.com/Shekyl-Foundation/shekyl-prism/blob/8293edcb9a501747a5a47f49ec1941011ebeece5/research/fixed-modulus-hnf-followup/REPORT.md) · [Admission lemmas](https://github.com/Shekyl-Foundation/shekyl-prism/blob/35c59c6cca8c9d97701395802a308c9df6e06d01/research/stage2c-design-notes/NOTES.md)
+
 ### 2.3 Gaussian-integer basis reduction (stage 2c)
 
 **Status (2026-11-28).** *Settled:* the exact step, its ties and its terminal state. They define the oracle, `scripts/stage2c_oracle.py`. *Proposal, implemented as a prototype* (`shekyl-prism/examples/stage2c/reducer.rs`): the exp64 quotient, the step table and the widths. **The step table is not certified as stated.** Its counts are the constant-time schedule, and one inequality of their certificate was checked at another threshold than the split the table uses (below). The prototype names this schedule `Reviewed`; that name claims more than is established, and part C renames it until the certificate and the table use one split. *Open:* O33, which closes when the widths below are reviewed with a checker on `dev`; and G7's compiled-code evidence (section 0). The table at the head of section 2 gives each part's state.
@@ -1034,6 +1128,8 @@ The figures of this table were recomputed for this section from `prism-vectors/d
 
 **What this does to an overflow.** For a start the constructor accepts, W1 to W5 say no mark is set by the reduction. The lemmas are **Unproved** and not reviewed, so O33 stays open and the exits keep their present treatment (2.1.3). The older paragraph on the exact step's `3M` bound, above, concerns the oracle's unbounded integers and is not what the widths rest on.
 
+Provenance for the widths: [Lemmas W1 to W4](https://github.com/Shekyl-Foundation/shekyl-prism/blob/35c59c6cca8c9d97701395802a308c9df6e06d01/research/normalized-gram/REPORT.md) · [W5 and the width script](https://github.com/Shekyl-Foundation/shekyl-prism/blob/35c59c6cca8c9d97701395802a308c9df6e06d01/research/stage2c-design-notes/NOTES.md) · [Counterexample to the clamp](https://github.com/Shekyl-Foundation/shekyl-prism/blob/53e2eb4fdd772ff8a53708ba60314c3dabea9d05/research/q5-width-proof/REPORT.md)
+
 #### Executable acceptance cases
 
 At toy prime `p=3` with ideal norm `T=5`, start with `U=(10,0,0,0)` and `V=(4,9,1,0)`. The first step subtracts `iU` and swaps. The new first vector `(4,−1,1,0)` already has the minimum numerator norm 20. The second vector still has projections `2` and `+1/2` on the first vector and its rotation (inner products divided by 20). The second step subtracts the multiple `2+i`, producing `(1,−2,−2,−1)`, also of norm 20. Equal norms preserve the order. A count of one swap therefore requires two active steps on this input.
@@ -1108,6 +1204,8 @@ Both corpora are on `dev`, identical to research's files. Their generators are n
 
 **Why not Q3's normal form.** A normal form at the modulus `2·N·q` would need Barrett products of 31, 40, 46, 61 and 80 limbs (**Checked on research**: `research/fixed-modulus-hnf`, `widths_table.py`), against 22 to 54 here.
 
+Provenance: [Oracle report, as corrected](https://github.com/Shekyl-Foundation/shekyl-prism/blob/0a696a49b5d723eb7543f44be68842ad3461d18d/research/signing-intersection-oracle/REPORT.md) · [Oracle-only fixtures and the comaximal correction](https://github.com/Shekyl-Foundation/shekyl-prism/blob/0a696a49b5d723eb7543f44be68842ad3461d18d/research/signing-intersection-oracle/followup/FOLLOWUP.md)
+
 #### 2.4.2 The shortest-equivalent ideal
 
 **Not built.** This is the contract for the next consumer. No code on `dev` implements it and no test on `dev` checks it.
@@ -1133,6 +1231,8 @@ The report gives a second proof that `ε` is a unit which uses only the action o
 
 **`N'` can be even.** About two outputs in five are (**Measured**: 22 of 55 rows and 3,291 of 7,300). This output is not a key and A1 does not apply to it; a consumer must accept an even `N'`. A native implementation derives `g` and `ε` with exact divisions that are checked.
 
+
+Provenance: [Shortcut proof and lattice comparison](https://github.com/Shekyl-Foundation/shekyl-prism/blob/08033e2c73ffbfa2ddfc384d14006eef0cda5bf7/research/shortest-equivalent-shortcut/REPORT.md)
 
 #### 2.4.3 The basis and norm form passed to a consumer
 
