@@ -205,7 +205,7 @@ jobs:
         run: |
           python3 scripts/ci/mutants_scope.py --packages "$MUTATE" --features "$FEATURES" \
             --control-file "$CONTROL_FILE" --control-mutant "$CONTROL_MUTANT" \
-            --control-tests "$CONTROL_TESTS" --inventory "$RUNNER_TEMP/compiled.json"
+            --control-tests="$CONTROL_TESTS" --inventory "$RUNNER_TEMP/compiled.json"
       # This step does not judge. The exit code is passed on, and verdict
       # reads it once the output is kept.
       #
