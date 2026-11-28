@@ -257,6 +257,19 @@ jobs:
           cargo mutants "${args[@]}" > mutants.txt
           echo "code=$?" >> "$GITHUB_OUTPUT"
           tail -n 3 mutants.txt
+      # How long the job's processes were held back by the runner's CPU
+      # allowance while the tool ran. A large share of the step's time
+      # means something sized itself from the machine and not from the
+      # allowance; near zero means the time is the work's own. The
+      # allowance itself is not printed.
+      - name: Time held back by the runner's CPU allowance
+        if: ${{ always() && steps.run.outcome != 'skipped' }}
+        run: |
+          if [ -r /sys/fs/cgroup/cpu.stat ]; then
+            grep -E '^(usage_usec|nr_periods|nr_throttled|throttled_usec) ' /sys/fs/cgroup/cpu.stat
+          else
+            echo "no cgroup CPU record on this runner"
+          fi
       # The three steps below run whenever the tool was started: after it
       # finished, after its limit stopped it, and after the job was
       # cancelled while it ran. What it had written by then is kept, the
