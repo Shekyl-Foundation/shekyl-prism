@@ -108,7 +108,7 @@ A fixture or key contrast that is a leak in any phase fails G7's timing. The con
 **What that run is not** (the review of 2026-11-28).
 
 - **It did not time admission.** The harness's first phase was called "admission" in the first version of this procedure. It times the reducer's constructor, which checks its own invariants. `GuardedIdeal::admit`, the eleven checks of 2.2.3, is never called by the harness. No timing evidence exists for A1 to A11, and a phase that times them is owed.
-- **The verdict program does not implement these verdicts.** `research/g7-rtlf/v2/verdict_v2.py` requires two flagged processes for a candidate, so both tests flagging in one process falls to noise where this procedure says candidate; it has no leak outcome; it asks for one sign among all flags where the rule asks for agreement in two; it gives a zero median the negative sign; and a missing record reads as unflagged. The run above reported no flag at all, so none of these changed its result. **No G7 result is to be cited from that program until it is brought into line:** a total, ordered decision table, tested on synthetic verdict records, that refuses a run with a missing arm (ledger O46).
+- **The verdict program does not implement these verdicts.** `research/g7-rtlf/v2/verdict_v2.py` requires two flagged processes for a candidate, so both tests flagging in one process falls to noise where this procedure says candidate; its first-run classifier has no leak verdict (a candidate that persists on the re-run is printed as a leak until explained); it asks for one sign among all flags where the rule asks for agreement in two; it gives a zero median the negative sign; a missing record reads as unflagged; the rule's contrast of each fixture against the pooled others is printed and given no verdict, the verdicts coming from the contrasts against the process's reference; and persistence compares the two candidate labels without comparing the sign of the first run with the sign of the re-run. The run above reported no flag at all, so none of these changed its result. **No G7 result is to be cited from that program until it is brought into line:** a total, ordered decision table, tested on synthetic verdict records, that refuses a run with a missing arm (ledger O46).
 - **A pass at `r` describes a session.** It is the observation that no planned contrast flagged while a constant delay of that size was detected in every process. It is not a bound excluding timing differences of size `r`, and three detections in three processes give little confidence about a fourth.
 - Replaced void processes are a selection. Their number is stated and capped before the run.
 
@@ -964,12 +964,14 @@ The layer has two widths for each set, both public and fixed by the type `IdealS
 | An entry of the normal form: at most `2N`, bits | 159 | 196 | 225 | 286 | 368 |
 | A coordinate of an admitted pair: at most `c = ⌈√(1024·⌈√p⌉·2^B)⌉` by A10 and A11, bits | 147 | 184 | 213 | 274 | 356 |
 | The guard's comparison `p·(1024·N)²`, bits | 587 | 736 | 851 | 1,095 | 1,423 |
-| The largest product of the membership test, bits | 706 | 893 | 1,036 | 1,342 | 1,751 |
+| A loose bound on a dividend of the membership test, never attained (see below), bits | 706 | 893 | 1,036 | 1,342 | 1,751 |
 | Width of `2W` limbs, bits | 1,408 | 1,792 | 2,048 | 2,688 | 3,456 |
 
 **Which product is largest (Unproved; reviewed, and corrected 2026-11-28).** The first version of this paragraph said the largest ordinary product is in A4. It is not: it is A11's own comparison, `p·(1024·N)²`, the guard row of the table.
 
-- *A4 and A8.* For numerator vectors `X` and `Y`, `|det(X, Y)| ≤ √(N4(X)·N4(Y)/p)`. `N4(H·u) = (p+1)·N4(u)/4`, and a rotation keeps `N4`. With `N4 ≤ 1024·√p·N` for both vectors and `|d| = 2N`, a dividend of the membership test is at most `1024·√(p+1)·N²`: 452, 563, 650, 833 and 1,079 bits at the five sets. That is below the guard's product at every set.
+- *A4.* For numerator vectors `X` and `Y`, `|det(X, Y)| ≤ √(N4(X)·N4(Y)/p)`. `N4(H·u) = (p+1)·N4(u)/4`, and a rotation keeps `N4`. With `N4 ≤ 1024·√p·N` for both vectors and `|d| = 2N`, a dividend of A4's membership test is at most `1024·√(p+1)·N²`: 452, 563, 650, 833 and 1,079 bits at the five sets.
+- *A8.* Here one vector is a column of the normal form, which the guard does not bound: its `N4` can reach `8N² + p`. The same inequality gives a dividend of at most `2N·√((8N² + p)·1024·N/√p)`: 340, 414, 472, 594 and 758 bits. That is below A4's bound.
+- Both are below the guard's product at every set.
 - *The table's membership row* (706 to 1,751 bits) is a looser bound on the same dividends, from coordinate bounds and triangle inequalities: a coordinate of `H·u` at most `(m + 1)·c` with `m = (p+1)/2`, four products in a determinant, two in the multiplication by `conj(d)`, and a factor of two. It is kept because each step of it can be read off the code. It is not attained.
 - *Modular products are another category.* The inverse of `N²` modulo `2^(128·W)` and the products with it are reduced by design and fill the whole of `2W` limbs on ordinary keys. No bound of this table applies to them and none is needed: their results are multiplied back and compared at full width.
 
@@ -1315,13 +1317,14 @@ Most of these scripts need a Sage environment (Sage, cypari2, gmpy2, sympy), and
 | D14 | 2.4.1: the corpora's checksums and the definition of their columns | `signing-intersection-oracle/fixtures/MANIFEST.txt`, `followup/fixtures_oracle/README.md` @`0a696a4` | — | No |
 | D15 | Section 0, the timing procedure: the harness, the key pool and its generator, the verdict script, the pinned RTLF reference and the run that set the largest resolutions | `g7-rtlf/RULE-v2.md`, `v2/harness-v2.patch`, `v2/genpool.py`, `v2/keypool_p248.txt.xz`, `v2/extract_v2.py`, `v2/verdict_v2.py`, `rtlf_batch.R`, `pin.txt`, `v2/results/runV2/` at the tip | R with the pinned RTLF; the harness is a patch against `dev` at `470d537` and must be rebased | `docs/benchmarks/stage2c/` holds the earlier paired-t record only |
 
-**New, written by part D** (no script exists anywhere):
+**New, written or brought by part D** (D16 to D18 exist nowhere; D24 exists outside the repository):
 
 | # | Supports | What to write |
 | --- | --- | --- |
 | D16 | 2.2.4 and 2.4.1: the tables of admission's and the intersection's widths | A script that recomputes both tables from the parameter files and asserts each row below its width |
 | D17 | 2.2.3: the "what would pass" column | A model of the eleven checks at toy primes that confirms each example fails its one check and no other |
 | D18 | 2.3: the `2⁻⁹` form of the boundary inequality of D7 | The inequality restated and checked at the split the table uses |
+| D24 | 2.2 to 2.4: the statements the review of 2026-11-28 derived | The review's own script, brought to `dev` as a separate review script and not merged with the generators it checks (Rick, 2026-11-28). A label moves to *checked on dev* only where the script reproduces the statement |
 
 **For the record, not normative today.**
 
