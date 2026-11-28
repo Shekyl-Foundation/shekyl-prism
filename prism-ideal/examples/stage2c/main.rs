@@ -7,7 +7,6 @@
 #![forbid(unsafe_code)]
 
 mod driver;
-mod reducer;
 
 use prism_field::{P248, P324, P376, P500, P664};
 

@@ -3,9 +3,11 @@
 // All rights reserved.
 // BSD-3-Clause
 
-use crate::reducer::{self, Basis, Bounds, Class, Reduced, ReductionSet, Scalar, Schedule, Vector};
+use prism_ideal as ideal;
+use prism_ideal::reduce::{
+    self as reducer, Basis, Bounds, Class, Reduced, ReductionSet, Scalar, Schedule, Vector,
+};
 use prism_int::{Int, SecretError, SecretInt};
-use shekyl_prism::hazmat::ideal;
 use std::hint::black_box;
 use std::time::Instant;
 

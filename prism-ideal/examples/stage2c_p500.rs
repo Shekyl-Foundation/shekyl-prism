@@ -8,8 +8,6 @@
 
 #[path = "stage2c/driver.rs"]
 mod driver;
-#[path = "stage2c/reducer.rs"]
-mod reducer;
 
 fn main() {
     driver::run::<prism_field::P500, _, _>(

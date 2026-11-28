@@ -11,8 +11,8 @@ use super::{
     Schedule,
 };
 use prism_field::{P248, P324, P376, P500, P664};
+use prism_ideal::{GenericHnf, GuardedIdeal, Intersection};
 use prism_vectors::Group;
-use shekyl_prism::hazmat::ideal::{GenericHnf, GuardedIdeal, Intersection};
 
 fn fields<const N: usize>(text: &str) -> [&str; N] {
     let mut values = text.split_ascii_whitespace();

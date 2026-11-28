@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "prism-ct-barrier",
     "prism-int",
+    "prism-ideal",
     "prism-field",
     "prism-isogeny",
     "prism-verify",
@@ -26,6 +27,7 @@ prism-ct-barrier = { version = "0.1.0", path = "prism-ct-barrier" }
 fp2 = { version = "=0.6.0", default-features = false }
 sha3 = "=0.10.9"
 prism-int = { version = "0.1.0", path = "prism-int" }
+prism-ideal = { version = "0.1.0", path = "prism-ideal" }
 prism-field = { version = "0.1.0", path = "prism-field" }
 prism-isogeny = { version = "0.1.0", path = "prism-isogeny" }
 prism-verify = { version = "0.1.0", path = "prism-verify" }

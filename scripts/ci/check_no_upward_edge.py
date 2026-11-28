@@ -59,6 +59,11 @@ ORDER = (
     "prism-isogeny",
     "prism-verify",
     "prism-testkit",
+    # The signer's ideal layer. It calls the verifier's challenge degree
+    # and primality predicate, so it is above the verifier; it is placed
+    # last before the front crate so that no verifier layer and not the
+    # testkit may name signer code.
+    "prism-ideal",
     "shekyl-prism",
 )
 FRONT = "shekyl-prism"

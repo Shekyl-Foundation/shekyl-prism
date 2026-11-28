@@ -8,14 +8,11 @@
 //! (`required-features` in the manifest), and CI's step that asks for it
 //! requires the log to show each of these tests ran.
 
-#[path = "signer_layers/ideal_lattice.rs"]
-mod ideal_lattice;
-
 use shekyl_prism::hazmat::ideal::geometry::{
     degree_bits, secret_norm_bits, DEGREE_EXPONENT, DEGREE_SHIFT, ORDER_DENOMINATOR_BITS,
     Q4_SLACK_BITS,
 };
-#[path = "support/signer_fixtures.rs"]
+#[path = "../../prism-ideal/tests/support/signer_fixtures.rs"]
 mod signer_fixtures;
 use shekyl_prism::hazmat::ideal::GenericHnf;
 use shekyl_prism::hazmat::int::{Int, SecretBit, SecretInt};

@@ -14,10 +14,11 @@ Two rules, both about what leaves the repository.
    `signer`, off by default, and:
 
    - its feature table is exactly `default = []` and
-     `signer = ["dep:prism-int"]`, and `prism-int` is an optional
-     dependency;
+     `signer = ["dep:prism-int", "dep:prism-ideal"]`, and `prism-int` and
+     `prism-ideal` are optional dependencies;
    - the default graph of the front crate, over normal and build edges,
-     holds none of the signer's crates: `prism-int`, `zeroize`, `prism-ct-barrier`;
+     holds none of the signer's crates: `prism-int`, `prism-ideal`, `zeroize`,
+     `prism-ct-barrier`;
    - the graph with `--features signer` holds every one of them. Without
      this the second rule would pass on a graph reader that sees nothing.
 
@@ -38,10 +39,11 @@ import tomllib
 ROOT = Path(__file__).resolve().parents[2]
 FRONT = "shekyl-prism"
 INTEGERS = "prism-int"
-FEATURES = {"default": [], "signer": [f"dep:{INTEGERS}"]}
+IDEALS = "prism-ideal"
+FEATURES = {"default": [], "signer": [f"dep:{INTEGERS}", f"dep:{IDEALS}"]}
 # The crates only the signer needs. A default build of the front crate
 # holds none, and a build with `signer` holds all.
-SIGNER_ONLY = (INTEGERS, "zeroize", "prism-ct-barrier")
+SIGNER_ONLY = (INTEGERS, IDEALS, "zeroize", "prism-ct-barrier")
 # In the repository, and not in the package.
 NOT_PACKAGED = ("tests/data/vectors.tsv", "tests/vectors.rs")
 # In the package: the subject of the list is there to be read.
@@ -76,9 +78,10 @@ def closure_fault(manifest, default, signer):
     """The first breach of rule 1, or None."""
     if manifest.get("features") != FEATURES:
         return f"{FRONT}: [features] must be exactly {FEATURES}"
-    dependency = manifest.get("dependencies", {}).get(INTEGERS)
-    if not isinstance(dependency, dict) or dependency.get("optional") is not True:
-        return f"{FRONT}: {INTEGERS} must be an optional dependency"
+    for crate in (INTEGERS, IDEALS):
+        dependency = manifest.get("dependencies", {}).get(crate)
+        if not isinstance(dependency, dict) or dependency.get("optional") is not True:
+            return f"{FRONT}: {crate} must be an optional dependency"
     if FRONT not in default or FRONT not in signer:
         return f"{FRONT} is not in its own build graph"
     for name in SIGNER_ONLY:
@@ -126,8 +129,14 @@ def selftest(manifest, default, signer, listed):
         "the dependency is not optional":
             (planted(lambda m: m["dependencies"].__setitem__(INTEGERS, {"workspace": True})),
              default, signer),
+        "the ideal crate is not optional":
+            (planted(lambda m: m["dependencies"].__setitem__(IDEALS, {"workspace": True})),
+             default, signer),
         "the default build holds the integer crate":
             (manifest, default | {INTEGERS}, signer),
+        "the default build holds the ideal crate":
+            (manifest, default | {IDEALS}, signer),
+        "the signer build lacks the ideal crate": (manifest, default, signer - {IDEALS}),
         "the default build holds zeroize": (manifest, default | {"zeroize"}, signer),
         "the default build holds prism-ct-barrier": (manifest, default | {"prism-ct-barrier"}, signer),
         "the signer build lacks the integer crate": (manifest, default, signer - {INTEGERS}),

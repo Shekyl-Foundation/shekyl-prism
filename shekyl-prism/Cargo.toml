@@ -20,19 +20,17 @@ publish.workspace = true
 # manifest; scripts/ci holds this crate to that.
 [features]
 default = []
-signer = ["dep:prism-int"]
+signer = ["dep:prism-int", "dep:prism-ideal"]
 
 [dependencies]
-# Built with `signer` alone for the integer and ideal layers.
+# Built with `signer` alone: the integer and ideal layers.
 prism-int = { workspace = true, optional = true }
+prism-ideal = { workspace = true, optional = true }
 prism-field = { workspace = true }
 prism-isogeny = { workspace = true }
 prism-verify = { workspace = true }
 
 [dev-dependencies]
-# Unbounded public arithmetic for the independent ideal-lattice test oracle.
-num-bigint = "=0.4.6"
-num-integer = "=0.1.47"
 prism-vectors = { workspace = true }
 # The negatives and the responses built from public data, for the tests
 # that run both entries on them (`tests/support/entries.rs`). The testkit
@@ -54,11 +52,3 @@ required-features = ["signer"]
 
 [lints]
 workspace = true
-
-[[example]]
-name = "stage2c_p500"
-required-features = ["signer"]
-
-[[example]]
-name = "stage2c"
-required-features = ["signer"]

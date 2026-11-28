@@ -70,7 +70,8 @@ pub use prism_int as int;
 pub use prism_isogeny as isogeny;
 pub use prism_verify as verify;
 
-/// Native quaternion ideal admission and intersection in O0 numerator coordinates.
+/// The signer's ideal layer, `prism-ideal`: admission, the guarded
+/// intersection and the reduction of a Gaussian pair, in O0 numerator
+/// coordinates. Here only with the `signer` feature.
 #[cfg(feature = "signer")]
-#[path = "ideal/mod.rs"]
-pub mod ideal;
+pub use prism_ideal as ideal;
