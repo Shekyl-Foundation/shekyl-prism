@@ -21,7 +21,7 @@ from collections import Counter
 from pathlib import Path
 from stage2c_oracle import columns, native_schedules, norm_form, reduce_exact, signer_parameters
 
-VECTORS = Path(__file__).resolve().parents[1] / "shekyl-prism/examples/stage2c/vectors"
+VECTORS = Path(__file__).resolve().parents[1] / "prism-ideal/examples/stage2c/vectors"
 SET_WIDTHS = {"p248": 11, "p324": 14, "p376": 16, "p500": 21, "p664": 27}
 
 LIMB_BYTES = 8

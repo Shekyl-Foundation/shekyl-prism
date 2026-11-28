@@ -1349,3 +1349,31 @@ The full path's 2,000 ns is the largest of the three process medians, 1,649, 2,0
 **Correction.** This supersedes the preceding entry’s conclusion about inconclusive and noisy re-runs. Rick confirmed the six section 0 clarifications on 2026-11-28. The runV2 replay commands above produced the same report byte for byte. That historical run had no candidate to re-run.
 
 **Who.** Rick supplied the revised ruling. Codex implemented F5 and checked the synthetic cases and historical replay.
+
+## 2026-11-28 — The ideal layer moves to its own crate (clean-up part C1)
+
+Ruling G1 asks for one crate for each layer of the signer, re-exported under `hazmat`. Sections 2.2 to 2.4 were reviewed on 2026-11-28, so the move was due. This part moves the code and changes no behaviour.
+
+**What moved.** The front crate's `src/ideal/` and the reducer under its `examples/stage2c/` are the crate `prism-ideal`. Its modules are `geometry` (unchanged), `admission`, `intersection`, `modulus` (private) and `reduce` (the reducer). The `stage2c` and `stage2c_p500` examples, their corpora, the lattice test and the two fixture-support files moved with them. `hazmat::ideal` is now `pub use prism_ideal as ideal`, so no path through `hazmat` changed.
+
+**What had to become visible.** The reducer was a module of an example and is now a module of a library.
+
+- `Basis::ordered_gram` was `#[cfg(test)] pub(super)`. The example's tests read it from another crate now, so it is `pub` and `#[doc(hidden)]`, named as fixture support.
+- `tie_fixture` was already `pub`; it is `#[doc(hidden)]` and named as fixture support.
+- Inside the crate, `GuardedIdeal`'s fields, `rotate`, and `Modulus` with its methods are `pub(crate)`, because admission, the intersection and the modular arithmetic are three modules where they were one file.
+- The crate denies missing documentation, so every public item of the reducer has a line of it.
+
+**Two things the move showed and did not change.**
+
+- The library holds the public test corpus: `ReductionSet::IDEAL_CORPUS` embeds `examples/stage2c/ideals/<set>.txt`. It was an example's constant and is now a library's. It is fixture data and belongs with the tests; part C2 or C3 moves it.
+- The crate depends on the whole verifier for the challenge degree and its primality predicate. That is intended and the crate's documentation says so.
+
+**Checks that learned the crate.** The layer order places `prism-ideal` last before the front crate: it needs the verifier, and nothing but the front crate may name it. The consumer build check requires the default build of the front crate to hold none of it, and plants three new breaches. The secret-exit count is unchanged at five; three rows of the table name new paths.
+
+**Mutation.** The signer job mutates and tests `prism-ideal`, so the reducer is in the inventory for the first time. Its positive control is the same mutation, now in `prism-ideal/src/modulus.rs`. The front job's reject control is retired: it showed that the default build listed no mutant of the ideal module, and the front crate has no signer source left to list. The script keeps the mode and its own cases, and no job uses it.
+
+**The probe links the library.** The release probe compiled the reducer's source as its own module. It now links `prism-ideal`, so the stack and instruction figures are of the code a signer would link. They can differ from the committed record, which is of the earlier build and is not regenerated here.
+
+**Validation** is in the pull request: the list of test names before and after, the `stage2c -- bench` logs of both, and the mutation dispatches on the final head. This entry was written before those runs, so that no commit follows them.
+
+**Corrections.** The three leftovers of the move are closed in the same pull request. `ReductionSet` no longer embeds the ideal corpora; the example passes those files in, next to the vector files. `ordered_gram` is crate-private and the Gram replay is a test of `prism-ideal`; `tie_fixture` is a test of the reducer and is not a public function. The challenge-degree test is the crate `prism-prime`, which depends on `prism-field` alone. The verifier re-exports it as `prime`. The ideal layer calls it directly and does not depend on the verifier, so in the layer order `prism-ideal` sits after `prism-vectors` and before the isogeny engine.

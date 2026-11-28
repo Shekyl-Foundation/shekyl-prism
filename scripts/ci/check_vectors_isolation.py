@@ -10,9 +10,9 @@
 keep it what it is:
 
 - **No build of a library crate contains test data.** The library crates
-  are `prism-field`, `prism-isogeny`, `prism-verify` and the front crate
-  `shekyl-prism`. Each may name `prism-vectors` as a dev-dependency and in
-  no other kind.
+  are `prism-field`, `prism-prime`, `prism-ideal`, `prism-isogeny`,
+  `prism-verify` and the front crate `shekyl-prism`. Each may name
+  `prism-vectors` as a dev-dependency and in no other kind.
 - **The vectors crate does not depend on the code it tests.** It has
   none of `prism-verify`, `prism-isogeny` and `shekyl-prism` in its
   graph, in any kind, dev-dependencies included. A dev-dependency back onto the verifier
@@ -46,7 +46,14 @@ PACKAGE = "prism-vectors"
 OWN = "prism-vectors/Cargo.toml"
 ONLY_DEPENDENCY = "prism-field"
 # The crates whose builds must not contain test data.
-LIBRARY = ("prism-field", "prism-isogeny", "prism-verify", "shekyl-prism")
+LIBRARY = (
+    "prism-field",
+    "prism-prime",
+    "prism-ideal",
+    "prism-isogeny",
+    "prism-verify",
+    "shekyl-prism",
+)
 # A crate of this workspace, by its name: every member is `prism-*` but the
 # front crate.
 FRONT = "shekyl-prism"

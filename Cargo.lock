@@ -140,6 +140,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "prism-ideal"
+version = "0.1.0"
+dependencies = [
+ "num-bigint",
+ "num-integer",
+ "prism-field",
+ "prism-int",
+ "prism-prime",
+ "prism-vectors",
+]
+
+[[package]]
 name = "prism-int"
 version = "0.1.0"
 dependencies = [
@@ -156,6 +168,13 @@ version = "0.1.0"
 dependencies = [
  "prism-field",
  "prism-vectors",
+]
+
+[[package]]
+name = "prism-prime"
+version = "0.1.0"
+dependencies = [
+ "prism-field",
 ]
 
 [[package]]
@@ -191,6 +210,7 @@ version = "0.1.0"
 dependencies = [
  "prism-field",
  "prism-isogeny",
+ "prism-prime",
  "prism-vectors",
  "sha3",
 ]
@@ -215,9 +235,8 @@ dependencies = [
 name = "shekyl-prism"
 version = "0.1.0"
 dependencies = [
- "num-bigint",
- "num-integer",
  "prism-field",
+ "prism-ideal",
  "prism-int",
  "prism-isogeny",
  "prism-testkit",

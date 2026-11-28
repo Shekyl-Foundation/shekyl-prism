@@ -31,16 +31,16 @@ def run(*args):
     return subprocess.check_output(args, cwd=ROOT, text=True)
 
 
-# The reducer calls ideal geometry through hazmat::ideal. The probe links
-# shekyl-prism instead of compiling geometry.rs a second time.
-WANTED_LIBRARIES = ("prism_int", "prism_field", "shekyl_prism")
+# The reducer and the ideal geometry are the library `prism-ideal`. The
+# probe links it and compiles neither a second time.
+WANTED_LIBRARIES = ("prism_int", "prism_field", "prism_ideal")
 
 
 def release_libraries():
     """Release rlibs the probe links, including the signer ideal layer."""
     messages = run(
         "cargo", "build", "--locked", "--release",
-        "-p", "shekyl-prism", "--features", "signer",
+        "-p", "prism-ideal",
         "--message-format=json",
     )
     libraries = {}
@@ -85,7 +85,7 @@ def build_command(libraries, name, binary):
         "-Crelocation-model=static", "--cfg", f'stage2c_set="{name}"',
         "--extern", f"prism_int={libraries['prism_int']}",
         "--extern", f"prism_field={libraries['prism_field']}",
-        "--extern", f"shekyl_prism={libraries['shekyl_prism']}",
+        "--extern", f"prism_ideal={libraries['prism_ideal']}",
         *search,
         PROBE_SOURCE, "-o", binary,
     ]

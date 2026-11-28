@@ -112,7 +112,7 @@ p664 sign-generic reviewed max |t|=1.64 (t=1.64) at other=3
 ## Reproduction
 
 ```text
-taskset -c 0 cargo run --release --locked -p shekyl-prism --features signer --example stage2c -- timing REPEATS
+taskset -c 0 cargo run --release --locked -p prism-ideal --example stage2c -- timing REPEATS
 python3 -B scripts/ci/stage2c_timing.py FILE --repeats REPEATS
 python3 -B scripts/ci/stage2c_stack.py DIRECTORY
 ```

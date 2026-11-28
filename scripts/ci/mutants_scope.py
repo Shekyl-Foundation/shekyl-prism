@@ -303,7 +303,9 @@ def workflow_failures(nightly, shard):
                 modes.add("discovery")
             if args.control_file and args.control_tests != inputs["control_tests"]:
                 failures.append(f"{job}: the control's tests arrived as {args.control_tests!r}")
-    for mode in ("discovery", "verify", "reject_file", "control_file"):
+    # The nightly has had no reject control since the ideal layer left
+    # the front crate; the mode keeps its own cases below.
+    for mode in ("discovery", "verify", "control_file"):
         if mode not in modes:
             failures.append(f"no job of the nightly reaches the {mode} mode")
     return failures

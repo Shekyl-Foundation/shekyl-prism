@@ -6,13 +6,10 @@
 //! Replay the independently checked public corpus through import, intersection
 //! and reduction. The four outcomes belong to distinct stages of the API.
 
-use super::{
-    check_bit, check_invalid, magnitude, scalar, Basis, Bounds, Class, ReductionSet, Scalar,
-    Schedule,
-};
+use super::{check_bit, check_invalid, magnitude, scalar, ReductionSet};
 use prism_field::{P248, P324, P376, P500, P664};
+use prism_ideal::{GenericHnf, GuardedIdeal, Intersection};
 use prism_vectors::Group;
-use shekyl_prism::hazmat::ideal::{GenericHnf, GuardedIdeal, Intersection};
 
 fn fields<const N: usize>(text: &str) -> [&str; N] {
     let mut values = text.split_ascii_whitespace();
@@ -63,63 +60,6 @@ fn intersection<S: ReductionSet<W, D>, const W: usize, const D: usize>(
     }
     assert_eq!(verdict, "ok");
     Some(found)
-}
-
-fn check_row<S: ReductionSet<W, D>, const W: usize, const D: usize>(
-    line: &str,
-    bounds: &Bounds<W, D>,
-) {
-    let row: Vec<_> = line.split('\t').collect();
-    let [name, verdict, inputs, outputs, gram, reduced] = row.as_slice() else {
-        panic!("expected six tab-separated columns");
-    };
-    eprintln!("{} {name}", S::NAME);
-    let Some(found) = intersection::<S, W, D>(inputs, verdict) else {
-        assert_eq!([*outputs, *gram, *reduced], ["-"; 3]);
-        return;
-    };
-    let coordinates = found.u.iter().chain(&found.v).chain([&found.norm]);
-    for (got, want) in coordinates.zip(fields::<9>(outputs)) {
-        check_bit(got.ct_eq(&scalar(want)), true);
-    }
-
-    let basis = Basis::from_intersection(&found.norm, found.u, found.v, Class::Guarded, bounds);
-    let [mut a, mut c, real, imag] = fields(gram).map(scalar);
-    // The oracle records the input order. The native constructor orders the
-    // diagonals and conjugates the off-diagonal when it exchanges the columns.
-    let swap = c.ct_lt(&a);
-    Scalar::swap(&mut a, &mut c, &swap);
-    let imag = Scalar::select(&imag, &imag.neg(), &swap);
-    for (got, want) in basis.ordered_gram().into_iter().zip([a, c, real, imag]) {
-        check_bit(got.ct_eq(&want), true);
-    }
-    let result = basis.reduce(Schedule::Reviewed);
-    // The triangular form stores half of each normalized Gram diagonal.
-    for (got, want) in result.form[..2].iter().zip(fields::<2>(reduced)) {
-        check_bit(got.shl(1).ct_eq(&scalar(want)), true);
-    }
-}
-
-fn replay<S: ReductionSet<W, D>, const W: usize, const D: usize>() {
-    let path = Group::Signer
-        .dir()
-        .join("intersection")
-        .join(format!("{}.tsv", S::NAME));
-    let corpus = std::fs::read_to_string(path).unwrap();
-    assert_eq!(corpus.lines().count(), 56);
-    let bounds = Bounds::new::<S>();
-    for line in corpus.lines() {
-        check_row::<S, W, D>(line, &bounds);
-    }
-}
-
-#[test]
-fn replays_all_five_sets() {
-    replay::<P248, _, _>();
-    replay::<P324, _, _>();
-    replay::<P376, _, _>();
-    replay::<P500, _, _>();
-    replay::<P664, _, _>();
 }
 
 fn compare_oracle_hnfs<S: ReductionSet<W, D>, const W: usize, const D: usize>() {

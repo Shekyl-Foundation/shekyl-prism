@@ -9,9 +9,9 @@
 
 use num_bigint::{BigInt, Sign};
 use num_integer::Integer;
-use shekyl_prism::hazmat::field::{P248, P324, P376, P500, P664};
-use shekyl_prism::hazmat::ideal::{geometry::degree_bits, GenericHnf, GuardedIdeal, IdealSet};
-use shekyl_prism::hazmat::int::SecretInt;
+use prism_field::{P248, P324, P376, P500, P664};
+use prism_ideal::{geometry::degree_bits, GenericHnf, GuardedIdeal, IdealSet};
+use prism_int::SecretInt;
 
 /// One row of `examples/stage2c/admission-boundaries.txt`.
 ///
@@ -65,7 +65,7 @@ fn public_degree(exponent: u32, scalar: &BigInt) -> BigInt {
     (BigInt::from(1) << degree_bits(exponent)) - scalar * scalar
 }
 
-#[path = "../support/lattice.rs"]
+#[path = "support/lattice.rs"]
 mod lattice;
 use lattice::{column_hnf, gaussian_columns, public_fixture, subtract_multiple};
 
@@ -207,11 +207,11 @@ fn compare_intersections<S: IdealSet<W, D>, const W: usize, const D: usize>(
 
 #[test]
 fn guarded_intersections_match_the_coprime_lattice_sum() {
-    let mut boundaries = include_str!("../../examples/stage2c/admission-boundaries.txt").lines();
+    let mut boundaries = include_str!("../examples/stage2c/admission-boundaries.txt").lines();
     macro_rules! compare {
         ($set:ty, $file:literal) => {
             compare_intersections::<$set, _, _>(
-                include_str!(concat!("../../examples/stage2c/ideals/", $file)),
+                include_str!(concat!("../examples/stage2c/ideals/", $file)),
                 boundaries.next().expect("admission boundary row"),
             );
         };

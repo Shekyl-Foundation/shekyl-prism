@@ -4,12 +4,14 @@ members = [
     "prism-ct-barrier",
     "prism-int",
     "prism-field",
+    "prism-prime",
+    "prism-vectors",
+    "prism-ideal",
     "prism-isogeny",
     "prism-verify",
     "prism-bench",
     "prism-signer",
     "prism-compare",
-    "prism-vectors",
     "prism-testkit",
     "shekyl-prism",
 ]
@@ -27,6 +29,8 @@ fp2 = { version = "=0.6.0", default-features = false }
 sha3 = "=0.10.9"
 prism-int = { version = "0.1.0", path = "prism-int" }
 prism-field = { version = "0.1.0", path = "prism-field" }
+prism-prime = { version = "0.1.0", path = "prism-prime" }
+prism-ideal = { version = "0.1.0", path = "prism-ideal" }
 prism-isogeny = { version = "0.1.0", path = "prism-isogeny" }
 prism-verify = { version = "0.1.0", path = "prism-verify" }
 prism-signer = { version = "0.1.0", path = "prism-signer" }

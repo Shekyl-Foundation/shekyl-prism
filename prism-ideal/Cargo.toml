@@ -1,0 +1,26 @@
+[package]
+name = "prism-ideal"
+description = "The ideal layer of the PRISM signer, a prototype: admission of a left ideal of the maximal order, its guarded intersection with a challenge ideal, and the reduction of a Gaussian pair"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+prism-int = { workspace = true }
+prism-field = { workspace = true }
+# The challenge degree and its primality test. The verifier re-exports
+# the same crate, so the two cannot disagree about which degrees are
+# accepted, and this layer does not depend on the verifier.
+prism-prime = { workspace = true }
+
+[dev-dependencies]
+# Unbounded public arithmetic for the independent lattice oracle.
+num-bigint = "=0.4.6"
+num-integer = "=0.1.47"
+# The pinned intersection corpora the example's tests replay.
+prism-vectors = { workspace = true }
+
+[lints]
+workspace = true

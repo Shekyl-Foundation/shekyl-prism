@@ -5,13 +5,13 @@
 
 //! Native Stage 2c reduction. Its caller supplies a spanning intersection from
 //! an admitted key (or a generic HNF). This prototype has no key decoder.
+use crate::{field_prime, geometry, Gaussian, GenericHnf, GuardedIdeal, IdealSet, Vector};
 use prism_field::{P248, P324, P376, P500, P664};
 use prism_int::{Int, SecretBit, SecretInt};
-use shekyl_prism::hazmat::ideal::{self, geometry, GenericHnf, GuardedIdeal, IdealSet};
 
-pub type Scalar<const W: usize> = SecretInt<W>;
+/// A secret integer of the set's coordinate width.
+type Scalar<const W: usize> = SecretInt<W>;
 type Word = SecretInt<1>;
-pub type Vector<const W: usize> = [Scalar<W>; 4];
 
 /// exp64, as section 2.3 states it. The divisor keeps the top
 /// [`QUOTIENT_TOP_BITS`]. An exponent at or below [`QUOTIENT_WINDOW`] is one
@@ -25,9 +25,12 @@ const DOUBLED_DIAGONAL_BITS: u32 = 1;
 /// Slack on `q` in the guarded diagonal bound. The schedule's `C0` uses `q + 1`.
 const GUARDED_DIAGONAL_SLACK: u64 = 3;
 
+/// The public input class. It selects the starting bounds and the schedule.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Class {
+    /// A guarded intersection from an admitted key.
     Guarded,
+    /// The generators of a generic normal form.
     Generic,
 }
 
@@ -51,9 +54,12 @@ impl Class {
     }
 }
 
+/// Which public step count the reducer runs.
 #[derive(Clone, Copy, Debug)]
 pub enum Schedule {
+    /// The step table of `docs/SIGNER_SPEC.md` 2.3.
     Reviewed,
+    /// The earlier, longer counts, kept for differential runs.
     Pr45Baseline,
 }
 
@@ -67,6 +73,7 @@ impl Schedule {
     }
 }
 
+/// The step counts of one class at one set, one for each [`Schedule`].
 #[derive(Clone, Copy)]
 pub struct Steps {
     reviewed: usize,
@@ -74,6 +81,7 @@ pub struct Steps {
 }
 
 impl Steps {
+    /// The count for `schedule`.
     pub fn count(self, schedule: Schedule) -> usize {
         match schedule {
             Schedule::Reviewed => self.reviewed,
@@ -82,21 +90,22 @@ impl Steps {
     }
 }
 
-/// Bind each public set to its [`IdealSet`] widths, schedules, and ideal corpus.
+/// Bind each public set to its [`IdealSet`] widths and its reduction schedules.
 pub trait ReductionSet<const W: usize, const D: usize>: IdealSet<W, D> {
+    /// The coordinate width in limbs.
     const LIMBS: usize = W;
+    /// Step counts of the guarded class.
     const GUARDED: Steps;
+    /// Step counts of the generic class.
     const GENERIC: Steps;
+    /// Steps that pre-reduce a key-generation candidate.
     const SECRET_IDEAL_STEPS: usize;
-    /// Recovered norm, root, basis, and challenge for this set's guarded rows.
-    const IDEAL_CORPUS: &'static str;
 }
 
 macro_rules! reduction_set {
-    ($set:ty, $width:literal, guarded: $g:literal / $gb:literal, generic: $h:literal / $hb:literal, secret_ideal: $k:literal, corpus: $corpus:literal) => {
+    ($set:ty, $width:literal, guarded: $g:literal / $gb:literal, generic: $h:literal / $hb:literal, secret_ideal: $k:literal) => {
         impl ReductionSet<$width, { 2 * $width }> for $set {
             const SECRET_IDEAL_STEPS: usize = $k;
-            const IDEAL_CORPUS: &'static str = include_str!($corpus);
             const GUARDED: Steps = Steps {
                 reviewed: $g,
                 baseline: $gb,
@@ -109,12 +118,14 @@ macro_rules! reduction_set {
     };
 }
 
-reduction_set!(P248, 11, guarded: 267 / 297, generic: 280 / 312, secret_ideal: 22, corpus: "ideals/p248.txt");
-reduction_set!(P324, 14, guarded: 347 / 387, generic: 360 / 401, secret_ideal: 22, corpus: "ideals/p324.txt");
-reduction_set!(P376, 16, guarded: 402 / 448, generic: 415 / 463, secret_ideal: 23, corpus: "ideals/p376.txt");
-reduction_set!(P500, 21, guarded: 533 / 594, generic: 546 / 609, secret_ideal: 22, corpus: "ideals/p500.txt");
-reduction_set!(P664, 27, guarded: 706 / 787, generic: 719 / 803, secret_ideal: 24, corpus: "ideals/p664.txt");
+reduction_set!(P248, 11, guarded: 267 / 297, generic: 280 / 312, secret_ideal: 22);
+reduction_set!(P324, 14, guarded: 347 / 387, generic: 360 / 401, secret_ideal: 22);
+reduction_set!(P376, 16, guarded: 402 / 448, generic: 415 / 463, secret_ideal: 23);
+reduction_set!(P500, 21, guarded: 533 / 594, generic: 546 / 609, secret_ideal: 22);
+reduction_set!(P664, 27, guarded: 706 / 787, generic: 719 / 803, secret_ideal: 24);
 
+/// The public bounds of a set: step counts, the prime, and the largest
+/// norm and starting diagonal of each class.
 pub struct Bounds<const W: usize, const D: usize> {
     guarded_steps: Steps,
     generic_steps: Steps,
@@ -126,6 +137,7 @@ pub struct Bounds<const W: usize, const D: usize> {
 }
 
 impl<const W: usize, const D: usize> Bounds<W, D> {
+    /// The step counts of `class`.
     pub fn steps(&self, class: Class) -> Steps {
         match class {
             Class::Guarded => self.guarded_steps,
@@ -133,9 +145,10 @@ impl<const W: usize, const D: usize> Bounds<W, D> {
         }
     }
 
+    /// The bounds of the set `S`.
     pub fn new<S: ReductionSet<W, D>>() -> Self {
         let one = Int::<W>::one();
-        let p = ideal::field_prime::<S, W, D>().unwrap();
+        let p = field_prime::<S, W, D>().unwrap();
         let q = one.shl(geometry::degree_bits(S::E)).unwrap();
         let secret_norm_bits = geometry::secret_norm_bits(p.bit_length());
         let max_norm = q.shl(secret_norm_bits).unwrap();
@@ -200,6 +213,8 @@ struct Gram<const W: usize> {
     h: [Scalar<W>; 2],
 }
 
+/// A Gaussian pair with its normalized Gram form, before or during
+/// reduction, and the validity bit its constructor computed.
 pub struct Basis<const W: usize> {
     steps: Steps,
     u: Vector<W>,
@@ -209,11 +224,19 @@ pub struct Basis<const W: usize> {
 }
 
 impl<const W: usize> Basis<W> {
+    /// The four Gram entries after the initial ordering.
+    ///
+    /// The oracle records the input order. The constructor orders the
+    /// diagonals, so a fixture comparison reads them here.
     #[cfg(test)]
-    pub(super) fn ordered_gram(&self) -> [&Scalar<W>; 4] {
+    pub(crate) fn ordered_gram(&self) -> [&Scalar<W>; 4] {
         [&self.gram.a, &self.gram.c, &self.gram.h[0], &self.gram.h[1]]
     }
 
+    /// Build the normalized form of the pair `(u, v)` of an ideal of norm
+    /// `t`, checking the class's shape, the exact divisions, the
+    /// determinant and the starting bounds. A failed check is carried in
+    /// the validity bit and marks every output of the reduction.
     pub fn from_intersection<const D: usize>(
         t: &Scalar<W>,
         u: Vector<W>,
@@ -349,7 +372,7 @@ impl<const W: usize> Basis<W> {
     /// and every other admission predicate are that one verdict.
     pub fn secret_candidate<S: ReductionSet<W, D>, const D: usize>(
         norm: &Scalar<W>,
-        root: &ideal::Gaussian<W>,
+        root: &Gaussian<W>,
         bounds: &Bounds<W, D>,
     ) -> Option<(GuardedIdeal<S, W, D>, Reduced<W>)> {
         let hnf = GenericHnf::from_norm_and_root(norm, root);
@@ -365,6 +388,7 @@ impl<const W: usize> Basis<W> {
         Some((admitted, reduced))
     }
 
+    /// Run the class's step count for `schedule`.
     pub fn reduce(self, schedule: Schedule) -> Reduced<W> {
         let steps = self.steps.count(schedule);
         self.reduce_steps(steps)
@@ -399,8 +423,12 @@ impl<const W: usize> Basis<W> {
     }
 }
 
+/// A reduced pair and its norm form. Every value is marked if any
+/// check or any arithmetic failed.
 pub struct Reduced<const W: usize> {
+    /// First vector of the reduced pair.
     pub u: Vector<W>,
+    /// Second vector of the reduced pair.
     pub v: Vector<W>,
     /// F00, F22, F20, F21. The second column of each Gaussian pair is its i-rotation.
     pub form: [Scalar<W>; 4],
@@ -436,18 +464,66 @@ fn quotient<const W: usize>(g: &Gram<W>) -> ([Word; 2], Word) {
     (m, shift)
 }
 
-/// Exercise the same constructor, step and form conversion on both half ties.
-pub fn tie_fixture<S: ReductionSet<W, D>, const W: usize, const D: usize>(
-    steps: usize,
-) -> Reduced<W> {
-    let mut bounds = Bounds::new::<S>();
-    bounds.p = SecretInt::<D>::from_u64(3);
-    Basis::from_intersection(
-        &Scalar::from_u64(5),
-        [10, 0, 0, 0].map(Scalar::from_u64),
-        [4, 9, 1, 0].map(Scalar::from_u64),
-        Class::Generic,
-        &bounds,
-    )
-    .reduce_steps(steps)
+#[cfg(test)]
+mod half_tie {
+    use super::{Basis, Bounds, Class, Reduced, ReductionSet};
+    use prism_field::{P248, P324, P376, P500, P664};
+    use prism_int::SecretInt;
+
+    use crate::signer_fixtures::check_bit;
+
+    type Scalar<const W: usize> = SecretInt<W>;
+
+    /// The same constructor, step and form conversion on both half ties.
+    /// The field prime is replaced by 3 so the toy determinant matches.
+    fn tie_fixture<S: ReductionSet<W, D>, const W: usize, const D: usize>(
+        steps: usize,
+    ) -> Reduced<W> {
+        let mut bounds = Bounds::new::<S>();
+        bounds.p = SecretInt::<D>::from_u64(3);
+        Basis::from_intersection(
+            &Scalar::from_u64(5),
+            [10, 0, 0, 0].map(Scalar::from_u64),
+            [4, 9, 1, 0].map(Scalar::from_u64),
+            Class::Generic,
+            &bounds,
+        )
+        .reduce_steps(steps)
+    }
+
+    fn one_set<S: ReductionSet<W, D>, const W: usize, const D: usize>() {
+        for steps in [1, 2, 3] {
+            let result = tie_fixture::<S, W, D>(steps);
+            let first = [4, -1, 1, 0];
+            let (second, form) = if steps == 1 {
+                ([10, 0, 0, 0], [1, 5, 4, 1])
+            } else {
+                ([1, -2, -2, -1], [1, 1, 0, -1])
+            };
+            for (got, expected) in result
+                .u
+                .iter()
+                .chain(&result.v)
+                .chain(&result.form)
+                .zip(first.into_iter().chain(second).chain(form))
+            {
+                check_bit(got.ct_eq(&Scalar::from_i64(expected)), true);
+            }
+            let [a, c, real, imag] = &result.form;
+            let mut terminal = c.ct_lt(a).not();
+            for h in [real, imag] {
+                terminal = terminal.and(&h.ct_lt(&a.neg()).not()).and(&h.ct_lt(a));
+            }
+            check_bit(terminal, steps >= 2);
+        }
+    }
+
+    #[test]
+    fn both_half_ties_at_every_set() {
+        one_set::<P248, 11, 22>();
+        one_set::<P324, 14, 28>();
+        one_set::<P376, 16, 32>();
+        one_set::<P500, 21, 42>();
+        one_set::<P664, 27, 54>();
+    }
 }

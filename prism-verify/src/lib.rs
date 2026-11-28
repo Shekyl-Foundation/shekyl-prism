@@ -209,7 +209,10 @@ pub mod identity;
 mod mark;
 mod model;
 pub mod prepared;
-pub mod prime;
+/// Baillie–PSW and the challenge degree. The crate is [`prism_prime`];
+/// this is the verifier's path to it, and the signer's ideal layer calls
+/// the same crate directly.
+pub use prism_prime as prime;
 mod relation;
 #[cfg(feature = "research-reduced-width")]
 pub mod research;
@@ -435,7 +438,6 @@ pub(crate) fn prime_then<L: ParameterSet>(
 mod tests {
     use super::*;
     use basis::{BasisHint, C_HINT_MAX_INDEX};
-    use prime::is_baillie_psw;
     use prism_field::{Field, ParameterSet, Salt, P248, P376, P500};
     use set::{
         verify_set, Committed, CommittedSet, NoCorpus, Set, UnknownCommittedLabel, UnknownSet,
@@ -863,54 +865,5 @@ mod tests {
             NoCorpus(Set::P324).to_string(),
             UnknownCommittedLabel.to_string()
         );
-    }
-
-    #[test]
-    fn two_thousand_forty_seven_is_not_a_prime() {
-        let is_prime = is_baillie_psw::<<P248 as ParameterSet>::Degree>;
-        assert!(!is_prime(&2047u32.to_le_bytes()[..2]));
-        assert!(is_prime(&1019u32.to_le_bytes()[..2]));
-        assert!(!is_prime(&[1]));
-        assert!(!is_prime(&[91]));
-        assert!(!is_prime(&[49, 2]));
-    }
-
-    #[test]
-    fn the_three_field_primes_pass_baillie_psw() {
-        // Each at its own set's width, which holds `p` with room: the
-        // width is for a degree of about twice the bits.
-        fn passes<L: ParameterSet>(cofactor: u128) -> bool {
-            is_baillie_psw::<L::Degree>(&prime_bytes(cofactor, L::E))
-        }
-        assert!(passes::<P248>(5));
-        assert!(passes::<P376>(65));
-        assert!(passes::<P500>(27));
-    }
-
-    /// `cofactor·2^shift − 1`, little-endian.
-    fn prime_bytes(cofactor: u128, shift: u32) -> Vec<u8> {
-        let mut bytes = vec![0u8; (shift as usize) / 8 + 17];
-        let byte = (shift as usize) / 8;
-        let bit = shift % 8;
-        for (index, value) in cofactor.to_le_bytes().iter().enumerate() {
-            let shifted = u16::from(*value) << bit;
-            bytes[index + byte] |= shifted as u8;
-            if let Some(slot) = bytes.get_mut(index + byte + 1) {
-                *slot |= (shifted >> 8) as u8;
-            }
-        }
-        let mut borrow = true;
-        for slot in &mut bytes {
-            if !borrow {
-                break;
-            }
-            let (value, wrapped) = slot.overflowing_sub(1);
-            *slot = value;
-            borrow = wrapped;
-        }
-        while bytes.last() == Some(&0) {
-            bytes.pop();
-        }
-        bytes
     }
 }

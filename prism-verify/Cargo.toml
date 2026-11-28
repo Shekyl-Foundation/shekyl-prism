@@ -18,6 +18,8 @@ op-count = ["prism-field/op-count"]
 
 [dependencies]
 prism-field = { workspace = true }
+# The challenge degree and its primality test. Re-exported as `prime`.
+prism-prime = { workspace = true }
 prism-isogeny = { workspace = true }
 sha3 = { workspace = true }
 

@@ -227,15 +227,15 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       # Every library crate denies missing documentation: the front crate
       # (the interface), the vectors crate (public data), the testkit (a
-      # library of test inputs) and the three layer crates. Here a broken
-      # link or any other rustdoc warning fails too. One step for each
-      # feature set that makes something public; a step builds every crate
-      # that has the feature. Their doc tests run in the test jobs, which
-      # `cargo test --workspace` already includes.
+      # library of test inputs), the challenge-degree test, and the layer
+      # crates. Here a broken link or any other rustdoc warning fails too.
+      # One step for each feature set that makes something public; a step
+      # builds every crate that has the feature. Their doc tests run in
+      # the test jobs, which `cargo test --workspace` already includes.
       - name: Documentation of the library crates, default features
         env:
           RUSTDOCFLAGS: -D warnings
-        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit -p prism-int -p prism-field -p prism-isogeny -p prism-verify --no-deps --locked
+        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit -p prism-int -p prism-field -p prism-prime -p prism-ideal -p prism-isogeny -p prism-verify --no-deps --locked
       # The counter's module and the verifier's stage names are public only
       # with this feature, which the verifier's turns on in the field crate.
       - name: Documentation of the library crates, operation counter
@@ -254,7 +254,7 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
         run: cargo doc -p prism-verify --features research-reduced-width --no-deps --locked
-      # `hazmat::int` is public only with this feature of the front crate.
+      # `hazmat::int` and `hazmat::ideal` are public only with this feature.
       - name: Documentation of the front crate, signer
         env:
           RUSTDOCFLAGS: -D warnings
@@ -296,7 +296,7 @@ jobs:
       - name: Check all five native reducers and record paired wall-clock samples
         run: |
           set -euo pipefail
-          cargo run --release --locked -p shekyl-prism --features signer --example stage2c -- bench | tee stage2c-native.log
+          cargo run --release --locked -p prism-ideal --example stage2c -- bench | tee stage2c-native.log
           python3 -B -S scripts/stage2c_fixtures.py --native-log stage2c-native.log
           python3 -B -S scripts/stage2d_fixtures.py --native-log stage2c-native.log
       - name: Install compiled-code inspection tools
@@ -333,20 +333,25 @@ jobs:
       - name: The research module's tests
         run: "cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::"
       # The second configuration of the front crate: `signer` on, which the
-      # workspace run above leaves off. The lib unit tests and signer_layers run, not the
-      # verifier's tests a second time. Without the feature that file is
-      # skipped, so the log must show each layer test ran.
+      # workspace run above leaves off. Its lib unit tests and signer_layers
+      # run, not the verifier's tests a second time. Without the feature
+      # that file is skipped, so the log must show each reachability test
+      # ran. The ideal layer's own tests are the crate `prism-ideal`: the
+      # workspace run builds them too, and this step requires by name that
+      # each one ran.
       - name: The front crate with the signer feature, debug and release
         run: |
           set -euo pipefail
           for profile in "" "--release"; do
-            cargo test -p shekyl-prism --features signer --locked $profile --lib --test signer_layers --example stage2c > signer.log 2>&1 || { cat signer.log; exit 1; }
+            cargo test -p shekyl-prism --features signer --locked $profile --lib --test signer_layers > signer.log 2>&1 || { cat signer.log; exit 1; }
             grep -q 'test the_integers_are_under_hazmat ... ok' signer.log || { cat signer.log; exit 1; }
             grep -q 'test the_ideal_layer_is_under_hazmat ... ok' signer.log || { cat signer.log; exit 1; }
-            grep -Fxq 'test ideal_lattice::guarded_intersections_match_the_coprime_lattice_sum ... ok' signer.log || { cat signer.log; exit 1; }
-            grep -Fxq 'test driver::intersection_oracle::replays_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
+            cargo test -p prism-ideal --locked $profile --lib --test ideal_lattice --example stage2c > signer.log 2>&1 || { cat signer.log; exit 1; }
+            grep -Fxq 'test geometry::tests::left_action_on_order_basis_and_fractional_inputs ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test guarded_intersections_match_the_coprime_lattice_sum ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test replay::replays_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test reduce::half_tie::both_half_ties_at_every_set ... ok' signer.log || { cat signer.log; exit 1; }
             grep -Fxq 'test driver::intersection_oracle::intersection_spans_match_oracle_hnfs_at_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
-            grep -Fxq 'test hazmat::ideal::geometry::tests::left_action_on_order_basis_and_fractional_inputs ... ok' signer.log || { cat signer.log; exit 1; }
           done
 
   test-aarch64:
@@ -375,7 +380,7 @@ jobs:
       - name: Check all five native reducers and record paired wall-clock samples
         run: |
           set -euo pipefail
-          cargo run --release --locked -p shekyl-prism --features signer --example stage2c -- bench | tee stage2c-native.log
+          cargo run --release --locked -p prism-ideal --example stage2c -- bench | tee stage2c-native.log
           python3 -B -S scripts/stage2c_fixtures.py --native-log stage2c-native.log
           python3 -B -S scripts/stage2d_fixtures.py --native-log stage2c-native.log
       - name: Install compiled-code inspection tools
@@ -412,20 +417,25 @@ jobs:
       - name: The research module's tests
         run: "cargo test -p prism-verify --features research-reduced-width --locked --lib research::tests::"
       # The second configuration of the front crate: `signer` on, which the
-      # workspace run above leaves off. The lib unit tests and signer_layers run, not the
-      # verifier's tests a second time. Without the feature that file is
-      # skipped, so the log must show each layer test ran.
+      # workspace run above leaves off. Its lib unit tests and signer_layers
+      # run, not the verifier's tests a second time. Without the feature
+      # that file is skipped, so the log must show each reachability test
+      # ran. The ideal layer's own tests are the crate `prism-ideal`: the
+      # workspace run builds them too, and this step requires by name that
+      # each one ran.
       - name: The front crate with the signer feature, debug and release
         run: |
           set -euo pipefail
           for profile in "" "--release"; do
-            cargo test -p shekyl-prism --features signer --locked $profile --lib --test signer_layers --example stage2c > signer.log 2>&1 || { cat signer.log; exit 1; }
+            cargo test -p shekyl-prism --features signer --locked $profile --lib --test signer_layers > signer.log 2>&1 || { cat signer.log; exit 1; }
             grep -q 'test the_integers_are_under_hazmat ... ok' signer.log || { cat signer.log; exit 1; }
             grep -q 'test the_ideal_layer_is_under_hazmat ... ok' signer.log || { cat signer.log; exit 1; }
-            grep -Fxq 'test ideal_lattice::guarded_intersections_match_the_coprime_lattice_sum ... ok' signer.log || { cat signer.log; exit 1; }
-            grep -Fxq 'test driver::intersection_oracle::replays_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
+            cargo test -p prism-ideal --locked $profile --lib --test ideal_lattice --example stage2c > signer.log 2>&1 || { cat signer.log; exit 1; }
+            grep -Fxq 'test geometry::tests::left_action_on_order_basis_and_fractional_inputs ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test guarded_intersections_match_the_coprime_lattice_sum ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test replay::replays_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test reduce::half_tie::both_half_ties_at_every_set ... ok' signer.log || { cat signer.log; exit 1; }
             grep -Fxq 'test driver::intersection_oracle::intersection_spans_match_oracle_hnfs_at_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
-            grep -Fxq 'test hazmat::ideal::geometry::tests::left_action_on_order_basis_and_fractional_inputs ... ok' signer.log || { cat signer.log; exit 1; }
           done
 
   # The field operations of a verification are deterministic, so the two

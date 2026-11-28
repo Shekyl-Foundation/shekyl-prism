@@ -8,8 +8,12 @@
 //!
 //! [`degree_is_prime`] and [`challenge_degree`] are the two public
 //! functions. Both take the width as a type and the exponent as a
-//! number; for a parameter set, [`crate::challenge::ChallengeScalar::degree_is_prime`]
-//! passes the set's own and is the call to prefer.
+//! number. For a parameter set, the verifier's
+//! `ChallengeScalar::degree_is_prime` passes the set's own width and
+//! chain exponent, and is the call to prefer.
+//!
+//! The verifier re-exports this crate as `prism_verify::prime`. The
+//! signer's ideal layer calls it here. Neither copies the test.
 //!
 //! Products and exponentiations are variable-time Montgomery
 //! multiplications on 64-bit limbs. The challenge degree is public, so
@@ -42,6 +46,9 @@
 //! by nature, the strip of the factors of two (`Nat::split_twos`) and
 //! Euclid's algorithm in `jacobi_nonneg`, have a count they provably do
 //! not need in full and stop early inside it.
+
+#![forbid(unsafe_code)]
+#![deny(missing_docs)]
 
 use core::cmp::Ordering;
 
@@ -711,13 +718,13 @@ fn is_prime<W: DegreeWidth>(n: Nat<W>) -> bool {
 ///
 /// The bound it enforces is `s² < 2^{2·exponent−1}`. A challenge is
 /// narrower: `s < 2^{exponent−1}`. A scalar between the two gives a
-/// degree here and is no challenge;
-/// [`crate::challenge::ChallengeScalar::derive`] is what keeps a scalar
-/// in the challenge's range, and the verifier passes nothing else.
+/// degree here and is no challenge. The verifier's
+/// `ChallengeScalar::derive` is what keeps a scalar in the challenge's
+/// range, and the verifier passes nothing else.
 ///
 /// `W` must be wide enough for the set: for a parameter set `L`, pass
-/// `L::Degree` and `L::CHAIN_STEPS`, as
-/// [`crate::challenge::ChallengeScalar::degree_is_prime`] does.
+/// `L::Degree` and `L::CHAIN_STEPS`, as the verifier's
+/// `ChallengeScalar::degree_is_prime` does.
 pub fn challenge_degree<W: DegreeWidth>(exponent: u32, scalar: &[u8]) -> Option<Vec<u8>> {
     let scalar = Nat::<W>::from_le_bytes(scalar)?;
     if scalar.is_zero() || scalar.is_even() {
@@ -744,7 +751,7 @@ pub fn challenge_degree<W: DegreeWidth>(exponent: u32, scalar: &[u8]) -> Option<
 /// function it requires a positive odd scalar with
 /// `s² < 2^{2·exponent−1}` and does not enforce the narrower challenge
 /// domain `s < 2^{exponent−1}`. The verifier gets that domain from
-/// [`crate::challenge::ChallengeScalar::derive`], and does not reduce
+/// `ChallengeScalar::derive`, and does not reduce
 /// supplied bytes.
 ///
 /// "Prime" is Baillie–PSW's verdict: no composite that passes is known,

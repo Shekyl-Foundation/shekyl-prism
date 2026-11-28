@@ -7,7 +7,7 @@
 
 use num_bigint::{BigInt, Sign};
 use num_integer::Integer;
-use shekyl_prism::hazmat::int::{Int, SecretInt};
+use prism_int::{Int, SecretInt};
 
 pub(crate) type Column = [BigInt; 4];
 
