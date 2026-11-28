@@ -11,9 +11,9 @@
 //! a call with the retention markers. `profile` reduces every input in a
 //! concatenated basis file so one Callgrind run sees the whole class.
 #![forbid(unsafe_code)]
-#[allow(dead_code)] // The fixture-only half-tie entry is exercised by the native example.
-#[path = "../../../shekyl-prism/examples/stage2c/reducer.rs"]
-mod reducer;
+// The reducer is the library's: the probe links `prism-ideal` and measures
+// the code a signer would link.
+use prism_ideal::reduce as reducer;
 
 #[cfg(stage2c_set = "p248")]
 use prism_field::P248 as Selected;

@@ -167,7 +167,7 @@ binary that fails has been run.
 
 [[mutant]]
 job = "mutants-signer"
-file = "shekyl-prism/src/ideal/geometry.rs"
+file = "prism-ideal/src/geometry.rs"
 mutation = "replace * with /"
 outcome = "missed"
 count = 1

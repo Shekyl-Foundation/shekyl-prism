@@ -280,8 +280,12 @@ jobs:
       of: ${{ needs.dispatch.outputs.front_of }}
       mutate: shekyl-prism
       test: shekyl-prism
-      reject_file: shekyl-prism/src/ideal/mod.rs
-      reject_features: signer
+      # No reject control. It showed that the default build of this crate
+      # listed no mutant of the ideal module, which the `signer` feature
+      # compiled in. That module is the crate `prism-ideal` now: the front
+      # crate holds no signer source to list, and
+      # `scripts/ci/check_consumer_build.py` holds its default graph to
+      # having no signer crate.
 
   mutants-signer:
     name: mutants-signer (${{ matrix.shard }}/${{ needs.dispatch.outputs.signer_of }})
@@ -296,14 +300,13 @@ jobs:
       job: mutants-signer
       shard: ${{ matrix.shard }}
       of: ${{ needs.dispatch.outputs.signer_of }}
-      mutate: shekyl-prism
-      test: shekyl-prism
-      features: signer
-      scope: shekyl-prism/src/ideal
-      test_args: "--lib --test=signer_layers --example=stage2c"
-      control_file: shekyl-prism/src/ideal/mod.rs
+      mutate: prism-ideal
+      test: prism-ideal
+      scope: prism-ideal/src
+      test_args: "--lib --test=ideal_lattice --example=stage2c"
+      control_file: prism-ideal/src/modulus.rs
       control_mutant: "replace * with + in Modulus<W, D>::mul"
-      control_tests: "--test=signer_layers"
+      control_tests: "--test=ideal_lattice"
       timeout_multiplier: "4"
 
   # The signer's integers, against their own tests. The crate depends on

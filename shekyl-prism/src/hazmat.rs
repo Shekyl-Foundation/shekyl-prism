@@ -26,8 +26,10 @@
 //!   signer's quaternion arithmetic, as a public type and a secret type.
 //!   `ideal` calls it. It makes no constant-time claim; its own
 //!   documentation says what the secret type does and does not promise.
-//! - `ideal`: checked integral left-ideal components, the generic
-//!   column-HNF of a norm and a root, and guarded challenge intersections.
+//! - `ideal` (`prism-ideal`): checked integral left-ideal components, the
+//!   generic column-HNF of a norm and a root, guarded challenge
+//!   intersections, and the reduction of a Gaussian pair. A prototype; its
+//!   own documentation says what state it is in.
 //!
 //! # What using this module means
 //!
