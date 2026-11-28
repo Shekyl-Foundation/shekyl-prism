@@ -1,0 +1,16 @@
+[package]
+name = "quorum-approval-experiment"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+shekyl-prism = { path = "../../shekyl-prism" }
+sha3 = "=0.10.9"
+
+[dev-dependencies]
+socks = "=0.3.4"
+prism-signer = { path = "../../prism-signer" }
+prism-verify = { path = "../../prism-verify" }
