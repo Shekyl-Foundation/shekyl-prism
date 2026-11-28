@@ -147,8 +147,8 @@ dependencies = [
  "num-integer",
  "prism-field",
  "prism-int",
+ "prism-prime",
  "prism-vectors",
- "prism-verify",
 ]
 
 [[package]]
@@ -168,6 +168,13 @@ version = "0.1.0"
 dependencies = [
  "prism-field",
  "prism-vectors",
+]
+
+[[package]]
+name = "prism-prime"
+version = "0.1.0"
+dependencies = [
+ "prism-field",
 ]
 
 [[package]]
@@ -203,6 +210,7 @@ version = "0.1.0"
 dependencies = [
  "prism-field",
  "prism-isogeny",
+ "prism-prime",
  "prism-vectors",
  "sha3",
 ]

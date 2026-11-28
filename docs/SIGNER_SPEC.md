@@ -759,7 +759,7 @@ And for the error an exit returns when the overflow mark is set, **U**: a proof 
 | # | Stage | Call site | Exit | What leaves | Operation | Treatment at the last stage | Its overflow error |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | 2c fixture | `prism-ideal/tests/support/signer_fixtures.rs::check_bit` | SecretBit::declassify | Predicate on public oracle data | Compare a public fixture: the basis, the form, the half-tie control, and the norm-and-root HNF generators | I, public fixture only | Fail the fixture |
-| 2 | 2c fixture | `prism-ideal/examples/stage2c/driver.rs::check_invalid` | SecretInt::declassify | Refusal on an invalid public input | Check every returned coordinate and form entry | I, public fixture only | Expected on this negative control |
+| 2 | 2c fixture | `prism-ideal/tests/support/signer_fixtures.rs::check_invalid` | SecretInt::declassify | Refusal on an invalid public input | Check every returned coordinate and form entry | I, public fixture only | Expected on this negative control |
 | 3 | 2b/2d ideal component | `GuardedIdeal::admit` | SecretBit::declassify | Aggregate validity of the generated or imported ideal component | Admit the candidate or decoded component | I, reject the candidate or refuse import | Refuse admission |
 | 4 | 2d fixture | `prism-ideal/tests/support/lattice.rs::public_fixture` | SecretInt::declassify | Numerators and carried norm of a public test intersection | Compare the full integer lattice with Q3 | I, test binary and public vectors only | Fail the fixture |
 | 5 | 2b unit test | `geometry::tests::left_action_on_order_basis_and_fractional_inputs` | SecretBit::declassify | Agreement on public basis vectors and fractional inputs | Check the order action and exact division | I, test binary only | Fail the fixture |
@@ -821,15 +821,15 @@ An operation with no consumer is not built. The consumers are the later stages, 
 
 #### 2.1.5 The existing integers
 
-`prism-verify/src/prime/mod.rs` has a private natural number, `Nat<W>`, for the verifier's Baillie–PSW test of the challenge degree: unsigned, of the width `ParameterSet::Degree` names, with Montgomery multiplication, a Jacobi symbol by a small integer, and loops that are all counted (**Read**).
+`prism-prime` has a private natural number, `Nat<W>`, for the Baillie–PSW test of the challenge degree: unsigned, of the width `ParameterSet::Degree` names, with Montgomery multiplication, a Jacobi symbol by a small integer, and loops that are all counted (**Read**). The verifier re-exports the crate as `prime`. The ideal layer calls it directly.
 
 Could this layer serve it later? In part.
 
 - The storage and the ring operations of `Nat` are a subset of the public type's.
 - Its Montgomery arithmetic and its test are what stage 3 needs for item 20, if stage 3 takes the deterministic test (1.5). Then there would be two implementations of one test, at two widths, or one.
-- Against merging: the verifier's file is inside the reviewed verifier, pinned by operation counts and by the mutation record, generic over a width trait of `prism-field`, and it has no dependency. The new crate brings a wipe on drop the verifier does not need.
+- Against merging into `prism-int`: `Nat` is generic over a width trait of `prism-field`, and the integer crate's wipe on drop is something the degree test does not need. The test is the crate `prism-prime`. The verifier re-exports it and the ideal layer calls it. Whether stage 3's integer primality is this test, or a second one, is still open.
 
-Not merged in this part, and not decided. Ledger O34 holds the question for stage 3's section.
+Not merged into the integer crate. Ledger O34 holds that question for stage 3's section.
 
 #### 2.1.6 What the crate is (step 2 of this part)
 

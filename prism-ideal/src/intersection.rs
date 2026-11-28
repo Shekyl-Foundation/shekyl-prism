@@ -9,7 +9,7 @@ use crate::geometry::degree_bits;
 use crate::modulus::Modulus;
 use crate::{Gaussian, IdealSet, Vector};
 use prism_int::{Int, SecretInt as Scalar};
-use prism_verify::prime::{challenge_degree, degree_is_prime};
+use prism_prime::{challenge_degree, degree_is_prime};
 
 /// A spanning intersection in O0 numerators ready for guarded Stage 2c reduction.
 pub struct Intersection<const W: usize> {

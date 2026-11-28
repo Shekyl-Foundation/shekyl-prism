@@ -261,8 +261,8 @@ jobs:
       job: mutants
       shard: ${{ matrix.shard }}
       of: ${{ needs.dispatch.outputs.mutants_of }}
-      mutate: prism-verify prism-field
-      test: prism-field prism-verify prism-testkit shekyl-prism
+      mutate: prism-verify prism-field prism-prime
+      test: prism-field prism-prime prism-verify prism-testkit shekyl-prism
       timeout_multiplier: "12"
 
   mutants-front:

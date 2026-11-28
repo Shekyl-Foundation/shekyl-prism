@@ -45,7 +45,7 @@
 
 [[mutant]]
 job = "mutants"
-file = "prism-verify/src/prime/mod.rs"
+file = "prism-prime/src/lib.rs"
 mutation = "replace < with <= in Nat<W>::sub_mod"
 outcome = "missed"
 count = 1
@@ -62,7 +62,7 @@ the second operand is `modulus` itself and not below it; the sum is again \
 
 [[mutant]]
 job = "mutants"
-file = "prism-verify/src/prime/mod.rs"
+file = "prism-prime/src/lib.rs"
 mutation = "replace | with ^ in Nat<W>::rem_u32"
 outcome = "missed"
 count = 1
@@ -74,7 +74,7 @@ so no bit is set in both operands, and `|` and `^` agree wherever that holds.
 
 [[mutant]]
 job = "mutants"
-file = "prism-verify/src/prime/mod.rs"
+file = "prism-prime/src/lib.rs"
 mutation = "replace < with <= in jacobi"
 outcome = "missed"
 count = 1
@@ -146,7 +146,7 @@ two lines above it.
 
 [[mutant]]
 job = "mutants"
-file = "prism-verify/src/prime/mod.rs"
+file = "prism-prime/src/lib.rs"
 mutation = "replace + with * in Nat<W>::bit_len"
 outcome = "timeout"
 count = 1

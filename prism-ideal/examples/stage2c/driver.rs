@@ -4,10 +4,11 @@
 // BSD-3-Clause
 
 use prism_ideal as ideal;
-use prism_ideal::reduce::{
-    self as reducer, Basis, Bounds, Class, Reduced, ReductionSet, Scalar, Schedule, Vector,
-};
-use prism_int::{Int, SecretError, SecretInt};
+use prism_ideal::reduce::{Basis, Bounds, Class, Reduced, ReductionSet, Schedule};
+use prism_ideal::Vector;
+use prism_int::{Int, SecretInt};
+
+type Scalar<const W: usize> = SecretInt<W>;
 use std::hint::black_box;
 use std::time::Instant;
 
@@ -17,11 +18,7 @@ mod intersection_oracle;
 
 #[path = "../../tests/support/signer_fixtures.rs"]
 mod signer_fixtures;
-use signer_fixtures::check_bit;
-
-fn check_invalid<const W: usize>(value: &Scalar<W>) {
-    assert_eq!(value.declassify().unwrap_err(), SecretError::Overflowed);
-}
+use signer_fixtures::{check_bit, check_invalid};
 
 fn magnitude(hex: &str) -> Vec<u8> {
     hex.trim_start_matches('-')
@@ -207,33 +204,6 @@ fn check_ideal<S: ReductionSet<W, D>, const W: usize, const D: usize>(
     assert!(Basis::secret_candidate::<S, D>(&excessive, &ideal_root, bounds).is_none());
 }
 
-fn check_ties<S: ReductionSet<W, D>, const W: usize, const D: usize>() {
-    for steps in [1, 2, 3] {
-        let result = reducer::tie_fixture::<S, W, D>(steps);
-        let first = [4, -1, 1, 0];
-        let (second, form) = if steps == 1 {
-            ([10, 0, 0, 0], [1, 5, 4, 1])
-        } else {
-            ([1, -2, -2, -1], [1, 1, 0, -1])
-        };
-        for (got, expected) in result
-            .u
-            .iter()
-            .chain(&result.v)
-            .chain(&result.form)
-            .zip(first.into_iter().chain(second).chain(form))
-        {
-            check_bit(got.ct_eq(&Scalar::from_i64(expected)), true);
-        }
-        let [a, c, real, imag] = &result.form;
-        let mut terminal = c.ct_lt(a).not();
-        for h in [real, imag] {
-            terminal = terminal.and(&h.ct_lt(&a.neg()).not()).and(&h.ct_lt(a));
-        }
-        check_bit(terminal, steps >= 2);
-    }
-}
-
 const SCHEDULES: [Schedule; 2] = [Schedule::Reviewed, Schedule::Pr45Baseline];
 
 /// Smoke-bench samples per schedule. Odd, so each schedule leads the pair
@@ -348,11 +318,13 @@ fn contrasts<const W: usize, const D: usize>(
     }
 }
 
-pub fn run<S: ReductionSet<W, D>, const W: usize, const D: usize>(corpus: &str, mode: Mode) {
-    check_ties::<S, W, D>();
+pub fn run<S: ReductionSet<W, D>, const W: usize, const D: usize>(
+    corpus: &str,
+    ideals: &str,
+    mode: Mode,
+) {
     let bounds = Bounds::new::<S>();
     let fixtures: Vec<_> = corpus.lines().map(Fixture::parse).collect();
-    let ideals = S::IDEAL_CORPUS;
     let guarded: Vec<_> = fixtures
         .iter()
         .filter(|f| f.class == Class::Guarded)

@@ -12,6 +12,7 @@ mod driver;
 fn main() {
     driver::run::<prism_field::P500, _, _>(
         include_str!("stage2c/vectors/p500.txt"),
+        include_str!("stage2c/ideals/p500.txt"),
         driver::mode(),
     );
 }

@@ -10,10 +10,10 @@ publish.workspace = true
 [dependencies]
 prism-int = { workspace = true }
 prism-field = { workspace = true }
-# The whole verifier, on purpose: the challenge degree and its primality
-# predicate are the verifier's own functions, so the signer and the
-# verifier cannot disagree about which degrees are accepted.
-prism-verify = { workspace = true }
+# The challenge degree and its primality test. The verifier re-exports
+# the same crate, so the two cannot disagree about which degrees are
+# accepted, and this layer does not depend on the verifier.
+prism-prime = { workspace = true }
 
 [dev-dependencies]
 # Unbounded public arithmetic for the independent lattice oracle.

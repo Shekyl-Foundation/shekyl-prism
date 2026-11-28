@@ -225,15 +225,15 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       # Every library crate denies missing documentation: the front crate
       # (the interface), the vectors crate (public data), the testkit (a
-      # library of test inputs) and the three layer crates. Here a broken
-      # link or any other rustdoc warning fails too. One step for each
-      # feature set that makes something public; a step builds every crate
-      # that has the feature. Their doc tests run in the test jobs, which
-      # `cargo test --workspace` already includes.
+      # library of test inputs), the challenge-degree test, and the layer
+      # crates. Here a broken link or any other rustdoc warning fails too.
+      # One step for each feature set that makes something public; a step
+      # builds every crate that has the feature. Their doc tests run in
+      # the test jobs, which `cargo test --workspace` already includes.
       - name: Documentation of the library crates, default features
         env:
           RUSTDOCFLAGS: -D warnings
-        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit -p prism-int -p prism-field -p prism-isogeny -p prism-verify --no-deps --locked
+        run: cargo doc -p shekyl-prism -p prism-vectors -p prism-testkit -p prism-int -p prism-field -p prism-prime -p prism-ideal -p prism-isogeny -p prism-verify --no-deps --locked
       # The counter's module and the verifier's stage names are public only
       # with this feature, which the verifier's turns on in the field crate.
       - name: Documentation of the library crates, operation counter
@@ -252,7 +252,7 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
         run: cargo doc -p prism-verify --features research-reduced-width --no-deps --locked
-      # `hazmat::int` is public only with this feature of the front crate.
+      # `hazmat::int` and `hazmat::ideal` are public only with this feature.
       - name: Documentation of the front crate, signer
         env:
           RUSTDOCFLAGS: -D warnings
@@ -347,7 +347,8 @@ jobs:
             cargo test -p prism-ideal --locked $profile --lib --test ideal_lattice --example stage2c > signer.log 2>&1 || { cat signer.log; exit 1; }
             grep -Fxq 'test geometry::tests::left_action_on_order_basis_and_fractional_inputs ... ok' signer.log || { cat signer.log; exit 1; }
             grep -Fxq 'test guarded_intersections_match_the_coprime_lattice_sum ... ok' signer.log || { cat signer.log; exit 1; }
-            grep -Fxq 'test driver::intersection_oracle::replays_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test replay::replays_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test reduce::half_tie::both_half_ties_at_every_set ... ok' signer.log || { cat signer.log; exit 1; }
             grep -Fxq 'test driver::intersection_oracle::intersection_spans_match_oracle_hnfs_at_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
           done
 
@@ -430,7 +431,8 @@ jobs:
             cargo test -p prism-ideal --locked $profile --lib --test ideal_lattice --example stage2c > signer.log 2>&1 || { cat signer.log; exit 1; }
             grep -Fxq 'test geometry::tests::left_action_on_order_basis_and_fractional_inputs ... ok' signer.log || { cat signer.log; exit 1; }
             grep -Fxq 'test guarded_intersections_match_the_coprime_lattice_sum ... ok' signer.log || { cat signer.log; exit 1; }
-            grep -Fxq 'test driver::intersection_oracle::replays_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test replay::replays_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
+            grep -Fxq 'test reduce::half_tie::both_half_ties_at_every_set ... ok' signer.log || { cat signer.log; exit 1; }
             grep -Fxq 'test driver::intersection_oracle::intersection_spans_match_oracle_hnfs_at_all_five_sets ... ok' signer.log || { cat signer.log; exit 1; }
           done
 

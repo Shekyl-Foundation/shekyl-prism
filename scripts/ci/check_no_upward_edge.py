@@ -8,8 +8,8 @@
 
 The crates of the library and of its tests are in one order:
 
-    prism-ct-barrier < prism-int < prism-field < prism-vectors < prism-isogeny < prism-verify
-        < prism-testkit < shekyl-prism
+    prism-ct-barrier < prism-int < prism-field < prism-prime < prism-vectors < prism-ideal
+        < prism-isogeny < prism-verify < prism-testkit < shekyl-prism
 
 A crate of that list may name, in any dependency table, only crates
 earlier in it. `[dev-dependencies]` count: Cargo allows a crate's tests to
@@ -19,10 +19,14 @@ to be undone before anything is published. So:
 
 - `prism-int`, the signer's integers, may use only the mask barrier of
   this workspace in any table;
-- none of `prism-field`, `prism-vectors`, `prism-isogeny` and
-  `prism-verify` names `prism-testkit` or `shekyl-prism`;
+- `prism-prime`, the challenge-degree test, may use only `prism-field`;
+- `prism-ideal`, the signer's ideal layer, may use `prism-int`,
+  `prism-field`, `prism-prime` and, in its tests, `prism-vectors`;
+- none of `prism-field`, `prism-prime`, `prism-vectors`, `prism-ideal`,
+  `prism-isogeny` and `prism-verify` names `prism-testkit` or
+  `shekyl-prism`;
 - `prism-testkit` does not name `shekyl-prism`;
-- none of the seven names a tool of this workspace (the bench, the
+- none of these names a tool of this workspace (the bench, the
   comparison, the signer), which all sit above the verifier.
 
 A test lives in the lowest crate that contains everything it exercises.
@@ -55,15 +59,18 @@ ORDER = (
     "prism-ct-barrier",
     "prism-int",
     "prism-field",
+    # Challenge degree and Baillie–PSW. Field arithmetic only. The
+    # verifier re-exports it; the ideal layer calls it. Neither depends
+    # on the other for the test.
+    "prism-prime",
     "prism-vectors",
+    # The signer's ideal layer. Above the integers, the field and the
+    # degree test, and above the vectors its examples read. Below the
+    # isogeny engine and the verifier, which must not name signer code.
+    "prism-ideal",
     "prism-isogeny",
     "prism-verify",
     "prism-testkit",
-    # The signer's ideal layer. It calls the verifier's challenge degree
-    # and primality predicate, so it is above the verifier; it is placed
-    # last before the front crate so that no verifier layer and not the
-    # testkit may name signer code.
-    "prism-ideal",
     "shekyl-prism",
 )
 FRONT = "shekyl-prism"

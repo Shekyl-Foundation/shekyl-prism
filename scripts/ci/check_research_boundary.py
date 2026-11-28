@@ -79,7 +79,8 @@ def main():
     if FEATURE not in verifier_features("prism-verify", "--features", f"prism-verify/{FEATURE}"):
         raise SystemExit("the graph reader does not see the research feature when it is requested")
     for name in (
-        "prism-int", "prism-ideal", "prism-field", "prism-isogeny", "prism-verify", "prism-signer",
+        "prism-int", "prism-field", "prism-prime", "prism-ideal", "prism-isogeny",
+        "prism-verify", "prism-signer",
         "shekyl-prism",
         "prism-testkit",
     ):

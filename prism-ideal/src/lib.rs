@@ -17,10 +17,9 @@
 //!   challenge ideal.
 //! - [`reduce`] is the reduction of a Gaussian pair.
 //!
-//! The crate depends on the whole verifier, `prism-verify`, and that is
-//! intended. The challenge degree and its primality predicate are the
-//! verifier's own functions, so the signer and the verifier cannot
-//! disagree about which degrees are accepted. They are not copied here.
+//! The challenge degree and its primality test are `prism-prime`. The
+//! verifier re-exports that crate, and this layer calls it directly, so
+//! the signer and the verifier share one test. They are not copied here.
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
@@ -29,6 +28,13 @@ pub mod geometry;
 mod intersection;
 mod modulus;
 pub mod reduce;
+
+#[cfg(test)]
+#[path = "../tests/support/signer_fixtures.rs"]
+mod signer_fixtures;
+
+#[cfg(test)]
+mod replay;
 
 pub use admission::{GenericHnf, GuardedIdeal};
 pub use intersection::Intersection;

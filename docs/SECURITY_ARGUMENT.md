@@ -111,7 +111,7 @@ evidence.
 | Fields, exponents, byte and salt sizes | `prism-field/src/lib.rs`, `parameter_set!` and `Salt` | Integer audit reproducible with `python3 scripts/security_parameters.py`; modulus proofs checked by `python3 scripts/ci/check_signer_prime_certificates.py` (ledger O19) |
 | Hash domain, framing and projection | `prism-verify/src/challenge.rs`, `ChallengeScalar::derive` and `with_width`; `prism-verify/src/lib.rs`, `checked` | One hash per verification; no search; any salt of the row length is admissible |
 | Reduced-width entry points | `challenge.rs`, `derive_width`, `research_bytes`; `prism-verify/src/research.rs` | Compiled only under `research-reduced-width`; `scripts/ci/check_research_boundary.py` builds a consumer to show their absence by default |
-| Degree arithmetic and BPSW | `prism-verify/src/prime/mod.rs`, `challenge_degree`, `degree_is_prime`, `is_prime` | Adversarial primality remains an assumption |
+| Degree arithmetic and BPSW | `prism-prime/src/lib.rs`, `challenge_degree`, `degree_is_prime`, `is_prime` | Adversarial primality remains an assumption |
 | Key identity and canonical bytes | `prism-verify/src/identity.rs`, `KeyIdentity::decode`; `prism-verify/src/signature.rs`, `Response::decode` | Unique field bytes; raw key bytes bind the message context |
 | Generic response models and joint sign | `prism-verify/src/model.rs`, `check`; `signature.rs`, `canonical_sign` | Conditional map-encoding uniqueness; see §4 |
 | On-curve, full torsion, span, pairing | `prism-verify/src/relation.rs`, `relate_points`, `pairing_holds` | Necessary preconditions for the algebraic lemma |
