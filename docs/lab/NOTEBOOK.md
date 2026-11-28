@@ -1255,7 +1255,8 @@ Specification only: no Rust source and no script changed. The review of 2026-11-
 
 **Downgrades made while writing.**
 
-- The step table is called a proposal, not certified as stated (ledger O42). Its tail bound was checked at the split it uses; the exp64 boundary inequality was checked with the earlier split's threshold.
+- The step table is called a proposal (ledger O42): its certificate is on `research` only and is not reviewed. Read at source, the certificate does cover the table. The tail bound was checked at the table's split; the exp64 boundary inequality is written with the earlier threshold, whose form is the stronger; and the later tail proof from `2⁻¹¹` gives counts at or below the table in every cell.
+- Lemmas W1 to W4, which the narrow widths rest on, are labelled unproved: the research report gives each one line, and its script compares observed maxima.
 - "These bounds fit the double width at every set" had no source. The section gives a derivation and labels it unproved (O39).
 - The exact step's `3M` bound and the `diag(28, 14, 1, 1)` example are labelled unproved (O40, O41).
 - "Zero rejections in 10,000 sampled keys" was measured on simulated ideals of a model order, not on keys from our key generation, and now says so.
@@ -1264,6 +1265,6 @@ Specification only: no Rust source and no script changed. The review of 2026-11-
 
 **What the mathematics showed of the code** is ledger O43, for part C. The one finding that is not a matter of tidiness is O38: admission accepts a non-primitive ideal.
 
-**How the examples were checked.** A model of the eleven checks in Python, at `p = 3` and other toy primes, confirmed that each example of 2.2.3 fails its one check and no other, and that testing closure on two vectors agrees with testing it on four over 2,720 generic lattices. The width tables were recomputed from `prism-vectors/data/signer/` and agree with the research results where research has them. Neither script is committed: this part changes no script, and both are items D16 and D17 of the list.
+**How the examples were checked.** A model of the checks in Python, at `p = 3` and other toy primes, confirmed that the examples for A1 and A3 to A10 fail their one check and no other, and that testing closure on two vectors agrees with testing it on four over 2,720 generic lattices. A2 was not in the model, and A11's example does not reach its bound at toy size. The width tables were recomputed from `prism-vectors/data/signer/` and agree with the research results where research has them. Neither script is committed: this part changes no script, and both are items D16 and D17 of the list.
 
-**Not done.** The research claims were read at the commits cited and not re-run. Row 4 of the secret-treatment table named a path that does not exist; it now names `tests/support/lattice.rs::public_fixture`.
+**Not done.** No research checker was re-run. Read at source for this part: the width lemmas, the intersection theorem, the timing rule and its run, the exp64 charge script, and the two reports on the tail. Taken from the inventory of 2026-11-28 without opening the source: the clamp trace's figures, the cell and band figures, the fixed-modulus counts and limb widths, and the corpus and sweep counts. Row 4 of the secret-treatment table named a path that does not exist; it now names `tests/support/lattice.rs::public_fixture`.

@@ -57,7 +57,7 @@ Under G3, the Stage 2c and Stage 3 design reviews must establish the following f
 
 ### Stage 2c reduction and the G2 exception
 
-Use fixed-schedule Gaussian-integer Lagrange reduction with exact quotients as the correctness baseline. **Read:** the Q5 research bounds intermediate width for its stated input shapes. On a valid ideal its bounded 64-bit quotient saturated, and the scheduled steps plus exact cleanup returned an unreduced basis. A sticky error would make saturation visible while leaving a secret-dependent failure. **Open (O33):** demonstrate adequate width and progress on every admitted input for the chosen quotient, including that fixture. A fast quotient can replace the baseline once it meets both obligations. [Q5 proof and counterexample](https://github.com/Shekyl-Foundation/shekyl-prism/blob/53e2eb4fdd772ff8a53708ba60314c3dabea9d05/research/q5-width-proof/REPORT.md)
+Fixed-schedule Gaussian-integer Lagrange reduction with exact quotients is the correctness baseline, and it defines the oracle. A quotient clamped to 64 bits fails on a valid ideal, and a sticky error on saturation would leave a secret-dependent failure; 2.3 states the counterexample. The candidate is exp64 (2.3), which the prototype implements. **Open (O33):** adequate width and progress on every admitted input, as a reviewed statement with its checker on `dev`. 2.3 states the widths and the progress lemmas and gives the standing of each. [Q5 proof and counterexample](https://github.com/Shekyl-Foundation/shekyl-prism/blob/53e2eb4fdd772ff8a53708ba60314c3dabea9d05/research/q5-width-proof/REPORT.md)
 
 The exception permits one dependency-free `no_std` crate with a safe value/mask API. Its only locally allowed unsafe operation is the register identity in `value_barrier_u64`, using one general-purpose input/output register on x86-64 and AArch64. The crate denies unsafe code elsewhere. Its implementation PR must pin this boundary in the workspace lint check, including a failing test for a second unsafe site. The existing benchmark counter has its own exception. Signing on an unaudited architecture must fail at build time. Verifier-only builds must remain portable, with the existing s390x big-endian verifier tests still executing. [Crate audit](https://github.com/Shekyl-Foundation/shekyl-prism/blob/53e2eb4fdd772ff8a53708ba60314c3dabea9d05/research/ct-barrier-policy/prism-ct-barrier/AUDIT.md)
 
@@ -453,8 +453,8 @@ Section 2.1 is the integers (stage 2a). Section 2.2 is the ideal layer (stage 2b
 | The representation of an ideal, and admission | 2.2 | Implemented as a prototype | `shekyl-prism/src/ideal` (`GenericHnf`, `GuardedIdeal::admit`) |
 | The exact step, ties and terminal state | 2.3 | Settled as the oracle's definition; not reviewed under G3 | `scripts/stage2c_oracle.py` |
 | The exp64 quotient | 2.3 | Implemented as a prototype | `shekyl-prism/examples/stage2c/reducer.rs` |
-| The step table | 2.3 | Proposal, not certified as stated; implemented as a prototype under the name `Reviewed` | the same, and the oracle |
-| The widths `W` and `2W` | 2.2.4, 2.3, 2.4.1 | Implemented as a prototype; the reduction's are checked on research, the ideal layer's are unproved | `IdealSet` |
+| The step table | 2.3 | Proposal: certified on research only, not reviewed; implemented as a prototype under the name `Reviewed` | the same, and the oracle |
+| The widths `W` and `2W` | 2.2.4, 2.3, 2.4.1 | Implemented as a prototype. Unproved: the reduction's rest on lemmas argued in 2.3 and not reviewed, the ideal layer's on a derivation in 2.2.4 | `IdealSet` |
 | The guarded intersection | 2.4.1 | Implemented as a prototype | `GuardedIdeal::intersection` |
 | The shortest-equivalent ideal | 2.4.2 | Proposal | none |
 | The norm form passed to a consumer | 2.4.3 | Implemented as a prototype | the reducer's `Reduced::form` |
@@ -495,8 +495,8 @@ The budget below was written on 2026-11-21, before stages 2b to 2d were designed
 | --- | --- | --- | --- |
 | A norm, a coordinate, an entry of a normal form, a residue modulo `q` (2b, 2d) | `shekyl-prism/src/ideal` | `W`: 11, 14, 16, 21, 27 | 2.2.4 and 2.4.1. Unproved: argued there, no checker (ledger O39) |
 | A product inside admission or the intersection (2b, 2d) | the same | `2W`: 22, 28, 32, 42, 54 | The same |
-| The normalized Gram form, a coordinate and the carried norm in the reduction (2c) | `shekyl-prism/examples/stage2c` | `W` | 2.3, W1 to W4. Checked on research (`widths.py`, `bounds_ng.py`) |
-| The reducer's constructor: a numerator before the division by `T`, and the check of that division (2c) | the same | `2W` | 2.3. Checked on research (`widths.py`) |
+| The normalized Gram form, a coordinate and the carried norm in the reduction (2c) | `shekyl-prism/examples/stage2c` | `W` | 2.3, W1 to W4. Unproved lemmas, argued there; their arithmetic is checked on research (`widths.py`) and the observed maxima measured (`bounds_ng.py`) |
+| The reducer's constructor: a numerator before the division by `T`, and the check of that division (2c) | the same | `2W` | 2.3. The same |
 | The quotient's divisor and digit, and its dividend (2c) | the same | 1 and 2 | 2.3, W5. Checked on research (`check_exp64_words.py`) |
 | Sampling, the norm equation, Cornacchia (stage 3) | none | General | Rows 6, 7 and 9 below. Proven there for the methods assumed; stage 3's design round states its own |
 | The step to an equivalent ideal (2d, stage 3) | none | Not fixed | Row 8 below, written for a four-dimensional basis. 2.4.2's form needs no such product; its widths are stated when it is built |
@@ -513,7 +513,7 @@ So **no code on `dev` uses the general width today.** The integer crate is gener
 | Q2 | **In use** | The norm is carried by the admitted ideal, by the intersection and by the reducer, and is never recovered from an index. Its second sentence, on a generator reduced modulo `N·O0`, is stage 3's and is not built |
 | Q3 | **Kept as a test oracle.** Superseded on the signing path, 2026-11-28 | The eight-generator sum is what `guarded_intersections_match_the_coprime_lattice_sum` computes in unbounded integers to check the guarded intersection. On the signing path a normal form at the modulus `2·N₁·N₂` would need 31 to 80 limbs, and the formula needs coprime norms where 2.4.1 needs only a unit |
 | Q4 | **In use**, and moved: it is tested by admission (2.2.3, A2), at generation and at import, not first at stage 5 | The bound itself, `B = ⌈L/2⌉ + 32`, is still the provisional rule of "the secret norm" below. How often key generation meets it is measured only on simulated ideals (2.3), and it is ruled at stage 5 against real key generation |
-| Q5 | **Open** (ledger O33). Stated, not reviewed | 2.3 states the largest intermediate as a formula for the exact step and for exp64, with lemmas W1 to W5. Their checkers are on `research` (D1 to D3 of 2.5) |
+| Q5 | **Open** (ledger O33). Stated, not reviewed | 2.3 states the largest intermediate as a formula for the exact step and for exp64, with lemmas W1 to W5. W1 to W4 are unproved; W5 and the arithmetic to the widths are checked on research (D1 to D3 of 2.5) |
 
 ##### What the reference reaches (Ran)
 
@@ -639,7 +639,7 @@ For an ideal `I` of norm `N`, with `b = b(N)`, under Q1 and Q2. An element of `O
 | 9 | The norm equation: a coefficient of the generator, the target, the lattice of dimension 2, the values given to Cornacchia | stage 3 | `2.5·L + 80`, with the bounds of R2 (17 bits, 20,000 steps) and an ideal of norm below `2^(⌈L/2⌉ + 2)` | Proven, given a reduced basis in 2c's sense |
 | 10 | The translation: a coordinate of an endomorphism of norm `d₁·d₂ < 2^(2e)`, its product with a matrix entry below `2^e`, a degree times a norm | stage 4 | `e + b + ⌈L/2⌉ + 4` | Proven, as row 9 |
 
-Row 3 is the largest of this budget (a reducer that carried the reference's Gram matrix would reach it twice; ours does not, see row 3), and it is reached twice: by key generation, which reduces the ideal of norm `D`, and by signing, which reduces the intersection of the ideal of norm `q` with the secret ideal. So with `B` the bound on the secret norm's bits (Q4):
+Row 3 is the largest of this budget. Ours does not hold it (see row 3). A reducer that carried the reference's Gram matrix would reach it twice: by key generation, which reduces the ideal of norm `D`, and by signing, which reduces the intersection of the ideal of norm `q` with the secret ideal. So with `B` the bound on the secret norm's bits (Q4):
 
     need = max( 2·(2W + 1), 2·(2e − 5 + B) ) + L + 4,    B = ⌈L/2⌉ + 32
 
@@ -907,7 +907,7 @@ How many ideals are generic (**Unproved**): for a prime `N ≡ 3` modulo 4 all `
 
 `hazmat::ideal::GuardedIdeal::admit` takes the norm `N`, four columns offered as the normal form, and a pair `(u, v)`. It returns the admitted ideal or nothing. Every check below is a secret bit; they are combined into one bit, and that one bit is the only thing that leaves (2.1.3, row 3). An arithmetic overflow anywhere sets the overflow mark of 2.1.3, and a marked verdict is a refusal.
 
-Each check is justified by what it must rule out. The last column gives an input that would be admitted if the check were removed and the others kept. The examples at `p = 3`, `N = 5` use the valid key with normal form `(10,0,0,0), (0,10,0,0), (4,9,1,0), (1,4,0,1)` and reduced pair `u = (4,−1,1,0)`, `v = (1,−2,−2,−1)`; each can be verified by hand (**Unproved**: no script on `dev` checks them; D17 of 2.5).
+Each check is justified by what it must rule out. The last column gives an input that would be admitted if the check were removed and the others kept. The examples are at `p = 3`. Those with `N = 5` use the valid key with normal form `(10,0,0,0), (0,10,0,0), (4,9,1,0), (1,4,0,1)` and reduced pair `u = (4,−1,1,0)`, `v = (1,−2,−2,−1)`; each can be verified by hand (**Unproved**: no script on `dev` checks them; D17 of 2.5). A2 and A11 have no toy example, because their bounds exceed anything at toy size: their entries describe the input at real size.
 
 | # | Check | What it rules out | What would pass without it |
 | --- | --- | --- | --- |
@@ -921,7 +921,7 @@ Each check is justified by what it must rule out. The last column gives an input
 | A8 | Each of the four columns is in `L` | A normal form of some other lattice | The normal form of the other ideal of norm 5 with `x = 4`: `(10,0,0,0), (0,10,0,0), (4,1,1,0), (9,4,0,1)` |
 | A9 | The product of the pivots is `4N²` | The normal form of a proper sublattice of `L` | The valid normal form with every column tripled |
 | A10 | `N4(u) ≤ N4(v)` | A pair whose first vector is the long one, so that A11 bounds neither | A valid pair with a multiple of `v` added to `u` |
-| A11 | `N4(v)² ≤ p·(1024·N)²`, that is `nrd(v/2) ≤ 256·√p·N` (the factor-256 guard) | A basis too long for the guarded schedule of 2.3 and for `nrd(v) < q` in 2.4 | The generators of the generic shape, used as the pair without reduction |
+| A11 | `N4(v)² ≤ p·(1024·N)²`, that is `nrd(v/2) ≤ 256·√p·N` (the factor-256 guard) | A basis too long for the guarded schedule of 2.3 and for `nrd(v) < q` in 2.4 | The generators of the generic shape, used as the pair without reduction, for a norm above `256·√p` (at toy size the bound is not reached) |
 
 `N4(x) = x₀² + x₁² + p·(x₂² + x₃²)` is four times the reduced norm of `x/2`.
 
@@ -1000,7 +1000,23 @@ Provenance: [Fixed-modulus normal form](https://github.com/Shekyl-Foundation/she
 
 ### 2.3 Gaussian-integer basis reduction (stage 2c)
 
-**Status (2026-11-28).** *Settled:* the exact step, its ties and its terminal state. They define the oracle, `scripts/stage2c_oracle.py`. *Proposal, implemented as a prototype* (`shekyl-prism/examples/stage2c/reducer.rs`): the exp64 quotient, the step table and the widths. **The step table is not certified as stated.** Its counts are the constant-time schedule, and one inequality of their certificate was checked at another threshold than the split the table uses (below). The prototype names this schedule `Reviewed`; that name claims more than is established, and part C renames it until the certificate and the table use one split. *Open:* O33, which closes when the widths below are reviewed with a checker on `dev`; and G7's compiled-code evidence (section 0). The table at the head of section 2 gives each part's state.
+**Status (2026-11-28).** *Settled:* the exact step, its ties and its terminal state. They define the oracle, `scripts/stage2c_oracle.py`. *Proposal, implemented as a prototype* (`shekyl-prism/examples/stage2c/reducer.rs`): the exp64 quotient, the step table and the widths. **The step table is a proposal.** Its counts are the constant-time schedule. Their certificate is checked on `research` only, by two routes that are stated below, and no part of it is on `dev` or has been reviewed under G3. The prototype names this schedule `Reviewed`, which says more than that. *Open:* O33, which closes when the widths below are reviewed with a checker on `dev`; and G7's compiled-code evidence (section 0). The table at the head of section 2 gives each part's state.
+
+**Labels of the paragraphs kept from the first draft of this section.** They were written before the four labels, and are labelled here.
+
+| Statement | Label | Checker |
+| --- | --- | --- |
+| The exact step: half-up ties, the strict swap, the terminal state, the strict descent of the first norm | Checked on dev | `scripts/stage2c_oracle.py`: `test_ties_and_order`, `test_final_size_reduction_after_last_swap`, `test_strict_descent_allows_slow_swaps`, `test_exhaustive_minima` |
+| The exact step's `3M` width | Unproved | None (ledger O40) |
+| **Lemma W.** In the window (`eₕ ≤ 60`) an estimate from the top 64 bits of the divisor is within one of the exact half-up quotient, and the correction `X` returns that quotient exactly | Checked on research; part checked on dev | `clamped-quotient-progress/progress_check.py` (781,000 cases); `test_exp64_window_is_half_up` |
+| **Lemma U.** Beyond the window, with `s = eₕ − 60`, the multiple subtracted leaves `2^(s−1) < \|q − m\| < 2^(s+1)·(1 + 2⁻⁶³)` in the larger component. So the sub-step does not swap, does not lengthen the second vector, and lowers the exponent by at least 58 | Checked on research; part checked on dev | `progress_check.py` (600,000 cases); `test_exp64_large_quotient_progress` |
+| **Lemmas B1, B2.** The logarithms of the quotients of a run sum to at most `Λ = ½·log₂(C₀/λ₁)`, so at most `E = max{n : 58n + 2 < Λ}` big sub-steps occur | Checked on research | `progress_check.py` |
+| **Theorem.** `T + E` exp64 steps end on exactly the basis that `T` exact steps give, because rounding commutes with subtracting a Gaussian integer | Checked on research | `progress_check.py`; `certificate-review/test_contract.py` on an independent reducer |
+| The head enumeration: every positive `k` with `4^(58k+3) < R_C` | Checked on research; checked on dev | `tighter-progress-certificate/test_head_ratios.py`; `test_big_first_step_can_go_straight_to_the_tail` |
+| `Δ = 4pT²` in numerators, `pT²/4` in reduced-norm units, `p` normalized | Checked on research; checked on dev | `certificate-review/lemmas.sage`, `clamped-quotient-progress/verify_finding.sage`; `test_native_hermitian_determinant` |
+| The class ratios `R₀` and `R_C` | Checked on dev as arithmetic; their derivation is unproved | `test_class_bounds_are_the_reduced_norm_inputs` |
+| The prototype's cost against the first prototype (1.17 times at P500), its stack residue, its timing contrasts | Measured | `research/clamped-quotient-progress/results/rust_bench.csv`; `docs/benchmarks/stage2c/` |
+| The P500 saturation fixture and its two minima | Checked on dev | `test_p500_saturation_regression`; the minima are from PARI/GP, by the commands in "executable acceptance cases" |
 
 The reduction takes a Gaussian pair of a left ideal and returns a pair of the same ideal whose first vector has the smallest non-zero norm, with a quadratic form for evaluating a combination of its columns. Key generation samples combinations of those columns. The shortest-equivalent step of 2.4 needs the first column to be shortest. The mathematical oracle below uses variable-time integers on public fixtures, and the exact rule defines it. The production candidate is exp64 with the native schedules below.
 
@@ -1044,7 +1060,7 @@ A fixed schedule needs a quotient that fits a machine word. The first prototype 
 
 The P500 instance is `scripts/fixtures/stage2c_p500.json`, and `test_p500_saturation_regression` requires the exact and the exp64 schedules to reach its minimum on both lattices (**Checked on dev**). Nothing on `dev` shows the clamp failing: the clamp model is on part D's list.
 
-**What exp64 does instead.** When the quotient is too long for the window it does not saturate. It takes the top bits of the quotient at the quotient's own scale and subtracts that multiple, which undershoots. One such step leaves the first vector in place, never lengthens the second, and shortens the quotient by at least 58 bits. The number of these extra steps is bounded by the class's starting bounds, so a fixed schedule still completes. The statements are below.
+**What exp64 does instead.** When the quotient is too long for the window it does not saturate. It takes the top bits of the quotient at the quotient's own scale and subtracts that multiple, which undershoots. One such step leaves the first vector in place, never lengthens the second, and shortens the quotient by at least 58 bits. The number of these extra steps is bounded by the class's starting bounds, so a fixed schedule still completes. The statements are Lemmas W, U, B1 and B2 and the theorem in the table at the head of this section; the rule is the next subsection.
 
 #### Production candidate and public schedule
 
@@ -1075,7 +1091,8 @@ The table uses the split at `λ=Δ/A²=2⁻⁹`. The 8,758 cells have maximum qu
 
 - **Checked on research** (`certificate-review/cellcheck.py` on `cert_2685.txt`): the potential is constant on 8,758 cells of depth at most 14, is at least 1, and is at most `7998092957/2³²`; the main ratio is at most `537/2000`; the seven band ratios down to `λ = 2⁻⁹`. The command that produced the three lowest bands is not recorded.
 - **Checked on research** (`certificate-review/tailcert.c`): fewer than five further swaps from every state with `λ ≥ 2⁻⁹`. This is the split the table uses.
-- **Checked on research, at another threshold** (`certificate-review/exp64_charge.py`): the charge `G·2^−(116n+4) ≤ ρ^(1+n)` and the boundary inequality `2^(116n+4) ≥ 2¹¹·ρ^−(2(1+n))`, for `n` from 1 to 64. The boundary inequality is written with `2¹¹`, the threshold of the earlier split, and not with the `2⁹` of this one. Whether the `2¹¹` form implies the `2⁹` form depends on the role of that constant in the proof, and this section does not decide it: the inequality is to be restated and checked at `2⁹` (D18 of 2.5; ledger O42). Until then the counts are **not certified as stated**.
+- **Checked on research** (`certificate-review/exp64_charge.py`): the exp64 charge `G·2^−(116n+4) ≤ ρ^(1+n)` and the boundary inequality `2^(116n+4) ≥ 2¹¹·ρ^−(2(1+n))`, for `n` from 1 to 64, with `ρ = 537/2000`. The script writes the boundary with `2¹¹`, the threshold of a split at `2⁻¹¹`, and not with the `2⁹` of the table's split. The `2⁹` form has the smaller right-hand side, so it follows; that step is **Unproved** in the sense of this section, a one-line argument with no checker (D18 of 2.5).
+- **Checked on research**, a second route at one threshold throughout (`tail-proof-and-search/cellmap.c`, counts in `results/mycounts_full.txt`): fewer than five further swaps from every state with `λ ≥ 2⁻¹¹`. With the tail from `2⁻¹¹`, the band ratios down to `2⁻¹¹` and the inequalities above as written, every count is at most the table's: 280/360/415/545/718 for generic signing, 267/347/402/532/705 for the guarded class, 208/323/308/410/637 for key generation, 21/22/22/22/23 for the secret ideal under exp64, and 196/257/297/395/525 for the challenge. So each entry of the table is an upper bound certified at a single split, and it is not the least one.
 - **Checked on dev** (`test_native_schedule_table`): the table equals what `scripts/stage2c_oracle.py` computes from the class bounds and five literals, `BANDS`, `MAIN_RATIO`, `MAX_POTENTIAL`, `TAIL_THRESHOLD` and `TAIL_SLOTS`. That test reproduces arithmetic. It does not justify the literals, which are the outputs of the checkers above.
 - **Measured** (`tail-proof-and-search/hunt.py`): no input was found that needs more steps than the table. The search was short: 1,800 seconds a cell. [Independent certificate review, §§1–4](https://github.com/Shekyl-Foundation/shekyl-prism/blob/c9a92cded9a0ce713570acdca3fa0b90d213e1fb/research/certificate-review/REPORT.md) · [Corrected head enumeration](https://github.com/Shekyl-Foundation/shekyl-prism/commit/df92507)
 
@@ -1093,14 +1110,14 @@ This is the statement Q5 of 2.1.2 asks for. The reducer does not carry the Gram 
 
 The divisions are exact for a basis of an ideal of norm `T` (the constructor checks each, and the determinant). `A` is twice the form's first diagonal entry.
 
-**The starting bound `M₀`** is a public bound on the larger of `A` and `C` before the first step, for each input class (**Checked on research**: `widths.py` computes both):
+**The starting bound `M₀`** is a public bound on the larger of `A` and `C` before the first step, for each input class. The two bounds are **Unproved**, argued here; the arithmetic from them to the widths is **Checked on research** (`widths.py`):
 
 - *Generic.* `A = 2T` and `C = (x² + y² + p)/(2T) < 4T + p/(2T)`, so `M₀ = 4·Tmax + ⌊p/2⌋ + 1`, with `Tmax = 2^(B + 2e − 5)` for signing.
 - *Guarded* (the intersection of 2.4 from an admitted key). `U = q·v` and `V = u + γ·v`, with `N4(u) ≤ N4(v) ≤ 1024·√p·N` (A10, A11) and `|γ|² ≤ q²/2`. So `A ≤ 512·√p·q` and `C ≤ 512·√p·(1 + q)²/q`, and `M₀ = 512·⌈√p⌉·(qmax + 3)`, with `qmax = 2^(2e−5)`. The secret norm cancels.
 
 The constructor refuses, by the mark, a start whose `A` or `C` exceeds its class's `M₀`.
 
-**The lemmas (Checked on research: `research/normalized-gram` REPORT section 4, W1 to W4, checker `bounds_ng.py`; `research/stage2c-design-notes` NOTES 2.4, W5, checker `check_exp64_words.py`).** Write `q_j = h_j/A` for the exact quotient and `m_j` for the multiple a step subtracts.
+**The lemmas.** W1 to W4 are **Unproved**: they are argued below, and the research report that names them (`research/normalized-gram` REPORT section 4) gives each one line. What research has for them is **Measured**: `bounds_ng.py` compared every observed intermediate of its replay with these factors of `M₀` and found none above. W5 is **Checked on research** (`research/stage2c-design-notes` NOTES 2.4 has the proof; `check_exp64_words.py` asserts it on 200,440 operand pairs). Write `q_j = h_j/A` for the exact quotient and `m_j` for the multiple a step subtracts.
 
 - **W1.** `A` and `C` never exceed `M₀`, and `|h_j| < M₀`. A half-up rounding has `|q_j − m_j| ≤ 1/2`, and it is zero when `|q_j| < 1/2`; an exp64 big step has `m_j` between 0 and `q_j`. Either way `|q_j − m_j| ≤ |q_j|`, so the new `C`, which is `C − A·Σ(q_j² − (q_j − m_j)²)`, is at most `C`. A swap exchanges `A` and `C`. And `h₀² + h₁² = A·C − p < M₀²`.
 - **W2.** The quotient's intermediates are below `9·M₀`. The estimate `m̃` is within one of the half-up quotient in the window, and below `|q_j|·(1 + 2⁻⁶³)` at its scale on the big path. So `|m̃·A| ≤ 2.5·M₀` and the correction `X = 2·(h − m̃·A) + A` has magnitude at most `5.1·M₀`. Both paths are computed on every step, so the bound covers the discarded one.
@@ -1126,7 +1143,7 @@ The magnitudes are signed, and the sign is held beside the limbs (2.1.3), so a m
 
 The figures of this table were recomputed for this section from `prism-vectors/data/signer/<set>.txt` and agree with `research/stage2c-design-notes/results/widths.txt` (checker `widths.py`, which also asserts that `2W` limbs are fewer than the general `LIMBS` of 2.1.2). On `dev` the widths are literals (`IdealSet`, `scripts/stage2c_fixtures.py`, `scripts/int_vectors.py`) and nothing derives them: `widths.py` and `check_exp64_words.py` are on part D's list.
 
-**What this does to an overflow.** For a start the constructor accepts, W1 to W5 say no mark is set by the reduction. The lemmas are **Unproved** and not reviewed, so O33 stays open and the exits keep their present treatment (2.1.3). The older paragraph on the exact step's `3M` bound, above, concerns the oracle's unbounded integers and is not what the widths rest on.
+**What this does to an overflow.** For a start the constructor accepts, W1 to W5 say no mark is set by the reduction. W1 to W4 are unproved and not reviewed, so O33 stays open and the exits keep their present treatment (2.1.3). The older paragraph on the exact step's `3M` bound, above, concerns the oracle's unbounded integers and is not what the widths rest on.
 
 Provenance for the widths: [Lemmas W1 to W4](https://github.com/Shekyl-Foundation/shekyl-prism/blob/35c59c6cca8c9d97701395802a308c9df6e06d01/research/normalized-gram/REPORT.md) · [W5 and the width script](https://github.com/Shekyl-Foundation/shekyl-prism/blob/35c59c6cca8c9d97701395802a308c9df6e06d01/research/stage2c-design-notes/NOTES.md) · [Counterexample to the clamp](https://github.com/Shekyl-Foundation/shekyl-prism/blob/53e2eb4fdd772ff8a53708ba60314c3dabea9d05/research/q5-width-proof/REPORT.md)
 
@@ -1235,6 +1252,8 @@ The report gives a second proof that `ε` is a unit which uses only the action o
 Provenance: [Shortcut proof and lattice comparison](https://github.com/Shekyl-Foundation/shekyl-prism/blob/08033e2c73ffbfa2ddfc384d14006eef0cda5bf7/research/shortest-equivalent-shortcut/REPORT.md)
 
 #### 2.4.3 The basis and norm form passed to a consumer
+
+Kept from the first draft. The form's orientation and its exact divisions are **Checked on dev** (`test_form_orientation_and_denominator`, and the reduced forms of the corpus in `replays_all_five_sets`). The account of the pinned C code's scaling is **Unproved**: it was read in the source at the links, and no differential test compares the two forms yet.
 
 Let `B=(U,JU,V,JV)` in column order. Its numerator Gram matrix is `Wᵢⱼ=D(Bᵢ,Bⱼ)`. The upper-right two-by-two block has rows `(h₀,−h₁)` and `(h₁,h₀)`. The integral class norm form for the native consumer is lower triangular:
 
