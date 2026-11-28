@@ -86,9 +86,9 @@ This is the test procedure for timing evidence under G7. It replaces the paired-
 
 | Phase | Largest resolution for a pass |
 | --- | ---: |
-| Admission and drop | 0.25 µs |
+| The reducer's constructor (`Basis::from_intersection`) and its drop | 0.25 µs |
 | The three Hermitian products | 0.25 µs |
-| The full path, admission and reduction | 2.0 µs |
+| The full path: that constructor and the reduction | 2.0 µs |
 
 **Measured**: these were set on the floor device (a Raspberry Pi 4, Cortex-A72) at P248, generic class, three processes of 8,192 rounds, null arm clean in all three. The lowest injected level was detected every time, so they are upper bounds on what the instrument resolves. They are stated for that set, class and board only; another set, the guarded class or another board states its own before it can pass. The t-test never sets a resolution: it did not reach the control at these levels.
 
@@ -103,7 +103,14 @@ This is the test procedure for timing evidence under G7. It replaces the paired-
 
 A fixture or key contrast that is a leak in any phase fails G7's timing. The controls are constant delays; a leak that moves a few calls in a hundred has another shape, the decile test is less sensitive to it, and the structural checks remain primary for it.
 
-**Where it has been run. Measured**: P248, generic class, on the floor device: no candidate in admission, the Hermitian products or the full path; no flag for the fixed secret against random secrets; null arm clean in all three processes. Two of the three processes drew the same permutation, so the run has two distinct layouts and not three. The guarded class has no key generator in the harness and has fixtures only. No other set and no x86-64 run exists under this procedure.
+**Where it has been run. Measured**: P248, generic class, on the floor device: no candidate in the reducer's constructor, the Hermitian products or the full path; no flag for the fixed secret against random secrets; null arm clean in all three processes. Two of the three processes drew the same permutation, so the run has two distinct layouts and not three. The guarded class has no key generator in the harness and has fixtures only. No other set and no x86-64 run exists under this procedure.
+
+**What that run is not** (the review of 2026-11-28).
+
+- **It did not time admission.** The harness's first phase was called "admission" in the first version of this procedure. It times the reducer's constructor, which checks its own invariants. `GuardedIdeal::admit`, the eleven checks of 2.2.3, is never called by the harness. No timing evidence exists for A1 to A11, and a phase that times them is owed.
+- **The verdict program does not implement these verdicts.** `research/g7-rtlf/v2/verdict_v2.py` requires two flagged processes for a candidate, so both tests flagging in one process falls to noise where this procedure says candidate; its first-run classifier has no leak verdict (a candidate that persists on the re-run is printed as a leak until explained); it asks for one sign among all flags where the rule asks for agreement in two; it gives a zero median the negative sign; a missing record reads as unflagged; the rule's contrast of each fixture against the pooled others is printed and given no verdict, the verdicts coming from the contrasts against the process's reference; and persistence compares the two candidate labels without comparing the sign of the first run with the sign of the re-run. The run above reported no flag at all, so none of these changed its result. **No G7 result is to be cited from that program until it is brought into line:** a total, ordered decision table, tested on synthetic verdict records, that refuses a run with a missing arm (ledger O46).
+- **A pass at `r` describes a session.** It is the observation that no planned contrast flagged while a constant delay of that size was detected in every process. It is not a bound excluding timing differences of size `r`, and three detections in three processes give little confidence about a fourth.
+- Replaced void processes are a selection. Their number is stated and capped before the run.
 
 ### Stage 3 norm equation (O29)
 
@@ -450,13 +457,13 @@ Section 2.1 is the integers (stage 2a). Section 2.2 is the ideal layer (stage 2b
 | Part | Section | State | Code on `dev` |
 | --- | --- | --- | --- |
 | The integers | 2.1 | Reviewed (PR #42) | `prism-int` |
-| The representation of an ideal, and admission | 2.2 | Implemented as a prototype | `shekyl-prism/src/ideal` (`GenericHnf`, `GuardedIdeal::admit`) |
-| The exact step, ties and terminal state | 2.3 | Settled as the oracle's definition; not reviewed under G3 | `scripts/stage2c_oracle.py` |
+| The representation of an ideal, and admission | 2.2 | Reviewed as mathematics, 2026-11-28: the representation, P1 to P3, the eleven checks and their sufficiency, the exactness of the membership test. Open: one encoding per key, and the distribution of generated keys. Code: implemented as a prototype | `shekyl-prism/src/ideal` (`GenericHnf`, `GuardedIdeal::admit`) |
+| The exact step, ties and terminal state | 2.3 | Reviewed as mathematics, 2026-11-28, with shortestness of the first vector, the `3M` bound, the class ratios, the starting bounds and W1 to W5 at the level of the source's arithmetic contract | `scripts/stage2c_oracle.py` |
 | The exp64 quotient | 2.3 | Implemented as a prototype | `shekyl-prism/examples/stage2c/reducer.rs` |
-| The step table | 2.3 | Proposal: certified on research only, not reviewed; implemented as a prototype under the name `Reviewed` | the same, and the oracle |
+| The step table | 2.3 | Proposal. Its arithmetic and both routes were reproduced by the review of 2026-11-28; the interval certificate under them was read and not independently verified. Implemented as a prototype under the name `Reviewed` | the same, and the oracle |
 | The widths `W` and `2W` | 2.2.4, 2.3, 2.4.1 | Implemented as a prototype. Unproved: the reduction's rest on lemmas argued in 2.3 and not reviewed, the ideal layer's on a derivation in 2.2.4 | `IdealSet` |
-| The guarded intersection | 2.4.1 | Implemented as a prototype | `GuardedIdeal::intersection` |
-| The shortest-equivalent ideal | 2.4.2 | Proposal | none |
+| The guarded intersection | 2.4.1 | Reviewed as mathematics, 2026-11-28: the kernel and the intersection under the unit hypothesis. Code: implemented as a prototype | `GuardedIdeal::intersection` |
+| The shortest-equivalent ideal | 2.4.2 | Its identities reviewed as mathematics, 2026-11-28. Proposal until it has a test on a common basis and a consumer | none |
 | The norm form passed to a consumer | 2.4.3 | Implemented as a prototype | the reducer's `Reduced::form` |
 
 The prototype's code is in the front crate and under `examples/`. Part C moves the ideal layer to its own crate (G1). No part of 2.2 to 2.4 leaves prototype status before its section is reviewed and its unproved statements are settled.
@@ -857,7 +864,9 @@ The Stage 2c fixture exits are listed in 2.1.3 and counted by `scripts/ci/check_
 - **Checked on dev**: proved or computed, with a test or script on `dev` that checks it, named in the sentence.
 - **Checked on research**: proved or computed, with a checker that is on the `research` branch and not on `dev`. The sentence names the report and the checker; 2.5 lists each one for part D.
 - **Measured**: observed on stated inputs, and no more general than they are.
-- **Unproved**: no checker anywhere. Where an argument is written out it is given in full, and it stands unreviewed. An unproved statement the code depends on has a ledger row.
+- **Unproved**: no checker on `dev` or on `research`. Where an argument is written out it is given in full. An unproved statement the code depends on has a ledger row.
+
+**Reviewed, 2026-11-28.** Two readers reviewed sections 2.2 to 2.4 at `327ccdf`. The first derived the statements independently and recomputed the tables with a script of its own; the second re-ran that script and checked five findings at source. Where a statement says *reviewed* it was derived by that review. Its label does not change, because the review's script is not in the repository: a label names a checker, and *reviewed* names a reading. The corrections that review found are made in place and dated.
 
 #### 2.2.1 What the layer is for
 
@@ -875,10 +884,10 @@ For two numerator vectors `u = (u₁, u₂)` and `v = (v₁, v₂)` in Gaussian 
 
 **The action of `H`.** On numerators with `a ≡ d` and `b ≡ c`, left multiplication by `H` gives the numerators `(−B − m·C, A + m·D, A, −B)`, where `m = (p+1)/2` (**Unproved** from `i² = −1`, `j² = −p`, `ji = −ij`: `H·(z₁ + z₂j)/2 = ((i·z₁ − p·z̄₂) + (z̄₁ + i·z₂)·j)/4`. **Checked on dev**: `geometry::tests::left_action_on_order_basis_and_fractional_inputs` at `p = 11`). The halvings are exact only on `Λ0`. The remaining generator of `O0` needs no formula: `(1+k)/2 = 1 + i·H`.
 
-**What is carried.** Three things, all secret:
+**What a key's ideal consists of.** Three things, all secret:
 
 1. **The norm** `N`, a positive odd integer. It is carried with the ideal and never recovered from an index (Q2).
-2. **A Gaussian pair** `(u, v)`: two numerator vectors with `I = Z[i]·u ⊕ Z[i]·v`. This is what the arithmetic uses. For a key it is a reduced pair (2.3), stored with the key.
+2. **A Gaussian pair** `(u, v)`: two numerator vectors with `I = Z[i]·u ⊕ Z[i]·v`. This is what the arithmetic uses. For a key made by key generation it is the output of the reduction (2.3). For an imported key it is whatever pair the key holds that passes A10 and A11, which is a weaker condition (below).
 3. **The column Hermite normal form** of the numerator lattice: four columns of `Z⁴`, upper triangular, with positive pivots and every entry above a pivot in `[0, pivot of its row)`. A lattice of full rank has exactly one. It is the ideal's canonical name: two keys hold the same ideal exactly when their normal forms are equal.
 
 **Why a pair with three properties is an ideal (Unproved: argued here, no checker).** Let `N > 0` and let `L = Z[i]·u + Z[i]·v`. Consider:
@@ -893,7 +902,7 @@ For two numerator vectors `u = (u₁, u₂)` and `v = (v₁, v₂)` in Gaussian 
 
 P3 is tested on `u` and `v` alone. The identity above shows that the images of `i·u` and `i·v` are then in `L` without a test.
 
-**The normal form of an ideal (Unproved).** `N·O0 ⊆ I` (locally `N = ᾱ·α`), and the numerators of `N·O0` contain `2N·Z⁴`. So every pivot divides `2N`, every entry is in `[0, 2N)`, and the product of the pivots is `4N²`.
+**The normal form of an ideal (Unproved).** `N·O0 ⊆ I` (locally `N = ᾱ·α`), and the numerators of `N·O0` contain `2N·Z⁴`. So every pivot `d` divides `2N`, with `1 ≤ d ≤ 2N`; every entry above a pivot is in `[0, pivot of its row)`; and the product of the pivots is `4N²`. (Corrected 2026-11-28: this said every entry is below `2N`. A pivot can equal `2N`, as the first two of the generic shape do.) Reviewed.
 
 **The generic shape.** When the normal form has pivots `(2N, 2N, 1, 1)` its columns are
 
@@ -901,7 +910,7 @@ P3 is tested on `u` and `v` alone. The identity above shows that the images of `
 
 for one pair `(x, y)` with `x` even, `y` odd, both in `[0, 2N)`, and `x² + y² + p ≡ 0` modulo `4N`. The ideal is `O0·N + O0·(x + y·i + j)/2`, the pair `(x, y)` is its *root*, and the first and third columns are a Gaussian pair for it (their determinant is `2N`). `hazmat::ideal::GenericHnf::from_norm_and_root` writes these columns from the norm and the root, and `GenericHnf::generators` returns that pair. It checks nothing: the congruence is tested by the reducer's constructor (2.3) and the whole form by admission. An ideal of another shape has no such pair in its first and third columns, and this layer offers no conversion for it: its pair is the caller's to supply.
 
-How many ideals are generic (**Unproved**): for a prime `N ≡ 3` modulo 4 all `N + 1` left ideals of norm `N` are, and for `N ≡ 1` modulo 4 all but two.
+How many ideals are generic (**Unproved**; reviewed, with an exhaustive count at `p = 3, 7, 11` and norms 3, 5, 7): for a prime `N` other than `p`, there are `N + 1` left ideals of norm `N`; all are generic when `N ≡ 3` modulo 4, and all but two when `N ≡ 1` modulo 4. At the ramified prime `N = p` there is one ideal of norm `p`, and it is generic. (Corrected 2026-11-28: the exception at `N = p` was missing. A2 excludes `N = p` at the five sets.)
 
 #### 2.2.3 Admission
 
@@ -912,7 +921,7 @@ Each check is justified by what it must rule out. The last column gives an input
 | # | Check | What it rules out | What would pass without it |
 | --- | --- | --- | --- |
 | A1 | `N` is positive and odd | A norm that is not a norm; an even norm, which the key's definition excludes (the secret norm is an odd prime, 2.1.2) and for which the division of A5 is not defined | The valid key with `−N` in place of `N` |
-| A2 | `N < 2^B`, `B = ⌈L/2⌉ + 32` (Q4) | A norm too long for the widths of 2.2.4 and for the inequality `nrd(v) < q` that 2.4 rests on | A valid ideal of longer norm. Signing would then meet a marked overflow, or a `v` inside the challenge ideal: a failure that depends on the key |
+| A2 | `N < 2^B`, `B = ⌈L/2⌉ + 32` (Q4) | A norm too long for the widths of 2.2.4 and for the inequality `nrd(v) < q` that 2.4 rests on | A valid ideal of longer norm. The proofs of 2.2.4 and 2.4.1 then no longer cover it; a later failure is possible and is not shown to be inevitable |
 | A3 | `u` and `v` are in `Λ0` (P1) | A lattice not inside `O0`. Without it the halvings in the action of `H` are not exact and A4 does not test the action | `N = 1`, `u = (1,1,0,0)`, `v = (0,0,1,1)` with normal form `(2,0,0,0), (1,1,0,0), (0,0,2,0), (0,0,1,1)`: the lattice `a ≡ b`, `c ≡ d`, which holds `(1+i)/2` and is not closed under `H`, yet passes A4 computed with truncated halvings |
 | A4 | `H·u` and `H·v` are in `L` (P3) | A `Z[i]`-lattice of the right index that is not closed under `O0` | `N = 5`, `u = (2,1,1,0)`, `v = (10,0,0,0)` with the columns of that lattice: index 100, and `2² + 1² + 3 = 8` is not a multiple of 20 |
 | A5 | `\|det(u, v)\|² = 4N²` (P2) | A pair spanning a lattice of another index. The membership test of A8 divides by `4N²`, so it is a membership test only when this holds | The pair `(3u, 3v)` with the valid normal form: it spans `3·I` and would be admitted as a basis of `I` |
@@ -921,7 +930,7 @@ Each check is justified by what it must rule out. The last column gives an input
 | A8 | Each of the four columns is in `L` | A normal form of some other lattice | The normal form of the other ideal of norm 5 with `x = 4`: `(10,0,0,0), (0,10,0,0), (4,1,1,0), (9,4,0,1)` |
 | A9 | The product of the pivots is `4N²` | The normal form of a proper sublattice of `L` | The valid normal form with every column tripled |
 | A10 | `N4(u) ≤ N4(v)` | A pair whose first vector is the long one, so that A11 bounds neither | A valid pair with a multiple of `v` added to `u` |
-| A11 | `N4(v)² ≤ p·(1024·N)²`, that is `nrd(v/2) ≤ 256·√p·N` (the factor-256 guard) | A basis too long for the guarded schedule of 2.3 and for `nrd(v) < q` in 2.4 | The generators of the generic shape, used as the pair without reduction, for a norm above `256·√p` (at toy size the bound is not reached) |
+| A11 | `N4(v)² ≤ p·(1024·N)²`, that is `nrd(v/2) ≤ 256·√p·N` (the factor-256 guard) | A basis too long for the guarded schedule of 2.3 and for `nrd(v) < q` in 2.4 | The generators of the generic shape in the order A10 requires, shorter first and without reduction, for a norm above `256·√p` (at toy size the bound is not reached) |
 
 `N4(x) = x₀² + x₁² + p·(x₂² + x₃²)` is four times the reduced norm of `x/2`.
 
@@ -933,7 +942,9 @@ Each check is justified by what it must rule out. The last column gives an input
 
 - **That `N` is prime, or that the ideal is primitive.** An admissible ideal times an odd integer is admitted when its norm is still below `2^B`: at `p = 3`, the ideal `3·I` above is admitted with norm 45. Composite odd norms are admitted by design (the corpus of 2.4 has them). Whether a decoder must test that `N` is prime, and what a non-primitive ideal would do in stage 4, is undecided (ledger O38). Key generation's own candidates have a prime norm by construction (2.1.2).
 - **Where the key came from**, how its norm was sampled, and the rest of a key's encoding. Those are their producers' (stage 5).
-- **Anything about the Gaussian pair beyond A10 and A11.** The guard is weaker than "reduced": it admits any basis within the factor.
+- **Anything about the Gaussian pair beyond A10 and A11.** Three conditions of different strength are in use, and they are not interchangeable (stated apart since 2026-11-28). *Terminal*: the fixed point of the exact step of 2.3, which key generation's pair satisfies. *Guarded*: A10 and A11, which is all that import requires and which admits any ordered basis within the factor. *Shortest first*: only that the first vector has the least norm, which is what 2.4.2 needs.
+- **That a key has one encoding.** The normal form names the ideal uniquely. The pair does not: multiplying both vectors by a unit of `Z[i]` keeps the lattice, both lengths and every check, and A10 and A11 admit bases that are not terminal. The admitted object keeps the norm and the pair and drops the normal form once it is verified. A decoder that promises unique key bytes must fix a canonical pair, or derive the pair from the normal form, and fix the integers' encoding. Undecided, for stage 5 (ledger O44).
+- **That every valid ideal of admissible norm is admitted.** A pair of full rank has a non-zero `j` or `k` coordinate in one vector, so its longer vector has `N4 ≥ p`, and A11 then needs `1024·N ≥ √p`. An ideal of smaller norm is refused whatever its basis: `N = 3` at every set. So admission has an implied lower bound on the norm, `N ≥ √p/1024`. What mass key generation's sampler puts on refused ideals, and what the refusals do to the distribution of keys, is not known (ledger O45).
 
 **Who may draw again.** A refused candidate of key generation may be replaced by another draw. A refused import is an error. Signing never admits: it uses a key admitted once.
 
@@ -950,13 +961,21 @@ The layer has two widths for each set, both public and fixed by the type `IdealS
 | `W`, limbs | 11 | 14 | 16 | 21 | 27 |
 | `2W`, limbs | 22 | 28 | 32 | 42 | 54 |
 | `N`: below `2^B`, bits | 158 | 195 | 224 | 285 | 367 |
-| An entry of the normal form: below `2N`, bits | 159 | 196 | 225 | 286 | 368 |
+| An entry of the normal form: at most `2N`, bits | 159 | 196 | 225 | 286 | 368 |
 | A coordinate of an admitted pair: at most `c = ⌈√(1024·⌈√p⌉·2^B)⌉` by A10 and A11, bits | 147 | 184 | 213 | 274 | 356 |
 | The guard's comparison `p·(1024·N)²`, bits | 587 | 736 | 851 | 1,095 | 1,423 |
-| The largest product of the membership test, bits | 706 | 893 | 1,036 | 1,342 | 1,751 |
+| A loose bound on a dividend of the membership test, never attained (see below), bits | 706 | 893 | 1,036 | 1,342 | 1,751 |
 | Width of `2W` limbs, bits | 1,408 | 1,792 | 2,048 | 2,688 | 3,456 |
 
-**The largest product (Unproved).** It is in A4. A coordinate of `H·u` is at most `(m + 1)·c` with `m = (p+1)/2`. A component of its determinant against `v` is four products, at most `4·(m + 1)·c²`. Multiplied by `conj(d)`, with `|d| = 2N < 2^(B+1)`, each component is two products, at most `16·(m + 1)·c²·2^B`. The table's row is the bit length of twice that figure. It is near `2.5·L + 79` bits, about half of the `2W` limbs.
+**Which product is largest (Unproved; reviewed, and corrected 2026-11-28).** The first version of this paragraph said the largest ordinary product is in A4. It is not: it is A11's own comparison, `p·(1024·N)²`, the guard row of the table.
+
+- *A4.* For numerator vectors `X` and `Y`, `|det(X, Y)| ≤ √(N4(X)·N4(Y)/p)`. `N4(H·u) = (p+1)·N4(u)/4`, and a rotation keeps `N4`. With `N4 ≤ 1024·√p·N` for both vectors and `|d| = 2N`, a dividend of A4's membership test is at most `1024·√(p+1)·N²`: 452, 563, 650, 833 and 1,079 bits at the five sets.
+- *A8.* Here one vector is a column of the normal form, which the guard does not bound: its `N4` can reach `8N² + p`. The same inequality gives a dividend of at most `2N·√((8N² + p)·1024·N/√p)`: 340, 414, 472, 594 and 758 bits. That is below A4's bound.
+- Both are below the guard's product at every set.
+- *The table's membership row* (706 to 1,751 bits) is a looser bound on the same dividends, from coordinate bounds and triangle inequalities: a coordinate of `H·u` at most `(m + 1)·c` with `m = (p+1)/2`, four products in a determinant, two in the multiplication by `conj(d)`, and a factor of two. It is kept because each step of it can be read off the code. It is not attained.
+- *Modular products are another category.* The inverse of `N²` modulo `2^(128·W)` and the products with it are reduced by design and fill the whole of `2W` limbs on ordinary keys. No bound of this table applies to them and none is needed: their results are multiplied back and compared at full width.
+
+So capacity is settled by an upper bound: every ordinary product on an admitted input is below the guard's product, which is below `2W` limbs. The largest value actually reached is not established, and nothing rests on it.
 
 **What the bound is for.** The bound covers an input that passes. An input that does not pass needs none: a product that does not fit sets the overflow mark, and a marked verdict is a refusal. The only reduction modulo a power of two in admission is the multiplication by the inverse of `N²`, and its result is multiplied back and compared at full width. So no overflow can turn a refusal into an admission, and by the table none can turn an admission into a refusal.
 
@@ -985,7 +1004,17 @@ The pinned reference holds an ideal as a lattice basis with a denominator and a 
 - The normal form is by columns, upper triangular, with residues in `[0, pivot)`.
 - A generic root is the pair `(x, y)` in `[0, 2N)²` with `x` even and `y` odd.
 
-The Gaussian pair is not a value the reference has. It depends on the reduction's conventions (2.3) and on the starting basis. How stage 5 maps the reference's stored ideal to these coordinates, and whether a signature can be replayed byte for byte through a reduction that is not the reference's, are stage 5's questions and are undecided.
+The Gaussian pair is not a value the reference has. It depends on the reduction's conventions (2.3) and on the starting basis.
+
+**What a replay must fix** (the review of 2026-11-28), by what is compared:
+
+- *Lattices*: the denominator; multiplication on the left; `j` written to the right of its Gaussian coefficient; `k = ij`; the map of primes and parameters; and which pivot reduces each entry.
+- *Columns or forms*: also the ordered starting pair; the orientation of `J` and of the determinant; the strict initial ordering and the strict swaps; signed half ties; the final size reduction; the byte order of the challenge scalar; the root modulo `q`; the centring of `γ`; the order of the intersection's two columns; and the units and triangle of the form in 2.4.3.
+- *A whole key*: also a sampler, canonical bytes, and a convention for the pair. None exists.
+
+A comparison of normal forms cannot see a sign error made on both sides: replacing `J` by `−J` in both bases keeps both spans. Q3's oracle shares the fixtures, roots and Gaussian interpretation of what it checks, so it does not settle the sign of the cross term `h₁`. A differential against the pinned reference on common coordinates, with a non-zero imaginary cross term, is owed.
+
+How stage 5 maps the reference's stored ideal to these coordinates, and whether a signature can be replayed byte for byte through a reduction that is not the reference's, are stage 5's questions and are undecided.
 
 #### 2.2.8 What is not built
 
@@ -1000,7 +1029,7 @@ Provenance: [Fixed-modulus normal form](https://github.com/Shekyl-Foundation/she
 
 ### 2.3 Gaussian-integer basis reduction (stage 2c)
 
-**Status (2026-11-28).** *Settled:* the exact step, its ties and its terminal state. They define the oracle, `scripts/stage2c_oracle.py`. *Proposal, implemented as a prototype* (`shekyl-prism/examples/stage2c/reducer.rs`): the exp64 quotient, the step table and the widths. **The step table is a proposal.** Its counts are the constant-time schedule. Their certificate is checked on `research` only, by two routes that are stated below, and no part of it is on `dev` or has been reviewed under G3. The prototype names this schedule `Reviewed`, which says more than that. *Open:* O33, which closes when the widths below are reviewed with a checker on `dev`; and G7's compiled-code evidence (section 0). The table at the head of section 2 gives each part's state.
+**Status (2026-11-28).** *Settled:* the exact step, its ties and its terminal state. They define the oracle, `scripts/stage2c_oracle.py`. *Proposal, implemented as a prototype* (`shekyl-prism/examples/stage2c/reducer.rs`): the exp64 quotient, the step table and the widths. **The step table is a proposal.** Its counts are the constant-time schedule. Their certificate is checked on `research` only, by two routes that are stated below, and no part of it is on `dev` or has been reviewed under G3. The prototype names this schedule `Reviewed`, which says more than that. *Reviewed as mathematics, 2026-11-28:* the exact step, shortestness, the `3M` bound, the class ratios, the starting bounds, and W1 to W5 as bounds (the largest values reached are not established). *Not checked by the reducer:* its own terminal state. The final validity collects overflow marks and does not test `C ≥ A` or that each projection is within half of `A`. If a schedule were too short for an input, the reducer would return an unreduced basis with no mark. A fixed-time terminal test folded into the mark is part C's (ledger O47). *Open:* O33, which closes when the widths below have a checker on `dev`; and G7's compiled-code evidence (section 0). The table at the head of section 2 gives each part's state.
 
 **Labels of the paragraphs kept from the first draft of this section.** They were written before the four labels, and are labelled here.
 
@@ -1010,7 +1039,7 @@ Provenance: [Fixed-modulus normal form](https://github.com/Shekyl-Foundation/she
 | The exact step's `3M` width | Unproved | None (ledger O40) |
 | **Lemma W.** In the window (`eₕ ≤ 60`) an estimate from the top 64 bits of the divisor is within one of the exact half-up quotient, and the correction `X` returns that quotient exactly | Checked on research; part checked on dev | `clamped-quotient-progress/progress_check.py` (781,000 cases); `test_exp64_window_is_half_up` |
 | **Lemma U.** Beyond the window, with `s = eₕ − 60`, the multiple subtracted leaves `2^(s−1) < \|q − m\| < 2^(s+1)·(1 + 2⁻⁶³)` in the larger component. So the sub-step does not swap, does not lengthen the second vector, and lowers the exponent by at least 58 | Checked on research; part checked on dev | `progress_check.py` (600,000 cases); `test_exp64_large_quotient_progress` |
-| **Lemmas B1, B2.** The logarithms of the quotients of a run sum to at most `Λ = ½·log₂(C₀/λ₁)`, so at most `E = max{n : 58n + 2 < Λ}` big sub-steps occur | Checked on research | `progress_check.py` |
+| **Lemmas B1, B2.** The logarithms of the quotients of a run sum to at most `Λ = ½·log₂(C₀/λ₁)`, so at most `E` big sub-steps occur, where `E` is the largest `n ≥ 0` with `58n + 2 < Λ`, and zero if there is none. The sum is over the quotients of magnitude above one | Checked on research | `progress_check.py` |
 | **Theorem.** `T + E` exp64 steps end on exactly the basis that `T` exact steps give, because rounding commutes with subtracting a Gaussian integer | Checked on research | `progress_check.py`; `certificate-review/test_contract.py` on an independent reducer |
 | The head enumeration: every positive `k` with `4^(58k+3) < R_C` | Checked on research; checked on dev | `tighter-progress-certificate/test_head_ratios.py`; `test_big_first_step_can_go_straight_to_the_tail` |
 | `Δ = 4pT²` in numerators, `pT²/4` in reduced-norm units, `p` normalized | Checked on research; checked on dev | `certificate-review/lemmas.sage`, `clamped-quotient-progress/verify_finding.sage`; `test_native_hermitian_determinant` |
@@ -1053,7 +1082,7 @@ A fixed schedule needs a quotient that fits a machine word. The first prototype 
 **The counterexample (Checked on research: `research/q5-width-proof`, checker `crafted_saturation.py`, seed 77; the trace is `research/clamped-quotient-progress`, checker `trace_counterexample.py`).** Take a prime `T` of signing size and a multiplier `k` near `2^(L/2 + 20)` with `k·T − p` a prime that is 1 modulo 4, so that `k·T − p = a² + b²`. The element `a + b·i + j` has norm `k·T`, and the ideal of norm `T` it generates has a vector far shorter than a typical ideal's. Its generic starting basis is therefore very unbalanced: the first exact quotient has about `L` bits (251.8, 326.9, 379.5, 503.9 and 667.8 at the five sets).
 
 - A clamped step subtracts at most `2^63` times the first vector. It lowers the quotient by about `2^60` and changes neither the first vector nor the order of the pair. Every step of the schedule clamps (301 of 301, 387 of 387, 446 of 446, 587 of 587, 773 of 773 on the schedule of that report) and none swaps.
-- Clearing a quotient of `2^503.9` this way would take more than `2^441` steps.
+- The report puts the number of such steps needed to clear a quotient of `2^503.9` above `2^441`. The two figures printed here do not by themselves prove that bound; it needs the clamp's exact digit range and the exact quotient, which are in the report. The review of 2026-11-28 read this counterexample and did not reproduce it.
 - After the schedule and one exact clean-up step the first vector is not the shortest: 791 bits against a minimum of 774 at `p248`, and 1,547 against 1,532 at `p500`.
 - A 128-bit clamp fails in the same way.
 - Turning saturation into an abort does not repair it. The abort is then reachable, and whether it is reached depends on the key: certainly on a crafted key, and on an honest one with a probability the report could only extrapolate.
@@ -1123,7 +1152,7 @@ The constructor refuses, by the mark, a start whose `A` or `C` exceeds its class
 - **W2.** The quotient's intermediates are below `9·M₀`. The estimate `m̃` is within one of the half-up quotient in the window, and below `|q_j|·(1 + 2⁻⁶³)` at its scale on the big path. So `|m̃·A| ≤ 2.5·M₀` and the correction `X = 2·(h − m̃·A) + A` has magnitude at most `5.1·M₀`. Both paths are computed on every step, so the bound covers the discarded one.
 - **W3.** The update's intermediates are below `2.25·M₀`: `|m_j·A| ≤ |h_j| + A/2 ≤ 1.5·M₀`; the new `h_j` is `A·(q_j − m_j)`, at most `M₀`; and `|m_j·(2h_j − m_j·A)| ≤ A·(|q_j| + 1/2)² ≤ C + |h_j| + A/4 ≤ 2.25·M₀`. After the first component's product is subtracted, `C` lies between its old and its new value.
 - **W4.** A coordinate of `U` or `V` is at most `√(2·Tmax·M₀)`, since its square is at most `N4 = 2T·A`. A step's partial results are at most four times that: `|q| ≤ √(C/A)`, so a product of a coordinate with a quotient component is at most `1.5·√(2·Tmax·M₀)`, two of them are subtracted, and the result is again a coordinate.
-- **W5** (word level). With `k = max(0, bl(A) − 64)` and `n = A >> k`: `n` is in `[2^63, 2^64)` when `bl(A) ≥ 64`; the dividend `|h| >> (k + s)` is below `2^124` and fits two limbs; the quotient word is below `2^62`; every shift count is in `[0, 64·W)`.
+- **W5** (word level). With `k = max(0, bl(A) − 64)` and `n = A >> k`: `n` is in `[2^63, 2^64)` when `bl(A) ≥ 64`; the dividend `|h| >> (k + s)` is below `2^124` and fits two limbs (the research checker asserts the looser `2^125`); the quotient word is below `2^62`; every shift count is in `[0, 64·W)`.
 
 **The widths.** Signing's generic class has the largest `M₀`, so it sets the width for the set. `W` limbs hold the Gram form, a coordinate and the carried norm; `2W` limbs hold the constructor's numerators before the division by `T`, and the product that checks that division.
 
@@ -1196,7 +1225,7 @@ The Gaussian determinant of the result is `−q·det(u, v)`, of squared magnitud
 
 "Every output" is the nine values: the carried norm and the eight coordinates. A marked value refuses at the existing exits (2.1.3); the intersection adds no exit and no branch. Signing has no retry here: a marked intersection fails the signature.
 
-The primality predicate is the verifier's, a probable-prime test, so the multiply-back is kept: if `q` were composite the power would not be an inverse, the product would not be 1, and the outputs would be marked. On an admitted key and a prime `q` neither secret failure can happen, by the paragraph above, provided the root is a root. A wrong root is a defect of the caller.
+The primality predicate is the verifier's, a probable-prime test. The multiply-back certifies that the value used is an inverse of `ρ(v)·conj(ρ(v))`; it is not a test of primality, and a composite `q` can pass it (the residue 1 does, in any modulus). (Corrected 2026-11-28: this said a composite `q` would fail it.) What it gives is soundness of the construction for whatever `q` was accepted: the theorem needs a unit, and a verified inverse is one. What is proved unreachable is narrower, and its two hypotheses are carried forward to the signing boundary: **for a prime `q` and a root that is a root**, neither secret failure can happen on an admitted key. For a probable prime that is not prime, or a wrong root, a marked result and a refused signature are possible, and the refusal is observable. Stage 5 states which of the two it assumes of `q`.
 
 **Arithmetic and widths (Unproved).** The residues are computed in Montgomery form modulo the public `q`, with `R = 2^(64W)`. All values are of the secret type and the modulus is public.
 
@@ -1204,7 +1233,7 @@ The primality predicate is the verifier's, a probable-prime test, so the multipl
 | --- | ---: | ---: | ---: | ---: | ---: |
 | `q`: exactly `2e − 5` bits | 491 | 643 | 747 | 995 | 1,323 |
 | The carried norm `T = N·q`: below `2^(B + 2e − 5)`, bits | 649 | 838 | 971 | 1,280 | 1,690 |
-| A coordinate of `first` or `second`: at most `(q + 1)·c`, with `c` of 2.2.4, bits | 639 | 828 | 961 | 1,270 | 1,680 |
+| A coordinate of `first` or `second`, and each partial sum: at most `q·c`, with `c` of 2.2.4, bits (corrected 2026-11-28; each was one too high) | 638 | 827 | 960 | 1,269 | 1,679 |
 | Width of `W` limbs, bits | 704 | 896 | 1,024 | 1,344 | 1,728 |
 | A Montgomery product before reduction: below `q·R`, bits | 1,195 | 1,539 | 1,771 | 2,339 | 3,051 |
 | Width of `2W` limbs, bits | 1,408 | 1,792 | 2,048 | 2,688 | 3,456 |
@@ -1288,13 +1317,14 @@ Most of these scripts need a Sage environment (Sage, cypari2, gmpy2, sympy), and
 | D14 | 2.4.1: the corpora's checksums and the definition of their columns | `signing-intersection-oracle/fixtures/MANIFEST.txt`, `followup/fixtures_oracle/README.md` @`0a696a4` | — | No |
 | D15 | Section 0, the timing procedure: the harness, the key pool and its generator, the verdict script, the pinned RTLF reference and the run that set the largest resolutions | `g7-rtlf/RULE-v2.md`, `v2/harness-v2.patch`, `v2/genpool.py`, `v2/keypool_p248.txt.xz`, `v2/extract_v2.py`, `v2/verdict_v2.py`, `rtlf_batch.R`, `pin.txt`, `v2/results/runV2/` at the tip | R with the pinned RTLF; the harness is a patch against `dev` at `470d537` and must be rebased | `docs/benchmarks/stage2c/` holds the earlier paired-t record only |
 
-**New, written by part D** (no script exists anywhere):
+**New, written or brought by part D** (D16 to D18 exist nowhere; D24 exists outside the repository):
 
 | # | Supports | What to write |
 | --- | --- | --- |
 | D16 | 2.2.4 and 2.4.1: the tables of admission's and the intersection's widths | A script that recomputes both tables from the parameter files and asserts each row below its width |
 | D17 | 2.2.3: the "what would pass" column | A model of the eleven checks at toy primes that confirms each example fails its one check and no other |
 | D18 | 2.3: the `2⁻⁹` form of the boundary inequality of D7 | The inequality restated and checked at the split the table uses |
+| D24 | 2.2 to 2.4: the statements the review of 2026-11-28 derived | The review's own script, brought to `dev` as a separate review script and not merged with the generators it checks (Rick, 2026-11-28). A label moves to *checked on dev* only where the script reproduces the statement |
 
 **For the record, not normative today.**
 
