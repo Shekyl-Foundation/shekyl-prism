@@ -145,6 +145,8 @@ jobs:
           python3 scripts/ci/check_int_surface.py
           python3 scripts/ci/check_secret_exits.py --selftest
           python3 scripts/ci/check_secret_exits.py
+      - name: Check the G7 timing decision table and run validation
+        run: python3 -B scripts/ci/test_g7_verdict.py
       - name: Validate the committed Stage 2c timing contrasts
         run: |
           for arch in x86_64 aarch64; do

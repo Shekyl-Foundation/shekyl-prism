@@ -1291,6 +1291,65 @@ Two readers reviewed sections 2.2 to 2.4 of `docs/SIGNER_SPEC.md` at `327ccdf`. 
 
 **Still open after both readers:** independent verification of the interval certificate; the largest values the intermediates reach; the key sampler's distribution under the guards; compiled constant-time behaviour.
 
+## 2026-11-28 — Replay the G7 rule on runV2 (O46)
+
+**Question and expectation.** The published runV2 observed no flag. Would the ordered rule reproduce that observation when every planned contrast received a verdict and the real control shifts were compared with the limits?
+
+**Ran.** At `de15193`, with research object `1cc5d26` available locally, run the following from the repository root.
+
+```sh
+python3 -B scripts/g7_verdict.py --selftest
+python3 -B scripts/g7_replay_runv2.py > /tmp/g7-runV2.json
+python3 -B scripts/g7_verdict.py /tmp/g7-runV2.json
+```
+
+The self-test passed 60 named cases, including all seven historical regressions, and 1,728 exhaustive three-process combinations. The replay exited 0. Configuration SHA-256 was `0c016913e4e9db9792ae6279167ef973b3e9abb6dd41af43bebe26c1f455d1d5`. Processes s101, s102 and s103 were valid, each with 8,192 rounds. All nine nulls were clean. All 27 whole-process delay controls flagged in the decile test. All 36 reference comparisons were printed and none flagged.
+
+| Phase | f0, f1, f2, f3, f4 (each against the others) | Fixed against random | Largest allowed |
+| --- | --- | --- | ---: |
+| Reducer constructor and drop (archived token `adm`) | Each Pass at 240 ns | Pass at 240 ns | 250 ns |
+| Three Hermitian products | Each Pass at 222 ns | Pass at 222 ns | 250 ns |
+| Full constructor and reduction | Each Pass at 2,000 ns | Pass at 2,000 ns | 2,000 ns |
+
+**Derived.** At the lowest detected delay, the largest observed process median gives the coarsest of the three measured shifts. The verdict file published control levels and no-flag counts. The replay adds explicit resolutions and pooled verdicts. The observed flags agree. The historical configuration did not record a numerical replacement cap. The replay uses zero because all three planned processes were valid and no replacements occurred.
+
+**Open.** Admission was outside every archived interval. Its harness awaits part C’s second merge. A new measurement needs Rick’s word.
+
+**Who.** The reviewers identified the discrepancies. Rick relayed the repair brief. Codex implemented the checker and converter and checked the replay and synthetic cases. No independent implementation review is recorded here.
+
+**Additional re-run check, 2026-11-28 (Ran).** A synthetic repeat cleared one candidate and raised a new candidate on a different fixture. The new fixture needs its own follow-up. Two added cases check the exit status and the affected contrast, bringing the suite to 62 named cases. The runV2 replay is unchanged.
+
+## 2026-11-28 — The re-run keeps an open candidate
+
+**Question and expectation.** A re-run that flags the same contrast in the opposite direction was reported as not reproduced, and the gate cleared. The same held for one re-run process flagged by both tests. A refused input was also printing a partial process list. The exhaustive comparison covered three processes while a larger plan was accepted.
+
+**Ran.** `python3 -B scripts/ci/test_g7_verdict.py`, then the runV2 replay:
+
+```sh
+python3 -B scripts/g7_replay_runv2.py > /tmp/g7-runV2.json
+python3 -B scripts/g7_verdict.py /tmp/g7-runV2.json
+```
+
+The self-test passed 75 named cases, 1,728 three-process combinations, and 20,736 four-process combinations. The replay exited 0. The configuration digest and the eighteen passes are the ones in the entry above.
+
+**Derived.** The first-run ruling keeps the directions that qualified a candidate, and the re-run uses that set. Two re-run processes that support one of those directions are a persistent leak. A re-run that meets row 1 is a leak in its own right. Any other re-run candidate, including the opposite direction and a single both-tests process, stays a candidate and the gate stays open. Noise, a pass, or an inconclusive re-run is not reproduced. A refusal prints only `refused`. Plans of three and four are the tested populations; any other plan is refused. "The t-test does not see it" and "it is small" are restored as what does not explain a leak.
+
+The full path's 2,000 ns is the largest of the three process medians, 1,649, 2,000 and 1,740.5 ns, equal to its limit. Four planned contrasts and one reference comparison have an RTLF detection of 18 or 19 ns. Each is below three ticks and none has a Welch flag, so none is a flag.
+
+**Open.** Admission was outside every archived interval.
+
+**Who.** Review of the checker. The opposite-direction gap was in the brief.
+
+## 2026-11-28 — F5: resolution required to retire a candidate
+
+**Expected.** A quiet or noisy re-run can retire a candidate only if the phase could resolve the stated delay. A different phase’s calibration cannot answer that question.
+
+**Ran.** At `36d0ba1`, synthetic Inconclusive and Noise re-runs with a missing phase resolution both returned **Not reproduced**, exit 0. After F5, `python3 -B scripts/ci/test_g7_verdict.py` passed 78 named cases, 1,728 three-process combinations and 20,736 four-process combinations. Both former failures now return **Candidate**, exit 1, as does Noise above the limit. Noise exactly at the limit and Pass both retire the candidate. A two-phase case gives different verdicts for the same re-run flags according to each phase’s controls.
+
+**Correction.** This supersedes the preceding entry’s conclusion about inconclusive and noisy re-runs. Rick confirmed the six section 0 clarifications on 2026-11-28. The runV2 replay commands above produced the same report byte for byte. That historical run had no candidate to re-run.
+
+**Who.** Rick supplied the revised ruling. Codex implemented F5 and checked the synthetic cases and historical replay.
+
 ## 2026-11-28 — The ideal layer moves to its own crate (clean-up part C1)
 
 Ruling G1 asks for one crate for each layer of the signer, re-exported under `hazmat`. Sections 2.2 to 2.4 were reviewed on 2026-11-28, so the move was due. This part moves the code and changes no behaviour.
