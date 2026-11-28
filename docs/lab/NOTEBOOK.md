@@ -1290,3 +1290,29 @@ Two readers reviewed sections 2.2 to 2.4 of `docs/SIGNER_SPEC.md` at `327ccdf`. 
 **An error of mine this corrects.** I wrote that A4 holds the largest product from a chain of triangle inequalities, without comparing it with the other products of the same function. The bound was safe and the attribution was false.
 
 **Still open after both readers:** independent verification of the interval certificate; the largest values the intermediates reach; the key sampler's distribution under the guards; compiled constant-time behaviour.
+
+## 2026-11-28 — Replay the G7 rule on runV2 (O46)
+
+**Question and expectation.** The published runV2 observed no flag. Would the ordered rule reproduce that observation when every planned contrast received a verdict and the real control shifts were compared with the limits?
+
+**Ran.** At `de15193`, with research object `1cc5d26` available locally, run the following from the repository root.
+
+```sh
+python3 -B scripts/g7_verdict.py --selftest
+python3 -B scripts/g7_replay_runv2.py > /tmp/g7-runV2.json
+python3 -B scripts/g7_verdict.py /tmp/g7-runV2.json
+```
+
+The self-test passed 60 named cases, including all seven historical regressions, and 1,728 exhaustive three-process combinations. The replay exited 0. Configuration SHA-256 was `0c016913e4e9db9792ae6279167ef973b3e9abb6dd41af43bebe26c1f455d1d5`. Processes s101, s102 and s103 were valid, each with 8,192 rounds. All nine nulls were clean. All 27 whole-process delay controls flagged in the decile test. All 36 reference comparisons were printed and none flagged.
+
+| Phase | f0, f1, f2, f3, f4 (each against the others) | Fixed against random | Largest allowed |
+| --- | --- | --- | ---: |
+| Reducer constructor and drop (archived token `adm`) | Each Pass at 240 ns | Pass at 240 ns | 250 ns |
+| Three Hermitian products | Each Pass at 222 ns | Pass at 222 ns | 250 ns |
+| Full constructor and reduction | Each Pass at 2,000 ns | Pass at 2,000 ns | 2,000 ns |
+
+**Derived.** At the lowest detected delay, the largest observed process median gives the coarsest of the three measured shifts. The verdict file published control levels and no-flag counts. The replay adds explicit resolutions and pooled verdicts. The observed flags agree. The historical configuration did not record a numerical replacement cap. The replay uses zero because all three planned processes were valid and no replacements occurred.
+
+**Open.** Admission was outside every archived interval. Its harness awaits part C’s second merge. A new measurement needs Rick’s word. The reviewer proposed the four clarifications in section 0 and Rick’s confirmation is pending.
+
+**Who.** The reviewers identified the discrepancies. Rick relayed the repair brief. Codex implemented the checker and converter and checked the replay and synthetic cases. No independent implementation review is recorded here.
